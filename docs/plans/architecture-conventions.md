@@ -132,6 +132,34 @@ the analog of picardo's `TRPCError`.
 - Timestamps surface as numbers/ISO strings deliberately (SQLite has no `Date`); document
   the choice in `packages/db`.
 
+## 5. State management (frontend)
+
+State is split **by kind**, not funneled through one global store. Match the tool to the
+shape of the data:
+
+- **Projection / IPC data** (notes, backlinks, search results, file lists, recents) →
+  **TanStack Query** (`@tanstack/react-query`). The `queryFn` is a `@reflect/core` getter;
+  the file-watcher event (Plans 03/04) drives **targeted `queryClient.invalidateQueries`**,
+  and setters (markdown writes) do optimistic update + invalidate. SQLite stays the single
+  source of truth — **the frontend caches the projection, it never holds a second copy of it.**
+- **Editor / document state** → owned by **meowdown/ProseMirror**; the `<Editor>` is
+  uncontrolled, so this is never mirrored into a store.
+- **Shared UI / session state** (theme, active graph, route model, command palette,
+  sidebar + AI-context toggles, sync status) → **React context + hooks by default**
+  (what `ThemeProvider`/`GraphProvider` already are). **Zustand** is in the toolbox for when
+  a slice outgrows context — frequent updates that re-render too widely, or state needed far
+  from where it's provided — but that's a per-slice judgement call, not a mandate. Reach for
+  it when it earns its place; otherwise context suffices. Tradeoffs, as always.
+- **Strictly-local ephemeral state** → plain React (`useState` / `useReducer`).
+
+This composes with the actions pattern (§3): getters back query functions, setters invalidate.
+
+**Non-goal:** a global observable domain model (MobX / MobX-Keystone style) that mirrors the
+graph and notes in memory. V1 did this; in V2 the domain model lives in files → SQLite, so an
+in-memory mirror only duplicates the projection and reintroduces watcher-sync complexity for
+no benefit. MobX's fine-grained reactivity pays off over a rich client-owned model — which we
+deliberately don't have.
+
 ## Consequences for specific plans
 
 - **Plan 01** restructures the scaffold into `apps/desktop` + `packages/core` +
