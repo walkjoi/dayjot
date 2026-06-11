@@ -86,8 +86,10 @@ describe('SettingsScreen', () => {
       expect(saved).toEqual([
         {
           editorMarkdownSyntax: 'show',
+          editorSpellCheck: true,
           semanticSearchEnabled: false,
           theme: 'system',
+          weekStartDay: 'monday',
           allNotesFilterTags: ['book', 'link', 'person'],
           aiModels: [],
           defaultAiModelId: null,
@@ -96,6 +98,38 @@ describe('SettingsScreen', () => {
     )
     expect(radio(/^show/i).checked).toBe(true)
     expect(radio(/^focus/i).checked).toBe(false)
+  })
+
+  it('reflects a persisted spell check opt-out', async () => {
+    stored = { editorSpellCheck: false }
+    renderScreen()
+    const toggle = screen.getByRole('switch', { name: /spell check/i })
+    await waitFor(() => expect(toggle.getAttribute('aria-checked')).toBe('false'))
+  })
+
+  it('toggling spell check off applies instantly and persists', async () => {
+    renderScreen()
+    const toggle = screen.getByRole('switch', { name: /spell check/i })
+    // On by default.
+    expect(toggle.getAttribute('aria-checked')).toBe('true')
+
+    fireEvent.click(toggle)
+
+    expect(toggle.getAttribute('aria-checked')).toBe('false')
+    await waitFor(() =>
+      expect(saved).toEqual([
+        {
+          editorMarkdownSyntax: 'focus',
+          editorSpellCheck: false,
+          semanticSearchEnabled: false,
+          theme: 'system',
+          weekStartDay: 'monday',
+          allNotesFilterTags: ['book', 'link', 'person'],
+          aiModels: [],
+          defaultAiModelId: null,
+        },
+      ]),
+    )
   })
 
   it('reflects the persisted theme and persists a new choice', async () => {
@@ -110,8 +144,10 @@ describe('SettingsScreen', () => {
       expect(saved).toEqual([
         {
           editorMarkdownSyntax: 'focus',
+          editorSpellCheck: true,
           semanticSearchEnabled: false,
           theme: 'light',
+          weekStartDay: 'monday',
           allNotesFilterTags: ['book', 'link', 'person'],
           aiModels: [],
           defaultAiModelId: null,
@@ -132,8 +168,10 @@ describe('SettingsScreen', () => {
       expect(saved).toEqual([
         {
           editorMarkdownSyntax: 'focus',
+          editorSpellCheck: true,
           semanticSearchEnabled: false,
           theme: 'system',
+          weekStartDay: 'monday',
           allNotesFilterTags: ['book', 'link', 'person', 'meeting'],
           aiModels: [],
           defaultAiModelId: null,
@@ -186,8 +224,10 @@ describe('SettingsScreen', () => {
       expect(saved).toEqual([
         {
           editorMarkdownSyntax: 'focus',
+          editorSpellCheck: true,
           semanticSearchEnabled: false,
           theme: 'system',
+          weekStartDay: 'monday',
           allNotesFilterTags: ['person'],
           aiModels: [],
           defaultAiModelId: null,
@@ -204,7 +244,7 @@ describe('SettingsScreen', () => {
 
     await waitFor(() =>
       expect(saved).toEqual([
-        { editorMarkdownSyntax: 'focus', semanticSearchEnabled: true, theme: 'system', allNotesFilterTags: ['book', 'link', 'person'], aiModels: [], defaultAiModelId: null },
+        { editorMarkdownSyntax: 'focus', editorSpellCheck: true, semanticSearchEnabled: true, theme: 'system', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], aiModels: [], defaultAiModelId: null },
       ]),
     )
     // The control flips to the loading state (EmbeddingsSync owns the actual
@@ -233,7 +273,7 @@ describe('SettingsScreen', () => {
 
     await waitFor(() =>
       expect(saved).toEqual([
-        { editorMarkdownSyntax: 'focus', semanticSearchEnabled: false, theme: 'system', allNotesFilterTags: ['book', 'link', 'person'], aiModels: [], defaultAiModelId: null },
+        { editorMarkdownSyntax: 'focus', editorSpellCheck: true, semanticSearchEnabled: false, theme: 'system', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], aiModels: [], defaultAiModelId: null },
       ]),
     )
     expect(screen.getByRole('button', { name: /enable semantic search/i })).toBeTruthy()
@@ -256,7 +296,7 @@ describe('SettingsScreen', () => {
     await waitFor(() => expect(invoked).toContain('embed_ensure'))
     await waitFor(() =>
       expect(saved).toEqual([
-        { editorMarkdownSyntax: 'focus', semanticSearchEnabled: true, theme: 'system', allNotesFilterTags: ['book', 'link', 'person'], aiModels: [], defaultAiModelId: null },
+        { editorMarkdownSyntax: 'focus', editorSpellCheck: true, semanticSearchEnabled: true, theme: 'system', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], aiModels: [], defaultAiModelId: null },
       ]),
     )
   })
@@ -275,7 +315,7 @@ describe('SettingsScreen', () => {
 
     await waitFor(() =>
       expect(saved).toEqual([
-        { editorMarkdownSyntax: 'focus', semanticSearchEnabled: false, theme: 'system', allNotesFilterTags: ['book', 'link', 'person'], aiModels: [], defaultAiModelId: null },
+        { editorMarkdownSyntax: 'focus', editorSpellCheck: true, semanticSearchEnabled: false, theme: 'system', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], aiModels: [], defaultAiModelId: null },
       ]),
     )
     expect(screen.getByRole('button', { name: /enable semantic search/i })).toBeTruthy()
