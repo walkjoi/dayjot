@@ -48,9 +48,12 @@ export async function writeAsset(
   await call('asset_write', { path, contentsBase64, generation }, voidSchema)
 }
 
-/** Move/rename a note within the graph (pinned to `generation`). */
-export async function moveNote(from: string, to: string, generation: number): Promise<void> {
-  await call('note_move', { from, to, generation }, voidSchema)
+/**
+ * Does a graph-relative path currently exist as a file on disk? Probes the
+ * filesystem directly — unlike an index lookup, this can't lag the watcher.
+ */
+export async function noteExists(path: string): Promise<boolean> {
+  return call('note_exists', { path }, z.boolean())
 }
 
 /** Send a note to the OS trash (recoverable; pinned to `generation`). */
