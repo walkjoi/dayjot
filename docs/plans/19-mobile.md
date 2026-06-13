@@ -257,6 +257,18 @@ Steps 1 and 2 are the existential gates; nothing else starts until both pass.
    device: git2 vendored OpenSSL cross-compile, keyring round-trip to the iOS
    keychain, rusqlite FTS5 query, fs read/write under `Documents/`. *Failures
    here trip TDR 0003's fallback triggers.*
+
+   > **Status (2026-06-12): simulator half passed.** The crate cross-compiles
+   > clean for `aarch64-apple-ios`, and the app boots on the iPhone 17 Pro
+   > simulator with the frontend rendering and all four runtime probes green
+   > (keychain round-trip, FTS5 query, `Documents/` file IO, libgit2
+   > init+commit — the temporary `spike_mobile.rs` instrumentation).
+   > One real finding: cargo's `rustc-link-lib` directives don't reach the
+   > final Xcode link, so libgit2's zlib/iconv must be declared in
+   > `ios.project.yml` (`libz.tbd`, `libiconv.tbd`); after editing the
+   > template, re-run `tauri ios init` to regenerate `gen/apple/`.
+   > Remaining: the same probes on a physical iPhone.
+
 2. **Gate spike B — editing on a real iPhone (timeboxed).** Prototype the
    Swift keyboard plugin (decision 8) far enough to evaluate honestly, then
    run the meowdown checklist from decision 7 on-device. Outcome is a
@@ -271,6 +283,39 @@ Steps 1 and 2 are the existential gates; nothing else starts until both pass.
    `src/mobile/` tree, tab/stack navigation over the `Route` subset, theme +
    safe-area tokens, sync-status pill stub. Desktop bundle unaffected
    (verify chunk split).
+
+   > **Status (2026-06-12): steps 3–4 partially landed, ahead of the spike-B
+   > gate.** Done: `mobile_graph_root` + `app_platform` commands with core
+   > wrappers, Files-app exposure (`UIFileSharingEnabled` +
+   > `LSSupportsOpeningDocumentsInPlace`), identity normalized to
+   > `app.reflect.ios` / product name Reflect, the lazy `PlatformRoot` gate
+   > (desktop chrome split into `desktop-root.tsx`), the fixed-root mobile
+   > bootstrap in `GraphProvider`, and a Today screen mounting the real
+   > editor via `NotePane`. **Verified on the simulator end-to-end:** boot →
+   > auto-bootstrap in `Documents/` → type into meowdown → the daily note
+   > lands on disk through the shared save pipeline. Two findings: the
+   > document stack requires `RouterProvider` (a missing router unmounted the
+   > tree to a white screen — `MobileErrorBoundary` now makes that class
+   > visible). Still open from these steps: tab/stack navigation, day pager,
+   > and the sync-status pill.
+   >
+   > **Also landed 2026-06-12: step 5 and the decision-8 keyboard plugin.**
+   > The write-event seam ships as `setLocalWriteEcho`/`echoLocalWrite` in
+   > core — `writeNote`/`writeAsset`/`deleteNote` emit their change batch
+   > in-process after the write lands, enabled by the mobile root chunk at
+   > load, unit-tested (including no-emit-on-failed-write).
+   > `plugins/tauri-plugin-keyboard` (workspace member, mobile-only dep)
+   > implements decision 8: Swift disables the system scroll nudge and
+   > streams keyboard overlap as `keyboardChange` events; the frontend
+   > mirrors it into `--keyboard-height` and Today's scroll container yields
+   > via `max(safe-area, keyboard)`. **Simulator-verified with the software
+   > keyboard: the caret line stays visible above the keyboard while
+   > editing.** Gotcha worth keeping: `registerListener`/`remove_listener`
+   > (those exact spellings) must be in a plugin's `COMMANDS` for
+   > `addPluginListener` to pass the ACL. `capabilities/mobile.json` now
+   > exists (keyboard:default). Spike B's remaining on-device checklist
+   > (IME, autocorrect, selection, real-device feel) still gates the editor
+   > decision.
 5. **The in-process write-notification seam (decision 5).** Local write paths
    emit file-change batches on mobile; prove with a unit-level test that a
    session save reaches the index and the engine's dirty mark without a
