@@ -3,7 +3,6 @@ import { MarkdownPreview } from '@/editor/markdown-preview'
 import { useWikiLinkNavigation } from '@/editor/use-wiki-link-navigation'
 import type { ChatTurn as ChatTurnModel } from '@reflect/core'
 import { cn } from '@/lib/utils'
-import { useRouter } from '@/routing/router'
 import { ChatToolChip } from './chat-tool-chip'
 
 interface ChatTurnProps {
@@ -27,7 +26,6 @@ interface ChatTurnProps {
  */
 export function ChatTurn({ turn }: ChatTurnProps): ReactElement {
   const navigateWikiLink = useWikiLinkNavigation(null)
-  const { navigate } = useRouter()
   const lastIndex = turn.parts.length - 1
 
   return (
@@ -66,7 +64,6 @@ export function ChatTurn({ turn }: ChatTurnProps): ReactElement {
                   key={index}
                   content={part.text}
                   onWikiLinkClick={navigateWikiLink}
-                  onTagClick={(tag) => navigate({ kind: 'allNotes', tag })}
                   className="text-sm"
                 />
               )
