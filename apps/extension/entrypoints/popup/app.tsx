@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactElement } from 'react'
 import { browser } from 'wxt/browser'
-import { buildWireMessage } from '@/lib/capture-message'
-import { enqueueCapture, readQueue } from '@/lib/flush'
-import { flushResultSchema, type FlushResult } from '@/lib/messages'
+import { readQueue } from '@/lib/flush'
+import type { FlushResult } from '@/lib/messages'
+import { saveCapture } from '@/lib/save-capture'
 import {
   readIncludePageTextPreference,
   writeIncludePageTextPreference,
@@ -26,30 +26,6 @@ type SaveState =
 
 const RELEASES_URL = 'https://github.com/team-reflect/reflect-open/releases/latest'
 const CLOSE_DELAY_MS = 900
-
-type SaveOutcome =
-  | { fate: 'queued' }
-  | { fate: 'held'; result: FlushResult }
-  | { fate: 'rejected' }
-
-/**
- * Persist the capture, flush, and report **this capture's** fate — aggregate
- * flush counts can't distinguish an older queued entry's failure from the
- * current save's, so the verdict comes from this id's rejection or its
- * continued presence in the queue.
- */
-async function saveCapture(page: Parameters<typeof buildWireMessage>[0]): Promise<SaveOutcome> {
-  const wire = buildWireMessage(page)
-  await enqueueCapture(wire)
-  const response: unknown = await browser.runtime.sendMessage({ type: 'flush' })
-  const result = flushResultSchema.parse(response)
-  if (result.rejectedIds.includes(wire.envelope.id)) {
-    return { fate: 'rejected' }
-  }
-  const queue = await readQueue()
-  const stillHeld = queue.some((entry) => entry.wire.envelope.id === wire.envelope.id)
-  return stillHeld ? { fate: 'held', result } : { fate: 'queued' }
-}
 
 function holdMessage(result: FlushResult): string {
   switch (result.holdReason) {
@@ -121,13 +97,16 @@ export function CapturePopup(): ReactElement {
       const contentText = includePageText
         ? await tryExtractPageText(captured.tabId, captured.page.url)
         : undefined
-      const outcome = await saveCapture({
-        ...captured.page,
-        contentText,
-        note,
-        id: crypto.randomUUID(),
-        capturedAt: new Date(),
-      })
+      const outcome = await saveCapture(
+        {
+          ...captured.page,
+          contentText,
+          note,
+          id: crypto.randomUUID(),
+          capturedAt: new Date(),
+        },
+        () => browser.runtime.sendMessage({ type: 'flush' }),
+      )
       if (outcome.fate === 'queued') {
         setSave({ phase: 'queued' })
       } else if (outcome.fate === 'held') {

@@ -1,18 +1,45 @@
 import { browser } from 'wxt/browser'
 import { defineBackground } from '#imports'
+import { SAVE_CURRENT_PAGE_COMMAND } from '@/lib/commands'
 import { flushQueue } from '@/lib/flush'
 import { isFlushRequest } from '@/lib/messages'
+import { readIncludePageTextPreference } from '@/lib/popup-preferences'
+import { saveCapture } from '@/lib/save-capture'
+import { snapshotTab } from '@/lib/snapshot-active-tab'
+import { tryExtractPageText } from './popup/extract-page-text'
 
 /**
- * The MV3 service worker: flushes the capture queue to the native host. It
- * never composes captures — the popup persists them to storage first and
- * pings `flush`, so nothing depends on this worker's (or the popup's)
- * lifetime. Retries ride three triggers: every flush ping, browser startup,
- * and a coarse alarm for the "Reflect installed an hour later" case.
+ * The MV3 service worker owns retries and the shortcut fast path. Every
+ * capture is persisted before a flush starts, so nothing depends on this
+ * worker's (or the popup's) lifetime. Retries ride four triggers: every flush
+ * ping, the keyboard shortcut, browser startup, and a coarse alarm for the
+ * "Reflect installed an hour later" case.
  */
 
 const RETRY_ALARM = 'capture-retry'
 const RETRY_PERIOD_MINUTES = 15
+
+async function saveTabWithDefaults(tab: Parameters<typeof snapshotTab>[0]): Promise<void> {
+  const captured = await snapshotTab(tab)
+  if (captured.status !== 'ready') {
+    return
+  }
+  const contentText = (await readIncludePageTextPreference())
+    ? await tryExtractPageText(captured.tabId, captured.page.url)
+    : undefined
+  const outcome = await saveCapture(
+    {
+      ...captured.page,
+      contentText,
+      id: crypto.randomUUID(),
+      capturedAt: new Date(),
+    },
+    flushQueue,
+  )
+  if (outcome.fate === 'rejected') {
+    console.error('shortcut capture rejected by Reflect host')
+  }
+}
 
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -24,6 +51,14 @@ export default defineBackground(() => {
       return true // responding asynchronously
     }
     return false
+  })
+
+  browser.commands.onCommand.addListener((command, tab) => {
+    if (command === SAVE_CURRENT_PAGE_COMMAND) {
+      void saveTabWithDefaults(tab).catch((cause: unknown) => {
+        console.error('shortcut capture failed:', cause)
+      })
+    }
   })
 
   browser.runtime.onInstalled.addListener(() => {
