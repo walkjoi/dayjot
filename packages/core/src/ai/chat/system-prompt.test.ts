@@ -26,6 +26,14 @@ describe('chatSystemPrompt', () => {
     expect(prompt).not.toContain('Graph overview')
   })
 
+  it('steers the model away from redundant searches and serial reads', () => {
+    const prompt = chatSystemPrompt({ today: '2026-06-12', context: null })
+    expect(prompt).toContain('search_notes matches on both keywords and meaning')
+    expect(prompt).toContain('raise its “limit” (up to 20) in one call')
+    expect(prompt).toContain('pass all their paths to read_notes in one call')
+    expect(prompt).toContain('limited number of tool rounds')
+  })
+
   it('renders the graph name, sizes, daily span, and the full tag vocabulary', () => {
     const prompt = chatSystemPrompt({ today: '2026-06-12', context: context() })
     expect(prompt).toContain('Graph overview (private notes are excluded from every figure):')
