@@ -12,14 +12,14 @@ import { z } from 'zod'
  */
 
 /**
- * How the editor renders markdown syntax characters. `focus` (the default)
- * hides them except near the caret; `show` always displays them.
+ * How the editor renders markdown syntax characters. `hide` (the default)
+ * hides them; `show` always displays them.
  *
  * The persisted name is implementation-neutral on purpose — it maps to
  * meowdown's "mark mode" at the editor boundary, but the settings document
  * must outlive any one editor library.
  */
-export const editorMarkdownSyntaxSchema = z.enum(['focus', 'show']).catch('focus')
+export const editorMarkdownSyntaxSchema = z.enum(['hide', 'show']).catch('hide')
 
 export type EditorMarkdownSyntax = z.infer<typeof editorMarkdownSyntaxSchema>
 
@@ -29,6 +29,31 @@ export type EditorMarkdownSyntax = z.infer<typeof editorMarkdownSyntaxSchema>
  * preference of users who find the underlines noisy in note-taking.
  */
 export const editorSpellCheckSchema = z.boolean().catch(true)
+
+/**
+ * Whether a note that opens with an empty body starts the editor on a single
+ * empty bullet — old Reflect's every-note default. On by default.
+ *
+ * The bullet is an **editor affordance only**, never persisted on its own: an
+ * empty list item serializes to nothing (`docToMarkdown` drops it), so an
+ * unedited note still writes an empty file — and a not-yet-created daily-note
+ * placeholder stays uncreated until the first real keystroke (the lazy
+ * no-litter contract). The seam lives at the editor (`note-pane.tsx`), not the
+ * save pipeline, because seeding the document model with the literal `- `
+ * markdown would classify lossy and open the note read-only.
+ */
+export const editorDefaultBulletSchema = z.boolean().catch(true)
+
+/**
+ * Whether pressing Return at the end of a heading starts a new bullet on the
+ * next line — old Reflect's "type a title, then bullet" capture flow. On by
+ * default.
+ *
+ * Independent of {@link editorDefaultBulletSchema}: that seeds an empty note's
+ * first line, this shapes what Enter *after a heading* produces. They are
+ * separate keys so each can be turned off on its own.
+ */
+export const editorBulletAfterHeadingSchema = z.boolean().catch(true)
 
 /**
  * The app color theme. `system` (the default) follows the OS preference;
@@ -82,6 +107,26 @@ export type AllNotesFilterTags = z.infer<typeof allNotesFilterTagsSchema>
  * (Plan 09). Later launches load the cached model because this flag is set.
  */
 export const semanticSearchEnabledSchema = z.boolean().catch(false)
+
+/**
+ * Whether new eligible images/PDFs added under `assets/` are automatically
+ * described by the configured AI provider into a managed `.reflect.md` description
+ * (Plan 20). On by default — only new assets, gated to those referenced by
+ * public notes; existing assets are never auto-scanned (the Settings backfill
+ * action handles those, with a cost warning). Off disables the automatic path
+ * entirely.
+ */
+export const describeAssetsSchema = z.boolean().catch(true)
+
+/**
+ * Whether the user has finished the mobile onboarding choice (Plan 19, step
+ * 6): "Start fresh" or "Connect to GitHub". Off by default — a fresh install
+ * shows the onboarding screen, which (for the GitHub path) clones into the
+ * still-empty graph root before anything seeds it. Once set, later launches
+ * open the fixed root directly. Mobile-only; desktop has its own chooser, so
+ * this key is simply never read there.
+ */
+export const mobileOnboardedSchema = z.boolean().catch(false)
 
 /**
  * The preset palette for a graph's identity color (the swatch shown next to
@@ -197,10 +242,14 @@ export const aiProvidersSchema = z
   )
 
 export const settingsSchema = z
-  .object({
+  .looseObject({
     editorMarkdownSyntax: editorMarkdownSyntaxSchema,
     editorSpellCheck: editorSpellCheckSchema,
+    editorDefaultBullet: editorDefaultBulletSchema,
+    editorBulletAfterHeading: editorBulletAfterHeadingSchema,
     semanticSearchEnabled: semanticSearchEnabledSchema,
+    describeAssets: describeAssetsSchema,
+    mobileOnboarded: mobileOnboardedSchema,
     theme: themePreferenceSchema,
     timeFormat: timeFormatSchema,
     dateFormat: dateFormatSchema,
@@ -211,7 +260,6 @@ export const settingsSchema = z
     defaultAiProviderId: defaultAiProviderIdSchema,
     chatModelSelection: chatModelSelectionSchema,
   })
-  .passthrough()
 
 export type Settings = z.infer<typeof settingsSchema>
 

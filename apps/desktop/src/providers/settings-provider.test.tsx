@@ -50,7 +50,7 @@ function installFakeBridge(): void {
           if (failSaves) {
             throw { kind: 'io', message: 'disk full' }
           }
-          saved.push(args.settings)
+          saved.push(args['settings'])
           return null
         default:
           return null
@@ -93,7 +93,7 @@ describe('SettingsProvider', () => {
     stored = { editorMarkdownSyntax: 'show' }
     const { result } = renderHook(() => useSettings(), { wrapper })
     // Defaults are usable before the IPC load settles — no loading gate.
-    expect(result.current.settings.editorMarkdownSyntax).toBe('focus')
+    expect(result.current.settings.editorMarkdownSyntax).toBe('hide')
     await waitFor(() => expect(result.current.settings.editorMarkdownSyntax).toBe('show'))
     // Hydration alone must not write the store back.
     expect(saved).toEqual([])
@@ -103,7 +103,7 @@ describe('SettingsProvider', () => {
     stored = { editorMarkdownSyntax: 'sideways' }
     const { result } = renderHook(() => useSettings(), { wrapper })
     await loadSettled()
-    expect(result.current.settings.editorMarkdownSyntax).toBe('focus')
+    expect(result.current.settings.editorMarkdownSyntax).toBe('hide')
   })
 
   it('an equal-but-rebuilt array value does not trigger a save', async () => {
@@ -128,9 +128,13 @@ describe('SettingsProvider', () => {
     await waitFor(() =>
       expect(saved).toEqual([
         {
-          editorMarkdownSyntax: 'focus',
+          editorMarkdownSyntax: 'hide',
           editorSpellCheck: true,
+          editorDefaultBullet: true,
+          editorBulletAfterHeading: true,
           semanticSearchEnabled: false,
+          describeAssets: true,
+          mobileOnboarded: false,
           theme: 'system',
           timeFormat: '12h',
           dateFormat: 'mdy',
@@ -170,7 +174,7 @@ describe('SettingsProvider', () => {
   })
 
   it('applies an update instantly and persists the full document', async () => {
-    stored = { editorMarkdownSyntax: 'focus', futureKey: true }
+    stored = { editorMarkdownSyntax: 'hide', futureKey: true }
     const { result } = renderHook(() => useSettings(), { wrapper })
     await loadSettled()
 
@@ -185,7 +189,11 @@ describe('SettingsProvider', () => {
         {
           editorMarkdownSyntax: 'show',
           editorSpellCheck: true,
+          editorDefaultBullet: true,
+          editorBulletAfterHeading: true,
           semanticSearchEnabled: false,
+          describeAssets: true,
+          mobileOnboarded: false,
           theme: 'system',
           timeFormat: '12h',
           dateFormat: 'mdy',
@@ -202,7 +210,7 @@ describe('SettingsProvider', () => {
   })
 
   it('an update racing the initial load wins and keeps passthrough keys', async () => {
-    stored = { editorMarkdownSyntax: 'focus', futureKey: true }
+    stored = { editorMarkdownSyntax: 'hide', futureKey: true }
     gateLoad = true
     const { result } = renderHook(() => useSettings(), { wrapper })
 
@@ -225,7 +233,11 @@ describe('SettingsProvider', () => {
         {
           editorMarkdownSyntax: 'show',
           editorSpellCheck: true,
+          editorDefaultBullet: true,
+          editorBulletAfterHeading: true,
           semanticSearchEnabled: false,
+          describeAssets: true,
+          mobileOnboarded: false,
           theme: 'system',
           timeFormat: '12h',
           dateFormat: 'mdy',
@@ -249,7 +261,7 @@ describe('SettingsProvider', () => {
 
     act(() => {
       result.current.updateSettings({ editorMarkdownSyntax: 'show' })
-      result.current.updateSettings({ editorMarkdownSyntax: 'focus' })
+      result.current.updateSettings({ editorMarkdownSyntax: 'hide' })
     })
     act(() => {
       releaseLoad()
@@ -257,9 +269,13 @@ describe('SettingsProvider', () => {
     await waitFor(() =>
       expect(saved).toEqual([
         {
-          editorMarkdownSyntax: 'focus',
+          editorMarkdownSyntax: 'hide',
           editorSpellCheck: true,
+          editorDefaultBullet: true,
+          editorBulletAfterHeading: true,
           semanticSearchEnabled: false,
+          describeAssets: true,
+          mobileOnboarded: false,
           theme: 'system',
           timeFormat: '12h',
           dateFormat: 'mdy',
@@ -272,7 +288,7 @@ describe('SettingsProvider', () => {
         },
       ]),
     )
-    expect(result.current.settings.editorMarkdownSyntax).toBe('focus')
+    expect(result.current.settings.editorMarkdownSyntax).toBe('hide')
   })
 
   it('updateSettingsWith builds each patch from the latest settings, not the closure', async () => {
@@ -419,7 +435,11 @@ describe('SettingsProvider', () => {
         {
           editorMarkdownSyntax: 'show',
           editorSpellCheck: true,
+          editorDefaultBullet: true,
+          editorBulletAfterHeading: true,
           semanticSearchEnabled: false,
+          describeAssets: true,
+          mobileOnboarded: false,
           theme: 'system',
           timeFormat: '12h',
           dateFormat: 'mdy',
@@ -456,7 +476,11 @@ describe('SettingsProvider', () => {
       {
         editorMarkdownSyntax: 'show',
         editorSpellCheck: true,
+        editorDefaultBullet: true,
+        editorBulletAfterHeading: true,
         semanticSearchEnabled: false,
+        describeAssets: true,
+        mobileOnboarded: false,
         theme: 'system',
         timeFormat: '12h',
         dateFormat: 'mdy',

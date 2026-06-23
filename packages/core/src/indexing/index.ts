@@ -20,6 +20,7 @@ export {
   type FileChange,
 } from './file-changes'
 export { setLocalWriteEcho } from './local-write-echo'
+export { subscribeIndexApplied, type IndexAppliedListener } from './index-applied'
 export {
   subscribeIndexChanges,
   applyIndexChanges,
@@ -42,6 +43,7 @@ export {
 } from './indexed-note'
 export {
   indexNote,
+  reindexNotesReferencing,
   rebuildIndex,
   reconcileIndex,
   syncIndex,
@@ -58,9 +60,12 @@ export {
   getLinkSources,
   getNote,
   getNotesByTag,
+  getOpenTasks,
+  getCompletedTasks,
   getPinnedNotes,
   searchNotes,
   suggestWikiTargets,
+  suggestTags,
   getIndexedHashes,
   listDailyNotes,
   resolveWikiTarget,
@@ -71,9 +76,12 @@ export {
   type DailyNotesRange,
   type DuplicateIdGroup,
   type NoteRow,
+  type OpenTask,
   type PinnedNote,
   type SearchHit,
+  type TagSuggestion,
 } from './queries'
+export { groupTasks, taskDateBucket, type TaskGroup, type TaskGroupKind } from './group-tasks'
 export {
   listNotes,
   listNoteTags,
@@ -84,7 +92,17 @@ export {
   type RecentNoteRow,
   type RecentNotesOptions,
 } from './note-list'
-export { rankWikiSuggestions, type WikiSuggestion } from './suggest'
+export {
+  rankWikiSuggestions,
+  mergeDateSuggestions,
+  type WikiSuggestion,
+  type GeneratedDate,
+} from './suggest'
+export {
+  generateDateSuggestions,
+  type DateSuggestion,
+  type DateSuggestionContext,
+} from './date-suggestions'
 export {
   parseHighlights,
   randomNotePath,
@@ -92,7 +110,7 @@ export {
   HIGHLIGHT_END,
   type HighlightSegment,
 } from './search'
-export { lineSnippet, previewSnippet } from './snippet'
+export { lineAt, lineSnippet, previewSnippet } from './snippet'
 export { parseSearchQuery, type ParsedSearchQuery, type SearchFilters } from './filter-query'
 export { searchWithFilters, type FilteredSearchHit } from './filtered-search'
 export {

@@ -1,17 +1,22 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { dailyPath } from '@reflect/core'
 import { usePalette } from '@/components/command-palette/palette-provider'
 import { registerKeymap } from '@/editor/keymap'
 import { APP_COMMANDS } from '@/lib/commands/app-commands'
 import { runCommand } from '@/lib/commands/registry'
+import { todayIso } from '@/lib/dates'
 import { setMenuCommandDispatch } from '@/lib/native-menu/dispatch'
 import { retryFailedEmbeddings } from '@/lib/semantic'
 import type { CommandContext } from '@/lib/commands/types'
 import { useAudioMemo } from '@/providers/audio-memo-provider'
+import { useChatSession } from '@/providers/chat-provider'
+import { useFocusedDailyDate } from '@/providers/focused-daily-provider'
 import { useGraph } from '@/providers/graph-provider'
 import { useSettings } from '@/providers/settings-provider'
 import { useShortcuts } from '@/providers/shortcuts-provider'
 import { useSidebar } from '@/providers/sidebar-provider'
 import { useTheme } from '@/providers/theme-provider'
+import { effectiveDailyDate, notePathForRoute } from './route'
 import { useRouter } from './router'
 
 /**
@@ -46,38 +51,54 @@ function isModKey(event: KeyboardEvent): boolean {
  */
 export function useAppShortcuts(): CommandContext {
   const { route, navigate, back, forward } = useRouter()
+  const focusedDailyDate = useFocusedDailyDate()
   const { resolvedTheme, setTheme } = useTheme()
   const { graph } = useGraph()
   const { openPalette, open: paletteOpen } = usePalette()
   const { openShortcuts, closeShortcuts, open: shortcutsOpen } = useShortcuts()
   const { toggleSidebar } = useSidebar()
   const { toggle: toggleAudioMemo } = useAudioMemo()
+  const { newChat } = useChatSession()
   const { updateSettings } = useSettings()
 
   // The palette is modal: app shortcuts must not navigate behind its overlay.
   // A ref keeps the listener stable across open/close renders.
   const paletteOpenRef = useRef(paletteOpen)
-  paletteOpenRef.current = paletteOpen
 
   // Same for the ⌘/ cheat-sheet, except ⌘/ itself toggles it closed.
   const shortcutsOpenRef = useRef(shortcutsOpen)
-  shortcutsOpenRef.current = shortcutsOpen
 
   // Read at run time, not captured: a command can fire long after the render
   // that created the context (palette open across an index rebuild, etc.).
   const generationRef = useRef<number | null>(graph?.generation ?? null)
-  generationRef.current = graph?.generation ?? null
   const routeRef = useRef(route)
-  routeRef.current = route
+  const focusedDailyDateRef = useRef(focusedDailyDate)
+  useEffect(() => {
+    paletteOpenRef.current = paletteOpen
+    shortcutsOpenRef.current = shortcutsOpen
+    generationRef.current = graph?.generation ?? null
+    routeRef.current = route
+    focusedDailyDateRef.current = focusedDailyDate
+  })
 
   const context = useMemo<CommandContext>(
     () => ({
       navigate,
       route: () => routeRef.current,
+      // Resolve through the focused stream day so a note-scoped command targets
+      // the same day the context sidebar shows (see `effectiveDailyDate`); off
+      // the daily views it falls back to the routed note.
+      notePath: () => {
+        const route = routeRef.current
+        const today = todayIso()
+        const daily = effectiveDailyDate(route, today, focusedDailyDateRef.current)
+        return daily !== null ? dailyPath(daily) : notePathForRoute(route, today)
+      },
       back,
       forward,
       toggleTheme: () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'),
       toggleSidebar,
+      newChat,
       toggleAudioMemo,
       generation: () => generationRef.current,
       openPalette,
@@ -98,6 +119,7 @@ export function useAppShortcuts(): CommandContext {
       openPalette,
       openShortcuts,
       toggleSidebar,
+      newChat,
       toggleAudioMemo,
       updateSettings,
     ],

@@ -37,6 +37,10 @@ function fakeSession(path: string) {
     content: () => '',
     liveContent: () => '',
     updateFrontmatter: () => true,
+    commitTaskToggle: async () => false,
+    commitTaskEdit: async () => false,
+    commitTaskRemove: async () => false,
+    commitTaskToBullet: async () => false,
     dispose: () => {},
     discard: () => {},
   }

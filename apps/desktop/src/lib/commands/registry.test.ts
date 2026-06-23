@@ -10,10 +10,12 @@ function fakeContext(overrides?: Partial<CommandContext>): CommandContext {
   return {
     navigate: vi.fn(),
     route: () => ({ kind: 'today' }),
+    notePath: () => null,
     back: vi.fn(),
     forward: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
+    newChat: vi.fn(),
     toggleAudioMemo: vi.fn(),
     generation: () => 1,
     openPalette: vi.fn(),

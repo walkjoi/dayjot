@@ -140,15 +140,19 @@ export function ChatProvider({ graph, children }: ChatProviderProps): ReactEleme
   // Read at call time, not captured: send() can fire long after the render
   // that created it.
   const turnsRef = useRef(turns)
-  turnsRef.current = turns
   const attachmentsRef = useRef(attachments)
-  attachmentsRef.current = attachments
   const activeModelRef = useRef<AiProviderConfig | null>(activeModel)
-  activeModelRef.current = activeModel
   const conversationIdRef = useRef(conversationId)
-  conversationIdRef.current = conversationId
   const generationRef = useRef<number | null>(indexGeneration)
-  generationRef.current = indexGeneration
+  const semanticSearchEnabledRef = useRef(settings.semanticSearchEnabled)
+  useEffect(() => {
+    turnsRef.current = turns
+    attachmentsRef.current = attachments
+    activeModelRef.current = activeModel
+    conversationIdRef.current = conversationId
+    generationRef.current = indexGeneration
+    semanticSearchEnabledRef.current = settings.semanticSearchEnabled
+  })
 
   // The in-flight send, tracked synchronously — the no-concurrent-sends
   // guard can't ride on rendered state, which only reflects a send after
@@ -296,7 +300,12 @@ export function ChatProvider({ graph, children }: ChatProviderProps): ReactEleme
         updateTurn((turn) => ({ ...turn, parts: appendEvent(turn.parts, event) }))
       }
 
-      setTurns((current) => [...current, localTurn])
+      // Snapshot the turn as first rendered. This add runs at React's next
+      // flush, by which point `localTurn` may already point at folded state;
+      // closing over the mutable binding would add that folded turn and then
+      // re-fold it through updateTurn, duplicating appended parts.
+      const initialTurn = localTurn
+      setTurns((current) => [...current, initialTurn])
       // The user half lands immediately, so a crash mid-stream keeps the
       // question (restored with an empty response, which the model history
       // derivation already omits).
@@ -331,6 +340,7 @@ export function ChatProvider({ graph, children }: ChatProviderProps): ReactEleme
           fetchFn: providerFetch,
           messages,
           today: todayIso(),
+          semanticSearchEnabled: semanticSearchEnabledRef.current,
           context,
           signal: controller.signal,
         })
@@ -341,9 +351,9 @@ export function ChatProvider({ graph, children }: ChatProviderProps): ReactEleme
           if (event.type === 'complete' || event.type === 'aborted' || event.type === 'error') {
             updateTurn((turn) => ({ ...turn, responseMessages: event.messages }))
           }
-          if (event.type !== 'complete') {
-            applyEvent(event)
-          }
+          // `complete` is folded too: appendEvent backstops a reply-less turn
+          // with a notice, so the chips never settle into silence.
+          applyEvent(event)
         }
       } catch (cause) {
         // streamChat normalizes its own failures; this guards the seams around

@@ -17,6 +17,7 @@
  * A malformed token (impossible date, empty value) stays search text — typing
  * never makes results vanish behind a filter the user didn't form yet.
  */
+import { isCalendarDate } from '@reflect/utils'
 import { foldTag } from '../markdown'
 
 export interface SearchFilters {
@@ -62,18 +63,13 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
  */
 const TAG_TOKEN_RE = /^#\p{L}[\p{L}\p{N}/_-]*$/u
 
-function isCalendarDate(value: string): boolean {
-  const [year, month, day] = value.split('-').map(Number)
-  if (month < 1 || month > 12) {
-    return false
-  }
-  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
-  return day >= 1 && day <= daysInMonth
-}
-
 /** Epoch ms of the **local** start of `YYYY-MM-DD` (+`days`). */
 function localDayStartMs(date: string, days = 0): number {
-  const [year, month, day] = date.split('-').map(Number)
+  // Callers gate on ISO_DATE_RE first, so the split always yields three parts.
+  const parts = date.split('-').map(Number)
+  const year = parts[0]!
+  const month = parts[1]!
+  const day = parts[2]!
   return new Date(year, month - 1, day + days).getTime()
 }
 

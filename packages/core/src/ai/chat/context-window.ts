@@ -5,9 +5,9 @@ import type { ModelMessage } from 'ai'
  * a model's context budget before each turn. Two degradation stages, both
  * deterministic and free (no summarization calls on the user's BYOK dime):
  *
- * 1. **Elide** old tool results — a single `read_note` result can be 24k
- *    chars, so dropping whole turns first would evict real conversation to
- *    keep note dumps the model has already digested.
+ * 1. **Elide** old tool results — a single `read_notes` result can be tens of
+ *    thousands of chars, so dropping whole turns first would evict real
+ *    conversation to keep note dumps the model has already digested.
  * 2. **Drop** the oldest turns whole. Trimming happens only at turn
  *    boundaries (a segment starts at each `user` message), so a tool call
  *    can never be split from its result — providers reject dangling pairs.
@@ -122,11 +122,15 @@ export function fitToContextWindow(
   const kept: ModelMessage[][] = []
   let used = 0
   for (let index = elided.length - 1; index >= 0; index -= 1) {
-    const cost = totalTokens(elided[index])
+    const segment = elided[index]
+    if (segment === undefined) {
+      continue
+    }
+    const cost = totalTokens(segment)
     if (kept.length > 0 && used + cost > budget) {
       break
     }
-    kept.unshift(elided[index])
+    kept.unshift(segment)
     used += cost
   }
   return kept.flat()

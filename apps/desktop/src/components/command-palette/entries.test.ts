@@ -34,6 +34,27 @@ function sections(
 }
 
 describe('buildPaletteSections', () => {
+  it('appends generated date suggestions after real note matches', () => {
+    const generated: WikiSuggestion = {
+      target: '2020-01-06',
+      path: null,
+      title: '2020-01-06',
+      alias: null,
+      date: '2020-01-06',
+      generated: { phrase: 'This Monday' },
+    }
+    const result = sections({
+      query: 'mon',
+      // Core returns dates first; the palette must push them behind real notes.
+      suggestions: [generated, suggestion('notes/monday-standup.md', 'Monday Standup')],
+    })
+    expect(result.notes.map((note) => note.path)).toEqual([
+      'notes/monday-standup.md',
+      'daily/2020-01-06.md',
+    ])
+    expect(result.notes.find((note) => note.date === '2020-01-06')?.phrase).toBe('This Monday')
+  })
+
   it('an empty query is the recall feed: suggestions only, no commands', () => {
     const result = sections({
       query: '',
@@ -69,8 +90,8 @@ describe('buildPaletteSections', () => {
       hits: [hit('notes/a.md', 'Alpha'), hit('notes/b.md', 'Beta', 'about alpha')],
     })
     expect(result.notes.map((note) => note.path)).toEqual(['notes/a.md', 'notes/b.md'])
-    expect(result.notes[0].snippet).toBeNull() // the title form won
-    expect(result.notes[1].snippet).toContain('alpha')
+    expect(result.notes[0]!.snippet).toBeNull() // the title form won
+    expect(result.notes[1]!.snippet).toContain('alpha')
   })
 
   it('a daily body hit keeps its day label in the merge', () => {
@@ -78,7 +99,7 @@ describe('buildPaletteSections', () => {
       query: 'standup',
       hits: [hit('daily/2026-06-05.md', '2026-06-05', 'standup notes', '2026-06-05')],
     })
-    expect(result.notes[0].date).toBe('2026-06-05')
+    expect(result.notes[0]!.date).toBe('2026-06-05')
   })
 
   it('a not-yet-created daily (pathless suggestion) is still jumpable', () => {
@@ -89,7 +110,13 @@ describe('buildPaletteSections', () => {
       ],
     })
     expect(result.notes).toEqual([
-      { path: 'daily/2026-08-01.md', title: '2026-08-01', date: '2026-08-01', snippet: null },
+      {
+        path: 'daily/2026-08-01.md',
+        title: '2026-08-01',
+        date: '2026-08-01',
+        snippet: null,
+        phrase: null,
+      },
     ])
   })
 
@@ -121,7 +148,7 @@ describe('buildPaletteSections', () => {
       commands: COMMANDS,
     })
     expect(result.notes.map((note) => note.path)).toEqual(['daily/2026-06-08.md', 'notes/w.md'])
-    expect(result.notes[0].date).toBe('2026-06-08')
+    expect(result.notes[0]!.date).toBe('2026-06-08')
     expect(result.commands).toEqual([])
   })
 
@@ -177,6 +204,6 @@ describe('buildPaletteSections', () => {
         },
       ],
     })
-    expect(result.notes[0].date).toBe('2026-06-09')
+    expect(result.notes[0]!.date).toBe('2026-06-09')
   })
 })

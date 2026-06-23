@@ -196,7 +196,7 @@ describe('useNoteDocument', () => {
       expect(files['notes/a.md']).toBeUndefined()
       expect(files['notes/new-title.md']).toContain('aliases:')
       expect(files['notes/new-title.md']).toContain('Old Title')
-      expect(files['notes/new-title.md'].endsWith('# New Title\n')).toBe(true)
+      expect(files['notes/new-title.md']!.endsWith('# New Title\n')).toBe(true)
     } finally {
       vi.useRealTimers()
     }
@@ -603,8 +603,9 @@ describe('useNoteDocument', () => {
   it('opens a note the editor would corrupt in protected mode and never saves it', async () => {
     vi.useFakeTimers()
     try {
-      // meowdown's converter loses setext heading text — the guard must catch it.
-      disk = 'Title\n=====\n\nbody\n'
+      // meowdown's converter mangles git conflict markers, so the guard must catch it.
+      disk =
+        '# Shared\n\n<<<<<<< this device\nedited on a\n=======\nedited on b\n>>>>>>> other device\n'
       const hook = renderHook(() => useNoteDocument('notes/tasks.md', 1))
       await act(() => vi.advanceTimersByTimeAsync(0))
       expect(hook.result.current.status).toBe('ready')

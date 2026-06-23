@@ -11,6 +11,7 @@ import { UpdateProvider } from '@/providers/update-provider'
 import { RouterProvider } from '@/routing/router'
 
 const getPinnedNotes = vi.hoisted(() => vi.fn<() => Promise<PinnedNote[]>>(async () => []))
+const revealItemInDir = vi.hoisted(() => vi.fn<(path: string) => Promise<void>>(async () => {}))
 const openRecent = vi.hoisted(() => vi.fn())
 const pickAndOpen = vi.hoisted(() => vi.fn())
 const updateSettingsWith = vi.hoisted(() =>
@@ -22,6 +23,7 @@ vi.mock('@reflect/core', async (importOriginal) => ({
   hasBridge: () => true,
   getPinnedNotes,
 }))
+vi.mock('@tauri-apps/plugin-opener', () => ({ revealItemInDir }))
 vi.mock('@/providers/graph-provider', () => ({
   useGraph: () => ({
     graph: GRAPH,
@@ -82,6 +84,7 @@ beforeEach(() => {
   audioMemo.available = true
   audioMemo.unavailableReason = null
   audioMemo.toggle.mockReset()
+  revealItemInDir.mockClear()
 })
 
 afterEach(cleanup) // `globals: false` disables testing-library's automatic cleanup
@@ -92,10 +95,12 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
   const context: CommandContext = {
     navigate,
     route: () => ({ kind: 'today' }),
+    notePath: () => null,
     back: vi.fn(),
     forward: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
+    newChat: vi.fn(),
     toggleAudioMemo: vi.fn(),
     generation: () => 1,
     openPalette,
@@ -240,6 +245,24 @@ describe('Sidebar', () => {
     await userEvent.click(view.getByRole('button', { name: /Notes/ }))
     await userEvent.click(view.getByRole('menuitem', { name: /open another graph/i }))
     expect(pickAndOpen).toHaveBeenCalled()
+  })
+
+  it('the graph footer opens user settings from the graph menu', async () => {
+    const { view, navigate } = renderSidebar()
+
+    await userEvent.click(view.getByRole('button', { name: /Notes/ }))
+    await userEvent.click(view.getByRole('menuitem', { name: /user settings/i }))
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith({ kind: 'settings' }))
+  })
+
+  it('the graph footer opens the current graph in the system file manager', async () => {
+    const { view } = renderSidebar()
+
+    await userEvent.click(view.getByRole('button', { name: /Notes/ }))
+    await userEvent.click(view.getByRole('menuitem', { name: /reveal graph in finder/i }))
+
+    expect(revealItemInDir).toHaveBeenCalledWith('/notes')
   })
 
   it('the graph footer recolors the current graph', async () => {

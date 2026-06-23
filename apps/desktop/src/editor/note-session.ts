@@ -1,9 +1,14 @@
 import {
+  editTaskLine,
   errorMessage,
   isAppError,
+  removeTaskLine,
   splitFrontmatter,
+  taskLineToBullet,
+  toggleTaskMarker,
   upsertFrontmatter,
   type GistFrontmatter,
+  type TaskMarker,
 } from '@reflect/core'
 import type { RoundTripFidelity } from './roundtrip'
 
@@ -109,7 +114,7 @@ export interface NoteSessionOptions {
    * (including "load theirs"), or a landed save. `saved` is the only
    * user-driven origin — the title-rename tracker (Plan 07b) keys off it.
    */
-  onContent?: (content: string, origin: NoteContentOrigin) => void
+  onContent?: ((content: string, origin: NoteContentOrigin) => void) | undefined
   /**
    * Push content into the live editor (external reload / "load theirs"). The
    * editor's change handler may fire synchronously during this call; the
@@ -123,7 +128,7 @@ export interface NoteSessionOptions {
    * only to the initial load: a note deleted mid-session still reconciles to
    * a no-op rather than silently emptying the editor.
    */
-  createIfMissing?: boolean
+  createIfMissing?: boolean | undefined
   /**
    * Markdown to seed a **missing** note's buffer with (only meaningful with
    * `createIfMissing`) — the new-note title template. The seed is adopted as
@@ -132,7 +137,7 @@ export interface NoteSessionOptions {
    * rename tracker baselines on the real (empty) disk content, so the first
    * authored title stays a birth, not a rename.
    */
-  missingSeed?: string
+  missingSeed?: string | undefined
   saveDebounceMs?: number
 }
 
@@ -160,32 +165,40 @@ export interface FrontmatterPatch {
   private?: boolean
   /**
    * The published GitHub Gist block (id, url, file, hash of the published
-   * body) — written whole after every publish. Publishing is set-only in the
-   * first wave; there is no unpublish, so no delete encoding either.
+   * body) — written whole after every publish. `false` removes the block when
+   * the user unpublishes the link.
    */
-  gist?: GistFrontmatter
+  gist?: GistFrontmatter | false
 }
 
-/** Translate the typed patch into the YAML write (`undefined` deletes a key). */
-function yamlPatch(patch: FrontmatterPatch): Record<string, unknown> {
+/**
+ * Translate the typed patch into the YAML write (`undefined` deletes a key).
+ * Exported so the disk-fallback write (`commitNoteFrontmatter`) encodes a flag
+ * byte-for-byte the same way the live session does — one translation, no drift.
+ */
+export function frontmatterPatchToYaml(patch: FrontmatterPatch): Record<string, unknown> {
   const yaml: Record<string, unknown> = {}
   if (patch.aliases !== undefined) {
-    yaml.aliases = patch.aliases
+    yaml['aliases'] = patch.aliases
   }
   if (patch.pinned !== undefined) {
-    yaml.pinned = patch.pinned === false ? undefined : patch.pinned
+    yaml['pinned'] = patch.pinned === false ? undefined : patch.pinned
   }
   if (patch.private !== undefined) {
-    yaml.private = patch.private === false ? undefined : true
+    yaml['private'] = patch.private === false ? undefined : true
   }
   if (patch.gist !== undefined) {
-    // Spelled out key-by-key so the YAML block's shape (and key order) is
-    // this module's contract, not whatever object the caller happened to hold.
-    yaml.gist = {
-      id: patch.gist.id,
-      url: patch.gist.url,
-      file: patch.gist.file,
-      hash: patch.gist.hash,
+    if (patch.gist === false) {
+      yaml['gist'] = undefined
+    } else {
+      // Spelled out key-by-key so the YAML block's shape (and key order) is
+      // this module's contract, not whatever object the caller happened to hold.
+      yaml['gist'] = {
+        id: patch.gist.id,
+        url: patch.gist.url,
+        file: patch.gist.file,
+        hash: patch.gist.hash,
+      }
     }
   }
   return yaml
@@ -251,6 +264,41 @@ export interface NoteSession {
    * resolution instead (the rename alias), use `updateFrontmatter`.
    */
   commitFrontmatter: (patch: FrontmatterPatch) => Promise<boolean>
+  /**
+   * Toggle a GFM checkbox in the body from the Tasks view (Plan 18), applied to
+   * the live buffer so unsaved edits survive, then flushed now. The caller routes
+   * here whenever the note is open — the buffer is read synchronously, so there
+   * is no read/write race with the editor. Returns false when the session can't
+   * take it (loading, protected, disposed, or a parked conflict) so the caller
+   * refuses rather than clobber the buffer, and propagates `TaskStaleError` when
+   * the marker can't be located, like the disk path. An open note's toggle rides
+   * the editor, so a normalizing-fidelity note normalizes like any edit (an
+   * exact-fidelity note stays byte-identical apart from the marker).
+   */
+  commitTaskToggle: (task: TaskMarker) => Promise<boolean>
+  /**
+   * Replace a task's text from the inline Tasks editor (Plan 18): rewrites the
+   * marker's content line in the live buffer (preserving the marker and so the
+   * checked state), reflects it in the open editor, and flushes now. Same gating,
+   * `false`-when-busy, transactional revert, and `TaskStaleError` propagation as
+   * {@link commitTaskToggle}. `content` is one line of markdown.
+   */
+  commitTaskEdit: (task: TaskMarker, content: string) => Promise<boolean>
+  /**
+   * Delete a task's whole line from the Tasks view (Plan 18) — the ⌫/⌘⌫ path.
+   * Removes the physical line from the live buffer and flushes now; same gating,
+   * `false`-when-busy, transactional revert, and `TaskStaleError` propagation as
+   * {@link commitTaskToggle}.
+   */
+  commitTaskRemove: (task: TaskMarker) => Promise<boolean>
+  /**
+   * Demote a task to a plain bullet from the Tasks view — the "Convert to bullet"
+   * path (Plan 18 follow-up). Strips just the marker from the line in the live
+   * buffer (keeping its content) so the item leaves the Tasks projection while
+   * staying in the note, then flushes now; same gating, `false`-when-busy,
+   * transactional revert, and `TaskStaleError` propagation as {@link commitTaskToggle}.
+   */
+  commitTaskToBullet: (task: TaskMarker) => Promise<boolean>
   /** Flush pending edits and detach: no further snapshots are emitted. */
   dispose: () => void
   /**
@@ -608,7 +656,7 @@ export function createNoteSession(options: NoteSessionOptions): NoteSession {
     if (disposed || isProtected || status !== 'ready') {
       return false
     }
-    header = splitDoc(upsertFrontmatter(header + buffer, yamlPatch(patch))).header
+    header = splitDoc(upsertFrontmatter(header + buffer, frontmatterPatchToYaml(patch))).header
     dirty = header + buffer !== disk
     emit()
     if (dirty) {
@@ -618,6 +666,13 @@ export function createNoteSession(options: NoteSessionOptions): NoteSession {
   }
 
   async function commitFrontmatter(patch: FrontmatterPatch): Promise<boolean> {
+    // No write channel (no graph generation yet) means the patch can't land —
+    // say so, rather than riding `updateFrontmatter`'s in-memory success while
+    // `save()` silently no-ops. A `true` here would let publish/pin/private
+    // skip their disk fallback and treat an unwritten flag as persisted.
+    if (io.write === null) {
+      return false
+    }
     if (!updateFrontmatter(patch)) {
       return false
     }
@@ -630,16 +685,73 @@ export function createNoteSession(options: NoteSessionOptions): NoteSession {
     // content and write it through. The park refreshes in place, so "load
     // theirs" adopts the patched bytes, and recording the write in `disk`
     // makes the watcher's echo a recognized no-op.
-    if (io.write !== null) {
-      const patched = upsertFrontmatter(conflict, yamlPatch(patch))
-      if (patched !== conflict) {
-        await io.write(path, patched)
-        conflict = patched
-        disk = patched
-        emit()
-      }
+    const patched = upsertFrontmatter(conflict, frontmatterPatchToYaml(patch))
+    if (patched !== conflict) {
+      await io.write(path, patched)
+      conflict = patched
+      disk = patched
+      emit()
     }
     return true
+  }
+
+  /**
+   * Apply a Tasks-view body edit (toggle / edit / delete, Plan 18) transactionally:
+   * `transform` rewrites the live document — header plus the unsaved buffer, so
+   * concurrent editor edits survive — then we land it now so the Tasks view
+   * refreshes promptly. Returns false when the session can't safely take a body
+   * edit (no write channel, disposed, protected/read-only, still loading, or a
+   * parked conflict) so the caller refuses rather than clobber the buffer via disk.
+   * `transform` runs before any mutation, so a `TaskStaleError` (the marker can't
+   * be located) propagates with nothing changed. And the write is all-or-nothing:
+   * a failed flush reverts the in-memory edit so the editor and the Tasks list
+   * can't diverge, then re-throws the failure.
+   */
+  async function commitBodyEdit(transform: (full: string) => string): Promise<boolean> {
+    if (io.write === null || disposed || isProtected || status !== 'ready' || conflict !== null) {
+      return false
+    }
+    const previousHeader = header
+    const previousBuffer = buffer
+    const doc = splitDoc(transform(header + buffer))
+    header = doc.header
+    buffer = doc.body
+    applyToEditor(doc.body) // the open editor shows the edited line
+    dirty = header + buffer !== disk
+    // A no-op edit (transform changed nothing) writes nothing, so a *prior*
+    // surfaced save error must not be mistaken for this edit's failure.
+    const shouldPersist = dirty
+    emit()
+    await flush()
+    // `flush()` resolves even when the write failed (captured in `error`, not
+    // thrown). Revert and surface the failure: it persists, or nothing changes.
+    if (shouldPersist && error !== null) {
+      const message = error
+      header = previousHeader
+      buffer = previousBuffer
+      applyToEditor(previousBuffer)
+      dirty = header + buffer !== disk
+      error = null
+      emit()
+      throw new Error(message)
+    }
+    return true
+  }
+
+  function commitTaskToggle(task: TaskMarker): Promise<boolean> {
+    return commitBodyEdit((full) => toggleTaskMarker(full, task).source)
+  }
+
+  function commitTaskEdit(task: TaskMarker, content: string): Promise<boolean> {
+    return commitBodyEdit((full) => editTaskLine(full, task, content))
+  }
+
+  function commitTaskRemove(task: TaskMarker): Promise<boolean> {
+    return commitBodyEdit((full) => removeTaskLine(full, task))
+  }
+
+  function commitTaskToBullet(task: TaskMarker): Promise<boolean> {
+    return commitBodyEdit((full) => taskLineToBullet(full, task))
   }
 
   function dispose(): void {
@@ -676,6 +788,10 @@ export function createNoteSession(options: NoteSessionOptions): NoteSession {
     liveContent: () => (status === 'ready' ? header + buffer : null),
     updateFrontmatter,
     commitFrontmatter,
+    commitTaskToggle,
+    commitTaskEdit,
+    commitTaskRemove,
+    commitTaskToBullet,
     dispose,
     discard,
   }

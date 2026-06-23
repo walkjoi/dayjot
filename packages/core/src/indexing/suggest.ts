@@ -6,6 +6,21 @@
  * lives here where it can be unit-tested without a database.
  */
 
+import { foldKey } from '../markdown/keys'
+import type { DateSuggestion } from './date-suggestions'
+
+/**
+ * Marks a suggestion the date generator synthesised from a fuzzy query and
+ * carries its menu label. The presence of this object — not a bare optional
+ * field — is the explicit discriminator hosts branch on (suppress the "Create"
+ * row, trail real notes in the palette); the `phrase` can never drift onto a
+ * non-generated row.
+ */
+export interface GeneratedDate {
+  /** Human label for the menu ("3 days ago", "Next Friday"). */
+  phrase: string
+}
+
 /** A `[[` autocomplete candidate. */
 export interface WikiSuggestion {
   /** What `[[…]]` should contain when chosen (the canonical title, or an ISO date). */
@@ -18,6 +33,8 @@ export interface WikiSuggestion {
   alias: string | null
   /** Set on daily-note suggestions. */
   date: string | null
+  /** Set only on rows the date generator synthesised; see {@link GeneratedDate}. */
+  generated?: GeneratedDate
 }
 
 /** One `notes` row considered for suggestion (a title match or recency fill). */
@@ -112,4 +129,63 @@ export function rankWikiSuggestions(
     }
   }
   return result
+}
+
+/**
+ * Fold generated date suggestions into the ranked index results for the `[[`
+ * menu. Dates lead the list — except an exact title/alias match keeps the very
+ * top slot, the way V1 lets a note literally titled "Today" outrank the
+ * generated *Today*. When a generated day already exists as an indexed daily,
+ * that real row is reused (so the link resolves to the existing file) but
+ * carries the phrase, and a day never appears twice.
+ *
+ * Pure so the ordering policy is unit-testable without a database; the only
+ * caller is {@link suggestWikiTargets}.
+ */
+export function mergeDateSuggestions(
+  ranked: WikiSuggestion[],
+  dates: readonly DateSuggestion[],
+  options: { key: string; limit: number },
+): WikiSuggestion[] {
+  if (dates.length === 0) {
+    return ranked.slice(0, options.limit)
+  }
+  const rankedByDate = new Map<string, WikiSuggestion>()
+  for (const suggestion of ranked) {
+    if (suggestion.date !== null) {
+      rankedByDate.set(suggestion.date, suggestion)
+    }
+  }
+
+  const reused = new Set<WikiSuggestion>()
+  const dateRows: WikiSuggestion[] = dates.map(({ date, phrase }) => {
+    // A bare ISO query has no friendlier phrase, so it stays a plain daily (no
+    // `generated` marker) and behaves like an existing daily, not a synthesised one.
+    const generated = phrase === null ? undefined : { phrase }
+    const existing = rankedByDate.get(date)
+    if (existing !== undefined) {
+      reused.add(existing)
+      return generated === undefined ? existing : { ...existing, generated }
+    }
+    return {
+      target: date,
+      path: null,
+      title: date,
+      alias: null,
+      date,
+      ...(generated === undefined ? {} : { generated }),
+    }
+  })
+
+  const rest = ranked.filter((suggestion) => !reused.has(suggestion))
+  const exactIndex = rest.findIndex(
+    (suggestion) =>
+      foldKey(suggestion.target) === options.key ||
+      (suggestion.alias !== null && foldKey(suggestion.alias) === options.key),
+  )
+  const exact = exactIndex >= 0 ? rest[exactIndex] : undefined
+  const ordered = exact
+    ? [exact, ...dateRows, ...rest.filter((_, index) => index !== exactIndex)]
+    : [...dateRows, ...rest]
+  return ordered.slice(0, options.limit)
 }

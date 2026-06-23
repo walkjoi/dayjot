@@ -65,8 +65,17 @@ export const gistFrontmatterSchema = z.object({
    * one on the next publish.
    */
   id: z.coerce.string(),
-  /** The gist's html url — what publishing copies to the clipboard. */
-  url: z.string(),
+  /**
+   * The gist's html url — what publishing copies to the clipboard.
+   * Validated as https-only: only GitHub Gist URLs are valid here and
+   * `openUrl()` is called directly on this value; non-http(s) schemes
+   * (file://, javascript:, etc.) are rejected so a crafted frontmatter
+   * cannot open arbitrary resources.
+   */
+  url: z.string().refine(
+    (value) => value.startsWith('https://') || value.startsWith('http://'),
+    { message: 'gist url must be an http(s) url' },
+  ),
   /** The gist filename the body was last published under. */
   file: z.string(),
   /** {@link gistBodyHash} of the body as last published (coerced like `id`). */
@@ -80,7 +89,7 @@ export type GistFrontmatter = z.infer<typeof gistFrontmatterSchema>
  * rather than failing the whole parse and making a note unreadable.
  */
 export const frontmatterSchema = z
-  .object({
+  .looseObject({
     /** Reserved stable id. Not auto-written in the first wave (identity = path). */
     id: z.string().optional().catch(undefined),
     aliases: z.array(z.string()).catch([]).default([]),
@@ -99,7 +108,6 @@ export const frontmatterSchema = z
      */
     gist: gistFrontmatterSchema.optional().catch(undefined),
   })
-  .passthrough()
 export type Frontmatter = z.infer<typeof frontmatterSchema>
 
 /** Is the note pinned at all? Never truthiness — `pinned: 0` is order 0, pinned. */
@@ -117,7 +125,7 @@ export interface WikiLink extends Span {
   /** The link target as written (pre-resolution), trimmed. */
   target: string
   /** Display alias after `|`, if present. */
-  alias?: string
+  alias?: string | undefined
 }
 
 /** A standard markdown link or autolink `[text](href)`. */
@@ -125,7 +133,7 @@ export interface MarkdownLink extends Span {
   href: string
   text: string
   /** Host for external `http(s)` links, else undefined. */
-  domain?: string
+  domain?: string | undefined
 }
 
 /** An ATX or setext heading. */
@@ -142,26 +150,70 @@ export interface AssetRef extends Span {
   path: string
 }
 
-/** Version of the extraction contract; bump on breaking shape changes. */
-export const PARSED_NOTE_VERSION = 1
+/**
+ * The write-back coordinates of one task's checkbox: where its marker sits and
+ * what its line looked like. Carried from the index to the toggle ({@link
+ * toggleTaskMarker}); `raw` is the staleness guard that lets the toggle relocate
+ * the marker — or refuse — when the file drifted under it. {@link ParsedTask}
+ * extends this with the rendered text and checked state.
+ */
+export interface TaskMarker {
+  /**
+   * Character offset of the marker's `[` in the **original** file (UTF-16 code
+   * units, the unit Lezer reports — never UTF-8 bytes). The toggle splices the
+   * three marker characters here after re-confirming {@link raw}.
+   */
+  markerOffset: number
+  /**
+   * Exact source of the marker's physical line — the write-back staleness guard.
+   * Begins with the three-character marker, so `raw.slice(0, 3)` is `[ ]`/`[x]`.
+   */
+  raw: string
+}
+
+/**
+ * A GFM checkbox item (`- [ ] text` / `- [x] text`) — the unit the Tasks view
+ * (Plan 18) projects across the graph. Every checkbox is a task; there is no
+ * invented syntax, so the files stay meaningful in any markdown tool.
+ */
+export interface ParsedTask extends TaskMarker {
+  /** Inline text of the item's marker line, markdown stripped, for display + search. */
+  text: string
+  /** `[x]`/`[X]` → true, `[ ]` → false. */
+  checked: boolean
+  /**
+   * The task's explicit due date: the first calendar-valid `[[YYYY-MM-DD]]` link
+   * inside the item, or null. This is V1's "scheduling is association" mechanism —
+   * a date link *in the task* is its due date, distinct from (and overriding) the
+   * source note's own daily date. The Tasks view buckets Overdue strictly off this
+   * (a bare task in a past daily note is Current, not Overdue — Plan 18 / V1).
+   */
+  dueDate: string | null
+}
+
+/** Version of the extraction contract; bump on breaking shape changes.
+ * 1 — Plan 03 baseline · 2 — `tasks: ParsedTask[]` (with `dueDate`) added (Plan 18). */
+export const PARSED_NOTE_VERSION = 2
 
 /** The full parse of one note — the stable contract downstream plans depend on. */
 export interface ParsedNote {
   /** Graph-relative path; the note's identity in the first wave. */
   path: string
   /** Stable id from frontmatter, if the note carries one (else identity = path). */
-  id?: string
+  id?: string | undefined
   /** `frontmatter.title` → first H1 → filename (or the date for daily notes). */
   title: string
   frontmatter: Frontmatter
   /** Set when YAML frontmatter failed to parse; the note is still usable. */
-  frontmatterWarning?: string
+  frontmatterWarning?: string | undefined
   wikiLinks: WikiLink[]
   links: MarkdownLink[]
   /** Body `#tag` names (without the leading `#`), deduped, in document order. */
   tags: string[]
   headings: Heading[]
   assets: AssetRef[]
+  /** GFM checkbox items in document order — the Tasks projection (Plan 18). */
+  tasks: ParsedTask[]
   /** Plain-text rendering of the body for FTS (Plan 08) + AI context (Plan 10). */
   text: string
 }

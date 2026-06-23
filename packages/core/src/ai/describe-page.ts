@@ -15,6 +15,7 @@ const DESCRIBE_TIMEOUT_MS = 60_000
 
 /** Caps the prompt's selection excerpt; the model needs gist, not the article. */
 const MAX_SELECTION_CHARS = 1_000
+const MAX_CONTENT_TEXT_CHARS = 6_000
 
 export interface DescribePageRequest {
   /** The provider entry to call (the app default). */
@@ -22,16 +23,18 @@ export interface DescribePageRequest {
   /** The BYOK API key, read from the OS keychain by the caller. */
   apiKey: string
   /** Host transport (the Tauri HTTP plugin's fetch; tests pass a stub). */
-  fetchFn?: typeof fetch
+  fetchFn?: typeof fetch | undefined
   /** The captured page. */
   url: string
   title: string
   /** Text the user had selected, if any. */
-  selection?: string
+  selection?: string | undefined
+  /** Extracted full-page text, capped before it enters the provider prompt. */
+  contentText?: string | undefined
   /** Scraped meta description, if the scrape produced one. */
-  metaDescription?: string
+  metaDescription?: string | undefined
   /** Downscaled JPEG screenshot, base64 (no data-URL prefix), if captured. */
-  screenshotBase64?: string
+  screenshotBase64?: string | undefined
 }
 
 /**
@@ -84,8 +87,11 @@ function describePrompt(request: DescribePageRequest): string {
   if (request.selection) {
     lines.push(`Text the user highlighted: ${request.selection.slice(0, MAX_SELECTION_CHARS)}`)
   }
+  if (request.contentText) {
+    lines.push(`Extracted page text: ${request.contentText.slice(0, MAX_CONTENT_TEXT_CHARS)}`)
+  }
   lines.push(
-    'Base the description on the screenshot when one is attached.',
+    'Base the description on the extracted page text when present, and the screenshot when one is attached.',
     'Answer with the description only — no preamble, no markdown.',
   )
   return lines.join('\n')

@@ -1,4 +1,4 @@
-import { isAppError } from '../errors'
+import { errorMessage, isAppError } from '../errors'
 import { listFiles, readNote } from '../graph/commands'
 import { parseNote } from '../markdown'
 import {
@@ -9,6 +9,8 @@ import {
   removeFromIndex,
   setIndexMeta,
 } from './commands'
+import { assetReferencingNotePaths } from './asset-refs'
+import { gatherAssetDescriptionText } from './asset-description-text'
 import { hashContent } from './hash'
 import { buildIndexedNote, PROJECTION_VERSION, type IndexedNote } from './indexed-note'
 import { detectExternalMoves } from './move-healing'
@@ -49,15 +51,51 @@ export const PROJECTION_VERSION_KEY = 'projection_version'
  */
 export async function indexNote(
   path: string,
-  options: { generation: number; content?: string; mtime?: number },
+  options: { generation: number; content?: string | undefined; mtime?: number | undefined },
 ): Promise<void> {
   const content = options.content ?? (await readNote(path))
   const parsed = parseNote({ path, source: content })
   const fileHash = await hashContent(content)
+  const assetText = await gatherAssetDescriptionText(parsed.assets.map((asset) => asset.path))
   await applyIndexedNote(
-    buildIndexedNote(parsed, { fileHash, mtime: options.mtime ?? Date.now(), source: content }),
+    buildIndexedNote(parsed, {
+      fileHash,
+      mtime: options.mtime ?? Date.now(),
+      source: content,
+      assetText,
+    }),
     options.generation,
   )
+}
+
+/**
+ * Re-index every note referencing any of `assetPaths` (Plan 20 search
+ * integration). Asset descriptions are generated *after* their notes are
+ * indexed, so when one is written the referencing notes' search rows are stale;
+ * this folds the new description text into their FTS documents. `indexNote` is
+ * not hash-gated, so the unchanged note files re-index unconditionally. A note
+ * removed since it referenced the asset is skipped. Pinned to `generation`.
+ */
+export async function reindexNotesReferencing(
+  assetPaths: readonly string[],
+  generation: number,
+): Promise<void> {
+  const notePaths = new Set<string>()
+  for (const assetPath of assetPaths) {
+    for (const notePath of await assetReferencingNotePaths(assetPath)) {
+      notePaths.add(notePath)
+    }
+  }
+  for (const notePath of notePaths) {
+    try {
+      await indexNote(notePath, { generation })
+    } catch (cause) {
+      if (isAppError(cause) && cause.kind === 'notFound') {
+        continue // the note was removed since it referenced the asset
+      }
+      throw cause
+    }
+  }
 }
 
 /** Options for the long-running index passes. */
@@ -67,12 +105,52 @@ export interface IndexPassOptions {
   /** Aborts the pass early when the active graph changes. */
   signal?: AbortSignal
   /**
+   * Called when a full rebuild cannot apply one note's projection even after
+   * retrying it outside the batch. The rebuild continues so one bad projection
+   * cannot leave the whole cache empty after `index_clear`. If omitted, that
+   * final single-note failure is thrown.
+   */
+  onSkippedNote?: (note: SkippedIndexedNote) => void
+  /**
    * Called after id-based move healing relocates a note's rows (Plan 17): an
    * external rename observed after the fact. The desktop layer uses it to
    * carry live sessions and rewrite routes, exactly as for an in-app rename
    * — without it, history entries keep pointing at the dead path.
    */
   onMoved?: (from: string, to: string) => void
+}
+
+/** One note omitted from a rebuild because its projection could not be written. */
+export interface SkippedIndexedNote {
+  /** Graph-relative markdown path. */
+  path: string
+  /** Displayable reason from the failed write. */
+  message: string
+}
+
+async function applyRebuildBatch(
+  notes: IndexedNote[],
+  generation: number,
+  onSkippedNote?: (note: SkippedIndexedNote) => void,
+): Promise<void> {
+  if (notes.length === 0) {
+    return
+  }
+  try {
+    await applyIndexedNotes(notes, generation)
+    return
+  } catch (cause) {
+    if (notes.length === 1) {
+      if (onSkippedNote === undefined) {
+        throw cause
+      }
+      onSkippedNote({ path: notes[0]!.path, message: errorMessage(cause) })
+      return
+    }
+    const midpoint = Math.ceil(notes.length / 2)
+    await applyRebuildBatch(notes.slice(0, midpoint), generation, onSkippedNote)
+    await applyRebuildBatch(notes.slice(midpoint), generation, onSkippedNote)
+  }
 }
 
 /**
@@ -83,7 +161,7 @@ export interface IndexPassOptions {
  * empty or half-populated.
  */
 export async function rebuildIndex(options: IndexPassOptions): Promise<void> {
-  const { generation } = options
+  const { generation, onSkippedNote } = options
   if (options.signal?.aborted) {
     return // don't wipe the current index for an already-cancelled pass
   }
@@ -94,13 +172,14 @@ export async function rebuildIndex(options: IndexPassOptions): Promise<void> {
     const content = await readNote(file.path)
     const parsed = parseNote({ path: file.path, source: content })
     const fileHash = await hashContent(content)
-    batch.push(buildIndexedNote(parsed, { fileHash, mtime: file.modifiedMs, source: content }))
+    const assetText = await gatherAssetDescriptionText(parsed.assets.map((asset) => asset.path))
+    batch.push(buildIndexedNote(parsed, { fileHash, mtime: file.modifiedMs, source: content, assetText }))
     if (batch.length >= REBUILD_BATCH_SIZE) {
-      await applyIndexedNotes(batch, generation)
+      await applyRebuildBatch(batch, generation, onSkippedNote)
       batch = []
     }
   }
-  await applyIndexedNotes(batch, generation)
+  await applyRebuildBatch(batch, generation, onSkippedNote)
   // The rows now match the current projection — stamp it so `syncIndex` can
   // reconcile cheaply from here on. A superseded pass stamps into a stale
   // generation, which Rust drops: the next open then rebuilds again, which is
@@ -208,8 +287,9 @@ export async function reconcileIndex(options: IndexPassOptions): Promise<void> {
       return // re-check after the awaits — don't write for a superseded pass
     }
     const parsed = parseNote({ path: file.path, source: content })
+    const assetText = await gatherAssetDescriptionText(parsed.assets.map((asset) => asset.path))
     await applyIndexedNote(
-      buildIndexedNote(parsed, { fileHash, mtime: file.modifiedMs, source: content }),
+      buildIndexedNote(parsed, { fileHash, mtime: file.modifiedMs, source: content, assetText }),
       generation,
     )
   }

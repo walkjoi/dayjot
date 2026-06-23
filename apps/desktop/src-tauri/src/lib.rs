@@ -12,9 +12,11 @@
 
 mod capture;
 mod db;
+mod devtools;
 mod error;
 mod fs;
 mod git;
+mod graph_gitignore;
 mod quit;
 mod recents;
 mod secrets;
@@ -106,7 +108,10 @@ pub fn run() {
     // in tauri.conf.json (`plugins.updater`), and `process` provides the
     // post-install relaunch. Mobile updates go through the app stores.
     // Window-state restore is likewise meaningless on mobile (one fullscreen
-    // webview, no window frames to remember).
+    // webview, no window frames to remember). The main window starts hidden
+    // (`visible: false` in tauri.conf.json) so this plugin can restore its
+    // geometry before first paint — avoiding a visible jump — and then reveal
+    // it; mobile shows the window itself in the setup hook below.
     #[cfg(desktop)]
     let builder = builder
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -119,10 +124,17 @@ pub fn run() {
     #[cfg(mobile)]
     let builder = builder.plugin(tauri_plugin_keyboard::init());
 
-    // TEMPORARY (Plan 19 spike A): probe the native capabilities on startup;
-    // verdicts land in the dev console as `[plan19-spike]` lines.
+    // The main window starts hidden (`visible: false`); on desktop the
+    // window-state plugin reveals it after restoring geometry, but mobile has
+    // no such plugin, so show it here or the UI would never appear.
+    //
+    // (Also runs the TEMPORARY Plan 19 spike-A capability probe — delete that
+    // line with the spike, but keep the window show.)
     #[cfg(mobile)]
     let builder = builder.setup(|app| {
+        if let Some(window) = app.get_webview_window("main") {
+            window.show()?;
+        }
         spike_mobile::run_self_check(app.handle());
         Ok(())
     });
@@ -143,6 +155,7 @@ pub fn run() {
             fs::note_write,
             fs::asset_write,
             fs::asset_read,
+            fs::asset_open,
             fs::dir_list,
             fs::note_exists,
             fs::note_delete,
@@ -188,6 +201,7 @@ pub fn run() {
             git::git_merge_remote,
             git::git_push,
             quit::quit_confirm,
+            devtools::toggle_devtools,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

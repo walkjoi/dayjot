@@ -42,7 +42,11 @@ export function buildAutocompleteEntries(
       foldKey(suggestion.target) === key ||
       (suggestion.alias !== null && foldKey(suggestion.alias) === key),
   )
-  if (!resolvesAsTyped) {
+  // A generated date suggestion means the query reads as a date — "3 days ago",
+  // "next friday" — so offering to create a note with that literal title would
+  // be noise.
+  const hasDateSuggestion = suggestions.some((suggestion) => suggestion.generated !== undefined)
+  if (!resolvesAsTyped && !hasDateSuggestion) {
     entries.push({ kind: 'create', title })
   }
   return entries

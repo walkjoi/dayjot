@@ -3,12 +3,16 @@ import { parseFrontmatter, splitFrontmatter } from './frontmatter'
 import { parseBody } from './grammar'
 import { foldTag } from './keys'
 import { parseInlineLink } from './link-syntax'
+import { buildPlainText, plainTextOfRange, unescapeMarkdownText } from './plain-text'
+import { normalizeWikiTarget } from './resolve'
+import { parseTaskMarker } from './task-marker'
 import type {
   AssetRef,
   Frontmatter,
   Heading,
   MarkdownLink,
   ParsedNote,
+  ParsedTask,
   Span,
   WikiLink,
 } from './model'
@@ -37,8 +41,6 @@ const TAG_NAME_RE = /^\p{L}[\p{L}\p{N}/_-]*$/u
 export function isTagName(value: string): boolean {
   return TAG_NAME_RE.test(value)
 }
-// Inner of a wiki link, for plain-text rendering.
-const WIKI_INNER_RE = /\[\[([^\]\n]*)\]\]/g
 
 /** Names whose source range is markup to drop from plain text. */
 function isSyntaxNode(name: string): boolean {
@@ -56,6 +58,10 @@ function isTagExcludedNode(name: string): boolean {
   )
 }
 
+function isLiteralPlainTextNode(name: string): boolean {
+  return name === 'InlineCode' || name === 'FencedCode' || name === 'CodeBlock'
+}
+
 function headingLevelOf(name: string): number | null {
   const match = /^(?:ATXHeading|SetextHeading)([1-6])$/.exec(name)
   return match ? Number(match[1]) : null
@@ -64,12 +70,10 @@ function headingLevelOf(name: string): number | null {
 function cleanHeadingText(raw: string): string {
   const newline = raw.indexOf('\n')
   if (newline !== -1) {
-    return raw.slice(0, newline).trim() // setext: heading text is the first line
+    return unescapeMarkdownText(raw.slice(0, newline).trim()) // setext: heading text is the first line
   }
-  return raw
-    .replace(/^#{1,6}[ \t]*/, '')
-    .replace(/[ \t]*#*[ \t]*$/, '')
-    .trim()
+  const text = raw.replace(/^#{1,6}[ \t]*/, '').replace(/[ \t]*#*[ \t]*$/, '').trim()
+  return unescapeMarkdownText(text)
 }
 
 /** GitHub-style anchor slug. */
@@ -100,6 +104,40 @@ function isAssetHref(href: string): boolean {
   return /(^|\/)assets\//.test(href)
 }
 
+/**
+ * Canonicalize an asset href to the on-disk path. A note body may write the same
+ * file many ways — percent-encoded (`assets/my%20photo.png`), `./`-prefixed
+ * (`./assets/a.png`), with `..`/empty segments — while the file on disk (and the
+ * watcher / `dir_list` / `readAsset` paths) is the collapsed `assets/...` form.
+ * The index projection and the asset-description privacy gate key off this
+ * canonical form, so every spelling of one file collapses to one key — a private
+ * referer can't hide behind an alternate encoding *or* an alternate path shape.
+ *
+ * Decodes percent-escapes (a malformed escape keeps the raw href), then resolves
+ * `.`/`..`/empty segments. The `AssetRef` span still points at the raw body text;
+ * only the logical `path` is canonicalized.
+ */
+function decodeAssetPath(href: string): string {
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(href)
+  } catch {
+    decoded = href
+  }
+  const segments: string[] = []
+  for (const segment of decoded.split('/')) {
+    if (segment === '' || segment === '.') {
+      continue
+    }
+    if (segment === '..') {
+      segments.pop()
+      continue
+    }
+    segments.push(segment)
+  }
+  return segments.join('/')
+}
+
 function stringField(frontmatter: Frontmatter, key: string): string | undefined {
   const value = (frontmatter as Record<string, unknown>)[key]
   return typeof value === 'string' ? value : undefined
@@ -113,8 +151,9 @@ function basename(path: string): string {
 function readWikiLink(body: string, from: number, to: number, offset: number): WikiLink {
   const inner = body.slice(from + 2, to - 2)
   const pipe = inner.indexOf('|')
-  const target = (pipe === -1 ? inner : inner.slice(0, pipe)).trim()
-  const alias = pipe === -1 ? undefined : inner.slice(pipe + 1).trim() || undefined
+  const target = unescapeMarkdownText((pipe === -1 ? inner : inner.slice(0, pipe)).trim())
+  const alias =
+    pipe === -1 ? undefined : unescapeMarkdownText(inner.slice(pipe + 1).trim()) || undefined
   return { target, alias, from: from + offset, to: to + offset }
 }
 
@@ -127,22 +166,54 @@ function readLink(body: string, from: number, to: number, offset: number): Markd
   return { href, text, from: from + offset, to: to + offset, domain: hostOf(href) }
 }
 
-/** Body text minus the cut (syntax) ranges, with wiki brackets/pipes flattened. */
-function buildPlainText(body: string, cuts: Span[]): string {
-  const sorted = [...cuts].sort((a, b) => a.from - b.from)
-  let kept = ''
-  let pos = 0
-  for (const cut of sorted) {
-    if (cut.from > pos) {
-      kept += body.slice(pos, cut.from)
-    }
-    pos = Math.max(pos, cut.to)
+/**
+ * Resolve a `Task` Lezer node (the marker starts at `from`) into a
+ * {@link ParsedTask}, or `null` when the marker shape isn't a real GFM checkbox
+ * (a defensive guard against parser surprises). `text` is the marker line minus
+ * its syntax; `raw` is that physical line verbatim for the write-back guard.
+ */
+function readTask(
+  body: string,
+  range: Span,
+  bodyOffset: number,
+  cuts: Span[],
+  literalRanges: Span[],
+  wikiLinks: WikiLink[],
+): ParsedTask | null {
+  const { from, to } = range
+  const marker = parseTaskMarker(body.slice(from, from + 3))
+  if (marker === null) {
+    return null
   }
-  kept += body.slice(pos)
-  return kept
-    .replace(WIKI_INNER_RE, (_, inner: string) => inner.replace(/\|/g, ' '))
-    .replace(/\s+/g, ' ')
-    .trim()
+  const newline = body.indexOf('\n', from)
+  const lineEnd = newline === -1 ? body.length : newline
+  const markerOffset = from + bodyOffset
+  return {
+    text: plainTextOfRange(body, from, lineEnd, cuts, literalRanges),
+    raw: body.slice(from, lineEnd),
+    checked: marker.checked,
+    markerOffset,
+    dueDate: firstDueDate(wikiLinks, markerOffset, to + bodyOffset),
+  }
+}
+
+/**
+ * The task's due date: the first calendar-valid `[[YYYY-MM-DD]]` link inside the
+ * task's span `[from, to)` (file coords). `wikiLinks` are in document order, so
+ * "first" is the first such link in the item. Reuses {@link normalizeWikiTarget}
+ * so an impossible date (`2026-02-31`) is not treated as a due date — exactly the
+ * dailies the resolver recognises.
+ */
+function firstDueDate(wikiLinks: WikiLink[], from: number, to: number): string | null {
+  for (const link of wikiLinks) {
+    if (link.from >= from && link.from < to) {
+      const { date } = normalizeWikiTarget(link.target)
+      if (date !== undefined) {
+        return date
+      }
+    }
+  }
+  return null
 }
 
 function inAnyRange(index: number, ranges: Span[]): boolean {
@@ -151,11 +222,12 @@ function inAnyRange(index: number, ranges: Span[]): boolean {
 
 function collectTags(body: string, excluded: Span[], into: Map<string, string>): void {
   for (const match of body.matchAll(TAG_RE)) {
-    const hashIndex = (match.index ?? 0) + match[1].length
+    // Both groups are mandatory in TAG_RE, so a match always populates them.
+    const hashIndex = (match.index ?? 0) + match[1]!.length
     if (inAnyRange(hashIndex, excluded)) {
       continue
     }
-    const tag = match[2]
+    const tag = match[2]!
     const key = foldTag(tag)
     if (!into.has(key)) {
       into.set(key, tag) // dedupe case-insensitively, keep first-seen casing
@@ -215,6 +287,8 @@ export function parseNote(input: { path: string; source: string }): ParsedNote {
   const assets: AssetRef[] = []
   const cuts: Span[] = [] // body coords — syntax to drop from plain text
   const tagExcluded: Span[] = [] // body coords — regions that don't yield tags
+  const literalPlainText: Span[] = [] // body coords — regions that render backslashes literally
+  const taskRanges: Span[] = [] // body coords — `Task` node spans, resolved after the walk
 
   tree.iterate({
     enter: (node) => {
@@ -223,8 +297,18 @@ export function parseNote(input: { path: string; source: string }): ParsedNote {
       if (isSyntaxNode(name)) {
         cuts.push({ from, to })
       }
+      if (name === 'Task') {
+        // Resolve after the walk: the child `TaskMarker`/emphasis cuts this task
+        // needs to strip its text — and the `[[date]]` due-date link inside it —
+        // aren't collected until their own `enter`. The node span bounds the
+        // due-date search to this task.
+        taskRanges.push({ from, to })
+      }
       if (isTagExcludedNode(name)) {
         tagExcluded.push({ from, to })
+      }
+      if (isLiteralPlainTextNode(name)) {
+        literalPlainText.push({ from, to })
       }
 
       if (name === 'WikiLink') {
@@ -243,7 +327,7 @@ export function parseNote(input: { path: string; source: string }): ParsedNote {
         const link = readLink(body, from, to, bodyOffset)
         if (link) {
           if (isAssetHref(link.href)) {
-            assets.push({ path: link.href, from: link.from, to: link.to })
+            assets.push({ path: decodeAssetPath(link.href), from: link.from, to: link.to })
           } else {
             links.push(link)
           }
@@ -258,6 +342,14 @@ export function parseNote(input: { path: string; source: string }): ParsedNote {
   const tags = new Map<string, string>()
   collectTags(body, tagExcluded, tags)
 
+  const tasks: ParsedTask[] = []
+  for (const range of taskRanges) {
+    const task = readTask(body, range, bodyOffset, cuts, literalPlainText, wikiLinks)
+    if (task) {
+      tasks.push(task)
+    }
+  }
+
   return {
     path,
     id: stringField(frontmatter, 'id'),
@@ -269,6 +361,7 @@ export function parseNote(input: { path: string; source: string }): ParsedNote {
     tags: [...tags.values()],
     headings,
     assets,
-    text: buildPlainText(body, cuts),
+    tasks,
+    text: buildPlainText(body, cuts, literalPlainText),
   }
 }

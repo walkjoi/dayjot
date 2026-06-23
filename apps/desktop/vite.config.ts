@@ -1,14 +1,17 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { reactWithCompiler } from './react-compiler-plugin'
 
 // @ts-expect-error process is a Node.js global available in the Vite config context
 const host = process.env.TAURI_DEV_HOST
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react(), tailwindcss()],
+  plugins: [reactWithCompiler(), tailwindcss()],
+
+  // If the target is below Safari 17.5, Lightning CSS downlevels `light-dark()` to a broken polyfill.
+  build: { cssTarget: 'safari17.5' },
 
   resolve: {
     alias: {

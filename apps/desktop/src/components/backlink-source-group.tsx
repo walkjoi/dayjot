@@ -1,5 +1,7 @@
-import { useEffect, useState, type ReactElement } from 'react'
+import { useState, type ReactElement } from 'react'
 import { ChevronRight } from 'lucide-react'
+import type { WikilinkClickHandler } from '@meowdown/core'
+import { BacklinkSnippet } from '@/components/backlink-snippet'
 import type { BacklinkSource } from '@/lib/group-backlinks'
 
 interface BacklinkSourceGroupProps {
@@ -13,6 +15,10 @@ interface BacklinkSourceGroupProps {
   expanded: boolean
   /** Open the source note (the panel wires this to the router). */
   onOpen: (path: string) => void
+  /** Navigate a clicked `[[wiki link]]` inside a snippet to its target. */
+  onWikilinkClick: WikilinkClickHandler
+  /** Resolve `![…](…)` sources inside a snippet to displayable URLs. */
+  resolveImageUrl: (src: string) => string | undefined
 }
 
 /**
@@ -30,12 +36,20 @@ export function BacklinkSourceGroup({
   first,
   expanded: expandedOverride,
   onOpen,
+  onWikilinkClick,
+  resolveImageUrl,
 }: BacklinkSourceGroupProps): ReactElement {
   const [expanded, setExpanded] = useState(expandedOverride)
 
-  useEffect(() => {
+  // Reset to the panel-level toggle whenever it changes; the group chevron can
+  // then locally override again until the next panel toggle. Adjusting state
+  // during render (React applies it before paint, no wasted re-render) is the
+  // recommended alternative to a prop-syncing effect.
+  const [appliedOverride, setAppliedOverride] = useState(expandedOverride)
+  if (appliedOverride !== expandedOverride) {
+    setAppliedOverride(expandedOverride)
     setExpanded(expandedOverride)
-  }, [expandedOverride])
+  }
 
   return (
     <div className="group relative">
@@ -73,9 +87,12 @@ export function BacklinkSourceGroup({
       {expanded ? (
         <div className="mt-1 space-y-1">
           {source.snippets.map((snippet) => (
-            <p key={snippet.key} className="select-text text-xs text-text">
-              {snippet.text}
-            </p>
+            <BacklinkSnippet
+              key={snippet.key}
+              text={snippet.text}
+              onWikilinkClick={onWikilinkClick}
+              resolveImageUrl={resolveImageUrl}
+            />
           ))}
         </div>
       ) : null}

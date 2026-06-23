@@ -57,7 +57,7 @@ export interface NoteDocumentOptions {
    * template). Requires `createIfMissing`; see `NoteSessionOptions.missingSeed`
    * for the lazy-contract semantics.
    */
-  missingSeed?: string
+  missingSeed?: string | undefined
 }
 
 /**
@@ -79,9 +79,7 @@ export function useNoteDocument(
   /** Mirrors the snapshot's conflict for non-reactive checks (rename gating). */
   const conflictRef = useRef<string | null>(null)
   /** The pane's lifecycle policy object — one per hook instance. */
-  const bindingRef = useRef<DocumentBinding | null>(null)
-  bindingRef.current ??= createDocumentBinding()
-  const binding = bindingRef.current
+  const [binding] = useState<DocumentBinding>(() => createDocumentBinding())
 
   // Writes read the generation at write time, not at session creation, so the
   // session must NOT be keyed on `generation`: reopening the *same* graph bumps
@@ -92,6 +90,11 @@ export function useNoteDocument(
   // the unmounted pane never re-renders, its ref keeps the old generation, and
   // Rust rejects its final flush instead of landing it in the new graph.
   const generationRef = useRef(generation)
+  // Written during render, not in an effect: a debounced save or rename reads
+  // this at write time, and reopening the *same* graph bumps the generation
+  // without remounting the pane — an effect-based update would lag and let a
+  // write land with the previous generation, which Rust rejects.
+  // eslint-disable-next-line react-hooks/refs
   generationRef.current = generation
   const canWrite = generation !== null
 

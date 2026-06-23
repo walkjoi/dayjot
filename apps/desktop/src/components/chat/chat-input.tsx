@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactElement } from 'react'
 import { aiProvider, type AiProviderConfig, type ChatModelOption } from '@reflect/core'
 import { ArrowUp, Plus, Square, X } from 'lucide-react'
+import { ShortcutKeys } from '@/components/shortcut-keys'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -11,9 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { imageFilesFrom } from '@/lib/chat-attachments'
+import { keybindingFor } from '@/lib/commands/app-commands'
 import { useChatSession } from '@/providers/chat-provider'
 import { ChatHistoryMenu } from './chat-history-menu'
+
+const NEW_CHAT_BINDING = keybindingFor('chat.new')
 
 interface ModelOptionGroup {
   configId: string
@@ -187,10 +192,17 @@ export function ChatInput(): ReactElement {
           <div className="flex-1" />
           <ChatHistoryMenu />
           {turns.length > 0 && !streaming ? (
-            <Button variant="ghost" size="sm" onClick={newChat}>
-              <Plus aria-hidden data-icon="inline-start" />
-              New chat
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={newChat}>
+                  <Plus aria-hidden data-icon="inline-start" />
+                  New chat
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                New chat {NEW_CHAT_BINDING ? <ShortcutKeys binding={NEW_CHAT_BINDING} /> : null}
+              </TooltipContent>
+            </Tooltip>
           ) : null}
           {streaming ? (
             <Button size="icon-sm" aria-label="Stop" onClick={stop}>

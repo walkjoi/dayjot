@@ -21,8 +21,9 @@ export function dailyPath(date: string): string {
     throw new Error(`dailyPath expects an ISO YYYY-MM-DD date, got: ${date}`)
   }
   // Reject well-formatted but invalid dates (e.g. 2026-13-99, 2026-02-31) by
-  // round-tripping through UTC and comparing the components.
-  const [year, month, day] = date.split('-').map(Number)
+  // round-tripping through UTC and comparing the components. The regex above
+  // guarantees three numeric parts, so the destructure can't yield undefined.
+  const [year, month, day] = date.split('-').map(Number) as [number, number, number]
   const utc = new Date(Date.UTC(year, month - 1, day))
   if (
     utc.getUTCFullYear() !== year ||
@@ -47,6 +48,27 @@ export function assetPath(name: string): string {
 /** Graph-relative path to a stored recording under `audio-memos/`. */
 export function audioMemoPath(name: string): string {
   return `${AUDIO_MEMOS_DIR}/${name}`
+}
+
+/**
+ * Suffix of a managed asset-description file (Plan 20): the AI description +
+ * OCR for an asset lives beside it as `<asset>.reflect.md`.
+ */
+export const DESCRIPTION_SUFFIX = '.reflect.md'
+
+/** Graph-relative description path for an asset (`assets/x.png` → `assets/x.png.reflect.md`). */
+export function descriptionPathFor(assetPath: string): string {
+  return `${assetPath}${DESCRIPTION_SUFFIX}`
+}
+
+/**
+ * Is this graph-relative path an asset under `assets/` (and not a managed
+ * description file)? A coarse predicate — it does not check the file
+ * extension — used to decide whether a watcher batch is relevant to the
+ * asset-description pass; precise eligibility is `isEligibleAssetPath`.
+ */
+export function isAssetPath(path: string): boolean {
+  return path.startsWith(`${ASSETS_DIR}/`) && !path.endsWith(DESCRIPTION_SUFFIX)
 }
 
 /** Is this graph-relative path a daily note (`daily/YYYY-MM-DD.md`)? */

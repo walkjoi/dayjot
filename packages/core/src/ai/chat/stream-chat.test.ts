@@ -7,7 +7,7 @@ import type {
 } from '@ai-sdk/provider'
 import type { RetrievalHit } from '../../embeddings/retrieve'
 import { cloudSafeGraphContext } from '../checkers'
-import { streamChatTurn, type ChatStreamEvent } from './stream-chat'
+import { MAX_STEPS, streamChatTurn, type ChatStreamEvent } from './stream-chat'
 
 const USAGE: LanguageModelV3Usage = {
   inputTokens: { total: 1, noCache: 1, cacheRead: undefined, cacheWrite: undefined },
@@ -102,6 +102,7 @@ describe('streamChatTurn', () => {
       streamChatTurn(model, {
         messages: [{ role: 'user', content: 'where is the launch plan?' }],
         today: '2026-06-11',
+        semanticSearchEnabled: true,
         context: null,
         toolDeps: { retrieveFn: async () => [PUBLIC_HIT, PRIVATE_HIT], readNoteFn: async () => 'launch plan\n' },
       }),
@@ -140,6 +141,7 @@ describe('streamChatTurn', () => {
       streamChatTurn(model, {
         messages: [{ role: 'user', content: 'what do my notes say?' }],
         today: '2026-06-11',
+        semanticSearchEnabled: true,
         context: null,
         toolDeps: { retrieveFn: async () => [PUBLIC_HIT, PRIVATE_HIT], readNoteFn: async () => 'launch plan\n' },
       }),
@@ -160,6 +162,7 @@ describe('streamChatTurn', () => {
       streamChatTurn(model, {
         messages: [{ role: 'user', content: 'hi' }],
         today: '2026-06-11',
+        semanticSearchEnabled: true,
         context: cloudSafeGraphContext({
           graphName: 'atlas-graph',
           noteCount: 7,
@@ -191,6 +194,7 @@ describe('streamChatTurn', () => {
       streamChatTurn(model, {
         messages: [{ role: 'user', content: 'hi' }],
         today: '2026-06-11',
+        semanticSearchEnabled: true,
         context: null,
       }),
     )
@@ -214,6 +218,7 @@ describe('streamChatTurn', () => {
       streamChatTurn(model, {
         messages: [{ role: 'user', content: 'where is the launch plan?' }],
         today: '2026-06-11',
+        semanticSearchEnabled: true,
         context: null,
         toolDeps: { retrieveFn: async () => [PUBLIC_HIT], readNoteFn: async () => 'launch plan\n' },
       }),
@@ -251,6 +256,7 @@ describe('streamChatTurn', () => {
       streamChatTurn(model, {
         messages: [{ role: 'user', content: 'plan and budget?' }],
         today: '2026-06-11',
+        semanticSearchEnabled: true,
         context: null,
         toolDeps: { retrieveFn: async () => [PUBLIC_HIT], readNoteFn: async () => 'launch plan\n' },
       }),
@@ -270,5 +276,34 @@ describe('streamChatTurn', () => {
     const outbound = JSON.stringify(last.messages)
     expect(outbound).toContain('call-1')
     expect(outbound).toContain('call-2')
+  })
+
+  it('disables tools on the final step so a tool-bound turn still answers', async () => {
+    // Every gathering step calls a tool; the model only writes its answer
+    // once tools are disabled on the last permitted step. Without that force,
+    // the turn would end on a tool result with no reply.
+    const gathering = Array.from({ length: MAX_STEPS - 1 }, (_unused, index) =>
+      toolCallTurn(`query-${index}`, `call-${index}`),
+    )
+    const model = new MockLanguageModelV3({
+      doStream: sequence([...gathering, textTurn('Summary: [[Atlas Launch Plan]]')]),
+    })
+    const events = await collect(
+      streamChatTurn(model, {
+        messages: [{ role: 'user', content: 'summarize everything' }],
+        today: '2026-06-11',
+        semanticSearchEnabled: true,
+        context: null,
+        toolDeps: { retrieveFn: async () => [PUBLIC_HIT], readNoteFn: async () => 'body\n' },
+      }),
+    )
+
+    // Every step ran, gathering steps kept tools on, and the final step was
+    // forced to answer rather than call another tool.
+    expect(model.doStreamCalls.length).toBe(MAX_STEPS)
+    expect(model.doStreamCalls[0]?.toolChoice).toEqual({ type: 'auto' })
+    expect(model.doStreamCalls.at(-1)?.toolChoice).toEqual({ type: 'none' })
+    expect(events.at(-1)?.type).toBe('complete')
+    expect(events.some((event) => event.type === 'text-delta')).toBe(true)
   })
 })

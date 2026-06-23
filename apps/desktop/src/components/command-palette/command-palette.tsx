@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactElement } from 'react'
+import { memo, useEffect, useRef, useState, type KeyboardEvent, type ReactElement } from 'react'
 import { Command } from 'cmdk'
 import { parseHighlights } from '@reflect/core'
 import { CalendarDays, FileText } from 'lucide-react'
@@ -32,7 +32,7 @@ interface CommandPaletteProps {
   context: CommandContext
 }
 
-function Snippet({ snippet }: { snippet: string }): ReactElement {
+const Snippet = memo(function Snippet({ snippet }: { snippet: string }): ReactElement {
   return (
     <span className="block truncate text-xs text-text-muted">
       {parseHighlights(snippet).map((segment, i) =>
@@ -46,7 +46,7 @@ function Snippet({ snippet }: { snippet: string }): ReactElement {
       )}
     </span>
   )
-}
+})
 
 export function CommandPalette({ context }: CommandPaletteProps): ReactElement | null {
   const { open, query, setQuery, closePalette } = usePalette()
@@ -56,11 +56,15 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
   // on close so a reopened palette highlights its first result, not the last
   // session's pick.
   const [selectedValue, setSelectedValue] = useState('')
-  useEffect(() => {
+  // Reset on close so a reopened palette highlights its first result, not the
+  // last session's pick. Adjusting during render avoids a prop-syncing effect.
+  const [appliedOpen, setAppliedOpen] = useState(open)
+  if (appliedOpen !== open) {
+    setAppliedOpen(open)
     if (!open) {
       setSelectedValue('')
     }
-  }, [open])
+  }
   // Each new result set highlights its top note. Without this, cmdk keeps any
   // still-valid selection — and commands match synchronously while notes load
   // async, so the first command would stay highlighted over the top hit. Keyed
@@ -70,9 +74,11 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
   // stale note selection clears so cmdk's first-item default can highlight a
   // matching command (Enter must always have a target).
   const selectedValueRef = useRef(selectedValue)
-  selectedValueRef.current = selectedValue
   const notesRef = useRef(sections.notes)
-  notesRef.current = sections.notes
+  useEffect(() => {
+    selectedValueRef.current = selectedValue
+    notesRef.current = sections.notes
+  })
   const notesKey = sections.notes.map((entry) => entry.path).join('\n')
   useEffect(() => {
     if (!open) {
@@ -81,7 +87,7 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
     const notes = notesRef.current
     if (notes.length > 0) {
       if (!notes.some((entry) => entry.path === selectedValueRef.current)) {
-        setSelectedValue(notes[0].path)
+        setSelectedValue(notes[0]!.path)
       }
     } else if (!selectedValueRef.current.startsWith('command:')) {
       setSelectedValue('')
@@ -175,10 +181,17 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
                           />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm">
-                              {entry.date !== null
-                                ? formatDayLabel(entry.date, settings.dateFormat)
-                                : entry.title}
+                              {entry.phrase !== null
+                                ? entry.phrase
+                                : entry.date !== null
+                                  ? formatDayLabel(entry.date, settings.dateFormat)
+                                  : entry.title}
                             </span>
+                            {entry.phrase !== null && entry.date !== null ? (
+                              <span className="block truncate text-xs text-text-muted">
+                                {formatDayLabel(entry.date, settings.dateFormat)}
+                              </span>
+                            ) : null}
                             {entry.snippet !== null ? <Snippet snippet={entry.snippet} /> : null}
                           </span>
                         </span>
@@ -219,7 +232,11 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
             {splitLayout ? (
               <div className="min-w-0 flex-1 overflow-y-auto border-l border-border">
                 {selectedNote !== null ? (
-                  <NotePreview key={selectedNote.path} entry={selectedNote} />
+                  // A stable key keeps the preview pane mounted as the highlight
+                  // moves between results (↑/↓): the entry prop updates and the
+                  // query refetches by its own path-scoped key, so an arrow-key
+                  // press no longer unmounts/remounts the whole preview subtree.
+                  <NotePreview key="note-preview" entry={selectedNote} />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-text-muted">
                     No note selected

@@ -11,7 +11,8 @@ import {
   type ListDailyNotesOutput,
   type ListRecentNotesOutput,
   type NoteTools,
-  type ReadNoteOutput,
+  type ReadNoteResult,
+  type ReadNotesOutput,
   type SearchNotesOutput,
 } from './tools'
 
@@ -81,17 +82,26 @@ async function runSearch(
   return output
 }
 
-/** Execute `read_note` directly, asserting a non-streaming output. */
-async function runRead(tools: NoteTools, path: string): Promise<ReadNoteOutput> {
-  const execute = tools.read_note.execute
+/** Execute `read_notes` directly, asserting a non-streaming output. */
+async function runReadNotes(tools: NoteTools, paths: string[]): Promise<ReadNotesOutput> {
+  const execute = tools.read_notes.execute
   if (!execute) {
-    throw new Error('read_note has no execute')
+    throw new Error('read_notes has no execute')
   }
-  const output = await execute({ path }, CALL)
+  const output = await execute({ paths }, CALL)
   if (isAsyncIterable(output)) {
     throw new Error('unexpected streaming tool output')
   }
   return output
+}
+
+/** Read a single path via `read_notes`, returning its lone result. */
+async function runRead(tools: NoteTools, path: string): Promise<ReadNoteResult> {
+  const [note] = (await runReadNotes(tools, [path])).notes
+  if (note === undefined) {
+    throw new Error('read_notes returned no notes')
+  }
+  return note
 }
 
 /** Execute `list_recent_notes` directly, asserting a non-streaming output. */
@@ -136,7 +146,20 @@ describe('search_notes', () => {
       },
     })
     await runSearch(tools, { query: 'atlas' })
-    expect(seen).toEqual([{ limit: 8, excludePrivateContent: true }])
+    expect(seen).toEqual([{ limit: 8, mode: 'hybrid', excludePrivateContent: true }])
+  })
+
+  it('uses lexical retrieval when semantic search is disabled', async () => {
+    const seen: Array<RetrieveOptions | undefined> = []
+    const tools = buildNoteTools({
+      semanticSearchEnabled: false,
+      retrieveFn: async (_query, options) => {
+        seen.push(options)
+        return []
+      },
+    })
+    await runSearch(tools, { query: 'atlas' })
+    expect(seen).toEqual([{ limit: 8, mode: 'lexical', excludePrivateContent: true }])
   })
 
   it('drops private hits entirely — not even the title goes out', async () => {
@@ -192,7 +215,28 @@ describe('search_notes', () => {
   })
 })
 
-describe('read_note', () => {
+describe('read_notes', () => {
+  it('reads several notes in one call, isolating a per-note miss', async () => {
+    const bodies: Record<string, string> = {
+      'notes/a.md': '# A\n\nAlpha.\n',
+      'notes/b.md': '# B\n\nBeta.\n',
+    }
+    const tools = buildNoteTools({
+      readNoteFn: async (path) => {
+        const body = bodies[path]
+        if (body === undefined) {
+          throw { kind: 'notFound', message: 'no such note' }
+        }
+        return body
+      },
+    })
+    const output = await runReadNotes(tools, ['notes/a.md', 'notes/gone.md', 'notes/b.md'])
+    // Order is preserved and a missing note refuses on its own — the readable
+    // notes around it still come back.
+    expect(output.notes.map((note) => note.ok)).toEqual([true, false, true])
+    expect(output.notes[1]).toMatchObject({ ok: false, path: 'notes/gone.md' })
+  })
+
   it('returns the body without frontmatter, titled from the note', async () => {
     const tools = buildNoteTools({
       readNoteFn: async () => '---\npinned: true\n---\n# Project Atlas\n\nLaunch plan.\n',

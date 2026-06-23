@@ -1,8 +1,9 @@
-import { render, waitFor } from '@testing-library/react'
+import { cleanup, render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
+import type { NoteRow } from '@reflect/core'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { formatDayLabel } from '@/lib/dates'
 import { monthLabel, monthOf } from '@/lib/month-grid'
@@ -11,12 +12,14 @@ import { DailyContextSidebar } from './daily-context-sidebar'
 
 const dailyDatesInRange = vi.hoisted(() => vi.fn())
 const relatedNotes = vi.hoisted(() => vi.fn())
+const useNoteRow = vi.hoisted(() => vi.fn<(path: string) => NoteRow | null>(() => null))
 vi.mock('@reflect/core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@reflect/core')>()),
   hasBridge: () => true,
   dailyDatesInRange,
   relatedNotes,
 }))
+vi.mock('@/hooks/use-note-row', () => ({ useNoteRow }))
 vi.mock('@/providers/graph-provider', () => ({
   useGraph: () => ({ graph: { root: '/g', name: 'g', cloudSync: false, generation: 1 } }),
 }))
@@ -46,11 +49,27 @@ function renderSidebar(date: string) {
   )
 }
 
+function noteRow(overrides: Partial<NoteRow> = {}): NoteRow {
+  return {
+    path: 'daily/2026-06-09.md',
+    title: '2026-06-09',
+    dailyDate: '2026-06-09',
+    isPrivate: false,
+    hasConflict: false,
+    gistUrl: null,
+    gistStale: false,
+    ...overrides,
+  }
+}
+
 beforeEach(() => {
   window.sessionStorage.clear()
   dailyDatesInRange.mockReset().mockResolvedValue([])
   relatedNotes.mockReset().mockResolvedValue([])
+  useNoteRow.mockReset().mockReturnValue(null)
 })
+
+afterEach(cleanup)
 
 describe('DailyContextSidebar calendar header', () => {
   it('jumps to today from the calendar-icon button', async () => {
@@ -109,7 +128,7 @@ describe('DailyContextSidebar calendar', () => {
 describe('DailyContextSidebar related notes', () => {
   it('renders no Similar notes section without results', async () => {
     const view = renderSidebar('2026-06-09')
-    await waitFor(() => expect(relatedNotes).toHaveBeenCalledWith('daily/2026-06-09.md'))
+    await waitFor(() => expect(relatedNotes).toHaveBeenCalledWith('daily/2026-06-09.md', 6))
     expect(view.queryByText('Similar notes')).toBeNull()
     view.unmount()
   })
@@ -159,6 +178,23 @@ describe('DailyContextSidebar sections', () => {
     const view = renderSidebar('2026-06-09')
     expect(view.getByText(monthLabel(monthOf('2026-06-09')))).toBeDefined()
     expect(view.queryByRole('button', { name: /^Calendar$/ })).toBeNull()
+    view.unmount()
+  })
+})
+
+describe('DailyContextSidebar published link', () => {
+  it('shows the Published URL section once the daily note is published', () => {
+    const url = 'https://gist.github.com/alex/daily1'
+    useNoteRow.mockReturnValue(noteRow({ gistUrl: url }))
+    const view = renderSidebar('2026-06-09')
+    expect(view.getByText('Published URL')).toBeDefined()
+    expect(view.getByRole('link', { name: url }).getAttribute('href')).toBe(url)
+    view.unmount()
+  })
+
+  it('omits the Published URL section for an unpublished daily note', () => {
+    const view = renderSidebar('2026-06-09')
+    expect(view.queryByText('Published URL')).toBeNull()
     view.unmount()
   })
 })

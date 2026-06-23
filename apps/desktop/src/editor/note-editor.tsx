@@ -1,8 +1,29 @@
-import { useCallback, useImperativeHandle, useRef, type ReactElement, type Ref } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+} from 'react'
+import { openUrl } from '@tauri-apps/plugin-opener'
+import { errorMessage } from '@reflect/core'
 import { type MarkMode } from '@meowdown/core'
-import { MeowdownEditor, type EditorHandle, type WikilinkSearchHandler } from '@meowdown/react'
+import {
+  MeowdownEditor,
+  type EditorHandle,
+  type TagSearchHandler,
+  type WikilinkSearchHandler,
+} from '@meowdown/react'
 import '@meowdown/core/style.css'
 import '@meowdown/react/style.css'
+import {
+  IMAGE_LIGHTBOX_TRANSITION_NAME,
+  ImageLightbox,
+  type LightboxImage,
+} from '@/editor/image-lightbox'
+import { useLightboxTransition } from '@/editor/use-lightbox-transition'
 import { cn } from '@/lib/utils'
 
 /**
@@ -33,12 +54,32 @@ interface NoteEditorProps {
   initialContent: string
   /** Called with the current markdown whenever the user edits the document. */
   onChange?: (markdown: string) => void
-  /** How markdown syntax characters are shown; `focus` reveals them near the caret. */
+  /** How markdown syntax characters are shown. */
   markMode?: MarkMode
   /** Whether the browser underlines misspelled words (default on). */
   spellCheck?: boolean
+  /**
+   * Whether Enter at the end of a heading starts a bullet on the next line
+   * (the `editorBulletAfterHeading` setting). Off by default.
+   */
+  bulletAfterHeading?: boolean
+  /**
+   * Whether to show meowdown's per-block gutter handle: a grip to drag-reorder
+   * blocks and a "+" to insert a paragraph below. Off by default. The main note
+   * editor opts in; one-line surfaces like the inline task editor leave it off so
+   * no stray grip appears beside them.
+   */
+  blockHandle?: boolean
   /** Resolve an image `![…](…)` source to a displayable URL; unresolved images are skipped. */
   resolveImageUrl?: (src: string) => string | null
+  /**
+   * Resolve an image `![…](…)` source to the path passed to {@link openImage},
+   * so the lightbox can offer to open it in the OS image viewer. Returns null
+   * for remote images.
+   */
+  resolveImageOpenPath?: (src: string) => string | null
+  /** Open a resolved image path in the OS default viewer. */
+  openImage?: (path: string) => Promise<void> | void
   /** Persist a pasted/dropped image file and return its markdown `src`. */
   saveImage?: (file: File) => Promise<string | null>
   /** Called when persisting a pasted/dropped image throws. */
@@ -47,6 +88,8 @@ interface NoteEditorProps {
   onWikiLinkClick?: (target: string) => void
   /** Search notes for the `[[` autocomplete menu. */
   onWikilinkSearch?: WikilinkSearchHandler
+  /** Search tags for the `#` autocomplete menu. */
+  onTagSearch?: TagSearchHandler
   /**
    * Ghost text over a leading empty H1 (the new-note flow's "Untitled");
    * omitted for documents without title semantics (the daily stream).
@@ -60,18 +103,30 @@ interface NoteEditorProps {
   className?: string
   /** Imperative handle (React 19 ref-as-prop). */
   handleRef?: Ref<NoteEditorHandle>
+  /**
+   * Extra nodes rendered inside meowdown's ProseKit context (rich modes) — e.g.
+   * a feature keymap via `useKeymap`. They mount alongside the always-on
+   * bullet-after-heading keymap.
+   */
+  children?: ReactNode
 }
 
 export function NoteEditor({
   initialContent,
   onChange,
-  markMode = 'focus',
+  markMode = 'hide',
   spellCheck = true,
+  bulletAfterHeading = false,
+  blockHandle = false,
   resolveImageUrl,
+  resolveImageOpenPath,
+  openImage,
   saveImage,
   onImageSaveError,
   onWikiLinkClick,
   onWikilinkSearch,
+  onTagSearch,
+  children,
   titlePlaceholder,
   className,
   handleRef,
@@ -80,16 +135,29 @@ export function NoteEditor({
 
   // Latest callbacks, read through refs so a changing prop identity never
   // rebuilds meowdown's extensions (the uncontrolled-editor contract).
+  // TODO: This violates "Rule of hooks". Refactor this later.
   const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
   const onWikiLinkClickRef = useRef(onWikiLinkClick)
-  onWikiLinkClickRef.current = onWikiLinkClick
   const resolveImageUrlRef = useRef(resolveImageUrl)
-  resolveImageUrlRef.current = resolveImageUrl
+  const resolveImageOpenPathRef = useRef(resolveImageOpenPath)
+  const openImageRef = useRef(openImage)
   const saveImageRef = useRef(saveImage)
-  saveImageRef.current = saveImage
   const onImageSaveErrorRef = useRef(onImageSaveError)
-  onImageSaveErrorRef.current = onImageSaveError
+  useEffect(() => {
+    onChangeRef.current = onChange
+    onWikiLinkClickRef.current = onWikiLinkClick
+    resolveImageUrlRef.current = resolveImageUrl
+    resolveImageOpenPathRef.current = resolveImageOpenPath
+    openImageRef.current = openImage
+    saveImageRef.current = saveImage
+    onImageSaveErrorRef.current = onImageSaveError
+  })
+
+  const {
+    item: lightboxImage,
+    open: openLightbox,
+    close: closeLightbox,
+  } = useLightboxTransition<HTMLImageElement, LightboxImage>()
 
   useImperativeHandle(
     handleRef,
@@ -120,21 +188,72 @@ export function NoteEditor({
     (error: unknown, file: File) => onImageSaveErrorRef.current?.(error, file),
     [],
   )
+  const handleLinkClick = useCallback(
+    ({ href }: { href: string; event: MouseEvent }) => {
+      void openUrl(href).catch((cause) => {
+        console.error('open link failed:', errorMessage(cause))
+      })
+    },
+    [],
+  )
+  const handleImageClick = useCallback(
+    ({ src, alt, event }: { src: string; alt: string; event: MouseEvent }) => {
+      const displayUrl = resolveImageUrlRef.current?.(src) ?? null
+      if (displayUrl === null) {
+        return
+      }
+      // The clicked target is the `<img>` or its `.md-image-preview` wrapper;
+      // the source element drives the View Transition zoom.
+      const sourceImage =
+        event.target instanceof HTMLElement
+          ? event.target.closest('.md-image-preview')?.querySelector('img') ?? null
+          : null
+      openLightbox(sourceImage, {
+        src: displayUrl,
+        alt,
+        openPath: resolveImageOpenPathRef.current?.(src) ?? null,
+        openImage: openImageRef.current ?? null,
+        transitionName: IMAGE_LIGHTBOX_TRANSITION_NAME,
+      })
+    },
+    [openLightbox],
+  )
+  const handleOpenLightboxImage = useCallback((image: LightboxImage) => {
+    if (image.openPath !== null && image.openImage !== null) {
+      void Promise.resolve(image.openImage(image.openPath)).catch((cause) => {
+        console.error('open image failed:', errorMessage(cause))
+      })
+    }
+  }, [])
 
   return (
-    <MeowdownEditor
-      handleRef={innerRef}
-      mode={markMode}
-      initialMarkdown={initialContent}
-      spellCheck={spellCheck}
-      editorClassName={cn('reflect-editor', className)}
-      placeholder={titlePlaceholder}
-      onDocChange={handleDocChange}
-      onWikilinkClick={handleWikilinkClick}
-      onWikilinkSearch={onWikilinkSearch}
-      resolveImageUrl={handleResolveImageUrl}
-      onImagePaste={handleImagePaste}
-      onImageSaveError={handleImageSaveError}
-    />
+    <>
+      <MeowdownEditor
+        handleRef={innerRef}
+        mode={markMode}
+        initialMarkdown={initialContent}
+        spellCheck={spellCheck}
+        bulletAfterHeading={bulletAfterHeading}
+        blockHandle={blockHandle}
+        editorClassName={cn('reflect-editor', className)}
+        {...(titlePlaceholder !== undefined ? { placeholder: titlePlaceholder } : {})}
+        onDocChange={handleDocChange}
+        onWikilinkClick={handleWikilinkClick}
+        onLinkClick={handleLinkClick}
+        onImageClick={handleImageClick}
+        {...(onWikilinkSearch !== undefined ? { onWikilinkSearch } : {})}
+        {...(onTagSearch !== undefined ? { onTagSearch } : {})}
+        resolveImageUrl={handleResolveImageUrl}
+        onImagePaste={handleImagePaste}
+        onImageSaveError={handleImageSaveError}
+      >
+        {children}
+      </MeowdownEditor>
+      <ImageLightbox
+        image={lightboxImage}
+        onClose={closeLightbox}
+        onOpenImage={handleOpenLightboxImage}
+      />
+    </>
   )
 }

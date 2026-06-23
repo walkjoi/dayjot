@@ -1,6 +1,6 @@
-import type { ReactElement, ReactNode } from 'react'
+import { Fragment, type ReactElement, type ReactNode } from 'react'
 import { CalendarDays, FileText, History, Search } from 'lucide-react'
-import { isToolPending, type AssistantPart } from '@reflect/core'
+import { isTagName, isToolPending, type AssistantPart, type NoteHitSummary } from '@reflect/core'
 import { routeForPath } from '@/routing/route'
 import { useRouter } from '@/routing/router'
 import { Spinner } from '@/components/ui/spinner'
@@ -30,6 +30,35 @@ function ChipFrame({ pending, icon, children }: ChipFrameProps): ReactElement {
   )
 }
 
+interface NoteLinksProps {
+  notes: readonly NoteHitSummary[]
+  onOpen: (path: string) => void
+}
+
+function NoteLinks({ notes, onOpen }: NoteLinksProps): ReactElement | null {
+  if (notes.length === 0) {
+    return null
+  }
+
+  return (
+    <>
+      {': '}
+      {notes.map((note, index) => (
+        <Fragment key={`${note.path}-${index}`}>
+          {index > 0 ? ', ' : ''}
+          <button
+            type="button"
+            onClick={() => onOpen(note.path)}
+            className="underline-offset-2 hover:text-text hover:underline"
+          >
+            {note.title}
+          </button>
+        </Fragment>
+      ))}
+    </>
+  )
+}
+
 /**
  * The transparent-context chip for one tool call: what the assistant searched
  * for or listed (and how many notes came back), or which note it read.
@@ -39,6 +68,7 @@ function ChipFrame({ pending, icon, children }: ChipFrameProps): ReactElement {
  */
 export function ChatToolChip({ part }: ChatToolChipProps): ReactElement {
   const { navigate } = useRouter()
+  const openNote = (path: string) => navigate(routeForPath(path))
   const pending = isToolPending(part)
   const call = part.call
 
@@ -49,6 +79,7 @@ export function ChatToolChip({ part }: ChatToolChipProps): ReactElement {
         <span className="truncate">
           Searched “{call.query}”
           {result !== null ? countSuffix(result.hits.length, 'note') : ''}
+          {result !== null ? <NoteLinks notes={result.hits} onOpen={openNote} /> : null}
         </span>
       </ChipFrame>
     )
@@ -56,15 +87,30 @@ export function ChatToolChip({ part }: ChatToolChipProps): ReactElement {
 
   if (call.tool === 'recents') {
     const result = part.result?.tool === 'recents' ? part.result : null
+    const tagLabel =
+      call.tag !== null && isTagName(call.tag) ? (
+        <button
+          type="button"
+          onClick={() => navigate({ kind: 'allNotes', tag: call.tag })}
+          className="underline-offset-2 hover:text-text hover:underline"
+        >
+          #{call.tag}
+        </button>
+      ) : (
+        (call.tag !== null ? `#${call.tag}` : 'recent')
+      )
     return (
       <ChipFrame pending={pending} icon={<History aria-hidden className="size-3.5" />}>
         <span className="truncate">
-          Listed {call.tag !== null ? `#${call.tag}` : 'recent'} notes
+          Listed {tagLabel} notes
           {result !== null
             ? result.error !== null
               ? ` — ${result.error}`
               : countSuffix(result.notes.length, 'note')
             : ''}
+          {result !== null && result.error === null ? (
+            <NoteLinks notes={result.notes} onOpen={openNote} />
+          ) : null}
         </span>
       </ChipFrame>
     )
@@ -77,29 +123,53 @@ export function ChatToolChip({ part }: ChatToolChipProps): ReactElement {
         <span className="truncate">
           Listed daily notes {call.start} – {call.end}
           {result !== null ? countSuffix(result.days.length, 'day') : ''}
+          {result !== null ? <NoteLinks notes={result.days} onOpen={openNote} /> : null}
         </span>
       </ChipFrame>
     )
   }
 
+  // read_notes: one chip for the whole batch. A tool-level error fails it as a
+  // unit; otherwise each note links through on its own, or shows its refusal.
   const result = part.result?.tool === 'read' ? part.result : null
-  const error = part.error ?? result?.error ?? null
+  if (part.error !== null) {
+    return (
+      <ChipFrame pending={false} icon={<FileText aria-hidden className="size-3.5" />}>
+        <span className="truncate">
+          {call.paths.join(', ')} — {part.error}
+        </span>
+      </ChipFrame>
+    )
+  }
+  // Settled, we know each note's title/error; pending, only the requested paths.
+  const notes = result?.notes ?? call.paths.map((path) => ({ path, title: null, error: null }))
   return (
     <ChipFrame pending={pending} icon={<FileText aria-hidden className="size-3.5" />}>
-      {!pending && error === null ? (
-        <button
-          type="button"
-          onClick={() => navigate(routeForPath(call.path))}
-          className="truncate underline-offset-2 hover:text-text hover:underline"
-        >
-          Read {result?.title ?? call.path}
-        </button>
-      ) : (
-        <span className="truncate">
-          {call.path}
-          {error !== null ? ` — ${error}` : ''}
-        </span>
-      )}
+      <span className="truncate">
+        Read{' '}
+        {notes.map((note, index) => {
+          const label = note.title ?? note.path
+          return (
+            <Fragment key={`${note.path}-${index}`}>
+              {index > 0 ? ', ' : ''}
+              {!pending && note.error === null ? (
+                <button
+                  type="button"
+                  onClick={() => openNote(note.path)}
+                  className="underline-offset-2 hover:text-text hover:underline"
+                >
+                  {label}
+                </button>
+              ) : (
+                <span>
+                  {label}
+                  {note.error !== null ? ` — ${note.error}` : ''}
+                </span>
+              )}
+            </Fragment>
+          )
+        })}
+      </span>
     </ChipFrame>
   )
 }

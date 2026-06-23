@@ -228,15 +228,31 @@ describe('drainCaptureInbox', () => {
     expect(note).toContain('captureStatus: pending')
     expect(note).toContain('captureScreenshot: assets/capture-2026-06-11-153022-845-7c9e.jpg')
     expect(note).toContain('# An article')
-    expect(note).toContain('[example.com](https://example.com/article)')
-    expect(note).toContain('check later')
-    expect(note).toContain('> quoted text')
-    expect(note).toContain(`![An article](${IDENTITY.assetPath})`)
+    expect(note).toContain('- URL: https://example.com/article')
+    expect(note).toContain('- Type: #link')
+    expect(note).not.toContain('Highlights')
+    expect(note).toContain('## Note\n\ncheck later')
+    expect(note).toContain('## Selection\n\nquoted text')
+    expect(note).toContain(`## Screenshot\n\n![An article](${IDENTITY.assetPath})`)
 
     const daily = files.get(DAILY)
     expect(daily).toContain('## Links')
-    expect(daily).toContain('[[capture-2026-06-11-153022-845-7c9e|An article]]')
+    expect(daily).toContain('- [[capture-2026-06-11-153022-845-7c9e|An article]]')
     expect(spool.size).toBe(0)
+  })
+
+  it('writes extracted page text into the capture note', async () => {
+    addSpool(envelope({ contentText: 'First paragraph.\n\nSecond paragraph.' }), {
+      screenshot: false,
+    })
+
+    const outcome = await drain()
+
+    expect(outcome).toEqual({ pending: 1, drained: 1, deduped: 0, invalid: 0, stopped: null })
+    const note = files.get(IDENTITY.notePath)
+    expect(note).toContain(
+      '## Page Text\n\n<!-- reflect-capture-page-text:start -->\nFirst paragraph.\n\nSecond paragraph.\n<!-- reflect-capture-page-text:end -->',
+    )
   })
 
   it('removes the spool only after the note and daily entry are written', async () => {
@@ -279,7 +295,7 @@ describe('drainCaptureInbox', () => {
     const daily = files.get(DAILY) ?? ''
     expect(daily.match(/## Links/g)).toHaveLength(1)
     expect(daily).toContain('[[capture-2026-06-11-090000-000-0000|Old]]')
-    expect(daily).toContain('[[capture-2026-06-11-153022-845-7c9e|An article]]')
+    expect(daily).toContain('- [[capture-2026-06-11-153022-845-7c9e|An article]]')
   })
 
   it('saves a private-day capture raw, marked skipped', async () => {
@@ -290,7 +306,7 @@ describe('drainCaptureInbox', () => {
 
     expect(outcome.drained).toBe(1)
     expect(files.get(IDENTITY.notePath)).toContain('captureStatus: skipped')
-    expect(files.get(DAILY)).toContain('[[capture-2026-06-11-153022-845-7c9e|An article]]')
+    expect(files.get(DAILY)).toContain('- [[capture-2026-06-11-153022-845-7c9e|An article]]')
   })
 
   it('refreshes a same-day same-URL same-selection re-capture in place', async () => {
@@ -454,8 +470,20 @@ describe('reconcileCaptureEnrichment', () => {
     writeNoteMock.mockClear()
   }
 
-  it('patches the AI description under the link line with provenance', async () => {
-    await drainOne({ selection: 'quoted text' })
+  it('patches the AI description into the metadata bullets with provenance', async () => {
+    const contentText = [
+      'First paragraph.',
+      '- Description: A line from the captured article.',
+      '## Article heading',
+      '## Screenshot',
+      'This is an article heading, not the capture image section.',
+      'Second paragraph.',
+    ].join('\n\n')
+    await drainOne({
+      selection:
+        'quoted text\n\n<!-- reflect-capture-page-text:start -->\n\n## Page Text\n\nnot actual page text',
+      contentText,
+    })
     scrapeMock.mockResolvedValue({
       title: 'An article',
       description: 'A scraped description.',
@@ -466,9 +494,11 @@ describe('reconcileCaptureEnrichment', () => {
 
     expect(outcome).toEqual({ pending: 1, enriched: 1, skipped: 0, stopped: null })
     const note = files.get(IDENTITY.notePath) ?? ''
-    expect(note).toContain(
-      '[example.com](https://example.com/article)\n\nAn AI description of the page.\n\n> quoted text',
-    )
+    expect(note).toContain('- Type: #link\n- Description: An AI description of the page.\n\n## Selection')
+    expect(note).not.toContain('A scraped description.')
+    expect(note).toContain('- Description: A line from the captured article.')
+    expect(note).toContain('## Article heading')
+    expect(note).toContain('This is an article heading, not the capture image section.')
     expect(note).toContain('captureStatus: done')
     expect(note).toContain('captureProvider: openai')
     expect(note).toContain('captureModel: gpt-5.5')
@@ -477,6 +507,7 @@ describe('reconcileCaptureEnrichment', () => {
         url: URL,
         title: 'An article',
         metaDescription: 'A scraped description.',
+        contentText,
         screenshotBase64: btoa('jpeg-bytes'),
       }),
     )
@@ -496,7 +527,7 @@ describe('reconcileCaptureEnrichment', () => {
 
     expect(outcome.enriched).toBe(1)
     const note = files.get(IDENTITY.notePath) ?? ''
-    expect(note).toContain('A scraped description.')
+    expect(note).toContain('- Description: A scraped description.')
     expect(note).toContain('captureStatus: done')
     expect(note).not.toContain('captureProvider')
     expect(describeMock).not.toHaveBeenCalled()
@@ -576,7 +607,7 @@ describe('reconcileCaptureEnrichment', () => {
     expect(describeMock).toHaveBeenCalledWith(
       expect.objectContaining({ metaDescription: undefined }),
     )
-    expect(files.get(IDENTITY.notePath)).toContain('An AI description of the page.')
+    expect(files.get(IDENTITY.notePath)).toContain('- Description: An AI description of the page.')
   })
 
   it('a provider refusal falls back to the scraped description, done without AI provenance', async () => {
@@ -592,9 +623,36 @@ describe('reconcileCaptureEnrichment', () => {
 
     expect(outcome.enriched).toBe(1)
     const note = files.get(IDENTITY.notePath) ?? ''
-    expect(note).toContain('A scraped description.')
+    expect(note).toContain('- Description: A scraped description.')
     expect(note).toContain('captureStatus: done')
     expect(note).not.toContain('captureProvider')
+  })
+
+  it('a provider refusal without scraped description does not stamp AI provenance', async () => {
+    await drainOne()
+    scrapeMock.mockResolvedValue({ title: 'An article', description: null, siteName: null })
+    describeMock.mockRejectedValue(new DescriptionRejectedError('image too large'))
+
+    const outcome = await reconcile()
+
+    expect(outcome.enriched).toBe(1)
+    const note = files.get(IDENTITY.notePath) ?? ''
+    expect(note).not.toContain('- Description:')
+    expect(note).toContain('captureStatus: done')
+    expect(note).not.toContain('captureProvider')
+    expect(note).not.toContain('captureModel')
+  })
+
+  it('omits the description bullet when no description source exists', async () => {
+    await drainOne()
+    scrapeMock.mockResolvedValue({ title: 'An article', description: null, siteName: null })
+
+    const outcome = await reconcile({ providers: NO_PROVIDERS })
+
+    expect(outcome.enriched).toBe(1)
+    const note = files.get(IDENTITY.notePath) ?? ''
+    expect(note).not.toContain('- Description:')
+    expect(note).toContain('captureStatus: done')
   })
 
   it('an auth failure from the provider stops the pass', async () => {

@@ -14,6 +14,7 @@ import {
   forgetRecent,
   hasBridge,
   isMobilePlatform,
+  loadSettings,
   mobileGraphRoot,
   openGraph,
   recentGraphs,
@@ -22,8 +23,10 @@ import {
   type RecentGraph,
 } from '@reflect/core'
 import { followHealedMove } from '@/editor/move-note'
+import { resetNoteRowOverlays } from '@/hooks/note-row-overlay'
 import { invalidateIndexQueries } from '@/lib/query-client'
 import { ensureWelcomeNote } from '@/lib/welcome-note'
+import { useSettings } from '@/providers/settings-provider'
 import { createGraphIndex } from './graph-index'
 
 /** Lifecycle of the active graph (Plan 02 loading gate). */
@@ -46,10 +49,26 @@ interface GraphContextValue {
   error: string | null
   /** Show the OS folder picker, then open (and bootstrap) the chosen graph. */
   pickAndOpen: () => Promise<void>
-  /** Open a graph by its root path. */
-  openRecent: (root: string) => Promise<void>
+  /** Open a graph by its root path. Resolves true only when it reached 'ready'. */
+  openRecent: (root: string) => Promise<boolean>
   /** Drop a graph from the recents list. */
   forget: (root: string) => Promise<void>
+  /**
+   * Mobile only (Plan 19, step 6): the user hasn't yet chosen how to start
+   * (Start fresh / Connect to GitHub), so the fixed root is left untouched and
+   * the onboarding screen is shown instead of the graph. Always false on
+   * desktop, which has its own chooser.
+   */
+  needsOnboarding: boolean
+  /** Mobile only: the fixed graph root, derived once at bootstrap (null elsewhere). */
+  mobileRoot: string | null
+  /**
+   * Mobile only: finish onboarding — open the (now-populated, for the GitHub
+   * path already-cloned) fixed root and persist the onboarded flag so later
+   * launches skip the screen. The GitHub clone must already have landed in the
+   * root before this is called.
+   */
+  completeOnboarding: () => Promise<void>
 }
 
 const GraphContext = createContext<GraphContextValue | null>(null)
@@ -78,6 +97,13 @@ export function GraphProvider({
   const [indexing, setIndexing] = useState(false)
   const [indexGeneration, setIndexGeneration] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Mobile onboarding gate (Plan 19, step 6) — inert on desktop.
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  const [mobileRoot, setMobileRoot] = useState<string | null>(null)
+  // Settings live in one place (the app-wide provider, mounted above
+  // PlatformRoot): write the onboarded flag through it so its cached document
+  // carries the flag too — a raw save would be clobbered by the next change.
+  const { updateSettings, whenSettingsLoaded } = useSettings()
   // Monotonic open token: only the most recent open may commit `graph`/`status`,
   // so overlapping opens (double-click, StrictMode remount) can't finish out of
   // order and leave us on a graph the user didn't pick last.
@@ -121,49 +147,68 @@ export function GraphProvider({
   )
 
   const openRecent = useCallback(
-    (root: string): Promise<void> => {
+    (root: string): Promise<boolean> => {
       const seq = ++openSeq.current
       setStatus('opening')
       setError(null)
-      const run = async (): Promise<void> => {
+      // Resolves true only when this open actually reached 'ready' — callers
+      // (mobile onboarding) gate side effects like persisting the onboarded
+      // flag on a confirmed open, never on a clone that failed to open.
+      const run = async (): Promise<boolean> => {
+        let opened = false
         try {
           const info = await openGraph(root)
           if (seq !== openSeq.current) {
-            return // superseded by a newer open
+            return false // superseded by a newer open
           }
           const index = indexRef.current
           // Stop any prior reconcile and wait for it to fully settle before the
           // Rust index connection is swapped, so a stale pass can't write into
           // this graph's index.
           await index.stop()
+          // Reclaim the prior graph's optimistic note-row overlays. They're
+          // already invisible here (scoped by generation), so this is memory
+          // hygiene, not correctness.
+          resetNoteRowOverlays()
           // Open the index *before* 'ready' so reads can't hit the previous
           // graph's index. Best-effort: an index failure doesn't block editing.
           const generation = await index.open()
           if (seq !== openSeq.current) {
-            return
+            return false
           }
-          // Onboarding, considered exactly once per graph (the `welcomeSeeded`
-          // meta marker): an empty graph gets the pinned "How to use Reflect"
-          // note, seeded before the index pass starts so the reconcile indexes
-          // it like any other file. Needs the index for the marker, so a graph
-          // whose index failed to open simply tries again next time.
-          // Best-effort — a failed seed must never block opening.
-          if (generation !== null) {
-            try {
-              await ensureWelcomeNote({ fileGeneration: info.generation, indexGeneration: generation })
-            } catch (err) {
-              console.error('welcome seed failed:', errorMessage(err))
-            }
-          }
+          // Transition to 'ready' immediately — the user can start editing.
           setGraph(info)
           setIndexGeneration(generation)
           setStatus('ready')
-          // Background-sync the index (reconcile → subscribe → watch), bailing if
-          // a newer open supersedes this one.
-          index.sync(generation, () => seq !== openSeq.current)
+          opened = true
+          // Onboarding, considered exactly once per graph (the `welcomeSeeded`
+          // meta marker): an empty graph gets the pinned "How to use Reflect"
+          // note. Needs the index for the marker, so a graph whose index failed
+          // to open simply tries again next time. On all launches after the
+          // first, ensureWelcomeNote returns immediately (marker already set),
+          // so it no longer blocks time-to-first-workspace-paint. The note must
+          // land before the reconcile indexes files — index.sync starts in the
+          // .finally so it always runs after the seed attempt.
+          // Best-effort — a failed seed must never block opening.
+          if (generation !== null) {
+            ensureWelcomeNote({ fileGeneration: info.generation, indexGeneration: generation })
+              .catch((err) => {
+                console.error('welcome seed failed:', errorMessage(err))
+              })
+              .finally(() => {
+                if (seq === openSeq.current) {
+                  // Background-sync the index (reconcile → subscribe → watch),
+                  // bailing if a newer open supersedes this one.
+                  index.sync(generation, () => seq !== openSeq.current)
+                }
+              })
+          } else {
+            // No index — sync with null generation immediately.
+            index.sync(generation, () => seq !== openSeq.current)
+          }
         } catch (err) {
           if (seq !== openSeq.current) {
-            return
+            return false
           }
           setError(errorMessage(err))
           setStatus('choosing')
@@ -171,6 +216,7 @@ export function GraphProvider({
         if (seq === openSeq.current) {
           await loadRecents()
         }
+        return opened
       }
       // `graph_open` mutates Rust's GraphState (`set_root`), so overlapping opens
       // could otherwise have a slow older call land *after* a newer one and leave
@@ -191,8 +237,24 @@ export function GraphProvider({
         // Fixed root, derived fresh (never from recents — see the docblock).
         try {
           const root = await mobileGraphRoot()
-          if (active) {
+          if (!active) {
+            return
+          }
+          setMobileRoot(root)
+          // Gate the first launch on the onboarding choice (Plan 19, step 6).
+          // A missing/false flag is a fresh install: defer the open so the
+          // GitHub path can clone into the still-empty root (`git_clone`
+          // refuses a non-empty directory, and opening here would bootstrap
+          // and seed it). Once onboarded, open the fixed root directly.
+          const onboarded = (await loadSettings()).mobileOnboarded === true
+          if (!active) {
+            return
+          }
+          if (onboarded) {
             await openRecent(root)
+          } else {
+            setNeedsOnboarding(true)
+            setStatus('choosing')
           }
         } catch (err) {
           if (active) {
@@ -207,7 +269,7 @@ export function GraphProvider({
         return
       }
       if (list.length > 0) {
-        await openRecent(list[0].root)
+        await openRecent(list[0]!.root)
       } else {
         setStatus('choosing')
       }
@@ -247,6 +309,31 @@ export function GraphProvider({
     [loadRecents],
   )
 
+  const completeOnboarding = useCallback(async (): Promise<void> => {
+    if (mobileRoot === null) {
+      throw new Error('No mobile graph root to open')
+    }
+    // Keep the onboarding gate up while the open runs — `openRecent` moves the
+    // status to 'opening' synchronously and the onboarding screen shows its own
+    // pending state, so the shell never flashes. On failure throw rather than
+    // clear the gate: the screen surfaces the error and stays on onboarding for
+    // an in-app retry (Start fresh re-opens an already-cloned root) instead of
+    // landing on the dead-end open-failed screen.
+    const opened = await openRecent(mobileRoot)
+    if (!opened) {
+      throw new Error('Couldn’t open your notes — please try again.')
+    }
+    setNeedsOnboarding(false)
+    // Persist the flag only once the graph is actually open, so a failed open
+    // never strands the user past onboarding. Write through the settings
+    // provider (not a raw save), awaiting hydration first — the provider's
+    // contract for a setting paired with a keychain secret (here the GitHub
+    // token): after a failed load it stays session-only and the next launch
+    // re-onboards, where Start fresh re-opens the existing graph (no data loss).
+    await whenSettingsLoaded()
+    updateSettings({ mobileOnboarded: true })
+  }, [mobileRoot, openRecent, updateSettings, whenSettingsLoaded])
+
   const value = useMemo<GraphContextValue>(
     () => ({
       status,
@@ -258,8 +345,24 @@ export function GraphProvider({
       pickAndOpen,
       openRecent,
       forget,
+      needsOnboarding,
+      mobileRoot,
+      completeOnboarding,
     }),
-    [status, graph, recents, indexGeneration, indexing, error, pickAndOpen, openRecent, forget],
+    [
+      status,
+      graph,
+      recents,
+      indexGeneration,
+      indexing,
+      error,
+      pickAndOpen,
+      openRecent,
+      forget,
+      needsOnboarding,
+      mobileRoot,
+      completeOnboarding,
+    ],
   )
 
   return <GraphContext.Provider value={value}>{children}</GraphContext.Provider>

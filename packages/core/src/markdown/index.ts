@@ -16,6 +16,7 @@ export {
   type MarkdownLink,
   type Heading,
   type AssetRef,
+  type TaskMarker,
   type ParsedNote,
 } from './model'
 export {
@@ -30,10 +31,25 @@ export { parseNote, isTagName, hasAuthoredTitle } from './extract'
 export {
   scanInlineWikiLinks,
   scanInlineImages,
+  scanInlineSegments,
   type InlineWikiLink,
   type InlineImage,
+  type InlineSegment,
 } from './scan'
-export { appendBlock, appendUnderHeading, renameWikiLink } from './edit'
+export {
+  appendBlock,
+  appendUnderHeading,
+  appendTaskLine,
+  editTaskLine,
+  removeTaskLine,
+  renameWikiLink,
+  setTaskDueDate,
+  clearTaskDueDate,
+  taskLineToBullet,
+  toggleTaskMarker,
+  TaskStaleError,
+} from './edit'
+export { parseTaskMarker } from './task-marker'
 export {
   detectConflictMarkers,
   resolveConflictMarkers,

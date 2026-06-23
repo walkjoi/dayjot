@@ -1,11 +1,20 @@
 import type { Database } from '@reflect/db'
 import { sql, type Selectable } from 'kysely'
 import { readNote } from '../graph/commands'
-import { foldTag, normalizeWikiTarget, resolveWikiLinkAsync, type Resolution } from '../markdown'
+import {
+  foldKey,
+  foldTag,
+  normalizeWikiTarget,
+  resolveWikiLinkAsync,
+  type Resolution,
+  type TaskMarker,
+} from '../markdown'
+import { generateDateSuggestions, type DateSuggestionContext } from './date-suggestions'
 import { db } from './db'
 import { buildFtsMatch } from './search-query'
-import { lineSnippet } from './snippet'
+import { lineAt } from './snippet'
 import {
+  mergeDateSuggestions,
   rankWikiSuggestions,
   type AliasCandidate,
   type TitleCandidate,
@@ -37,7 +46,11 @@ export function getBacklinks(path: string): Promise<Backlink[]> {
 export interface BacklinkContext {
   sourcePath: string
   sourceTitle: string
-  /** The line of the source around the link (empty when the file is unreadable). */
+  /**
+   * The whole source line containing the link, as rich-text-renderable Markdown
+   * (empty when the file is unreadable). Not windowed: a half-cut Markdown token
+   * would garble the rendered snippet, so the panel clamps the line visually.
+   */
   snippet: string
   posFrom: number
 }
@@ -77,10 +90,95 @@ export async function getBacklinksWithContext(path: string): Promise<BacklinkCon
     return {
       sourcePath: row.sourcePath,
       sourceTitle: row.sourceTitle,
-      snippet: content == null ? '' : lineSnippet(content, row.posFrom),
+      snippet: content == null ? '' : lineAt(content, row.posFrom),
       posFrom: row.posFrom,
     }
   })
+}
+
+/**
+ * One open task plus the note context the Tasks view (Plan 18) groups and
+ * renders by. The view buckets Current/Overdue/Upcoming off the task's
+ * `dueDate` when it has one, else the source note's `dailyDate`;
+ * `isPinned`/`pinnedOrder`/`updatedAt` order the per-note groups for tasks in
+ * regular (dateless) notes.
+ */
+export interface OpenTask extends TaskMarker {
+  notePath: string
+  /** Whether the checkbox is ticked. Open lists are all `false`; the Tasks view's
+   * "show archived" surfaces completed rows where this is `true`. */
+  checked: boolean
+  /** Display text, markdown stripped. */
+  text: string
+  noteTitle: string
+  /** The task's explicit `[[YYYY-MM-DD]]` due date, or null — drives Overdue (V1). */
+  dueDate: string | null
+  /** ISO date for daily-note tasks; null for tasks in regular notes. */
+  dailyDate: string | null
+  /** Pin flag mapped to a real boolean at the read boundary (SQLite stores `0|1`). */
+  isPinned: boolean
+  pinnedOrder: number | null
+  updatedAt: number
+}
+
+/** Task rows joined to their note context — the shared shape both task reads select. */
+function taskRowsQuery() {
+  return db
+    .selectFrom('tasks')
+    .innerJoin('notes', 'notes.path', 'tasks.notePath')
+    .select([
+      'tasks.notePath',
+      'tasks.markerOffset',
+      'tasks.raw',
+      'tasks.text',
+      'tasks.checked',
+      'tasks.dueDate',
+      'notes.title as noteTitle',
+      'notes.dailyDate',
+      'notes.isPinned',
+      'notes.pinnedOrder',
+      'notes.updatedAt',
+    ])
+}
+
+/** Map the SQLite `0|1` flags to real booleans at the read boundary, like the
+ * other note getters — so `groupTasks` and the view see booleans, not integers. */
+function toTaskRow(row: {
+  checked: number
+  isPinned: number
+}): { checked: boolean; isPinned: boolean } {
+  return { ...row, checked: row.checked !== 0, isPinned: row.isPinned !== 0 }
+}
+
+/**
+ * Every open checkbox across the graph, with note context, for the Tasks view.
+ * `private: true` notes' tasks **are** included: the Tasks view is a local-only
+ * surface that never sends content anywhere — exactly like local search and the
+ * daily stream — so the `private` hard-block (content never leaves the device)
+ * is unaffected. The ordering here is only for a deterministic result; the final
+ * grouping and sort live in {@link groupTasks}, so this read just gathers the rows.
+ */
+export async function getOpenTasks(): Promise<OpenTask[]> {
+  const rows = await taskRowsQuery()
+    .where('tasks.checked', '=', 0)
+    .orderBy('tasks.notePath')
+    .orderBy('tasks.markerOffset')
+    .execute()
+  return rows.map((row) => ({ ...row, ...toTaskRow(row) }))
+}
+
+/**
+ * Completed checkboxes across the graph, most-recently-edited note first — the
+ * Tasks view's "show archived" surface. Same shape as {@link getOpenTasks}, so
+ * the view groups and renders both the same way (completed rows struck through).
+ */
+export async function getCompletedTasks(): Promise<OpenTask[]> {
+  const rows = await taskRowsQuery()
+    .where('tasks.checked', '=', 1)
+    .orderBy('notes.updatedAt', 'desc')
+    .orderBy('tasks.markerOffset')
+    .execute()
+  return rows.map((row) => ({ ...row, ...toTaskRow(row) }))
 }
 
 /** Distinct source paths of links whose folded target key is `targetKey`. */
@@ -100,14 +198,53 @@ function likeContains(key: string): string {
   return `%${key.replaceAll(/[\\%_]/g, (match) => `\\${match}`)}%`
 }
 
+/** One `#tag` autocomplete candidate: display casing + how many notes carry it. */
+export interface TagSuggestion {
+  tag: string
+  count: number
+}
+
+/**
+ * `#` autocomplete candidates for `query` (Plan 18): tags whose folded key
+ * contains the query, most-used first, deduped on the stored `tag_key` so
+ * `#Book`/`#book` are one row with one deterministic casing. An empty query
+ * suggests the most-used tags. Mirrors how {@link suggestWikiTargets} feeds the
+ * `[[` menu — the host ranks, the editor's menu does not re-sort.
+ */
+export async function suggestTags(query: string, limit = 8): Promise<TagSuggestion[]> {
+  const key = foldTag(query.trim())
+  let candidates = db
+    .selectFrom('tags')
+    .select([sql<string>`min(tags.tag)`.as('tag'), sql<number>`count(*)`.as('count')])
+    .groupBy('tags.tagKey')
+    .orderBy(sql`count(*)`, 'desc')
+    .orderBy(sql`min(tags.tag)`)
+    .limit(limit)
+  if (key !== '') {
+    candidates = candidates.where(sql<boolean>`tag_key LIKE ${likeContains(key)} ESCAPE '\\'`)
+  }
+  const rows = await candidates.execute()
+  return rows.map((row) => ({ tag: row.tag, count: Number(row.count) }))
+}
+
 /**
  * `[[` autocomplete candidates for `query` (Plan 07): title and alias contains-
  * matches ranked by {@link rankWikiSuggestions} (exact < prefix < substring,
  * titles before aliases, recent first); an empty query suggests recent notes.
  * A full `YYYY-MM-DD` query always yields that daily as the first candidate —
  * dailies are valid targets before their file exists (created lazily on write).
+ *
+ * Pass `dateGen` (the clock + date-format preference) to also synthesise
+ * date suggestions from fuzzy queries — "3 days ago", "next friday", "12/25",
+ * "December 2nd" — via {@link generateDateSuggestions}, merged ahead of the
+ * index matches. Omit it (e.g. legacy callers) to keep the plain title/alias
+ * behaviour with only the full-ISO daily injection.
  */
-export async function suggestWikiTargets(query: string, limit = 8): Promise<WikiSuggestion[]> {
+export async function suggestWikiTargets(
+  query: string,
+  limit = 8,
+  dateGen?: DateSuggestionContext,
+): Promise<WikiSuggestion[]> {
   const normalized = normalizeWikiTarget(query)
   const key = normalized.key
 
@@ -144,6 +281,12 @@ export async function suggestWikiTargets(query: string, limit = 8): Promise<Wiki
   }
 
   const ranked = rankWikiSuggestions(key, titles, aliases, limit)
+
+  // With a clock, the generator covers the full-ISO daily too (and more), so it
+  // supersedes the bare injection below.
+  if (dateGen !== undefined) {
+    return mergeDateSuggestions(ranked, generateDateSuggestions(query, dateGen), { key, limit })
+  }
 
   if (normalized.date !== undefined) {
     const date = normalized.date
@@ -382,17 +525,31 @@ export async function getIndexMeta(key: string): Promise<string | null> {
 /** A full-text search result: the note's path and title. */
 export type SearchHit = Pick<Selectable<Database['searchFts']>, 'path' | 'title'>
 
-/** Full-text search over title + body (FTS5 `MATCH`, ranked). */
+/**
+ * Full-text search over title + body (FTS5 `MATCH`), ranked like the palette's
+ * lexical search (`searchWithFilters` in `filtered-search.ts`): an exact title
+ * match leads, then title-boosted bm25, then pinned and recency as
+ * deterministic tiebreakers, with `path` as the stable final fallback. The
+ * `notes` join supplies the title-rank/pinned/recency columns; the exact-title
+ * key is folded the same way titles were at index time so it can't drift from
+ * the stored `notes.title_key`.
+ */
 export async function searchNotes(query: string, limit = 50): Promise<SearchHit[]> {
   const match = buildFtsMatch(query)
   if (match === null) {
     return [] // nothing to search (FTS5 also errors on an empty MATCH).
   }
+  const titleKey = foldKey(query)
   return db
     .selectFrom('searchFts')
-    .select(['path', 'title'])
+    .innerJoin('notes', 'notes.path', 'searchFts.path')
+    .select(['searchFts.path', 'searchFts.title'])
     .where(sql<boolean>`search_fts MATCH ${match}`)
-    .orderBy(sql`rank`)
+    .orderBy(sql`case when "notes"."title_key" = ${titleKey} then 0 else 1 end`)
+    .orderBy(sql`bm25(search_fts, 0, 10.0, 1.0)`)
+    .orderBy('notes.isPinned', 'desc')
+    .orderBy('notes.mtime', 'desc')
+    .orderBy('notes.path', 'asc')
     .limit(limit)
     .execute()
 }

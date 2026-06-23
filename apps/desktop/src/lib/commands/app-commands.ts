@@ -1,12 +1,18 @@
-import { errorMessage, getNote, getPinnedNotes, randomNotePath } from '@reflect/core'
+import {
+  errorMessage,
+  getNote,
+  getPinnedNotes,
+  hasBridge,
+  randomNotePath,
+  toggleDevtools,
+} from '@reflect/core'
 import { untitledNotePath } from '@/lib/create-note'
-import { todayIso } from '@/lib/dates'
 import { runGistPublish } from '@/lib/note-gist'
 import { toggleNotePinned } from '@/lib/note-pin'
 import { toggleNotePrivate } from '@/lib/note-private'
 import { startOperation } from '@/lib/operations'
 import { rebuildIndexVisibly } from '@/lib/rebuild-index'
-import { notePathForRoute, type Route } from '@/routing/route'
+import { type Route } from '@/routing/route'
 import { registerCommands } from './registry'
 import type { AppCommand } from './types'
 
@@ -37,7 +43,15 @@ const APP_COMMANDS: AppCommand[] = [
     id: 'nav.allNotes',
     title: 'All notes',
     keywords: ['notes', 'list', 'browse', 'library'],
+    keybinding: 'Mod-Shift-a',
     run: (context) => context.navigate({ kind: 'allNotes', tag: null }),
+  },
+  {
+    id: 'nav.tasks',
+    title: 'Tasks',
+    keywords: ['todo', 'todos', 'checklist', 'checkbox', 'open'],
+    keybinding: 'Mod-t',
+    run: (context) => context.navigate({ kind: 'tasks' }),
   },
   {
     id: 'note.new',
@@ -52,6 +66,18 @@ const APP_COMMANDS: AppCommand[] = [
     keywords: ['ai', 'assistant', 'copilot', 'ask'],
     keybinding: 'Mod-j',
     run: (context) => context.navigate({ kind: 'chat' }),
+  },
+  {
+    id: 'chat.new',
+    title: 'New chat',
+    keywords: ['ai', 'assistant', 'copilot', 'conversation'],
+    keybinding: 'Mod-Shift-n',
+    run: (context) => {
+      if (context.route().kind !== 'chat') {
+        return
+      }
+      context.newChat()
+    },
   },
   {
     id: 'history.back',
@@ -82,7 +108,7 @@ const APP_COMMANDS: AppCommand[] = [
     keybinding: 'Mod-o',
     run: async (context) => {
       const generation = context.generation()
-      const path = notePathForRoute(context.route(), todayIso())
+      const path = context.notePath()
       if (generation === null || path === null) {
         return
       }
@@ -109,7 +135,7 @@ const APP_COMMANDS: AppCommand[] = [
     // keyboard-reachable without spending a shortcut.
     run: async (context) => {
       const generation = context.generation()
-      const path = notePathForRoute(context.route(), todayIso())
+      const path = context.notePath()
       if (generation === null || path === null) {
         return
       }
@@ -127,8 +153,8 @@ const APP_COMMANDS: AppCommand[] = [
   },
   {
     id: 'note.publishGist',
-    title: 'Publish note to gist',
-    keywords: ['gist', 'github', 'share', 'publish', 'export'],
+    title: 'Share with private link',
+    keywords: ['gist', 'github', 'share', 'publish', 'private link', 'export'],
     // Publishes the body of the note the current route edits to a secret
     // GitHub gist (republishing to the same gist thereafter) and copies the
     // link. No default keybinding: the palette keeps it keyboard-reachable
@@ -136,7 +162,7 @@ const APP_COMMANDS: AppCommand[] = [
     // progress line, the failure surface, and the "link copied" confirmation.
     run: async (context) => {
       const generation = context.generation()
-      const path = notePathForRoute(context.route(), todayIso())
+      const path = context.notePath()
       if (generation === null || path === null) {
         return
       }
@@ -209,6 +235,26 @@ const APP_COMMANDS: AppCommand[] = [
         return
       }
       await rebuildIndexVisibly(generation)
+    },
+  },
+  {
+    id: 'dev.toggleDevtools',
+    title: 'Developer tools',
+    keywords: ['devtools', 'inspector', 'debug', 'console', 'inspect', 'web inspector'],
+    // The web inspector ships in every build (see `src-tauri/src/devtools.rs`),
+    // so users can always debug. Plain-browser dev has no native shell — and its
+    // own DevTools — so this no-ops there rather than throwing through the
+    // bridge. Errors are swallowed: a debug affordance never interrupts the user.
+    keybinding: 'Mod-Shift-i',
+    run: async () => {
+      if (!hasBridge()) {
+        return
+      }
+      try {
+        await toggleDevtools()
+      } catch {
+        // Best effort — opening the inspector is never worth a surfaced failure.
+      }
     },
   },
 ]

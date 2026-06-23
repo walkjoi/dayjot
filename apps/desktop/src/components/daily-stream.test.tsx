@@ -1,11 +1,15 @@
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEffect, useLayoutEffect, useState, type ReactElement, type ReactNode } from 'react'
 import { setBridge } from '@reflect/core'
+import {
+  FocusedDailyProvider,
+  useFocusedDailyDate,
+} from '@/providers/focused-daily-provider'
 import { RouterProvider, useRouter } from '@/routing/router'
 import { todayIso } from '@/lib/dates'
-import { createDayWindow, indexOfDate } from '@/lib/day-window'
+import { createDayWindow, dateAtIndex, indexOfDate } from '@/lib/day-window'
 import { DailyStream, ESTIMATED_DAY_HEIGHT } from './daily-stream'
 
 /**
@@ -29,7 +33,7 @@ vi.mock('@/providers/graph-provider', () => ({
 }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({
-    settings: { dateFormat: 'mdy', editorMarkdownSyntax: 'always', editorSpellCheck: true },
+    settings: { dateFormat: 'mdy', editorMarkdownSyntax: 'hide', editorSpellCheck: true },
     updateSettings: async () => {},
   }),
 }))
@@ -119,7 +123,7 @@ describe('DailyStream', () => {
 
     const expected = indexOfDate(createDayWindow(today), today) * ESTIMATED_DAY_HEIGHT
     expect(scrollToSpy.mock.calls.length).toBeGreaterThan(0)
-    expect(scrollToSpy.mock.calls[0][0]).toMatchObject({ top: expected })
+    expect(scrollToSpy.mock.calls[0]![0]).toMatchObject({ top: expected })
     view.unmount()
   })
 
@@ -139,7 +143,7 @@ describe('DailyStream', () => {
     )
 
     expect(scrollToSpy.mock.calls.length).toBeGreaterThan(0)
-    expect(scrollToSpy.mock.calls[0][0]).toMatchObject({ top: 4321 })
+    expect(scrollToSpy.mock.calls[0]![0]).toMatchObject({ top: 4321 })
     view.unmount()
   })
 
@@ -170,7 +174,34 @@ describe('DailyStream', () => {
 
     const expected = indexOfDate(createDayWindow(today), today) * ESTIMATED_DAY_HEIGHT
     expect(commandsDuringLayout).toBeGreaterThanOrEqual(2)
-    expect(scrollToSpy.mock.calls[commandsDuringLayout - 1][0]).toMatchObject({ top: expected })
+    expect(scrollToSpy.mock.calls[commandsDuringLayout - 1]![0]).toMatchObject({ top: expected })
+    view.unmount()
+  })
+
+  it('reports the focused day so the sidebar can follow it within the stream', () => {
+    const today = todayIso()
+    const dayWindow = createDayWindow(today)
+    let focused: string | null = 'unset'
+    function FocusProbe(): null {
+      focused = useFocusedDailyDate()
+      return null
+    }
+    const view = render(
+      <StreamProviders>
+        <FocusedDailyProvider>
+          <DailyStream targetDate={today} />
+          <FocusProbe />
+        </FocusedDailyProvider>
+      </StreamProviders>,
+    )
+
+    // Focus enters a stream row (the route is unchanged): the sidebar's day
+    // must move to that row's date, not stay on the routed day.
+    const row = view.container.querySelector('[data-index]') as HTMLElement
+    const date = dateAtIndex(dayWindow, Number(row.getAttribute('data-index')))
+    fireEvent.focusIn(row)
+
+    expect(focused).toBe(date)
     view.unmount()
   })
 

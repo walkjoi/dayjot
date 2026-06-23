@@ -1,8 +1,13 @@
-import { useEffect, useState, type FormEvent, type ReactElement } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactElement } from 'react'
 import { browser } from 'wxt/browser'
-import { buildWireMessage } from '@/lib/capture-message'
-import { enqueueCapture, readQueue } from '@/lib/flush'
-import { flushResultSchema, type FlushResult } from '@/lib/messages'
+import { readQueue } from '@/lib/flush'
+import type { FlushResult } from '@/lib/messages'
+import { saveCapture } from '@/lib/save-capture'
+import {
+  readIncludePageTextPreference,
+  writeIncludePageTextPreference,
+} from '@/lib/popup-preferences'
+import { tryExtractPageText } from './extract-page-text'
 import { useCapturedPage } from './use-captured-page'
 
 /**
@@ -22,30 +27,6 @@ type SaveState =
 const RELEASES_URL = 'https://github.com/team-reflect/reflect-open/releases/latest'
 const CLOSE_DELAY_MS = 900
 
-type SaveOutcome =
-  | { fate: 'queued' }
-  | { fate: 'held'; result: FlushResult }
-  | { fate: 'rejected' }
-
-/**
- * Persist the capture, flush, and report **this capture's** fate — aggregate
- * flush counts can't distinguish an older queued entry's failure from the
- * current save's, so the verdict comes from this id's rejection or its
- * continued presence in the queue.
- */
-async function saveCapture(page: Parameters<typeof buildWireMessage>[0]): Promise<SaveOutcome> {
-  const wire = buildWireMessage(page)
-  await enqueueCapture(wire)
-  const response: unknown = await browser.runtime.sendMessage({ type: 'flush' })
-  const result = flushResultSchema.parse(response)
-  if (result.rejectedIds.includes(wire.envelope.id)) {
-    return { fate: 'rejected' }
-  }
-  const queue = await readQueue()
-  const stillHeld = queue.some((entry) => entry.wire.envelope.id === wire.envelope.id)
-  return stillHeld ? { fate: 'held', result } : { fate: 'queued' }
-}
-
 function holdMessage(result: FlushResult): string {
   switch (result.holdReason) {
     case 'no-host':
@@ -60,11 +41,37 @@ function holdMessage(result: FlushResult): string {
 export function CapturePopup(): ReactElement {
   const captured = useCapturedPage()
   const [note, setNote] = useState('')
+  const [includePageText, setIncludePageText] = useState(false)
+  const includePageTextTouched = useRef(false)
+  const [includePageTextPreferenceLoaded, setIncludePageTextPreferenceLoaded] = useState(false)
   const [save, setSave] = useState<SaveState>({ phase: 'idle' })
   const [heldCount, setHeldCount] = useState(0)
 
   useEffect(() => {
     void readQueue().then((queue) => setHeldCount(queue.length))
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void readIncludePageTextPreference().then(
+      (preference) => {
+        if (!cancelled && !includePageTextTouched.current) {
+          setIncludePageText(preference)
+        }
+        if (!cancelled) {
+          setIncludePageTextPreferenceLoaded(true)
+        }
+      },
+      (cause) => {
+        console.warn('capture page text preference could not be read:', cause)
+        if (!cancelled) {
+          setIncludePageTextPreferenceLoaded(true)
+        }
+      },
+    )
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -77,17 +84,29 @@ export function CapturePopup(): ReactElement {
 
   async function onSubmit(event: FormEvent): Promise<void> {
     event.preventDefault()
-    if (captured.status !== 'ready' || save.phase === 'saving' || save.phase === 'queued') {
+    if (
+      captured.status !== 'ready' ||
+      !includePageTextPreferenceLoaded ||
+      save.phase === 'saving' ||
+      save.phase === 'queued'
+    ) {
       return
     }
     setSave({ phase: 'saving' })
     try {
-      const outcome = await saveCapture({
-        ...captured.page,
-        note,
-        id: crypto.randomUUID(),
-        capturedAt: new Date(),
-      })
+      const contentText = includePageText
+        ? await tryExtractPageText(captured.tabId, captured.page.url)
+        : undefined
+      const outcome = await saveCapture(
+        {
+          ...captured.page,
+          contentText,
+          note,
+          id: crypto.randomUUID(),
+          capturedAt: new Date(),
+        },
+        () => browser.runtime.sendMessage({ type: 'flush' }),
+      )
       if (outcome.fate === 'queued') {
         setSave({ phase: 'queued' })
       } else if (outcome.fate === 'held') {
@@ -110,7 +129,17 @@ export function CapturePopup(): ReactElement {
 
   const { page } = captured
   const host = new URL(page.url).host
-  const busy = save.phase === 'saving' || save.phase === 'queued'
+  const busy =
+    save.phase === 'saving' || save.phase === 'queued' || !includePageTextPreferenceLoaded
+
+  function onIncludePageTextChange(checked: boolean): void {
+    includePageTextTouched.current = true
+    setIncludePageTextPreferenceLoaded(true)
+    setIncludePageText(checked)
+    void writeIncludePageTextPreference(checked).catch((cause) => {
+      console.warn('capture page text preference could not be saved:', cause)
+    })
+  }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3 p-3">
@@ -139,6 +168,16 @@ export function CapturePopup(): ReactElement {
         disabled={busy}
         className="rounded-md border border-border bg-input-bg px-2 py-1.5 text-sm text-text outline-none placeholder:text-text-muted focus:ring-2 focus:ring-focus-ring"
       />
+      <label className="flex items-center gap-2 text-xs text-text-secondary">
+        <input
+          type="checkbox"
+          checked={includePageText}
+          onChange={(event) => onIncludePageTextChange(event.target.checked)}
+          disabled={busy}
+          className="size-3.5 rounded border-border text-accent focus:ring-focus-ring"
+        />
+        Capture page text
+      </label>
       <button
         type="submit"
         disabled={busy}

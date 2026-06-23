@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { setBridge } from '../ipc/bridge'
-import { applyIndexChanges, subscribeIndexChanges } from './live'
 import type { FileChange } from './file-changes'
+import { subscribeIndexApplied } from './index-applied'
+import { applyIndexChanges, subscribeIndexChanges } from './live'
 
 afterEach(() => {
   setBridge(null)
@@ -27,13 +28,13 @@ describe('applyIndexChanges', () => {
     const applied: string[] = []
     fakeBridge(async (command, args) => {
       if (command === 'note_read') {
-        if (args.path === 'notes/bad.md') {
+        if (args['path'] === 'notes/bad.md') {
           throw { kind: 'io', message: 'unreadable' }
         }
         return '# ok'
       }
       if (command === 'index_apply') {
-        applied.push((args.note as { path: string }).path)
+        applied.push((args['note'] as { path: string }).path)
       }
       return null
     })
@@ -88,8 +89,8 @@ describe('subscribeIndexChanges', () => {
     let releaseFirstRead: () => void = () => {}
     const { emitChanges } = fakeBridge(async (command, args) => {
       if (command === 'note_read') {
-        order.push(`read:${String(args.path)}`)
-        if (args.path === 'notes/slow.md') {
+        order.push(`read:${String(args['path'])}`)
+        if (args['path'] === 'notes/slow.md') {
           await new Promise<void>((resolve) => {
             releaseFirstRead = resolve
           })
@@ -97,7 +98,7 @@ describe('subscribeIndexChanges', () => {
         return '# content'
       }
       if (command === 'index_apply') {
-        order.push(`apply:${(args.note as { path: string }).path}`)
+        order.push(`apply:${(args['note'] as { path: string }).path}`)
       }
       return null
     })
@@ -130,7 +131,7 @@ describe('subscribeIndexChanges', () => {
         return '# content'
       }
       if (command === 'index_apply') {
-        order.push(`apply:${(args.note as { path: string }).path}`)
+        order.push(`apply:${(args['note'] as { path: string }).path}`)
       }
       return null
     })
@@ -151,6 +152,52 @@ describe('subscribeIndexChanges', () => {
     expect(order).toEqual(['apply:notes/a.md', 'applied:notes/a.md'])
   })
 
+  it('emits index-applied to subscribers after the batch is written — notes settle first', async () => {
+    const order: string[] = []
+    const { emitChanges } = fakeBridge(async (command, args) => {
+      if (command === 'note_read') {
+        return '# content'
+      }
+      if (command === 'index_apply') {
+        order.push(`apply:${(args['note'] as { path: string }).path}`)
+      }
+      return null
+    })
+    const unsubscribe = subscribeIndexApplied((changes) => {
+      order.push(`applied:${changes.map((change) => change.path).join(',')}`)
+    })
+
+    await subscribeIndexChanges(1)
+    // A note batch, then an asset-only batch: the asset emit must follow the
+    // note's apply, so a gate reading the index off the asset emit sees the note.
+    emitChanges([{ path: 'notes/a.md', kind: 'upsert' }])
+    emitChanges([{ path: 'assets/x.png', kind: 'upsert' }])
+    await vi.waitFor(() => {
+      expect(order).toContain('applied:assets/x.png')
+    })
+
+    expect(order).toEqual(['apply:notes/a.md', 'applied:notes/a.md', 'applied:assets/x.png'])
+    unsubscribe()
+  })
+
+  it('does not emit index-applied for a recordings-only batch', async () => {
+    const seen: string[] = []
+    const { emitChanges } = fakeBridge(async () => null)
+    const unsubscribe = subscribeIndexApplied((changes) => {
+      seen.push(changes.map((change) => change.path).join(','))
+    })
+
+    await subscribeIndexChanges(1)
+    emitChanges([{ path: 'audio-memos/audio-memo-2026-06-12-090000-000.m4a', kind: 'upsert' }])
+    emitChanges([{ path: 'assets/y.png', kind: 'upsert' }]) // something to wait on
+    await vi.waitFor(() => {
+      expect(seen).toContain('assets/y.png')
+    })
+
+    expect(seen).toEqual(['assets/y.png']) // the recordings batch emitted nothing
+    unsubscribe()
+  })
+
   it('stamps the indexed row with the modifiedMs carried by the event', async () => {
     const mtimes: number[] = []
     const { emitChanges } = fakeBridge(async (command, args) => {
@@ -158,7 +205,7 @@ describe('subscribeIndexChanges', () => {
         return '# content'
       }
       if (command === 'index_apply') {
-        mtimes.push((args.note as { mtime: number }).mtime)
+        mtimes.push((args['note'] as { mtime: number }).mtime)
       }
       return null
     })
@@ -201,13 +248,13 @@ describe('applyIndexChanges move healing (Plan 17)', () => {
     fakeBridge(async (command, args) => {
       calls.push([command, args])
       if (command === 'note_read') {
-        if (args.path === NEW) {
+        if (args['path'] === NEW) {
           return CONTENT
         }
         throw { kind: 'notFound', message: 'missing' }
       }
       if (command === 'db_query') {
-        const params = (args.params as unknown[]) ?? []
+        const params = (args['params'] as unknown[]) ?? []
         if (params.includes(OLD)) {
           return [{ path: OLD, id: options?.rowId === undefined ? '01abcdefghjkmnpqrstvwxyz00' : options.rowId }]
         }
@@ -235,8 +282,8 @@ describe('applyIndexChanges move healing (Plan 17)', () => {
     const move = calls.find(([command]) => command === 'index_move')
     expect(move?.[1]).toEqual({ from: OLD, to: NEW, generation: 7 })
     const apply = calls.find(([command]) => command === 'index_apply')
-    expect((apply?.[1].note as { path: string; mtime: number }).path).toBe(NEW)
-    expect((apply?.[1].note as { path: string; mtime: number }).mtime).toBe(42)
+    expect((apply?.[1]['note'] as { path: string; mtime: number }).path).toBe(NEW)
+    expect((apply?.[1]['note'] as { path: string; mtime: number }).mtime).toBe(42)
   })
 
   it('announces the heal via onMoved so the app can follow', async () => {

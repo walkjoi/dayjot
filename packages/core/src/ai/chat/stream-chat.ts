@@ -24,8 +24,14 @@ import {
  * shapes (and the only code that knows tool names) live in `./tools`.
  */
 
-/** Ceiling on model↔tool round-trips per user turn. */
-const MAX_STEPS = 8
+/**
+ * Ceiling on model↔tool round-trips per user turn. The model batches several
+ * tool calls into each step, so this is generous headroom for multi-note
+ * gathering rather than a tight budget — and the `prepareStep` hook below
+ * guarantees the turn still ends with a reply when the ceiling is reached
+ * mid-gather (see {@link streamChatTurn}).
+ */
+export const MAX_STEPS = 12
 
 export interface StreamChatOptions {
   /** The provider entry to call, with `model` set to the model id to use. */
@@ -41,6 +47,8 @@ export interface StreamChatOptions {
   messages: ModelMessage[]
   /** Local ISO date for the system prompt (daily-note key space). */
   today: string
+  /** Whether note search can use embeddings for meaning-based recall. */
+  semanticSearchEnabled: boolean
   /**
    * Graph overview for the system prompt (`loadChatGraphContext`), or
    * `null` to send the prompt without it — required so call sites decide
@@ -71,11 +79,16 @@ export type ChatStreamEvent =
 export function streamChat(options: StreamChatOptions): AsyncGenerator<ChatStreamEvent> {
   const messages = fitToContextWindow(options.messages, {
     contextWindow: modelContextWindow(options.config.provider, options.config.model),
-    systemPrompt: chatSystemPrompt({ today: options.today, context: options.context }),
+    systemPrompt: chatSystemPrompt({
+      today: options.today,
+      context: options.context,
+      semanticSearchEnabled: options.semanticSearchEnabled,
+    }),
   })
   return streamChatTurn(languageModel(options.config, options.apiKey, options.fetchFn), {
     messages,
     today: options.today,
+    semanticSearchEnabled: options.semanticSearchEnabled,
     context: options.context,
     signal: options.signal,
   })
@@ -87,12 +100,14 @@ export interface ChatTurnOptions {
   messages: ModelMessage[]
   /** Local ISO date for the system prompt (daily-note key space). */
   today: string
+  /** Whether note search can use embeddings for meaning-based recall. */
+  semanticSearchEnabled: boolean
   /** Graph overview for the system prompt, or `null` to omit the block. */
   context: CloudSafe<CloudGraphContext> | null
   /** Aborts the provider call mid-stream (the UI's stop button). */
-  signal?: AbortSignal
+  signal?: AbortSignal | undefined
   /** Test seam for the note tools' effects. */
-  toolDeps?: NoteToolDeps
+  toolDeps?: NoteToolDeps | undefined
 }
 
 /**
@@ -109,7 +124,10 @@ export async function* streamChatTurn(
   model: LanguageModel,
   options: ChatTurnOptions,
 ): AsyncGenerator<ChatStreamEvent> {
-  const tools = buildNoteTools(options.toolDeps)
+  const tools = buildNoteTools({
+    ...options.toolDeps,
+    semanticSearchEnabled: options.semanticSearchEnabled,
+  })
 
   // Messages for all *completed* steps (cumulative, assistant/tool pairs)…
   let stepMessages: ModelMessage[] = []
@@ -123,11 +141,22 @@ export async function* streamChatTurn(
   try {
     const result = streamText({
       model,
-      system: chatSystemPrompt({ today: options.today, context: options.context }),
+      system: chatSystemPrompt({
+        today: options.today,
+        context: options.context,
+        semanticSearchEnabled: options.semanticSearchEnabled,
+      }),
       messages: options.messages,
       tools,
       stopWhen: stepCountIs(MAX_STEPS),
-      abortSignal: options.signal,
+      // On the final permitted step, disable tools so the model must answer
+      // from what it has already gathered. Without this a turn still calling
+      // tools when the ceiling fires ends on a tool result with no reply — the
+      // user sees tool activity, then silence. `stepNumber` counts completed
+      // steps, so the last step that runs is `MAX_STEPS - 1`.
+      prepareStep: ({ stepNumber }) =>
+        stepNumber >= MAX_STEPS - 1 ? { toolChoice: 'none' } : {},
+      ...(options.signal !== undefined ? { abortSignal: options.signal } : {}),
       onStepFinish: (step) => {
         stepMessages = [...step.response.messages]
       },

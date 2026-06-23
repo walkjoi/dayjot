@@ -21,6 +21,7 @@ export {
   type AppPlatform,
 } from './ipc/commands'
 export { confirmQuit, subscribeQuitRequested } from './app/quit'
+export { toggleDevtools } from './app/devtools'
 
 // Embeddings & retrieval (Plan 09)
 export { chunkNote, type NoteChunk } from './embeddings/chunk'
@@ -63,6 +64,8 @@ export {
   notePath,
   assetPath,
   audioMemoPath,
+  descriptionPathFor,
+  DESCRIPTION_SUFFIX,
   isDaily,
   isNotePath,
   dateFromDailyPath,
@@ -82,6 +85,7 @@ export {
   writeNote,
   writeAsset,
   readAsset,
+  openAsset,
   listDir,
   noteExists,
   deleteNote,
@@ -96,13 +100,22 @@ export {
   captureMetaFetch,
   promoteCaptureScreenshot,
 } from './graph/commands'
+export {
+  importReflectMarkdownZip,
+  type ReflectMarkdownImportOptions,
+  type ReflectMarkdownImportProgress,
+  type ReflectMarkdownImportResult,
+} from './import/v1-markdown'
 
 // User settings (config-dir JSON document; Rust persists, this layer validates)
 export {
   settingsSchema,
   editorMarkdownSyntaxSchema,
   editorSpellCheckSchema,
+  editorDefaultBulletSchema,
+  editorBulletAfterHeadingSchema,
   semanticSearchEnabledSchema,
+  describeAssetsSchema,
   themePreferenceSchema,
   timeFormatSchema,
   dateFormatSchema,
@@ -181,6 +194,7 @@ export {
   buildNoteTools,
   MAX_DAILY_NOTE_DAYS,
   MAX_NOTE_CONTENT_CHARS,
+  MAX_READ_NOTES,
   type ListDailyNotesOutput,
   type ListRecentNotesOutput,
   type NoteHitSummary,
@@ -188,7 +202,9 @@ export {
   type NoteToolDeps,
   type NoteToolResult,
   type NoteTools,
-  type ReadNoteOutput,
+  type ReadNoteResult,
+  type ReadNoteSummary,
+  type ReadNotesOutput,
   type SearchNotesOutput,
 } from './ai/chat/tools'
 export { chatSystemPrompt, type SystemPromptInput } from './ai/chat/system-prompt'
@@ -206,6 +222,7 @@ export {
   appendEvent,
   buildHistory,
   isToolPending,
+  NO_REPLY_NOTICE,
   userMessage,
   type AssistantPart,
   type ChatAttachment,
@@ -238,6 +255,7 @@ export {
   audioMemoFromPath,
   audioMemoIdentity,
   captureAudioMemo,
+  isSilentStop,
   listPendingAudioMemos,
   reconcileAudioMemos,
   type AudioMemoIdentity,
@@ -282,6 +300,26 @@ export {
   DescriptionRejectedError,
   type DescribePageRequest,
 } from './ai/describe-page'
+
+// Asset descriptions (Plan 20)
+export {
+  isAssetDescriptionRejected,
+  AssetDescriptionRejectedError,
+  type AssetKind,
+  type DescribeAssetRequest,
+} from './ai/describe-asset'
+export {
+  buildDescriptionSource,
+  classifyAsset,
+  isEligibleAssetPath,
+  reconcileAssetDescriptions,
+  readManagedDescription,
+  type AssetDescriptionMeta,
+  type AssetDescriptionMode,
+  type AssetVerdict,
+  type ReconcileAssetDescriptionsInput,
+  type ReconcileAssetDescriptionsOutcome,
+} from './actions/asset-description'
 
 // Backup & sync (Plan 12)
 export {
@@ -345,7 +383,16 @@ export {
   parseNote,
   appendBlock,
   appendUnderHeading,
+  appendTaskLine,
+  editTaskLine,
+  removeTaskLine,
+  parseTaskMarker,
   renameWikiLink,
+  setTaskDueDate,
+  clearTaskDueDate,
+  taskLineToBullet,
+  toggleTaskMarker,
+  TaskStaleError,
   resolved,
   resolveWikiLink,
   resolveWikiLinkAsync,
@@ -361,6 +408,7 @@ export {
   wikiLinkExtension,
   scanInlineWikiLinks,
   scanInlineImages,
+  scanInlineSegments,
   foldKey,
   foldTag,
   isTagName,
@@ -375,9 +423,11 @@ export {
   type MarkdownLink,
   type Heading,
   type AssetRef,
+  type TaskMarker,
   type ParsedNote,
   type InlineWikiLink,
   type InlineImage,
+  type InlineSegment,
   type FrontmatterSplit,
   type ParsedFrontmatter,
   type NormalizedTarget,
@@ -397,6 +447,7 @@ export {
   watchStart,
   watchStop,
   subscribeIndexChanges,
+  subscribeIndexApplied,
   subscribeFileChanges,
   emitFileChanges,
   setLocalWriteEcho,
@@ -407,6 +458,7 @@ export {
   indexedLinkSchema,
   indexedAliasSchema,
   indexNote,
+  reindexNotesReferencing,
   rebuildIndex,
   reconcileIndex,
   syncIndex,
@@ -420,6 +472,10 @@ export {
   getLinkSources,
   getNote,
   getNotesByTag,
+  getOpenTasks,
+  getCompletedTasks,
+  groupTasks,
+  taskDateBucket,
   listDailyNotes,
   listNotes,
   listNoteTags,
@@ -427,6 +483,7 @@ export {
   getPinnedNotes,
   searchNotes,
   suggestWikiTargets,
+  suggestTags,
   getIndexedHashes,
   resolveWikiTarget,
   rewriteLinksForTitleChange,
@@ -447,6 +504,9 @@ export {
   type DailyNotesRange,
   type DuplicateIdGroup,
   type NoteRow,
+  type OpenTask,
+  type TaskGroup,
+  type TaskGroupKind,
   type NoteListEntry,
   type NoteListOptions,
   type NoteTagFacet,
@@ -454,8 +514,11 @@ export {
   type RecentNotesOptions,
   type PinnedNote,
   type SearchHit,
+  type TagSuggestion,
   type FileChange,
   type WikiSuggestion,
+  type GeneratedDate,
+  type DateSuggestionContext,
   type HighlightSegment,
   type ParsedSearchQuery,
   type SearchFilters,

@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react'
+import { useMemo, useState, type ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { dailyDatesInRange, hasBridge, type WeekStartDay } from '@reflect/core'
 import { CalendarIcon } from '@/components/icons/calendar-icon'
@@ -68,7 +68,10 @@ export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactEle
     queryFn: () => dailyDatesInRange(grid.start, grid.end),
     enabled: hasBridge() && graph !== null,
   })
-  const noted = new Set(notedDates ?? [])
+  // The sidebar re-renders as the focused day scrolls through the stream; with
+  // the query result reference-stable (structural sharing), rebuild the lookup
+  // set only when the noted dates actually change.
+  const noted = useMemo(() => new Set(notedDates ?? []), [notedDates])
 
   return (
     <div aria-label="Calendar" className="group min-w-36">
@@ -76,10 +79,9 @@ export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactEle
         <div className="cursor-default text-sm font-semibold text-text">
           {monthLabel(month)}
         </div>
-        {/* z-40 lifts the buttons above the WindowDragRegion strip overlaying
-            the title-bar band, so clicks land instead of dragging the window
-            (see NavigateArrows for the stacking contract). */}
-        <nav className="relative z-40 flex items-center justify-center space-x-1 text-text-muted">
+        {/* window-drag-control lifts the buttons above the WindowDragRegion strip
+            overlaying the title-bar band (see NavigateArrows for the contract). */}
+        <nav className="window-drag-control flex items-center justify-center space-x-1 text-text-muted">
           <button
             type="button"
             aria-label="Previous month"
@@ -125,7 +127,7 @@ export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactEle
 
         <div className="px-4 py-2">
           {grid.weeks.map((week) => (
-            <div key={week[0].date} className="grid grid-cols-7 text-center">
+            <div key={week[0]!.date} className="grid grid-cols-7 text-center">
               {week.map((cell) => {
                 const isSelected = cell.date === selectedDate
                 const isToday = cell.date === today

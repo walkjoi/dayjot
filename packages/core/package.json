@@ -13,22 +13,24 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.83",
-    "@ai-sdk/google": "^3.0.81",
-    "@ai-sdk/openai": "^3.0.70",
+    "@ai-sdk/anthropic": "^3.0.85",
+    "@ai-sdk/google": "^3.0.83",
+    "@ai-sdk/openai": "^3.0.73",
     "@lezer/common": "^1.5.2",
     "@lezer/markdown": "^1.6.4",
     "@reflect/db": "workspace:*",
-    "ai": "^6.0.202",
+    "@reflect/utils": "workspace:*",
+    "ai": "^6.0.208",
+    "fflate": "^0.8.3",
     "kysely": "^0.28.17",
     "yaml": "^2.9.0",
-    "zod": "^3.23.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@ai-sdk/provider": "^3.0.10",
     "@types/node": "^25.9.3",
     "jsdom": "^29.1.1",
     "typescript": "~5.8.3",
-    "vitest": "^3"
+    "vitest": "^4.1.9"
   }
 }

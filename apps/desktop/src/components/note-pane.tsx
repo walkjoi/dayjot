@@ -1,18 +1,17 @@
-import { useCallback, useRef, type ReactElement } from 'react'
-import { type WikilinkItem } from '@meowdown/react'
-import { hasBridge, isDaily, suggestWikiTargets } from '@reflect/core'
+import { memo, useCallback, useState, type ReactElement } from 'react'
+import { isDaily } from '@reflect/core'
 import { BacklinksPanel } from '@/components/backlinks-panel'
 import { InlineAlert } from '@/components/inline-alert'
 import { NoteConflictBanner } from '@/components/note-conflict-banner'
 import { ProtectedNoteView } from '@/components/protected-note-view'
 import { SyncConflictNotice } from '@/components/sync-conflict-notice'
+import { editorBodyWithDefaultBullet } from '@/editor/default-bullet'
 import { NoteEditor, type NoteEditorHandle } from '@/editor/note-editor'
+import { useEditorAutocomplete } from '@/editor/use-editor-autocomplete'
 import { useImagePersistence } from '@/editor/use-image-persistence'
 import { useNoteDocument } from '@/editor/use-note-document'
 import { useWikiLinkNavigation } from '@/editor/use-wiki-link-navigation'
-import { buildAutocompleteEntries } from '@/editor/wiki-autocomplete-entries'
-import { createNoteWithTitle, untitledNoteSeed } from '@/lib/create-note'
-import { formatDayLabel } from '@/lib/dates'
+import { untitledNoteSeed } from '@/lib/create-note'
 import { cn } from '@/lib/utils'
 import { useGraph } from '@/providers/graph-provider'
 import { useSettings } from '@/providers/settings-provider'
@@ -50,7 +49,6 @@ interface NotePaneProps {
   gutterClassName?: string
 }
 
-
 /**
  * One open note: the editor bound to its on-disk document via the Plan 05 save
  * pipeline (debounced atomic writes, watcher-driven external reload, and a
@@ -63,7 +61,7 @@ interface NotePaneProps {
  * `useNoteDocument`/`note-session.ts`, link-click behavior in
  * `useWikiLinkNavigation`, and the banners are shared components.
  */
-export function NotePane({
+export function NotePaneComponent({
   path,
   lazy = false,
   autoFocus = false,
@@ -79,13 +77,13 @@ export function NotePane({
   const dailyNote = isDaily(path)
   // One seed per (pane, path): a fresh seed carries a fresh `id:`, and a mere
   // re-render must not mint a new identity (the session is keyed on the seed).
-  const seedRef = useRef<{ path: string; seed: string } | null>(null)
-  let missingSeed: string | undefined
-  if (lazy && !dailyNote) {
-    if (seedRef.current === null || seedRef.current.path !== path) {
-      seedRef.current = { path, seed: untitledNoteSeed() }
-    }
-    missingSeed = seedRef.current.seed
+  // Re-mint during render when the path changes — only the committed render's
+  // seed reaches the session, so the transient stale render is harmless, and
+  // this avoids writing a ref during render.
+  const needsSeed = lazy && !dailyNote
+  const [seed, setSeed] = useState(() => ({ path, seed: untitledNoteSeed() }))
+  if (needsSeed && seed.path !== path) {
+    setSeed({ path, seed: untitledNoteSeed() })
   }
   const document = useNoteDocument(path, generation, {
     createIfMissing: lazy,
@@ -97,62 +95,18 @@ export function NotePane({
     // caret lands in, ghosted "Untitled" by the title placeholder — only
     // reaches disk if the user edits, and typing names the note. Daily
     // notes stay unseeded — the date is their identity.
-    missingSeed,
+    ...(needsSeed ? { missingSeed: seed.seed } : {}),
   })
   const {
     resolveImageUrl,
+    resolveImageOpenPath,
+    openImage,
     saveImage,
     onImageSaveError,
     saveError: imageSaveError,
   } = useImagePersistence(graphRoot, generation)
   const onWikiLinkClick = useWikiLinkNavigation(generation)
-
-  // The `[[` autocomplete's create row: make the file; the menu inserts the
-  // link text either way (a failed create just leaves an unresolved link).
-  const createFromAutocomplete = useCallback(
-    async (title: string) => {
-      if (generation !== null) {
-        await createNoteWithTitle(title, generation)
-      }
-    },
-    [generation],
-  )
-
-  // The `[[` menu's rows: ranked index suggestions plus a trailing "Create"
-  // row. meowdown owns the menu UI and gives us the (lowercased, punctuation
-  // stripped) query; ranking stays the index's job, so the menu never re-sorts.
-  const onWikilinkSearch = useCallback(
-    async (query: string): Promise<WikilinkItem[]> => {
-      if (!hasBridge() || graph === null) {
-        return []
-      }
-      const suggestions = await suggestWikiTargets(query)
-      return buildAutocompleteEntries(query, suggestions, { offerCreate: true }).map((entry) => {
-        if (entry.kind === 'create') {
-          return {
-            target: entry.title,
-            label: `Create “${entry.title}”`,
-            // Insert happens in the menu; create the note in the background.
-            onSelect: () => {
-              void createFromAutocomplete(entry.title)
-            },
-          }
-        }
-        const { target, title, alias, date, path } = entry.suggestion
-        const label = date !== null ? formatDayLabel(date, settings.dateFormat) : title
-        const detail =
-          alias !== null
-            ? `${alias} → ${title}`
-            : date !== null
-              ? path === null
-                ? `${date} · new`
-                : date
-              : undefined
-        return { target, label, detail }
-      })
-    },
-    [graph, settings.dateFormat, createFromAutocomplete],
-  )
+  const { onWikilinkSearch, onTagSearch } = useEditorAutocomplete()
 
   const bindEditor = document.bindEditor
   const handleRef = useCallback(
@@ -214,6 +168,15 @@ export function NotePane({
     )
   }
 
+  // A note that opens with an empty body starts on an empty bullet when the
+  // setting is on (old Reflect's every-note default). The seed only changes what
+  // the editor shows; persistence is untouched, so a not-yet-created daily
+  // placeholder stays uncreated until the user types — see `default-bullet.ts`.
+  const editorSeed = editorBodyWithDefaultBullet(
+    document.initialContent,
+    settings.editorDefaultBullet,
+  )
+
   return (
     <div className={cn('relative', className)} aria-label={`Editing ${path}`}>
       <div className={gutterClassName}>
@@ -245,18 +208,24 @@ export function NotePane({
         // session under a new filename (Plan 17), and remounting the editor
         // for that would throw away the cursor mid-thought.
         key={document.sessionEpoch}
-        initialContent={document.initialContent}
+        initialContent={editorSeed}
         onChange={document.onEditorChange}
         markMode={settings.editorMarkdownSyntax}
         spellCheck={settings.editorSpellCheck}
+        bulletAfterHeading={settings.editorBulletAfterHeading}
+        // The grip drag-reorders blocks and the "+" inserts a paragraph below.
+        blockHandle={true}
         resolveImageUrl={resolveImageUrl}
+        resolveImageOpenPath={resolveImageOpenPath}
+        openImage={openImage}
         saveImage={saveImage}
         onImageSaveError={onImageSaveError}
         onWikiLinkClick={onWikiLinkClick}
         onWikilinkSearch={onWikilinkSearch}
+        onTagSearch={onTagSearch}
         // Daily notes carry no title semantics (the date is their subject),
         // so an empty leading H1 there is just an empty heading.
-        titlePlaceholder={dailyNote ? undefined : 'Untitled'}
+        {...(dailyNote ? {} : { titlePlaceholder: 'Untitled' })}
         className={cn(gutterClassName, editorClassName)}
         handleRef={handleRef}
       />
@@ -267,3 +236,5 @@ export function NotePane({
     </div>
   )
 }
+
+export const NotePane = memo(NotePaneComponent)

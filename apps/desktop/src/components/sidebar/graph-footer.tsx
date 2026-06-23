@@ -1,7 +1,10 @@
 import type { ReactElement } from 'react'
 import type { GraphInfo } from '@reflect/core'
-import { Check, FolderOpen } from 'lucide-react'
+import { revealItemInDir } from '@tauri-apps/plugin-opener'
+import { Check, FolderOpen, LocateFixed, Settings } from 'lucide-react'
 import { GraphSwatch } from '@/components/graph-swatch'
+import { ShortcutKeys } from '@/components/shortcut-keys'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,12 +17,17 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useGraphColors } from '@/hooks/use-graph-colors'
+import { keybindingFor } from '@/lib/commands/app-commands'
+import { runCommand } from '@/lib/commands/registry'
+import type { CommandContext } from '@/lib/commands/types'
 import { DEFAULT_GRAPH_COLOR, GRAPH_COLOR_OPTIONS } from '@/lib/graph-colors'
 import { cn } from '@/lib/utils'
 import { useGraph } from '@/providers/graph-provider'
 import { useSync, type BackupState } from '@/providers/sync-provider'
+import { useRouter } from '@/routing/router'
 
 const MENU_ITEM_CLASS = 'gap-2 px-2 py-1.5 text-[13px] text-text-secondary'
+const SETTINGS_BINDING = keybindingFor('settings.open')
 
 /**
  * The quiet backup indicator: nothing when backed up (or not set up), a
@@ -47,15 +55,23 @@ function backupDot(backup: BackupState): { className: string; label: string } | 
  * dot reports backup state. The menu content matches the trigger width, so
  * it stays inset from the sidebar edges.
  */
-export function GraphFooter({ graph }: { graph: GraphInfo }): ReactElement {
+interface GraphFooterProps {
+  graph: GraphInfo
+  /** Commands run with this — the same context the palette/shortcuts use. */
+  context: CommandContext
+}
+
+export function GraphFooter({ graph, context }: GraphFooterProps): ReactElement {
   const { recents, indexing, openRecent, pickAndOpen } = useGraph()
   const { colorFor, setColor } = useGraphColors()
   const currentColor = colorFor(graph.root) ?? DEFAULT_GRAPH_COLOR
   const { backup } = useSync()
+  const { route } = useRouter()
   const dot = backupDot(backup)
+  const settingsActive = route.kind === 'settings'
 
   return (
-    <div className="flex items-center px-4 py-3">
+    <div className="flex items-center gap-1 px-4 py-3">
       <DropdownMenu>
         <Tooltip delayDuration={700}>
           <TooltipTrigger asChild>
@@ -68,7 +84,7 @@ export function GraphFooter({ graph }: { graph: GraphInfo }): ReactElement {
                   color={colorFor(graph.root)}
                   className={cn('h-5 w-5', indexing && 'motion-safe:animate-pulse')}
                 />
-                <span className="min-w-0 truncate text-xs font-medium text-text">
+                <span className="min-w-0 truncate text-xs font-medium text-text-secondary">
                   {graph.name}
                 </span>
                 {dot !== null ? (
@@ -140,14 +156,55 @@ export function GraphFooter({ graph }: { graph: GraphInfo }): ReactElement {
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuItem
+            onSelect={() => {
+              void revealItemInDir(graph.root).catch((cause: unknown) => {
+                console.error('open graph folder failed:', cause)
+              })
+            }}
+            className={MENU_ITEM_CLASS}
+          >
+            <LocateFixed aria-hidden strokeWidth={1.75} className="size-3.5 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">Reveal graph in Finder</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onSelect={() => void pickAndOpen()}
             className={MENU_ITEM_CLASS}
           >
             <FolderOpen aria-hidden strokeWidth={1.75} className="size-3.5 shrink-0" />
             <span className="min-w-0 flex-1 truncate">Open another graph…</span>
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => void runCommand('settings.open', context)}
+            className={MENU_ITEM_CLASS}
+          >
+            <Settings aria-hidden strokeWidth={1.75} className="size-3.5 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">User settings</span>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Open settings"
+            aria-current={settingsActive ? 'page' : undefined}
+            onClick={() => void runCommand('settings.open', context)}
+            className={cn(
+              'size-7 shrink-0 text-text-muted transition-colors duration-100 hover:bg-surface-hover hover:text-text-secondary',
+              settingsActive
+                ? 'bg-surface-hover text-text dark:bg-transparent dark:text-accent'
+                : null,
+            )}
+          >
+            <Settings aria-hidden strokeWidth={1.75} className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          Settings {SETTINGS_BINDING && <ShortcutKeys binding={SETTINGS_BINDING} />}
+        </TooltipContent>
+      </Tooltip>
     </div>
   )
 }

@@ -3,24 +3,28 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@10.34.4",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "lint": "oxlint apps packages",
+    "lint": "oxlint apps packages && pnpm --filter @reflect/desktop lint:react",
     "lint:fix": "oxlint --fix apps packages",
     "check": "pnpm typecheck && pnpm lint",
     "tauri": "pnpm --filter @reflect/desktop tauri",
+    "release:bump": "pnpm --filter @reflect/desktop release:bump",
     "release:macos": "pnpm --filter @reflect/desktop release:macos"
   },
   "devDependencies": {
-    "oxlint": "^1.69.0",
-    "turbo": "^2",
+    "oxlint": "^1.70.0",
+    "turbo": "^2.9.18",
     "typescript": "~5.8.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3", "esbuild"]
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
   }
 }

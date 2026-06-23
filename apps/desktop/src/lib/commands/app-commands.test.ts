@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { EmbedStatus, NoteRow, PinnedNote } from '@reflect/core'
-import type { Route } from '@/routing/route'
+import { notePathForRoute, type Route } from '@/routing/route'
 import { resetOperations } from '@/lib/operations'
 import type { CommandContext } from './types'
+
+const TODAY = '2026-06-09'
 
 const randomNotePath = vi.hoisted(() => vi.fn())
 const rebuildIndex = vi.hoisted(() => vi.fn())
@@ -14,6 +16,8 @@ const toggleNotePinned = vi.hoisted(() => vi.fn(async () => true))
 const toggleNotePrivate = vi.hoisted(() => vi.fn(async () => true))
 const getNote = vi.hoisted(() => vi.fn<() => Promise<NoteRow | undefined>>(async () => undefined))
 const getPinnedNotes = vi.hoisted(() => vi.fn<() => Promise<PinnedNote[]>>(async () => []))
+const hasBridge = vi.hoisted(() => vi.fn(() => true))
+const toggleDevtools = vi.hoisted(() => vi.fn(async () => undefined))
 const operationFail = vi.hoisted(() => vi.fn())
 const startOperation = vi.hoisted(() =>
   vi.fn(() => ({ progress: vi.fn(), done: vi.fn(), fail: operationFail })),
@@ -35,6 +39,8 @@ vi.mock('@reflect/core', async (importOriginal) => ({
   embedStatus,
   getNote,
   getPinnedNotes,
+  hasBridge,
+  toggleDevtools,
 }))
 
 // Importing registers the commands (module side effect, like production).
@@ -50,13 +56,18 @@ function command(id: string) {
 
 function fakeContext(overrides?: Partial<CommandContext>) {
   const navigated: Route[] = []
+  const route: () => Route = overrides?.route ?? (() => ({ kind: 'today' }))
   const context: CommandContext = {
-    navigate: (route) => void navigated.push(route),
-    route: () => ({ kind: 'today' }),
+    navigate: (target) => void navigated.push(target),
+    route,
+    // Mirror the real context: note-scoped commands resolve their target from
+    // the route (the focused-day branch is exercised in app-shortcuts).
+    notePath: () => notePathForRoute(route(), TODAY),
     back: vi.fn(),
     forward: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
+    newChat: vi.fn(),
     toggleAudioMemo: vi.fn(),
     generation: () => 7,
     openPalette: vi.fn(),
@@ -82,6 +93,7 @@ function noteRow(isPrivate: boolean): NoteRow {
 describe('keybindingFor', () => {
   it('returns the binding UI hints derive from', () => {
     expect(keybindingFor('nav.today')).toBe('Mod-d')
+    expect(keybindingFor('nav.allNotes')).toBe('Mod-Shift-a')
     expect(keybindingFor('palette.open')).toBe('Mod-k')
   })
 
@@ -92,6 +104,10 @@ describe('keybindingFor', () => {
 
   it('audioMemo.toggle is bound to Mod-Shift-r', () => {
     expect(keybindingFor('audioMemo.toggle')).toBe('Mod-Shift-r')
+  })
+
+  it('dev.toggleDevtools is bound to Mod-Shift-i', () => {
+    expect(keybindingFor('dev.toggleDevtools')).toBe('Mod-Shift-i')
   })
 })
 
@@ -127,11 +143,22 @@ describe('app commands', () => {
     expect(keybindingFor('shortcuts.show')).toBe('Mod-/')
   })
 
+  it('chat.new starts a fresh conversation only from the chat route', async () => {
+    const { context } = fakeContext({ route: () => ({ kind: 'chat' }) })
+    await command('chat.new').run(context)
+    expect(context.newChat).toHaveBeenCalledTimes(1)
+    expect(keybindingFor('chat.new')).toBe('Mod-Shift-n')
+
+    const { context: outsideChat } = fakeContext()
+    await command('chat.new').run(outsideChat)
+    expect(outsideChat.newChat).not.toHaveBeenCalled()
+  })
+
   it('note.new navigates to a fresh lazy ULID note path', async () => {
     const { context, navigated } = fakeContext()
     await command('note.new').run(context)
     expect(navigated).toHaveLength(1)
-    const route = navigated[0]
+    const route = navigated[0]!
     expect(route.kind).toBe('note')
     expect((route as { kind: 'note'; path: string }).path).toMatch(/^notes\/[0-9a-z]+\.md$/)
   })
@@ -221,6 +248,23 @@ describe('app commands', () => {
     expect(startOperation).toHaveBeenCalledWith('Unlocking note')
   })
 
+  it('dev.toggleDevtools toggles the inspector through the native shell', async () => {
+    hasBridge.mockReturnValue(true)
+    toggleDevtools.mockClear()
+    const { context } = fakeContext()
+    await command('dev.toggleDevtools').run(context)
+    expect(toggleDevtools).toHaveBeenCalledTimes(1)
+  })
+
+  it('dev.toggleDevtools no-ops without a native shell (plain-browser dev)', async () => {
+    hasBridge.mockReturnValue(false)
+    toggleDevtools.mockClear()
+    const { context } = fakeContext()
+    await expect(command('dev.toggleDevtools').run(context)).resolves.toBeUndefined()
+    expect(toggleDevtools).not.toHaveBeenCalled()
+    hasBridge.mockReturnValue(true)
+  })
+
   it('semantic.enable persists the opt-in through the context capability', async () => {
     const { context } = fakeContext()
     await command('semantic.enable').run(context)
@@ -233,7 +277,9 @@ describe('app commands', () => {
       rebuildIndex.mockResolvedValueOnce(undefined)
       const { context } = fakeContext()
       await command('index.rebuild').run(context)
-      expect(rebuildIndex).toHaveBeenCalledWith({ generation: 7 })
+      expect(rebuildIndex).toHaveBeenCalledWith(
+        expect.objectContaining({ generation: 7, onSkippedNote: expect.any(Function) }),
+      )
 
       // No graph open → no rebuild.
       rebuildIndex.mockClear()

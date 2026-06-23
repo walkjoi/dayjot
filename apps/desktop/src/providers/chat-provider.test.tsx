@@ -11,6 +11,7 @@ import type {
   Settings,
   StreamChatOptions,
 } from '@reflect/core'
+import { NO_REPLY_NOTICE } from '@reflect/core'
 import { ChatProvider, useChatSession } from '@/providers/chat-provider'
 
 /**
@@ -40,6 +41,7 @@ const settingsState = vi.hoisted(() => ({
   models: [] as AiProviderConfig[],
   defaultId: null as string | null,
   selection: null as ChatModelSelection | null,
+  semanticSearchEnabled: false,
 }))
 const updateSettings = vi.hoisted(() => vi.fn<(patch: Partial<Settings>) => void>())
 // Stateful like the real provider: a chatModelSelection patch re-renders with
@@ -54,6 +56,7 @@ vi.mock('@/providers/settings-provider', async () => {
           aiProviders: settingsState.models,
           defaultAiProviderId: settingsState.defaultId,
           chatModelSelection: selection,
+          semanticSearchEnabled: settingsState.semanticSearchEnabled,
         },
         updateSettings: (patch: Partial<Settings>) => {
           updateSettings(patch)
@@ -120,6 +123,7 @@ beforeEach(() => {
   settingsState.models = [MODEL]
   settingsState.defaultId = 'm1'
   settingsState.selection = null
+  settingsState.semanticSearchEnabled = false
   core.hasBridge.mockReturnValue(true)
   core.getSecret.mockResolvedValue('sk-test')
   core.loadChatGraphContext.mockResolvedValue(null)
@@ -162,8 +166,8 @@ describe('ChatProvider persistence', () => {
     await act(() => session?.send('hello there'))
 
     expect(core.saveChatMessage).toHaveBeenCalledTimes(2)
-    const first = core.saveChatMessage.mock.calls[0][0]
-    const second = core.saveChatMessage.mock.calls[1][0]
+    const first = core.saveChatMessage.mock.calls[0]![0]
+    const second = core.saveChatMessage.mock.calls[1]![0]
     expect(first).toMatchObject({
       generation: 7,
       conversation: { id: session?.activeConversationId, title: 'hello there' },
@@ -178,6 +182,29 @@ describe('ChatProvider persistence', () => {
     })
   })
 
+  it('backstops a reply-less turn with a notice, on screen and in the save', async () => {
+    // Regression: the forced final step can still yield no text. The provider
+    // must fold `complete` so a turn that ends on tool activity shows a notice
+    // instead of silent chips — and persists it, not a notice-less parts list.
+    scriptTurn([
+      { type: 'tool-call', call: { tool: 'read', toolCallId: 't1', paths: ['notes/a.md'] } },
+      {
+        type: 'tool-result',
+        result: { tool: 'read', toolCallId: 't1', notes: [{ path: 'notes/a.md', title: 'A', error: null }] },
+      },
+      { type: 'complete', messages: [{ role: 'assistant', content: 'noop' }] },
+    ])
+    renderProvider()
+    await waitFor(() => expect(core.listChatConversations).toHaveBeenCalled())
+
+    await act(() => session?.send('summarize my notes'))
+
+    const notice = { kind: 'notice', tone: 'info', text: NO_REPLY_NOTICE }
+    expect(session?.turns.at(-1)?.parts.at(-1)).toEqual(notice)
+    const saved = core.saveChatMessage.mock.calls.at(-1)![0] as { turn: ChatTurn }
+    expect(saved.turn.parts.at(-1)).toEqual(notice)
+  })
+
   it('saves later turns into the restored conversation', async () => {
     core.listChatConversations.mockResolvedValue([conversation()])
     scriptTurn([{ type: 'complete', messages: [{ role: 'assistant', content: 'More.' }] }])
@@ -186,10 +213,23 @@ describe('ChatProvider persistence', () => {
 
     await act(() => session?.send('and today?'))
 
-    expect(core.saveChatMessage.mock.calls[0][0]).toMatchObject({
+    expect(core.saveChatMessage.mock.calls[0]![0]).toMatchObject({
       conversation: { id: 'conv-1', title: 'what did I write yesterday?' },
       turn: { userText: 'and today?' },
     })
+  })
+
+  it('passes the semantic search setting into chat turns', async () => {
+    settingsState.semanticSearchEnabled = true
+    scriptTurn([{ type: 'complete', messages: [{ role: 'assistant', content: 'Hi.' }] }])
+    renderProvider()
+    await waitFor(() => expect(core.listChatConversations).toHaveBeenCalled())
+
+    await act(() => session?.send('hello'))
+
+    expect(core.streamChat).toHaveBeenCalledWith(
+      expect.objectContaining({ semanticSearchEnabled: true }),
+    )
   })
 
   it('opens a past conversation and switches the active id', async () => {
@@ -272,7 +312,7 @@ describe('ChatProvider persistence', () => {
       sendDone = session?.send('hello')
       await Promise.resolve()
     })
-    const sentInto = core.saveChatMessage.mock.calls[0][0] as { conversation: { id: string } }
+    const sentInto = core.saveChatMessage.mock.calls[0]![0] as { conversation: { id: string } }
 
     // Delete the conversation while the turn is streaming, then let it settle:
     // the settle-time save must not resurrect the deleted row.
@@ -301,7 +341,7 @@ describe('ChatProvider persistence', () => {
     await waitFor(() => expect(core.listChatConversations).toHaveBeenCalled())
 
     await act(() => session?.send('hello'))
-    const sentInto = core.saveChatMessage.mock.calls[0][0] as { conversation: { id: string } }
+    const sentInto = core.saveChatMessage.mock.calls[0]![0] as { conversation: { id: string } }
 
     let deleteDone: Promise<void> | undefined
     await act(async () => {

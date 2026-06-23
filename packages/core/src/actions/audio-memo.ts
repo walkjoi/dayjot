@@ -134,6 +134,16 @@ export function audioMemoFromPath(path: string): AudioMemoIdentity | null {
     return null
   }
   const [, base, date, hours, minutes, seconds, extension] = match
+  if (
+    base === undefined ||
+    date === undefined ||
+    hours === undefined ||
+    minutes === undefined ||
+    seconds === undefined ||
+    extension === undefined
+  ) {
+    return null
+  }
   if (Number(hours) > 23 || Number(minutes) > 59 || Number(seconds) > 59) {
     return null
   }
@@ -246,7 +256,7 @@ async function memoNoteBody(input: {
   memo: AudioMemoIdentity
   provider: TranscriptionProvider
   apiKey: string
-  fetchFn?: typeof fetch
+  fetchFn?: typeof fetch | undefined
 }): Promise<{ body: string; rejected: boolean }> {
   try {
     const text = await transcribeAudio({
@@ -291,6 +301,18 @@ async function ensureDailyBacklink(memo: AudioMemoIdentity, generation: number):
 export interface ReconcileStop {
   reason: 'config' | 'stale' | AppError['kind']
   message: string
+}
+
+/**
+ * Whether a {@link ReconcileStop} is an expected, self-healing stop that a
+ * background controller should swallow rather than surface to the user:
+ * `network` (offline — retries on the next trigger), `config` (no provider/key
+ * yet — the work waits), or `stale` (a graph switch tore the pass down). Any
+ * other reason is an unexpected failure worth surfacing or logging. Shared by
+ * every background reconcile loop (capture, transcription, asset descriptions).
+ */
+export function isSilentStop(stopped: ReconcileStop): boolean {
+  return stopped.reason === 'network' || stopped.reason === 'config' || stopped.reason === 'stale'
 }
 
 export interface ReconcileAudioMemosInput {

@@ -6,6 +6,7 @@ import {
   getNoteIdsByPath,
   getPinnedNotes,
   listDailyNotes,
+  suggestWikiTargets,
 } from './queries'
 
 // A fake bridge resolves `db_query` so the test exercises the real compiled
@@ -32,12 +33,12 @@ describe('dailyDatesInRange', () => {
     const dates = await dailyDatesInRange('2026-06-01', '2026-06-30')
 
     expect(dates).toEqual(['2026-06-01', '2026-06-09'])
-    const [command, args] = mockInvoke.mock.calls[0]
+    const [command, args] = mockInvoke.mock.calls[0]!
     expect(command).toBe('db_query')
-    const sql = String(args.sql)
+    const sql = String(args['sql'])
     expect(sql).toContain('daily_date')
     expect(sql).toContain('is not null')
-    expect(args.params).toEqual(['2026-06-01', '2026-06-30'])
+    expect(args['params']).toEqual(['2026-06-01', '2026-06-30'])
   })
 
   it('returns an empty list when no daily notes exist in the range', async () => {
@@ -71,15 +72,15 @@ describe('listDailyNotes', () => {
         isPrivate: false,
       },
     ])
-    const [command, args] = mockInvoke.mock.calls[0]
+    const [command, args] = mockInvoke.mock.calls[0]!
     expect(command).toBe('db_query')
-    const sql = String(args.sql)
+    const sql = String(args['sql'])
     expect(sql).toContain('daily_date')
     expect(sql).toContain('is not null')
     expect(sql).toContain('"is_private"')
     expect(sql).toContain('order by "daily_date" desc')
     expect(sql).toContain('limit')
-    expect(args.params).toEqual(['2026-06-01', '2026-06-30', 0, 32])
+    expect(args['params']).toEqual(['2026-06-01', '2026-06-30', 0, 32])
   })
 
   it('returns an empty list when no daily notes exist in the range', async () => {
@@ -103,15 +104,15 @@ describe('getPinnedNotes', () => {
       { path: 'notes/a.md', title: 'Alpha', dailyDate: null },
       { path: 'notes/b.md', title: 'Beta', dailyDate: null },
     ])
-    const [command, args] = mockInvoke.mock.calls[0]
+    const [command, args] = mockInvoke.mock.calls[0]!
     expect(command).toBe('db_query')
-    const sql = String(args.sql)
+    const sql = String(args['sql'])
     expect(sql).toContain('is_pinned')
     // Ordered pins lead (NULL orders sort last), alphabetical within.
     expect(sql).toContain('order by pinned_order IS NULL')
     expect(sql).toContain('"pinned_order"')
     expect(sql).toContain('title_key')
-    expect(args.params).toEqual([1])
+    expect(args['params']).toEqual([1])
   })
 })
 
@@ -122,9 +123,9 @@ describe('getDuplicateNoteIds', () => {
     await expect(getDuplicateNoteIds()).resolves.toEqual([])
 
     expect(mockInvoke).toHaveBeenCalledTimes(1)
-    const [command, args] = mockInvoke.mock.calls[0]
+    const [command, args] = mockInvoke.mock.calls[0]!
     expect(command).toBe('db_query')
-    const sql = String(args.sql)
+    const sql = String(args['sql'])
     expect(sql).toContain('group by')
     expect(sql).toContain('count(*)')
     expect(sql).toContain('is not null')
@@ -141,8 +142,8 @@ describe('getDuplicateNoteIds', () => {
     await expect(getDuplicateNoteIds()).resolves.toEqual([
       { id: 'dup-1', paths: ['notes/a.md', 'notes/b.md'] },
     ])
-    const [, args] = mockInvoke.mock.calls[1]
-    expect(args.params).toEqual(['dup-1'])
+    const [, args] = mockInvoke.mock.calls[1]!
+    expect(args['params']).toEqual(['dup-1'])
   })
 })
 
@@ -157,7 +158,7 @@ describe('getNoteIdsByPath', () => {
     // a single statement would blow the bound-variable budget.
     const paths = Array.from({ length: 1200 }, (_, index) => `notes/${index}.md`)
     mockInvoke.mockImplementation(async (_command, args) => {
-      const params = args.params as string[]
+      const params = args['params'] as string[]
       return [{ path: params[0], id: `id-${params[0]}` }]
     })
 
@@ -165,10 +166,57 @@ describe('getNoteIdsByPath', () => {
 
     expect(mockInvoke).toHaveBeenCalledTimes(3) // 500 + 500 + 200
     for (const [, args] of mockInvoke.mock.calls) {
-      expect((args.params as string[]).length).toBeLessThanOrEqual(500)
+      expect((args['params'] as string[]).length).toBeLessThanOrEqual(500)
     }
     expect(ids.get('notes/0.md')).toBe('id-notes/0.md')
     expect(ids.get('notes/500.md')).toBe('id-notes/500.md')
     expect(ids.get('notes/1000.md')).toBe('id-notes/1000.md')
+  })
+})
+
+describe('suggestWikiTargets', () => {
+  // Wednesday, 1 January 2020, day/month — the date generator's worked-example
+  // clock. This exercises the live glue (generator + merge) the editor hits;
+  // the parts themselves are unit-tested in date-suggestions/suggest.
+  const clock = { today: '2020-01-01', dateFormat: 'dmy' as const, weekStartDay: 'monday' as const }
+
+  it('synthesises a daily target from a fuzzy query when given a clock', async () => {
+    mockInvoke.mockResolvedValue([]) // no title or alias matches
+
+    await expect(suggestWikiTargets('3 days ago', 8, clock)).resolves.toEqual([
+      {
+        target: '2019-12-29',
+        path: null,
+        title: '2019-12-29',
+        alias: null,
+        date: '2019-12-29',
+        generated: { phrase: '3 days ago' },
+      },
+    ])
+  })
+
+  it('keeps an exact title match above the generated date (folded key threaded into the merge)', async () => {
+    mockInvoke.mockResolvedValue([]) // aliases query + fallback
+    mockInvoke.mockResolvedValueOnce([
+      { path: 'notes/today.md', title: 'Today', title_key: 'today', daily_date: null, mtime: 1 },
+    ])
+
+    const result = await suggestWikiTargets('today', 8, clock)
+
+    expect(result.map((row) => row.target)).toEqual(['Today', '2020-01-01'])
+    expect(result[0]!.path).toBe('notes/today.md')
+    expect(result[1]).toMatchObject({ date: '2020-01-01', generated: { phrase: 'Today' }, path: null })
+  })
+
+  it('does not synthesise dates without a clock (legacy callers unchanged)', async () => {
+    mockInvoke.mockResolvedValue([])
+    await expect(suggestWikiTargets('today')).resolves.toEqual([])
+  })
+
+  it('still injects the bare daily for a full ISO query without a clock', async () => {
+    mockInvoke.mockResolvedValue([])
+    await expect(suggestWikiTargets('2020-01-01')).resolves.toEqual([
+      { target: '2020-01-01', path: null, title: '2020-01-01', alias: null, date: '2020-01-01' },
+    ])
   })
 })

@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { lineSnippet, previewSnippet } from './snippet'
+import { lineAt, lineSnippet, previewSnippet } from './snippet'
+
+/** True when `text` contains a UTF-16 surrogate without its pair. */
+function hasLoneSurrogate(text: string): boolean {
+  for (let index = 0; index < text.length; index++) {
+    const code = text.charCodeAt(index)
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = text.charCodeAt(index + 1)
+      if (!(next >= 0xdc00 && next <= 0xdfff)) {
+        return true
+      }
+      index++
+    } else if (code >= 0xdc00 && code <= 0xdfff) {
+      return true
+    }
+  }
+  return false
+}
 
 describe('lineSnippet', () => {
   it('returns the whole line containing the position', () => {
@@ -33,6 +50,32 @@ describe('lineSnippet', () => {
   it('clamps an out-of-range position instead of throwing', () => {
     expect(lineSnippet('only line', 999)).toBe('only line')
     expect(lineSnippet('', 5)).toBe('')
+  })
+})
+
+describe('lineAt', () => {
+  it('returns the whole trimmed line containing the position', () => {
+    const content = 'first line\n   see [[Target]] here   \nlast line\n'
+    expect(lineAt(content, content.indexOf('[[Target]]'))).toBe('see [[Target]] here')
+  })
+
+  it('returns the full line untruncated even when very long', () => {
+    // A link past the 160-char window would be windowed (and possibly cut) by
+    // lineSnippet; lineAt keeps the whole line so the [[…]] token stays balanced.
+    const left = 'a'.repeat(300)
+    const content = `${left} [[Target]] tail`
+    const line = lineAt(content, content.indexOf('[[Target]]'))
+    expect(line).toBe(`${left} [[Target]] tail`)
+    expect(line).toContain('[[Target]]')
+    expect(line.startsWith('…')).toBe(false)
+  })
+
+  it('picks the correct line for first, last, and out-of-range positions', () => {
+    const content = 'alpha [[X]]\nomega [[Y]]'
+    expect(lineAt(content, content.indexOf('[[X]]'))).toBe('alpha [[X]]')
+    expect(lineAt(content, content.indexOf('[[Y]]'))).toBe('omega [[Y]]')
+    expect(lineAt('only line', 999)).toBe('only line')
+    expect(lineAt('', 5)).toBe('')
   })
 })
 
@@ -70,6 +113,23 @@ describe('previewSnippet', () => {
     const long = 'x'.repeat(200)
     const snippet = previewSnippet(long, 'Title', 50)
     expect(snippet).toBe(`${'x'.repeat(50)}…`)
+  })
+
+  it('never splits an astral character at the truncation boundary', () => {
+    // 𝐒 (U+1D5D2) is a surrogate pair; a raw slice(0, 50) would cut it in half
+    // and leave a lone high surrogate the Rust index writer's serde_json
+    // rejects ("unexpected end of hex escape"), dropping the note from the index.
+    const text = `${'x'.repeat(49)}𝐒𝐏𝐈𝐍 the rest is dropped`
+    const snippet = previewSnippet(text, 'Title', 50)
+    expect(hasLoneSurrogate(snippet)).toBe(false)
+    expect(snippet).toBe(`${'x'.repeat(49)}…`)
+  })
+
+  it('keeps a whole astral character that fits within the limit', () => {
+    const text = `${'x'.repeat(48)}𝐒 spilling well past the cap to force a cut`
+    const snippet = previewSnippet(text, 'Title', 50)
+    expect(hasLoneSurrogate(snippet)).toBe(false)
+    expect(snippet).toBe(`${'x'.repeat(48)}𝐒…`)
   })
 
   it('returns empty for empty or title-only text', () => {

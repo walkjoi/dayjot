@@ -10,14 +10,27 @@ import {
   ReflectError,
   splitFrontmatter,
   updateGist,
-  upsertFrontmatter,
-  writeNote,
   type GistFrontmatter,
 } from '@reflect/core'
-import { openSession } from '@/editor/open-documents'
-import { readNoteOrEmpty } from '@/lib/note-read'
+import { setNoteRowOverlay } from '@/hooks/note-row-overlay'
+import { commitNoteFrontmatter, readNoteSource } from '@/lib/note-frontmatter'
 import { startOperation } from '@/lib/operations'
 import { providerFetch } from '@/lib/provider-fetch'
+
+const activeGistOperations = new Set<string>()
+
+function claimGistOperation(path: string): boolean {
+  if (activeGistOperations.has(path)) {
+    startOperation('Gist operation already running').fail('Wait for the current gist operation to finish')
+    return false
+  }
+  activeGistOperations.add(path)
+  return true
+}
+
+function releaseGistOperation(path: string): void {
+  activeGistOperations.delete(path)
+}
 
 /**
  * Publish a note's body to a GitHub Gist (always secret), recording the gist
@@ -28,19 +41,18 @@ import { providerFetch } from '@/lib/provider-fetch'
  * one. The stored hash is of the body as published, so the indexer's
  * `gist_stale` reflects real edits, never the frontmatter write itself.
  *
- * Reads through the live session when the note is open and lands the
- * frontmatter through `commitFrontmatter`, exactly like the pin/private
- * toggles: a direct disk write under a dirty buffer would park a conflict
- * caused by our own action. With no live session (or one that can't take
- * patches), a read-patch-write on disk is reconciled like an external change.
+ * Reads and writes through the shared {@link readNoteSource} /
+ * {@link commitNoteFrontmatter} channel, exactly like the pin/private toggles:
+ * a direct disk write under a dirty buffer would park a conflict caused by our
+ * own action, and a still-loading session is read from disk rather than from
+ * its empty placeholder buffer.
  *
  * `private: true` is the hard block: the gate runs on the content actually
  * being published (live, not the possibly-lagging index), and it fails
  * closed before any byte leaves the device.
  */
 export async function publishNoteToGist(path: string, generation: number): Promise<string> {
-  const owner = openSession(path)
-  const source = owner !== null ? owner.content() : await readNoteOrEmpty(path)
+  const source = await readNoteSource(path)
   const parsed = parseNote({ path, source })
   assertCloudAllowed({ path, isPrivate: parsed.frontmatter.private })
 
@@ -75,10 +87,7 @@ export async function publishNoteToGist(path: string, generation: number): Promi
     hash: gistBodyHash(body),
   }
   try {
-    if (owner === null || !(await owner.commitFrontmatter({ gist }))) {
-      const onDisk = await readNoteOrEmpty(path)
-      await writeNote(path, upsertFrontmatter(onDisk, { gist }), generation)
-    }
+    await commitNoteFrontmatter(path, { gist }, generation)
   } catch (cause) {
     // The remote and local halves can't be atomic; compensate instead. A
     // *freshly created* gist with no local record would be orphaned (and
@@ -98,6 +107,39 @@ export async function publishNoteToGist(path: string, generation: number): Promi
 }
 
 /**
+ * Delete the note's published GitHub Gist and remove the local `gist`
+ * frontmatter block. A missing local block is already unpublished, so this is a
+ * no-op. The local record is cleared before the remote delete, so a local write
+ * failure cannot leave Reflect pointing at a dead link. If GitHub rejects the
+ * delete, the local block is restored before the error is surfaced.
+ */
+export async function unpublishNoteGist(path: string, generation: number): Promise<void> {
+  const source = await readNoteSource(path)
+  const parsed = parseNote({ path, source })
+  if (parsed.frontmatterWarning !== undefined) {
+    throw new ReflectError('parse', 'The note has invalid frontmatter — fix it before unpublishing')
+  }
+
+  const previous = parsed.frontmatter.gist
+  if (previous === undefined) {
+    return
+  }
+
+  const token = await getGithubToken(providerFetch)
+  if (token === null) {
+    throw new ReflectError('auth', 'Connect GitHub in Settings to unpublish gists')
+  }
+
+  await commitNoteFrontmatter(path, { gist: false }, generation)
+  try {
+    await deleteGist(token, previous.id, providerFetch)
+  } catch (cause) {
+    await commitNoteFrontmatter(path, { gist: previous }, generation)
+    throw cause
+  }
+}
+
+/**
  * The publish action as both entry points run it (Note actions button, ⌘K
  * command): publish, copy the gist link, and surface progress through the
  * operations status line — the second short-lived entry is the only success
@@ -106,22 +148,61 @@ export async function publishNoteToGist(path: string, generation: number): Promi
  * (focus, permissions) gets its own failure line, never a phantom "publish
  * failed" for a gist that exists — or `null` when the publish failed
  * (already surfaced).
+ *
+ * On success it records the url in the optimistic note-row overlay, so every
+ * sidebar surface (the gist action's label, the Published URL section)
+ * reflects the publish immediately, before the watcher re-indexes the file.
  */
 export async function runGistPublish(path: string, generation: number): Promise<string | null> {
-  const operation = startOperation('Publishing gist')
-  let url: string
-  try {
-    url = await publishNoteToGist(path, generation)
-  } catch (cause) {
-    operation.fail(errorMessage(cause))
+  if (!claimGistOperation(path)) {
     return null
   }
-  operation.done()
   try {
-    await navigator.clipboard.writeText(url)
-    startOperation('Gist link copied').done()
-  } catch (cause) {
-    startOperation('Copying the gist link').fail(errorMessage(cause))
+    const operation = startOperation('Publishing gist')
+    let url: string
+    try {
+      url = await publishNoteToGist(path, generation)
+    } catch (cause) {
+      operation.fail(errorMessage(cause))
+      return null
+    }
+    operation.done()
+    // Stamp the optimism with the publishing graph's generation, so a publish
+    // that resolves after a graph switch can't surface on the new graph.
+    setNoteRowOverlay(path, generation, { gistUrl: url, gistStale: false })
+    try {
+      await navigator.clipboard.writeText(url)
+      startOperation('Gist link copied').done()
+    } catch (cause) {
+      startOperation('Copying the gist link').fail(errorMessage(cause))
+    }
+    return url
+  } finally {
+    releaseGistOperation(path)
   }
-  return url
+}
+
+/**
+ * The unpublish action as the sidebar runs it: delete the remote gist, clear
+ * the local gist metadata, and hide the published URL optimistically while the
+ * index catches up.
+ */
+export async function runGistUnpublish(path: string, generation: number): Promise<boolean> {
+  if (!claimGistOperation(path)) {
+    return false
+  }
+  try {
+    const operation = startOperation('Unpublishing gist')
+    try {
+      await unpublishNoteGist(path, generation)
+    } catch (cause) {
+      operation.fail(errorMessage(cause))
+      return false
+    }
+    operation.done()
+    setNoteRowOverlay(path, generation, { gistUrl: null, gistStale: false })
+    return true
+  } finally {
+    releaseGistOperation(path)
+  }
 }

@@ -21,7 +21,7 @@ interface GithubAuthStepProps {
    * already knows it — the instructions name it instead of speaking
    * abstractly about "your backup repository".
    */
-  repoName?: string
+  repoName?: string | undefined
 }
 
 const FIELD_LABEL_CLASS = 'text-xs font-medium text-text-secondary'
@@ -111,9 +111,12 @@ export function GithubAuthStep({ onAuthed, repoName }: GithubAuthStepProps): Rea
       }
     }
     setOpenFailed(false)
-    void openUrl(flow.verificationUri).catch(() => {
-      setOpenFailed(true)
-    })
+    const uri = flow.verificationUri
+    if (uri.startsWith('https://') || uri.startsWith('http://')) {
+      void openUrl(uri).catch(() => {
+        setOpenFailed(true)
+      })
+    }
   }
 
   async function savePat(): Promise<void> {

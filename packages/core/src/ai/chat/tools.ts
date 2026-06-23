@@ -46,6 +46,13 @@ export const MAX_DAILY_NOTE_DAYS = 31
 /** Cap on returned note content so one huge note can't flood the context. */
 export const MAX_NOTE_CONTENT_CHARS = 24_000
 
+/**
+ * Cap on notes one read_notes call returns. Each note is itself capped at
+ * {@link MAX_NOTE_CONTENT_CHARS}, so this bounds a single batch read to roughly
+ * the per-turn token reserve — past it the model splits the read across calls.
+ */
+export const MAX_READ_NOTES = 10
+
 /** Injectable effects so tests can drive the tools without a live bridge. */
 export interface NoteToolDeps {
   retrieveFn?: (query: string, options?: RetrieveOptions) => Promise<RetrievalHit[]>
@@ -54,14 +61,27 @@ export interface NoteToolDeps {
   listDailyNotesFn?: (range: DailyNotesRange) => Promise<DailyNoteRow[]>
 }
 
+export interface BuildNoteToolsOptions extends NoteToolDeps {
+  /**
+   * Whether note search can use embeddings for meaning-based recall. When
+   * false, `search_notes` stays lexical so disabled semantic search is honored.
+   */
+  semanticSearchEnabled?: boolean
+}
+
 export interface SearchNotesOutput {
   hits: CloudSafe<CloudSearchHit>[]
 }
 
-/** A successful read, or a structured refusal/miss the model can relay. */
-export type ReadNoteOutput =
+/** One note in a {@link ReadNotesOutput}: its content, or a structured refusal/miss. */
+export type ReadNoteResult =
   | { ok: true; note: CloudSafe<CloudNoteContent> }
   | { ok: false; path: string; error: string }
+
+/** The read_notes output: one {@link ReadNoteResult} per requested path, in order. */
+export interface ReadNotesOutput {
+  notes: ReadNoteResult[]
+}
 
 /**
  * A listing, or a corrective refusal for a `tag` the tag grammar can never
@@ -94,8 +114,15 @@ const searchNotesInput = z.object({
     .describe(`How many notes to return (default ${DEFAULT_SEARCH_LIMIT})`),
 })
 
-const readNoteInput = z.object({
-  path: z.string().min(1).describe('Graph-relative note path, e.g. notes/abc.md'),
+const readNotesInput = z.object({
+  paths: z
+    .array(z.string().min(1))
+    .min(1)
+    .max(MAX_READ_NOTES)
+    .describe(
+      'Graph-relative note paths to read, e.g. ["notes/abc.md"] (from search_notes ' +
+        `results). Pass every note you need in one call, up to ${MAX_READ_NOTES}.`,
+    ),
 })
 
 const listRecentNotesInput = z.object({
@@ -137,14 +164,17 @@ function listingCandidate(
 }
 
 /**
- * Build the chat tool set. `deps` is a test seam; production callers omit it
- * and the tools run over the shared retrieval layer and the live filesystem.
+ * Build the chat tool set. Optional effect overrides are a test seam;
+ * production callers omit them and the tools run over the shared retrieval
+ * layer and the live filesystem.
  */
-export function buildNoteTools(deps: NoteToolDeps = {}) {
-  const retrieveFn = deps.retrieveFn ?? retrieve
-  const readNoteFn = deps.readNoteFn ?? readNote
-  const listRecentNotesFn = deps.listRecentNotesFn ?? listRecentNotes
-  const listDailyNotesFn = deps.listDailyNotesFn ?? listDailyNotes
+export function buildNoteTools(options: BuildNoteToolsOptions = {}) {
+  const retrieveFn = options.retrieveFn ?? retrieve
+  const readNoteFn = options.readNoteFn ?? readNote
+  const listRecentNotesFn = options.listRecentNotesFn ?? listRecentNotes
+  const listDailyNotesFn = options.listDailyNotesFn ?? listDailyNotes
+  const searchMode: RetrieveOptions['mode'] =
+    options.semanticSearchEnabled === false ? 'lexical' : 'hybrid'
 
   // The gate's live privacy probe: the index flag on a hit can lag a
   // just-saved `private: true`, so each candidate's frontmatter is re-read
@@ -159,16 +189,49 @@ export function buildNoteTools(deps: NoteToolDeps = {}) {
     }
   }
 
+  // Read one note for read_notes: its body (frontmatter stripped, capped), or
+  // a structured per-note miss/refusal so one bad path never fails the batch.
+  // Content is minted CloudSafe only after the live private re-check.
+  const readOneNote = async (path: string): Promise<ReadNoteResult> => {
+    let source: string
+    try {
+      source = await readNoteFn(path)
+    } catch (cause) {
+      if (isAppError(cause) && cause.kind === 'notFound') {
+        return { ok: false, path, error: 'No note exists at this path.' }
+      }
+      throw cause
+    }
+    const parsed = parseNote({ path, source })
+    const { body } = splitFrontmatter(source)
+    const truncated = body.length > MAX_NOTE_CONTENT_CHARS
+    try {
+      return {
+        ok: true,
+        note: cloudSafeNoteContent({
+          path,
+          isPrivate: parsed.frontmatter.private,
+          title: parsed.title,
+          content: truncated ? body.slice(0, MAX_NOTE_CONTENT_CHARS) : body,
+          truncated,
+        }),
+      }
+    } catch (cause) {
+      if (isPrivateNoteError(cause)) {
+        return { ok: false, path, error: 'This note is marked private and cannot be read by AI.' }
+      }
+      throw cause
+    }
+  }
+
   return {
     search_notes: tool({
-      description:
-        'Search the user’s notes by meaning and keywords. Returns the best-matching ' +
-        'notes with short snippets. Queries are plain language — there is no wildcard ' +
-        'or operator syntax. Private notes are excluded.',
+      description: searchNotesDescription(options.semanticSearchEnabled !== false),
       inputSchema: searchNotesInput,
       execute: async ({ query, limit }): Promise<SearchNotesOutput> => {
         const hits = await retrieveFn(query, {
           limit: limit ?? DEFAULT_SEARCH_LIMIT,
+          mode: searchMode,
           excludePrivateContent: true,
         })
         return { hits: await cloudSafeSearchHits(hits, isPrivateLive) }
@@ -215,44 +278,27 @@ export function buildNoteTools(deps: NoteToolDeps = {}) {
       },
     }),
 
-    read_note: tool({
+    read_notes: tool({
       description:
-        'Read the full markdown content of one note by its graph-relative path ' +
-        '(from search_notes results). Private notes cannot be read.',
-      inputSchema: readNoteInput,
-      execute: async ({ path }): Promise<ReadNoteOutput> => {
-        let source: string
-        try {
-          source = await readNoteFn(path)
-        } catch (cause) {
-          if (isAppError(cause) && cause.kind === 'notFound') {
-            return { ok: false, path, error: 'No note exists at this path.' }
-          }
-          throw cause
-        }
-        const parsed = parseNote({ path, source })
-        const { body } = splitFrontmatter(source)
-        const truncated = body.length > MAX_NOTE_CONTENT_CHARS
-        try {
-          return {
-            ok: true,
-            note: cloudSafeNoteContent({
-              path,
-              isPrivate: parsed.frontmatter.private,
-              title: parsed.title,
-              content: truncated ? body.slice(0, MAX_NOTE_CONTENT_CHARS) : body,
-              truncated,
-            }),
-          }
-        } catch (cause) {
-          if (isPrivateNoteError(cause)) {
-            return { ok: false, path, error: 'This note is marked private and cannot be read by AI.' }
-          }
-          throw cause
-        }
+        'Read the full markdown content of one or more notes by their graph-relative ' +
+        'paths (from search_notes results). Pass every note you need in a single call ' +
+        'rather than reading them one at a time. Private notes cannot be read.',
+      inputSchema: readNotesInput,
+      execute: async ({ paths }): Promise<ReadNotesOutput> => {
+        return { notes: await Promise.all(paths.map(readOneNote)) }
       },
     }),
   }
+}
+
+/** Tool description for the active search mode. */
+function searchNotesDescription(semanticSearchEnabled: boolean): string {
+  const suffix =
+    'Returns the best-matching notes with short snippets. Queries are plain language — there is no wildcard or operator syntax. Private notes are excluded.'
+  if (semanticSearchEnabled) {
+    return `Search the user’s notes by meaning and keywords. ${suffix}`
+  }
+  return `Search the user’s notes with lexical full-text search over titles and note bodies. ${suffix}`
 }
 
 /** The tool set type, for typed stream parts in the chat engine. */
@@ -261,17 +307,25 @@ export type NoteTools = ReturnType<typeof buildNoteTools>
 /** The hit slice tool-activity UI renders (full hits stay engine-side). */
 export type NoteHitSummary = Pick<CloudSearchHit, 'path' | 'title'>
 
+/** One note's outcome in a read_notes call, for the tool-activity UI. */
+export interface ReadNoteSummary {
+  path: string
+  title: string | null
+  /** The per-note refusal/miss text, or `null` when the read succeeded. */
+  error: string | null
+}
+
 /** One tool invocation, as the transcript sees it. */
 export type NoteToolCall =
   | { tool: 'search'; toolCallId: string; query: string }
-  | { tool: 'read'; toolCallId: string; path: string }
+  | { tool: 'read'; toolCallId: string; paths: string[] }
   | { tool: 'recents'; toolCallId: string; tag: string | null }
   | { tool: 'dailies'; toolCallId: string; start: string; end: string }
 
 /** One settled tool invocation. A failed read or listing keeps its refusal. */
 export type NoteToolResult =
   | { tool: 'search'; toolCallId: string; query: string; hits: NoteHitSummary[] }
-  | { tool: 'read'; toolCallId: string; path: string; title: string | null; error: string | null }
+  | { tool: 'read'; toolCallId: string; notes: ReadNoteSummary[] }
   | {
       tool: 'recents'
       toolCallId: string
@@ -289,8 +343,8 @@ export function noteToolCall(part: TypedToolCall<NoteTools>): NoteToolCall | nul
   switch (part.toolName) {
     case 'search_notes':
       return { tool: 'search', toolCallId: part.toolCallId, query: part.input.query }
-    case 'read_note':
-      return { tool: 'read', toolCallId: part.toolCallId, path: part.input.path }
+    case 'read_notes':
+      return { tool: 'read', toolCallId: part.toolCallId, paths: part.input.paths }
     case 'list_recent_notes':
       return { tool: 'recents', toolCallId: part.toolCallId, tag: part.input.tag ?? null }
     case 'list_daily_notes':
@@ -321,12 +375,16 @@ export function noteToolResult(part: TypedToolResult<NoteTools>): NoteToolResult
         query: part.input.query,
         hits: part.output.hits.map((hit) => ({ path: hit.path, title: hit.title })),
       }
-    case 'read_note': {
-      const output = part.output
-      return output.ok
-        ? { tool: 'read', toolCallId: part.toolCallId, path: output.note.path, title: output.note.title, error: null }
-        : { tool: 'read', toolCallId: part.toolCallId, path: output.path, title: null, error: output.error }
-    }
+    case 'read_notes':
+      return {
+        tool: 'read',
+        toolCallId: part.toolCallId,
+        notes: part.output.notes.map((entry) =>
+          entry.ok
+            ? { path: entry.note.path, title: entry.note.title, error: null }
+            : { path: entry.path, title: null, error: entry.error },
+        ),
+      }
     case 'list_recent_notes': {
       const output = part.output
       return output.ok

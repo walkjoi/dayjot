@@ -1,5 +1,4 @@
 import { useState, type ReactElement } from 'react'
-import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { rebuildIndexVisibly } from '@/lib/rebuild-index'
 import { useGraph } from '@/providers/graph-provider'
@@ -34,7 +33,7 @@ export function RebuildIndexField(): ReactElement {
       legend="Rebuild index"
       description="Reflect keeps a local index of your notes to power search and links. If results ever look stale or incomplete, rebuild it — your notes are never changed."
     >
-      <div className="mt-3">
+      <div className="mt-3 flex justify-start">
         <Button
           type="button"
           variant="outline"
@@ -43,11 +42,6 @@ export function RebuildIndexField(): ReactElement {
           onClick={() => void rebuild()}
           className="text-text-secondary"
         >
-          <RefreshCw
-            aria-hidden
-            strokeWidth={1.75}
-            className={rebuilding ? 'animate-spin' : undefined}
-          />
           {rebuilding ? 'Rebuilding…' : 'Rebuild index'}
         </Button>
       </div>
