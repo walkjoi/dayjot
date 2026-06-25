@@ -1,4 +1,5 @@
-import { memo, useCallback, useState, type ReactElement } from 'react'
+import { memo, useCallback, useMemo, useState, type ReactElement } from 'react'
+import type { ExitBoundaryHandler } from '@meowdown/core'
 import { isDaily } from '@reflect/core'
 import { BacklinksPanel } from '@/components/backlinks-panel'
 import { InlineAlert } from '@/components/inline-alert'
@@ -49,6 +50,24 @@ interface NotePaneProps {
    * stays part of the editor's click-to-focus area.
    */
   gutterClassName?: string
+  /**
+   * The daily stream's day key for this pane (omitted by non-daily callers).
+   * Required for {@link registerHandle} and {@link onExitBoundary} to identify
+   * which day fired.
+   */
+  dailyDate?: string
+  /**
+   * Register (or, with `null`, unregister) this pane's editor handle with the
+   * daily stream, so it can move the caret here from an adjacent day. Keyed by
+   * {@link dailyDate}.
+   */
+  registerHandle?: (date: string, handle: NoteEditorHandle | null) => void
+  /**
+   * The caret tried to leave this pane's top (`'up'`) / bottom (`'down'`) edge.
+   * The daily stream moves focus to the adjacent day; returns `true` when it
+   * did, so the editor consumes the key.
+   */
+  onExitBoundary?: (date: string, direction: 'up' | 'down') => boolean
 }
 
 /**
@@ -71,6 +90,9 @@ export function NotePaneComponent({
   className,
   editorClassName,
   gutterClassName,
+  dailyDate,
+  registerHandle,
+  onExitBoundary,
 }: NotePaneProps): ReactElement {
   const { graph } = useGraph()
   const { settings } = useSettings()
@@ -115,6 +137,9 @@ export function NotePaneComponent({
   const handleRef = useCallback(
     (handle: NoteEditorHandle | null) => {
       bindEditor(handle)
+      if (dailyDate !== undefined) {
+        registerHandle?.(dailyDate, handle)
+      }
       if (handle && autoFocus) {
         // The caret lands at the document start — for a seeded new note
         // that is the empty H1, so typing names the note.
@@ -122,8 +147,18 @@ export function NotePaneComponent({
         onAutoFocused?.()
       }
     },
-    [bindEditor, autoFocus, onAutoFocused],
+    [bindEditor, dailyDate, registerHandle, autoFocus, onAutoFocused],
   )
+
+
+  const handleExitBoundary: ExitBoundaryHandler | undefined = useMemo(() => {
+    if (!dailyDate || !onExitBoundary) {
+      return
+    }
+    return ({ direction }) => {
+      return onExitBoundary(dailyDate, direction)
+    }
+  }, [dailyDate, onExitBoundary])
 
   if (document.status === 'loading') {
     // `reflect-note-loading` keeps the hint invisible for the first beat:
@@ -235,6 +270,7 @@ export function NotePaneComponent({
         // also carry `reflect-editor` keep their own context size.
         className={cn('reflect-note-surface', gutterClassName, editorClassName)}
         handleRef={handleRef}
+        onExitBoundary={handleExitBoundary}
       />
 
       <div className={gutterClassName}>
