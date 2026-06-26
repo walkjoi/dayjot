@@ -2,11 +2,12 @@ import { useCallback, useLayoutEffect, useRef, useState, type ReactElement } fro
 import { useVirtualizer, type VirtualItem, type Virtualizer } from '@tanstack/react-virtual'
 import { dailyPath } from '@reflect/core'
 import { NotePane } from '@/components/note-pane'
+import type { NoteEditorHandle } from '@/editor/note-editor'
 import { formatDayLabel, todayIso } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { useSettings } from '@/providers/settings-provider'
 import { useToday } from '@/lib/use-today'
-import { createDayWindow, dateAtIndex, indexOfDate } from '@/lib/day-window'
+import { createDayWindow, dateAtIndex, indexOfDate, neighborDate } from '@/lib/day-window'
 import { useSetFocusedDailyDate } from '@/providers/focused-daily-provider'
 import { useRouter } from '@/routing/router'
 
@@ -118,6 +119,61 @@ export function DailyStream({ targetDate }: DailyStreamProps): ReactElement {
   // sidebar's note actions / published link must describe the focused day.
   const setFocusedDailyDate = useSetFocusedDailyDate()
 
+  // Cross-note arrow navigation (ArrowUp at the top of a day -> end of the
+  // previous day; ArrowDown at the bottom -> start of the next day). The stream
+  // is virtualized, so the neighbor day's editor may not be mounted: we keep a
+  // registry of mounted day handles plus a single pending-focus slot that
+  // carries the target caret position, applied when the neighbor row mounts and
+  // registers. This is independent of the `⌘D` autofocus path (`focusPending`).
+  const dayHandlesRef = useRef(new Map<string, NoteEditorHandle>())
+  const pendingFocusRef = useRef<{ date: string; position: 'start' | 'end' } | null>(null)
+
+  const focusDay = useCallback((handle: NoteEditorHandle, position: 'start' | 'end') => {
+    handle.focus()
+    // meowdown's setSelection also scrolls the caret into view.
+    handle.setSelection(position)
+  }, [])
+
+  const registerHandle = useCallback(
+    (date: string, handle: NoteEditorHandle | null) => {
+      if (handle === null) {
+        dayHandlesRef.current.delete(date)
+        return
+      }
+      dayHandlesRef.current.set(date, handle)
+      const pending = pendingFocusRef.current
+      if (pending?.date === date) {
+        pendingFocusRef.current = null
+        focusDay(handle, pending.position)
+      }
+    },
+    [focusDay],
+  )
+
+  const handleExitBoundary = useCallback(
+    (date: string, direction: 'up' | 'down'): boolean => {
+      const target = neighborDate(dayWindow, date, direction === 'up' ? -1 : 1)
+      if (target === null) {
+        // Window edge: no neighbor — hand the key back so the editor no-ops.
+        return false
+      }
+      const position: 'start' | 'end' = direction === 'up' ? 'end' : 'start'
+      const mounted = dayHandlesRef.current.get(target)
+      if (mounted) {
+        focusDay(mounted, position)
+        return true
+      }
+      // The neighbor is virtualized away: queue the focus, then scroll its row
+      // into the rendered range so it mounts and `registerHandle` applies it.
+      pendingFocusRef.current = { date: target, position }
+      virtualizer.scrollToIndex(indexOfDate(dayWindow, target), {
+        align: direction === 'up' ? 'end' : 'start',
+      })
+      return true
+    },
+    [dayWindow, virtualizer, focusDay],
+  )
+
   // Re-anchor on every explicit arrival (`arrivalSeq` bumps even when ⌘D is
   // pressed while already on today — the router clears the entry's saved
   // offset for that case; `entryId` covers back/forward between entries whose
@@ -138,13 +194,16 @@ export function DailyStream({ targetDate }: DailyStreamProps): ReactElement {
     const restored = savedScroll()
     if (restored !== null) {
       // A restored arrival also cancels any focus still pending from a prior
-      // navigation the user backed out of before that day's editor mounted —
-      // the day would otherwise steal focus when its row scrolls into view.
+      // navigation the user backed out of before that day's editor mounted (both
+      // the ⌘D autofocus and a queued cross-note boundary focus). The day would
+      // otherwise steal focus when its row scrolls into view.
       focusPending.current = null
+      pendingFocusRef.current = null
       virtualizer.scrollToOffset(restored)
       return
     }
     const target = targetDateRef.current
+    pendingFocusRef.current = null
     focusPending.current = target
     virtualizer.scrollToIndex(indexOfDate(dayWindow, target), { align: 'start' })
   }, [arrivalSeq, entryId, dayWindow, virtualizer, savedScroll])
@@ -161,6 +220,7 @@ export function DailyStream({ targetDate }: DailyStreamProps): ReactElement {
       // still land focus in today once its editor mounts.
       onPointerDownCapture={() => {
         focusPending.current = null
+        pendingFocusRef.current = null
       }}
     >
       <div ref={virtualizer.containerRef} className="relative w-full">
@@ -196,6 +256,9 @@ export function DailyStream({ targetDate }: DailyStreamProps): ReactElement {
                 </h2>
                 <NotePane
                   path={dailyPath(date)}
+                  dailyDate={date}
+                  registerHandle={registerHandle}
+                  onExitBoundary={handleExitBoundary}
                   lazy
                   autoFocus={autoFocus}
                   onAutoFocused={consumeFocus}

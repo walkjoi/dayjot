@@ -10,6 +10,9 @@ app is closed: the host spools into the graph's capture inbox
 (`<graph>/.reflect/inbox/`), and the app drains it on next launch.
 [Plan 11](../../docs/plans/11-link-capture.md) is the design doc.
 
+Install the published extension from the
+[Chrome Web Store](https://chromewebstore.google.com/detail/reflect-capture/ccabifmooehighoonjeiololjfofkhkd).
+
 ## Architecture in one breath
 
 popup → `chrome.storage` queue → background `sendNativeMessage` →
@@ -27,23 +30,59 @@ pnpm --filter @reflect/extension build   # production build → .output/chrome-m
 pnpm --filter @reflect/extension test    # vitest over lib/
 ```
 
-Load the production build via `chrome://extensions` → Developer mode →
-**Load unpacked** → `apps/extension/.output/chrome-mv3`.
+Load a build via `chrome://extensions` → Developer mode → **Load unpacked**.
+Prefer `pnpm … dev` (`.output/chrome-mv3-dev`) for development — it auto-reloads
+and always keeps the pinned `key`. You can also load the `pnpm … build` output
+(`.output/chrome-mv3`), but **do not load the `pnpm zip` output**: the store
+artifact omits `key`, so it loads under a random ID the host won't allowlist.
 
 For the native hop to work, run the desktop app once (it writes the host
 manifests for detected browsers and the active-graph pointer file), then
 restart Chrome so it re-reads the manifests.
 
-## The extension ID is pinned — don't regenerate it casually
+### Troubleshooting: "Install Reflect to finish saving…" while Reflect is installed
 
-`wxt.config.ts` carries a public `key`, which makes the extension ID
-`dlbliojklpickgimjdmjjdnbjdiomjik` everywhere: unpacked dev builds, CI, and
-the Chrome Web Store (the store keeps a key-pinned ID on first upload). The
-desktop app's host manifests (`apps/desktop/src-tauri/src/capture.rs`,
-`EXTENSION_ORIGINS`) allowlist exactly this origin — changing the key without
-updating that constant silently breaks the native hop. The private half of
-the key is deliberately discarded: unpacked loads and store uploads only need
-the public key, and the store re-signs every upload.
+That message is the `no-host` state — Chrome could not reach (or was not
+allowlisted by) the native-messaging host. Check, in order:
+
+1. **The extension's ID.** In `chrome://extensions`, the card must read either
+   `ccabifmooehighoonjeiololjfofkhkd` for the Chrome Web Store listing or
+   `dlbliojklpickgimjdmjjdnbjdiomjik` for an unpacked development build. Any
+   other ID means you loaded a **keyless** local build (typically
+   `.output/chrome-mv3` right after `pnpm zip`, which builds with
+   `WXT_STORE_BUILD=true`). Rebuild with `pnpm … dev` or `pnpm … build`, then
+   **Reload** the extension. The host allowlists only the store and pinned dev
+   IDs, so a wrong ID is rejected as "forbidden" → this message.
+2. **The desktop app has run at least once** on this machine, so it has written
+   `~/Library/Application Support/<browser>/NativeMessagingHosts/app.reflect.capture.json`.
+   If Chrome was already open when that file appeared, restart Chrome.
+3. **A graph is selected** in the app. The `no-graph` variant of this message
+   ("Open Reflect and pick a graph first") means the host ran but has no active
+   graph to spool into.
+
+The capture is never lost while held — it stays queued and retries automatically
+once the host is reachable.
+
+## The unpacked ID is pinned — and the store ID is not the same
+
+`wxt.config.ts` carries a public `key`, which fixes the extension ID to
+`dlbliojklpickgimjdmjjdnbjdiomjik` for **unpacked** loads — `wxt dev`, CI, and a
+`wxt build` you load by hand. The desktop app's host manifests
+(`apps/desktop/src-tauri/src/capture.rs`, `EXTENSION_ORIGINS`) allowlist exactly
+this origin, so during development the native hop works. Changing the key without
+updating that constant silently breaks it. The private half of the key is
+deliberately discarded; unpacked loads only need the public key.
+
+**The Chrome Web Store does not use this key.** It rejects a `key` field in the
+uploaded package (`key field is not allowed in manifest`) and minted the live
+listing ID `ccabifmooehighoonjeiololjfofkhkd`. So:
+
+- The store artifact must **omit** `key`. `pnpm zip` sets `WXT_STORE_BUILD=true`,
+  which drops it; every other build keeps it. (`manifest-key.test.ts` still pins
+  the dev key against `EXTENSION_ORIGINS`.)
+- `apps/desktop/src-tauri/src/capture.rs` must keep both the store ID and the
+  pinned dev ID in `EXTENSION_ORIGINS`, or the native hop will fail for one of
+  the two install modes.
 
 To derive an ID from a key (if it ever has to change):
 
@@ -54,26 +93,24 @@ openssl rsa -in key.pem -pubout -outform DER | shasum -a 256 \
   | head -c 32 | tr '0123456789abcdef' 'abcdefghijklmnop'    # extension ID
 ```
 
-## Releasing to the Chrome Web Store
+## Releasing updates to the Chrome Web Store
 
-The build is store-ready as-is: `pnpm --filter @reflect/extension zip` produces a
-signed-on-upload package, the manifest declares only the permissions the code uses
-(see the justifications below), and the extension ID is pinned. The remaining work
-is the listing — the copy and disclosures below are written to be pasted straight
-into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+`pnpm --filter @reflect/extension zip` produces a key-stripped,
+signed-on-upload package whose manifest declares only the permissions the code
+uses (see the justifications below). Upload updates to the existing
+[Reflect Capture listing](https://chromewebstore.google.com/detail/reflect-capture/ccabifmooehighoonjeiololjfofkhkd)
+in the [Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
 ### Build & upload
 
 1. `pnpm --filter @reflect/extension check` (typecheck + lint) and
    `pnpm --filter @reflect/extension test` — both must be green.
 2. `pnpm --filter @reflect/extension zip` → upload
-   `.output/reflect-capture-<version>-chrome.zip`.
-3. Confirm the store item ID matches `dlbliojklpickgimjdmjjdnbjdiomjik`
-   (it will, while the manifest `key` is unchanged).
-4. If the store ever assigns a different ID, append
-   `chrome-extension://<store-id>/` to `EXTENSION_ORIGINS` in
-   `apps/desktop/src-tauri/src/capture.rs` and ship a desktop release —
-   the native-messaging host manifests rewrite themselves on next launch.
+   `.output/reflect-capture-<version>-chrome.zip`. This artifact omits the manifest
+   `key` (the store rejects it); a plain `wxt build` keeps it for unpacked loads.
+3. Keep `chrome-extension://ccabifmooehighoonjeiololjfofkhkd/` in
+   `EXTENSION_ORIGINS` in `apps/desktop/src-tauri/src/capture.rs`; the
+   native-messaging host manifests rewrite themselves on each desktop launch.
 
 ### Listing copy
 

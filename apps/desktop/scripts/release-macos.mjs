@@ -20,7 +20,8 @@
 // Full procedure and troubleshooting: docs/macos-distribution.md
 
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { randomBytes } from 'node:crypto'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
 import { createInterface } from 'node:readline/promises'
@@ -67,6 +68,35 @@ function capture(command, args, options = {}) {
 function run(command, args) {
   const result = spawnSync(command, args, { encoding: 'utf8' })
   return { status: result.status, output: `${result.stdout ?? ''}${result.stderr ?? ''}` }
+}
+
+/** Parse `security list-keychains` output into keychain paths. */
+export function parseKeychainList(output) {
+  return [...output.matchAll(/"([^"]+)"/g)].map((match) => match[1])
+}
+
+function listUserKeychains() {
+  return parseKeychainList(capture('security', ['list-keychains', '-d', 'user']))
+}
+
+/** Build the Tauri CLI arguments for release packaging. */
+export function createTauriBuildArgs({ flavor, hasUpdater }) {
+  const buildArgs = ['tauri', 'build', '--bundles', 'app']
+  const overlay = FLAVOR_OVERLAYS[flavor]
+  if (overlay) buildArgs.push('--config', overlay)
+  // The beta and dev overlays pin their own updater feed; the stable flavor has
+  // no overlay, so without this it would inherit whatever endpoint is committed
+  // in the base tauri.conf.json — which on the `next` branch is the *beta* feed.
+  // Pin it at build time so a stable build always polls the stable feed, no
+  // matter which branch it was cut from. This is what makes releases
+  // branch-independent (release-bump.mjs no longer ties the channel to a branch).
+  if (flavor === 'stable') {
+    buildArgs.push('--config', JSON.stringify({ plugins: { updater: { endpoints: [STABLE_UPDATER_ENDPOINT] } } }))
+  }
+  if (hasUpdater) {
+    buildArgs.push('--config', JSON.stringify({ bundle: { createUpdaterArtifacts: true } }))
+  }
+  return buildArgs
 }
 
 /**
@@ -283,6 +313,95 @@ function writeUpdaterManifest({ version, tag, flavor }) {
   return manifestPath
 }
 
+/** Build the hdiutil arguments used to create the release DMG. */
+export function createDmgArgs({ dmg, sourceFolder, volumeName }) {
+  return ['create', '-volname', volumeName, '-srcfolder', sourceFolder, '-ov', '-format', 'UDZO', dmg]
+}
+
+/** Build the codesign arguments used for the DMG container. */
+export function signDmgArgs({ dmg, identity, keychain }) {
+  const args = ['--force', '--sign', identity, '--timestamp']
+  if (keychain) args.push('--keychain', keychain)
+  args.push(dmg)
+  return args
+}
+
+function importSigningCertificate() {
+  const { APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD } = process.env
+  if (!APPLE_CERTIFICATE) return null
+  if (!APPLE_CERTIFICATE_PASSWORD) fail('APPLE_CERTIFICATE is set but APPLE_CERTIFICATE_PASSWORD is not')
+
+  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-signing-'))
+  const certificatePath = join(tempDir, 'certificate.p12')
+  const keychainPath = join(tempDir, 'reflect-signing.keychain-db')
+  const keychainPassword = randomBytes(24).toString('hex')
+  const previousKeychains = listUserKeychains()
+
+  try {
+    writeFileSync(certificatePath, Buffer.from(APPLE_CERTIFICATE, 'base64'), { mode: 0o600 })
+    execFileSync('security', ['create-keychain', '-p', keychainPassword, keychainPath], { stdio: 'inherit' })
+    execFileSync('security', ['set-keychain-settings', '-lut', '21600', keychainPath], { stdio: 'inherit' })
+    execFileSync('security', ['unlock-keychain', '-p', keychainPassword, keychainPath], { stdio: 'inherit' })
+    execFileSync('security', ['list-keychains', '-d', 'user', '-s', keychainPath, ...previousKeychains], {
+      stdio: 'inherit',
+    })
+    execFileSync(
+      'security',
+      ['import', certificatePath, '-k', keychainPath, '-P', APPLE_CERTIFICATE_PASSWORD, '-T', '/usr/bin/codesign'],
+      { stdio: 'inherit' },
+    )
+    execFileSync(
+      'security',
+      ['set-key-partition-list', '-S', 'apple-tool:,apple:,codesign:', '-s', '-k', keychainPassword, keychainPath],
+      { stdio: 'inherit' },
+    )
+    rmSync(certificatePath, { force: true })
+    return { keychainPath, previousKeychains, tempDir }
+  } catch (error) {
+    cleanupSigningCertificate({ keychainPath, previousKeychains, tempDir })
+    throw error
+  }
+}
+
+function cleanupSigningCertificate(signingCertificate) {
+  if (!signingCertificate) return
+  if (signingCertificate.previousKeychains?.length) {
+    spawnSync('security', ['list-keychains', '-d', 'user', '-s', ...signingCertificate.previousKeychains], {
+      stdio: 'ignore',
+    })
+  }
+  if (existsSync(signingCertificate.keychainPath)) {
+    spawnSync('security', ['delete-keychain', signingCertificate.keychainPath], { stdio: 'ignore' })
+  }
+  rmSync(signingCertificate.tempDir, { recursive: true, force: true })
+}
+
+function createDmg({ flavor, identity, keychain }) {
+  const conf = readFlavorConf(flavor)
+  const { app, dmg } = bundlePaths(flavor)
+  if (!existsSync(app)) fail(`${app} does not exist — tauri did not produce the app bundle`)
+
+  const stagingRoot = mkdtempSync(join(tmpdir(), 'reflect-dmg-'))
+  const stagingDir = join(stagingRoot, `${conf.productName}-dmg`)
+  const stagedApp = join(stagingDir, basename(app))
+  try {
+    mkdirSync(stagingDir, { recursive: true })
+    execFileSync('ditto', [app, stagedApp], { stdio: 'inherit' })
+    symlinkSync('/Applications', join(stagingDir, 'Applications'))
+
+    mkdirSync(dirname(dmg), { recursive: true })
+    if (existsSync(dmg)) rmSync(dmg)
+    log(`creating ${basename(dmg)} from ${basename(app)}…`)
+    execFileSync('hdiutil', createDmgArgs({ dmg, sourceFolder: stagingDir, volumeName: conf.productName }), {
+      stdio: 'inherit',
+    })
+    log(`signing ${basename(dmg)}…`)
+    execFileSync('codesign', signDmgArgs({ dmg, identity, keychain }), { stdio: 'inherit' })
+  } finally {
+    rmSync(stagingRoot, { recursive: true, force: true })
+  }
+}
+
 /**
  * Notarize and staple the DMG. Tauri notarizes the .app during the build but
  * not the DMG wrapped around it afterwards; without its own ticket the DMG is
@@ -420,21 +539,12 @@ function build({ notarize, requireUpdater = false, flavor }) {
   // createUpdaterArtifacts stays out of the committed config: with it on,
   // `tauri build` hard-fails without the private key, which would break plain
   // contributor builds. The release script turns it on only when it can sign.
-  const buildArgs = ['tauri', 'build']
-  const overlay = FLAVOR_OVERLAYS[flavor]
-  if (overlay) buildArgs.push('--config', overlay)
-  // The beta and dev overlays pin their own updater feed; the stable flavor has
-  // no overlay, so without this it would inherit whatever endpoint is committed
-  // in the base tauri.conf.json — which on the `next` branch is the *beta* feed.
-  // Pin it at build time so a stable build always polls the stable feed, no
-  // matter which branch it was cut from. This is what makes releases
-  // branch-independent (release-bump.mjs no longer ties the channel to a branch).
-  if (flavor === 'stable') {
-    buildArgs.push('--config', JSON.stringify({ plugins: { updater: { endpoints: [STABLE_UPDATER_ENDPOINT] } } }))
-  }
-  if (updater) {
-    buildArgs.push('--config', JSON.stringify({ bundle: { createUpdaterArtifacts: true } }))
-  }
+  //
+  // Build only the signed/notarized .app with Tauri. The generated Tauri DMG
+  // script depends on Finder automation and has proven brittle on GitHub-hosted
+  // macOS images; create the DMG directly below and keep the same notarization
+  // and Gatekeeper checks around the final artifact.
+  const buildArgs = createTauriBuildArgs({ flavor, hasUpdater: Boolean(updater) })
   const result = spawnSync('pnpm', buildArgs, { cwd: appDir, stdio: 'inherit', env: buildEnv })
   if (result.status !== 0) fail('tauri build failed')
 
@@ -445,6 +555,12 @@ function build({ notarize, requireUpdater = false, flavor }) {
     }
   }
 
+  const signingCertificate = importSigningCertificate()
+  try {
+    createDmg({ flavor, identity, keychain: signingCertificate?.keychainPath })
+  } finally {
+    cleanupSigningCertificate(signingCertificate)
+  }
   if (notarize) notarizeDmg(bundlePaths(flavor).dmg, credentials)
   verify({ notarized: notarize, flavor })
   printArtifacts(flavor)

@@ -1,6 +1,14 @@
 import { expect, test } from 'vitest'
 
-import { createBetaFeedReleaseArgs, createReleaseArgs, uploadBetaFeedArgs } from './release-macos.mjs'
+import {
+  createBetaFeedReleaseArgs,
+  createDmgArgs,
+  createReleaseArgs,
+  createTauriBuildArgs,
+  parseKeychainList,
+  signDmgArgs,
+  uploadBetaFeedArgs,
+} from './release-macos.mjs'
 
 const baseInput = {
   assets: ['Reflect.dmg', 'Reflect.app.tar.gz', 'Reflect.app.tar.gz.sig', 'latest.json'],
@@ -85,4 +93,78 @@ test('beta feed upload replaces the moving manifest', () => {
     'latest.json',
     '--clobber',
   ])
+})
+
+test('release builds ask Tauri for the app bundle only', () => {
+  const args = createTauriBuildArgs({ flavor: 'stable', hasUpdater: true })
+
+  expect(args.slice(0, 4)).toEqual(['tauri', 'build', '--bundles', 'app'])
+  expect(args).not.toContain('dmg')
+  expect(args).toContain(JSON.stringify({ bundle: { createUpdaterArtifacts: true } }))
+  expect(args).toContain(
+    JSON.stringify({
+      plugins: {
+        updater: {
+          endpoints: ['https://github.com/team-reflect/reflect-open/releases/latest/download/latest.json'],
+        },
+      },
+    }),
+  )
+})
+
+test('beta release builds keep the beta flavor overlay', () => {
+  expect(createTauriBuildArgs({ flavor: 'beta', hasUpdater: false })).toEqual([
+    'tauri',
+    'build',
+    '--bundles',
+    'app',
+    '--config',
+    'src-tauri/tauri.beta.conf.json',
+  ])
+})
+
+test('DMG creation uses direct hdiutil packaging', () => {
+  expect(createDmgArgs({ dmg: 'Reflect.dmg', sourceFolder: '/tmp/stage', volumeName: 'Reflect' })).toEqual([
+    'create',
+    '-volname',
+    'Reflect',
+    '-srcfolder',
+    '/tmp/stage',
+    '-ov',
+    '-format',
+    'UDZO',
+    'Reflect.dmg',
+  ])
+})
+
+test('DMG signing timestamps the container', () => {
+  expect(signDmgArgs({ dmg: 'Reflect.dmg', identity: 'Developer ID Application: Reflect App, LLC (789ULN5MZB)' })).toEqual(
+    ['--force', '--sign', 'Developer ID Application: Reflect App, LLC (789ULN5MZB)', '--timestamp', 'Reflect.dmg'],
+  )
+})
+
+test('DMG signing can target a temporary CI keychain', () => {
+  expect(
+    signDmgArgs({
+      dmg: 'Reflect.dmg',
+      identity: 'Developer ID Application: Reflect App, LLC (789ULN5MZB)',
+      keychain: '/tmp/reflect-signing.keychain-db',
+    }),
+  ).toEqual([
+    '--force',
+    '--sign',
+    'Developer ID Application: Reflect App, LLC (789ULN5MZB)',
+    '--timestamp',
+    '--keychain',
+    '/tmp/reflect-signing.keychain-db',
+    'Reflect.dmg',
+  ])
+})
+
+test('macOS keychain list output is parsed as paths', () => {
+  expect(
+    parseKeychainList(`    "/Users/runner/Library/Keychains/login.keychain-db"
+    "/Library/Keychains/System.keychain"
+`),
+  ).toEqual(['/Users/runner/Library/Keychains/login.keychain-db', '/Library/Keychains/System.keychain'])
 })
