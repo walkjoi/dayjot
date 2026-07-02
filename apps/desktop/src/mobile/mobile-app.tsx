@@ -1,10 +1,13 @@
-import { type ReactElement } from 'react'
+import { useEffect, type ReactElement } from 'react'
+import { installBackgroundFlush } from '@/lib/background-flush'
 import { MobileErrorBoundary } from '@/mobile/mobile-error-boundary'
 import { MobileOnboardingScreen } from '@/mobile/onboarding-screen'
 import { MobileShell } from '@/mobile/mobile-shell'
+import { SyncStatusPill } from '@/mobile/sync-status-pill'
 import { useKeyboardHeightVar } from '@/mobile/use-keyboard'
 import { useTaskCheckboxHaptics } from '@/mobile/use-task-haptics'
 import { useGraph } from '@/providers/graph-provider'
+import { SyncProvider } from '@/providers/sync-provider'
 import { RouterProvider } from '@/routing/router'
 
 /**
@@ -24,11 +27,26 @@ export function MobileApp(): ReactElement {
   useKeyboardHeightVar()
   useTaskCheckboxHaptics()
 
+  // Flush-on-background (Plan 19, decision 6): iOS may suspend or kill the
+  // process soon after backgrounding, so every hide lands dirty note buffers
+  // and settings, then makes a local backup commit. Installed unconditionally
+  // (each flush is a no-op with nothing open) — the mobile leg of desktop's
+  // quit-flush.
+  useEffect(() => {
+    return installBackgroundFlush()
+  }, [])
+
   if (status === 'ready' && graph) {
     return (
       <MobileErrorBoundary>
         <RouterProvider key={graph.root}>
-          <MobileShell />
+          {/* Same engine, contracts, and triggers as desktop (Plan 12) — the
+              controller owns resume/edit/online; mobile adds only the
+              plain-language status pill (step 10). */}
+          <SyncProvider graph={graph}>
+            <MobileShell />
+            <SyncStatusPill />
+          </SyncProvider>
         </RouterProvider>
       </MobileErrorBoundary>
     )
