@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState, type ReactElement } from 'react'
+import { memo, useCallback, useMemo, useRef, useState, type ReactElement } from 'react'
 import type { ExitBoundaryHandler } from '@meowdown/core'
 import { isDaily, untitledNoteSeed } from '@reflect/core'
 import { BacklinksPanel } from '@/components/backlinks-panel'
@@ -7,10 +7,14 @@ import { NoteConflictBanner } from '@/components/note-conflict-banner'
 import { ProtectedNoteView } from '@/components/protected-note-view'
 import { SyncConflictNotice } from '@/components/sync-conflict-notice'
 import { editorBodyWithDefaultBullet } from '@/editor/default-bullet'
+import {
+  registerNoteEditorHandle,
+  unregisterNoteEditorHandle,
+} from '@/editor/editor-handle-registry'
 import { markModeFromSyntax } from '@/editor/mark-mode'
 import { NoteEditor, type NoteEditorHandle } from '@/editor/note-editor'
+import { useAssetPersistence } from '@/editor/use-asset-persistence'
 import { useEditorAutocomplete } from '@/editor/use-editor-autocomplete'
-import { useImagePersistence } from '@/editor/use-image-persistence'
 import { useNoteDocument } from '@/editor/use-note-document'
 import { useTagNavigation } from '@/editor/use-tag-navigation'
 import { useWikiLinkNavigation } from '@/editor/use-wiki-link-navigation'
@@ -122,20 +126,34 @@ export function NotePaneComponent({
   })
   const {
     resolveImageUrl,
-    resolveImageOpenPath,
-    openImage,
-    saveImage,
-    onImageSaveError,
-    saveError: imageSaveError,
-  } = useImagePersistence(graphRoot, generation)
+    resolveAssetOpenPath,
+    openAsset,
+    saveFile,
+    saveError,
+  } = useAssetPersistence(graphRoot, generation, path)
   const onWikiLinkClick = useWikiLinkNavigation(generation)
   const onTagClick = useTagNavigation()
   const { onWikilinkSearch, onTagSearch } = useEditorAutocomplete()
 
   const bindEditor = document.bindEditor
+  // The registry entry this pane made, so unmount removes exactly it (a
+  // remount of the same path may already have re-registered).
+  const registeredHandle = useRef<{ path: string; handle: NoteEditorHandle } | null>(null)
   const handleRef = useCallback(
     (handle: NoteEditorHandle | null) => {
       bindEditor(handle)
+      if (handle === null) {
+        if (registeredHandle.current !== null) {
+          unregisterNoteEditorHandle(
+            registeredHandle.current.path,
+            registeredHandle.current.handle,
+          )
+          registeredHandle.current = null
+        }
+      } else {
+        registerNoteEditorHandle(path, handle)
+        registeredHandle.current = { path, handle }
+      }
       if (dailyDate !== undefined) {
         registerHandle?.(dailyDate, handle)
       }
@@ -146,7 +164,7 @@ export function NotePaneComponent({
         onAutoFocused?.()
       }
     },
-    [bindEditor, dailyDate, registerHandle, autoFocus, onAutoFocused],
+    [bindEditor, path, dailyDate, registerHandle, autoFocus, onAutoFocused],
   )
 
 
@@ -224,9 +242,10 @@ export function NotePaneComponent({
           </InlineAlert>
         ) : null}
 
-        {imageSaveError !== null ? (
+        {saveError !== null ? (
           <InlineAlert tone="error" className="mb-4">
-            Couldn’t save the pasted image: {imageSaveError}. It was not added to the note.
+            Couldn’t save the {saveError.kind === 'image' ? 'pasted image' : 'file'}:{' '}
+            {saveError.message}. It was not added to the note.
           </InlineAlert>
         ) : null}
 
@@ -253,10 +272,9 @@ export function NotePaneComponent({
         // The grip drag-reorders blocks and the "+" inserts a paragraph below.
         blockHandle={true}
         resolveImageUrl={resolveImageUrl}
-        resolveImageOpenPath={resolveImageOpenPath}
-        openImage={openImage}
-        saveImage={saveImage}
-        onImageSaveError={onImageSaveError}
+        resolveAssetOpenPath={resolveAssetOpenPath}
+        openAsset={openAsset}
+        saveFile={saveFile}
         onWikiLinkClick={onWikiLinkClick}
         onTagClick={onTagClick}
         onWikilinkSearch={onWikilinkSearch}

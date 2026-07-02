@@ -12,7 +12,7 @@
  * and tests — they track internal contracts and may change with them.
  */
 export { setBridge, hasBridge, type IpcBridge, type Unlisten } from './ipc/bridge'
-export { call } from './ipc/invoke'
+export { call, callBinary } from './ipc/invoke'
 export {
   getAppVersion,
   getAppPlatform,
@@ -101,6 +101,8 @@ export {
   captureMetaFetch,
   promoteCaptureScreenshot,
 } from './graph/commands'
+export { createAsset, importAsset } from './graph/assets'
+export { assetFileName } from './graph/asset-names'
 export {
   newNoteId,
   newNoteSource,
