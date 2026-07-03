@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setBridge } from '@reflect/core'
 import { SettingsProvider } from '@/providers/settings-provider'
-import { CalendarSection } from './calendar-section'
+import { CalendarIntegrationField } from './calendar-integration-field'
 
 // The section renders only in the macOS desktop webview; jsdom is neither.
 vi.mock('@/lib/platform', () => ({ isMacosDesktop: true }))
@@ -57,7 +57,7 @@ function renderSection(): void {
   render(
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
-        <CalendarSection />
+        <CalendarIntegrationField />
       </SettingsProvider>
     </QueryClientProvider>,
   )
@@ -84,14 +84,14 @@ afterEach(() => {
   queryClient.clear()
 })
 
-describe('CalendarSection', () => {
+describe('CalendarIntegrationField', () => {
   it('starts switched off with no calendar detail', async () => {
     renderSection()
     await waitFor(() => expect(calendarSwitch().getAttribute('aria-checked')).toBe('false'))
     expect(screen.queryByText(/calendars/i)).toBeNull()
   })
 
-  it('enabling requests access, persists the setting, and lists calendars by account', async () => {
+  it('enabling requests access, persists the setting, and opens the calendar chooser dialog', async () => {
     renderSection()
     await waitFor(() => expect(calendarSwitch().getAttribute('aria-checked')).toBe('false'))
 
@@ -100,7 +100,13 @@ describe('CalendarSection', () => {
     await waitFor(() =>
       expect(saved.at(-1)).toMatchObject({ calendarEnabled: true, calendarIds: [] }),
     )
-    await waitFor(() => expect(screen.getByText('0/2 calendars')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('0/2 calendars selected')).toBeTruthy())
+    expect(screen.queryByText('Google')).toBeNull()
+    expect(screen.queryByText('iCloud')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /choose calendars/i }))
+
+    expect(await screen.findByRole('dialog', { name: 'Choose calendars' })).toBeTruthy()
     expect(screen.getByText('Google')).toBeTruthy()
     expect(screen.getByText('iCloud')).toBeTruthy()
     expect(screen.getByRole('checkbox', { name: 'Work' })).toBeTruthy()
@@ -130,12 +136,14 @@ describe('CalendarSection', () => {
     stored = { calendarEnabled: true }
     authStatus = 'fullAccess'
     renderSection()
+    await screen.findByText('0/2 calendars selected')
+    fireEvent.click(screen.getByRole('button', { name: /choose calendars/i }))
     const work = await screen.findByRole('checkbox', { name: 'Work' })
 
     fireEvent.click(work)
 
     await waitFor(() => expect(saved.at(-1)).toMatchObject({ calendarIds: ['cal-work'] }))
-    await waitFor(() => expect(screen.getByText('1/2 calendars')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('1/2 calendars selected')).toBeTruthy())
   })
 
   it('counts only ids the Mac still knows, ignoring stale ones', async () => {
@@ -143,7 +151,7 @@ describe('CalendarSection', () => {
     authStatus = 'fullAccess'
     renderSection()
 
-    await waitFor(() => expect(screen.getByText('1/2 calendars')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('1/2 calendars selected')).toBeTruthy())
   })
 
   it('denied access shows the explanation and deep-links to System Settings', async () => {
@@ -174,6 +182,6 @@ describe('CalendarSection', () => {
     await waitFor(() => expect(invoked).toContain('calendar_request_access'))
     // The grant resolved and the invalidated auth query re-ran: the calendar
     // list replaces the permission explanation.
-    await waitFor(() => expect(screen.getByText('0/2 calendars')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('0/2 calendars selected')).toBeTruthy())
   })
 })
