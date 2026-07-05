@@ -758,6 +758,45 @@ fn open_index_at_creates_migrates_and_reopens() {
     assert_eq!(rows[0]["n"], Value::from(1));
 }
 
+/// The note-window adoption contract (`windows::window_bootstrap`): reading
+/// the open sessions must never bump either generation — a bump here would
+/// strand every command the main window has pinned to the current ones.
+#[test]
+fn session_adoption_reads_never_bump_generations() {
+    use tauri::Manager;
+    let app = tauri::test::mock_builder()
+        .build(tauri::test::mock_context(tauri::test::noop_assets()))
+        .expect("mock app");
+    app.manage(crate::fs::GraphState::default());
+    app.manage(super::IndexState::default());
+
+    let graph_dir = tempfile::tempdir().expect("tempdir");
+    {
+        let state: tauri::State<crate::fs::GraphState> = app.state();
+        let mut inner = state.0.lock().unwrap();
+        inner.generation = 3;
+        inner.root = Some(graph_dir.path().to_path_buf());
+    }
+
+    // Before any index opens, adoption reports that honestly (None), rather
+    // than opening one itself.
+    assert_eq!(super::current_generation(&app.state()).unwrap(), None);
+
+    let opened = super::index_open(app.state(), app.state()).expect("open");
+    for _ in 0..2 {
+        let info = crate::fs::current_graph_info(&app.state()).expect("graph info");
+        assert_eq!(info.generation, 3);
+        assert_eq!(
+            super::current_generation(&app.state()).unwrap(),
+            Some(opened)
+        );
+    }
+
+    // Both counters sit exactly where the main window left them.
+    let graph: tauri::State<crate::fs::GraphState> = app.state();
+    assert_eq!(graph.0.lock().unwrap().generation, 3);
+}
+
 /// Command-level integration: the generation gate that every TS write relies on.
 /// A write carrying a stale generation (issued before the index was reopened)
 /// must silently no-op rather than mutate the newly-opened index.
@@ -789,22 +828,44 @@ fn stale_generation_writes_are_dropped_end_to_end() {
     };
 
     let stale = super::index_open(app.state(), app.state()).expect("first open");
-    super::index_apply(note("notes/a.md", "A", vec![]), stale, app.state()).expect("apply");
+    super::index_apply(
+        note("notes/a.md", "A", vec![]),
+        stale,
+        app.handle().clone(),
+        app.state(),
+    )
+    .expect("apply");
     assert_eq!(count("after first apply"), Value::from(1));
 
     // Reopening (graph switch / reload) bumps the generation; the old one is stale.
     let fresh = super::index_open(app.state(), app.state()).expect("reopen");
     assert_ne!(stale, fresh);
 
-    super::index_apply(note("notes/b.md", "B", vec![]), stale, app.state())
-        .expect("stale apply returns Ok");
+    super::index_apply(
+        note("notes/b.md", "B", vec![]),
+        stale,
+        app.handle().clone(),
+        app.state(),
+    )
+    .expect("stale apply returns Ok");
     assert_eq!(count("after stale apply"), Value::from(1)); // dropped, not applied
 
-    super::index_remove("notes/a.md".to_string(), stale, app.state())
-        .expect("stale remove returns Ok");
+    super::index_remove(
+        "notes/a.md".to_string(),
+        stale,
+        app.handle().clone(),
+        app.state(),
+    )
+    .expect("stale remove returns Ok");
     assert_eq!(count("after stale remove"), Value::from(1)); // also dropped
 
-    super::index_apply(note("notes/b.md", "B", vec![]), fresh, app.state()).expect("fresh apply");
+    super::index_apply(
+        note("notes/b.md", "B", vec![]),
+        fresh,
+        app.handle().clone(),
+        app.state(),
+    )
+    .expect("fresh apply");
     assert_eq!(count("after fresh apply"), Value::from(2));
 
     // index_meta_set rides the same gate: stale stamps vanish, fresh ones land

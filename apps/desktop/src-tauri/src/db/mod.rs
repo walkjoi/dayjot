@@ -63,6 +63,41 @@ fn lock_state<'a>(index: &'a State<IndexState>) -> AppResult<MutexGuard<'a, Inde
     })
 }
 
+/// The open index session's generation as a pure read, or `None` when no
+/// index is open. The note-window bootstrap (`windows::window_bootstrap`)
+/// adopts the session through this — it must never rebind the connection or
+/// bump the generation the way `index_open` does.
+pub(crate) fn current_generation(index: &State<IndexState>) -> AppResult<Option<u64>> {
+    let state = lock_state(index)?;
+    Ok(state.conn.is_some().then_some(state.generation))
+}
+
+/// Broadcast event fired after a note-projection write commits. Secondary
+/// note windows run no indexer of their own: they refetch their index-backed
+/// queries on this signal, while the main window (which did the writing)
+/// invalidates in-process via the `index-applied` module and never listens.
+const INDEX_WRITTEN_EVENT: &str = "index:written";
+
+fn emit_index_written<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    use tauri::Emitter;
+    let _ = app.emit(INDEX_WRITTEN_EVENT, ());
+}
+
+/// Broadcast event fired after a note's rows move to a new path (an in-app
+/// rename or an id-healed external one). The in-process `followHealedMove`
+/// hook only runs in the window that drove the move — a secondary note
+/// window with the note open must also retarget its session, or its next
+/// save would resurrect the dead file at the old path.
+const NOTE_MOVED_EVENT: &str = "note:moved";
+
+fn emit_note_moved<R: tauri::Runtime>(app: &tauri::AppHandle<R>, from: &str, to: &str) {
+    use tauri::Emitter;
+    let _ = app.emit(
+        NOTE_MOVED_EVENT,
+        serde_json::json!({ "from": from, "to": to }),
+    );
+}
+
 // ---- commands --------------------------------------------------------------
 
 /// Open + migrate the index for the active graph (reads the root from state).
@@ -93,14 +128,15 @@ pub fn index_open(graph: State<GraphState>, index: State<IndexState>) -> AppResu
 /// one-note and batch commands). No-op if the generation is stale — a superseded
 /// pass must not write the new graph's index. One transaction + cached statements
 /// keeps a full rebuild cheap; an empty batch commits a no-op transaction.
+/// Returns whether it committed, so callers only broadcast real writes.
 fn apply_in_txn(
     index: &State<IndexState>,
     generation: u64,
     notes: &[IndexedNote],
-) -> AppResult<()> {
+) -> AppResult<bool> {
     let mut state = lock_state(index)?;
     if state.generation != generation {
-        return Ok(());
+        return Ok(false);
     }
     let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
     let tx = conn.transaction()?;
@@ -108,23 +144,35 @@ fn apply_in_txn(
         write::apply_note(&tx, note)?;
     }
     tx.commit()?;
-    Ok(())
+    Ok(true)
 }
 
 /// Apply one note's extracted projection in a single transaction.
 #[tauri::command]
-pub fn index_apply(note: IndexedNote, generation: u64, index: State<IndexState>) -> AppResult<()> {
-    apply_in_txn(&index, generation, std::slice::from_ref(&note))
+pub fn index_apply<R: tauri::Runtime>(
+    note: IndexedNote,
+    generation: u64,
+    app: tauri::AppHandle<R>,
+    index: State<IndexState>,
+) -> AppResult<()> {
+    if apply_in_txn(&index, generation, std::slice::from_ref(&note))? {
+        emit_index_written(&app);
+    }
+    Ok(())
 }
 
 /// Apply many notes' projections in one transaction (the full-rebuild path).
 #[tauri::command]
-pub fn index_apply_batch(
+pub fn index_apply_batch<R: tauri::Runtime>(
     notes: Vec<IndexedNote>,
     generation: u64,
+    app: tauri::AppHandle<R>,
     index: State<IndexState>,
 ) -> AppResult<()> {
-    apply_in_txn(&index, generation, &notes)
+    if apply_in_txn(&index, generation, &notes)? {
+        emit_index_written(&app);
+    }
+    Ok(())
 }
 
 /// Remove a note (e.g. deleted on disk) from the index (no-op if stale).
@@ -132,19 +180,27 @@ pub fn index_apply_batch(
 /// `apply_note`'s internal remove must NOT do this (it runs on every upsert
 /// and would destroy the chunk hash-skip).
 #[tauri::command]
-pub fn index_remove(path: String, generation: u64, index: State<IndexState>) -> AppResult<()> {
-    let mut state = lock_state(&index)?;
-    if state.generation != generation {
-        return Ok(());
+pub fn index_remove<R: tauri::Runtime>(
+    path: String,
+    generation: u64,
+    app: tauri::AppHandle<R>,
+    index: State<IndexState>,
+) -> AppResult<()> {
+    {
+        let mut state = lock_state(&index)?;
+        if state.generation != generation {
+            return Ok(());
+        }
+        let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
+        // One transaction: a half-removed note (row gone, chunks left) would let
+        // a later note at the same path surface stale chunk text in semantic
+        // search until a re-embed.
+        let tx = conn.transaction()?;
+        write::remove_note(&tx, &path)?;
+        embed_write::remove_chunks(&tx, &path)?;
+        tx.commit()?;
     }
-    let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
-    // One transaction: a half-removed note (row gone, chunks left) would let
-    // a later note at the same path surface stale chunk text in semantic
-    // search until a re-embed.
-    let tx = conn.transaction()?;
-    write::remove_note(&tx, &path)?;
-    embed_write::remove_chunks(&tx, &path)?;
-    tx.commit()?;
+    emit_index_written(&app);
     Ok(())
 }
 
@@ -170,29 +226,34 @@ pub fn index_remove(path: String, generation: u64, index: State<IndexState>) -> 
 ///
 /// The rename pipeline end-to-end: `docs/readable-filenames.md`.
 #[tauri::command]
-pub fn note_move_indexed(
+pub fn note_move_indexed<R: tauri::Runtime>(
     from: String,
     to: String,
     generation: u64,
+    app: tauri::AppHandle<R>,
     graph: State<GraphState>,
     index: State<IndexState>,
 ) -> AppResult<()> {
     let root = crate::fs::root_for_generation(&graph, generation)?;
-    let mut state = lock_state(&index)?;
-    let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
-    move_rows(conn, &from, &to)?;
-    if let Err(err) = crate::fs::move_note_file(&root, &from, &to) {
-        // Compensate: the disk refused, so the rows go back. Best-effort —
-        // a failed compensation must surface the *original* error, and the
-        // reconcile heals any residue by id.
-        if let Err(comp) = move_rows(conn, &to, &from) {
-            tracing::error!(
-                ?comp,
-                "rename compensation failed; reconcile will heal by id"
-            );
+    {
+        let mut state = lock_state(&index)?;
+        let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
+        move_rows(conn, &from, &to)?;
+        if let Err(err) = crate::fs::move_note_file(&root, &from, &to) {
+            // Compensate: the disk refused, so the rows go back. Best-effort —
+            // a failed compensation must surface the *original* error, and the
+            // reconcile heals any residue by id.
+            if let Err(comp) = move_rows(conn, &to, &from) {
+                tracing::error!(
+                    ?comp,
+                    "rename compensation failed; reconcile will heal by id"
+                );
+            }
+            return Err(err);
         }
-        return Err(err);
     }
+    emit_index_written(&app);
+    emit_note_moved(&app, &from, &to);
     Ok(())
 }
 
@@ -215,18 +276,24 @@ fn move_rows(conn: &mut Connection, from: &str, to: &str) -> AppResult<()> {
 /// `note_move_indexed` this is gated on the **index** generation like every
 /// other reconcile-path write — a superseded pass must no-op.
 #[tauri::command]
-pub fn index_move(
+pub fn index_move<R: tauri::Runtime>(
     from: String,
     to: String,
     generation: u64,
+    app: tauri::AppHandle<R>,
     index: State<IndexState>,
 ) -> AppResult<()> {
-    let mut state = lock_state(&index)?;
-    if state.generation != generation {
-        return Ok(());
+    {
+        let mut state = lock_state(&index)?;
+        if state.generation != generation {
+            return Ok(());
+        }
+        let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
+        move_rows(conn, &from, &to)?;
     }
-    let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
-    move_rows(conn, &from, &to)
+    emit_index_written(&app);
+    emit_note_moved(&app, &from, &to);
+    Ok(())
 }
 
 /// One `index_touch` entry: re-stamp `path`'s stored mtime to `mtime`
@@ -290,13 +357,21 @@ pub fn index_meta_set(
 /// stale). The `chat_*` tables are deliberately untouched — chat history is
 /// durable, not a rebuildable projection.
 #[tauri::command]
-pub fn index_clear(generation: u64, index: State<IndexState>) -> AppResult<()> {
-    let state = lock_state(&index)?;
-    if state.generation != generation {
-        return Ok(());
+pub fn index_clear<R: tauri::Runtime>(
+    generation: u64,
+    app: tauri::AppHandle<R>,
+    index: State<IndexState>,
+) -> AppResult<()> {
+    {
+        let state = lock_state(&index)?;
+        if state.generation != generation {
+            return Ok(());
+        }
+        let conn = state.conn.as_ref().ok_or_else(AppError::no_graph)?;
+        write::clear_index(conn)?;
     }
-    let conn = state.conn.as_ref().ok_or_else(AppError::no_graph)?;
-    write::clear_index(conn)
+    emit_index_written(&app);
+    Ok(())
 }
 
 /// Upsert one chat message and its conversation row in a single transaction

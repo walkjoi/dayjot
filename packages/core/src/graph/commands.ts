@@ -6,10 +6,12 @@ import {
   graphImportSummarySchema,
   graphInfoSchema,
   recentGraphSchema,
+  windowBootstrapSchema,
   type FileMeta,
   type GraphImportSummary,
   type GraphInfo,
   type RecentGraph,
+  type WindowBootstrap,
 } from './schemas'
 
 /** Commands that return `()` from Rust serialize as `null` over IPC. */
@@ -18,6 +20,35 @@ const voidSchema = z.null()
 /** Open an existing graph at `path` (ensures the standard layout exists). */
 export async function openGraph(path: string): Promise<GraphInfo> {
   return call('graph_open', { path }, graphInfoSchema)
+}
+
+/**
+ * Open (or focus) a secondary note window on a `reflect://` route link
+ * (⌘-click a note link). Desktop-only; requires an open graph, which the new
+ * window adopts — see {@link windowBootstrap}.
+ */
+export async function openNoteWindow(deepLink: string): Promise<void> {
+  await call('open_note_window', { deepLink }, voidSchema)
+}
+
+/**
+ * Adopt the already-open graph for a secondary note window: a pure read of
+ * the current graph + index sessions (never `graph_open`/`index_open`, whose
+ * generation bumps would strand the main window's pinned commands) plus the
+ * one-shot deep link the window was created for. Errors when no graph is open.
+ */
+export async function windowBootstrap(): Promise<WindowBootstrap> {
+  return call('window_bootstrap', {}, windowBootstrapSchema)
+}
+
+/**
+ * Close every note window and wait (bounded) for their flushes to land.
+ * Call BEFORE anything that bumps the graph/index generations (switch,
+ * delete): note windows adopted the outgoing session, and a bump-first
+ * ordering would reject their final saves as stale.
+ */
+export async function closeNoteWindows(): Promise<void> {
+  await call('close_note_windows', {}, voidSchema)
 }
 
 /** Create a new graph at `path` and open it. */

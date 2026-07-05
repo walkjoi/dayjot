@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -15,7 +14,6 @@ import {
   errorMessage,
   forgetRecent,
   hasBridge,
-  isMobilePlatform,
   createGraph,
   openGraph,
   recentGraphs,
@@ -28,8 +26,12 @@ import { resetNoteRowOverlays } from '@/hooks/note-row-overlay'
 import { setIndexProgress } from '@/lib/index-progress'
 import { dropIcloudStatusQuery, throttledInvalidateIndexQueries } from '@/lib/query-client'
 import { ensureWelcomeNote } from '@/lib/welcome-note'
+import { closeSecondaryWindows } from '@/lib/windows/close-secondary-windows'
+import { isMainWindow, requireMainWindow } from '@/lib/windows/window-role'
 import { createGraphIndex } from './graph-index'
+import { useDesktopGraphBoot } from './use-desktop-graph-boot'
 import { useMobileGraphBoot, type MobileGraphBoot } from './use-mobile-graph-boot'
+import { useNoteWindowBoot } from './use-note-window-boot'
 
 /** Lifecycle of the active graph (Plan 02 loading gate). */
 export type GraphStatus = 'loading' | 'choosing' | 'opening' | 'ready'
@@ -187,6 +189,9 @@ export function GraphProvider({
 
   const openRecent = useCallback(
     (root: string): Promise<boolean> => {
+      if (!requireMainWindow('opening a graph')) {
+        return Promise.resolve(false)
+      }
       const seq = ++openSeq.current
       setStatus('opening')
       setError(null)
@@ -196,6 +201,7 @@ export function GraphProvider({
       const run = async (): Promise<boolean> => {
         let opened = false
         try {
+          await closeSecondaryWindows(platform) // before openGraph bumps the session
           const info = await openGraph(root)
           if (seq !== openSeq.current) {
             return false // superseded by a newer open
@@ -266,7 +272,7 @@ export function GraphProvider({
       openChain.current = next
       return next
     },
-    [loadRecents],
+    [loadRecents, platform],
   )
 
   // The mobile bootstrap + onboarding slice (Plans 19/21) lives in its own
@@ -283,28 +289,30 @@ export function GraphProvider({
     completeOnboarding,
   } = useMobileGraphBoot({ platform, openRecent, onParked })
 
-  // Desktop boot: reopen the most recent graph, or show the chooser. The
-  // mobile leg (fixed roots, onboarding gate) is the hook's job above.
-  useEffect(() => {
-    if (isMobilePlatform(platform)) {
-      return
-    }
-    let active = true
-    void (async () => {
-      const list = await loadRecents({ surfaceErrors: true })
-      if (!active) {
-        return
-      }
-      if (list.length > 0) {
-        await openRecent(list[0]!.root)
-      } else {
-        setStatus('choosing')
-      }
-    })()
-    return () => {
-      active = false
-    }
-  }, [loadRecents, openRecent, platform])
+  // Secondary note windows never open a graph: they adopt the main window's.
+  useNoteWindowBoot({
+    platform,
+    onAdopted: useCallback((boot) => {
+      setGraph(boot.graph)
+      setIndexGeneration(boot.indexGeneration)
+      setStatus('ready')
+    }, []),
+    onFailed: useCallback((message) => {
+      // Off-main, 'choosing' renders as an error screen (app.tsx), never the
+      // chooser — choosing here would re-root every other window.
+      setError(message)
+      setStatus('choosing')
+    }, []),
+  })
+
+  // Desktop main-window boot: reopen the most recent graph, or show the
+  // chooser. Mobile and note windows boot through their hooks above.
+  useDesktopGraphBoot({
+    platform,
+    loadRecents,
+    openRecent,
+    onChoose: useCallback(() => setStatus('choosing'), []),
+  })
 
   /**
    * Create (and open) a graph at an app-chosen path — desktop onboarding's
@@ -314,6 +322,12 @@ export function GraphProvider({
    */
   const createAt = useCallback(
     async (root: string): Promise<boolean> => {
+      // Guarded BEFORE createGraph: graph_create activates the shared Rust
+      // session, so off-main it would re-root every window even though the
+      // openRecent below refuses.
+      if (!requireMainWindow('creating a graph')) {
+        return false
+      }
       try {
         await createGraph(root)
       } catch (err) {
@@ -356,9 +370,13 @@ export function GraphProvider({
   }, [])
 
   const chooseGraph = useCallback(async (): Promise<void> => {
+    if (!requireMainWindow('switching graphs')) {
+      return
+    }
+    await closeSecondaryWindows(platform) // the session they adopted is ending
     await closeActiveGraph()
     await loadRecents({ surfaceErrors: true })
-  }, [closeActiveGraph, loadRecents])
+  }, [closeActiveGraph, loadRecents, platform])
 
   const forget = useCallback(
     async (root: string): Promise<void> => {
@@ -366,16 +384,22 @@ export function GraphProvider({
         await forgetRecent(root)
         await loadRecents()
         if (graph?.root === root) {
+          // Forgetting the ACTIVE graph ends the session its note windows
+          // adopted — same close-first rule as switch/delete.
+          await closeSecondaryWindows(platform)
           await closeActiveGraph()
         }
       } catch {
         // best-effort
       }
     },
-    [closeActiveGraph, graph, loadRecents],
+    [closeActiveGraph, graph, loadRecents, platform],
   )
 
   const deleteGraph = useCallback(async (): Promise<void> => {
+    if (!isMainWindow()) {
+      throw new Error('Deleting a graph is only available from the main window.')
+    }
     if (graph === null) {
       return
     }
@@ -385,6 +409,7 @@ export function GraphProvider({
     // re-open the graph the user switched to.
     const seq = openSeq.current
     try {
+      await closeSecondaryWindows(platform) // before the delete invalidates the session
       await deleteGraphCommand(generation)
     } catch (err) {
       // The command invalidates the Rust session before touching the
@@ -404,10 +429,11 @@ export function GraphProvider({
       await closeActiveGraph()
     }
     await loadRecents()
-  }, [closeActiveGraph, graph, loadRecents, openRecent])
+  }, [closeActiveGraph, graph, loadRecents, openRecent, platform])
 
   const refreshIndex = useCallback((): void => {
-    if (indexGeneration === null) {
+    // Off-main, a refresh would start a second concurrent index writer.
+    if (indexGeneration === null || !isMainWindow()) {
       return
     }
     // The index lifecycle coalesces stacked triggers (resume + poll-end +

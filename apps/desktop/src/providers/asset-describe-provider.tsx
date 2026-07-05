@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactElement, type ReactNode } from 'react'
 import type { AiProvidersState, GraphInfo } from '@reflect/core'
 import { createAssetDescribeController } from '@/lib/asset-describe-controller'
+import { useMainWindowEffect } from '@/hooks/use-main-window-effect'
 import { useSettings } from '@/providers/settings-provider'
 
 /**
@@ -33,7 +34,8 @@ export function AssetDescribeProvider({ graph, children }: AssetDescribeProvider
     }
   })
 
-  useEffect(() => {
+  // Main window only — two describers would double-bill the same assets.
+  useMainWindowEffect(() => {
     if (!describeAssets) {
       return
     }

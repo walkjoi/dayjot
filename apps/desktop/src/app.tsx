@@ -2,6 +2,7 @@ import { useEffect, type ReactElement } from 'react'
 import { GraphChooser } from '@/components/graph-chooser'
 import { GraphWorkspace } from '@/components/graph-workspace'
 import { installQuitFlush } from '@/lib/quit-flush'
+import { isMainWindow } from '@/lib/windows/window-role'
 import { useGraph } from '@/providers/graph-provider'
 
 /**
@@ -10,7 +11,7 @@ import { useGraph } from '@/providers/graph-provider'
  * (daily notes, search, AI) hang off the workspace in later plans.
  */
 export function App(): ReactElement {
-  const { status, graph } = useGraph()
+  const { status, graph, error } = useGraph()
 
   // Quit-time persistence: flush dirty note buffers before the webview dies
   // (window close, ⌘Q, reload) — unmount effects don't run on those paths.
@@ -24,6 +25,17 @@ export function App(): ReactElement {
   }
 
   if (status === 'choosing') {
+    // A secondary note window never chooses: opening a graph from here would
+    // re-root every other window. Landing in this state means its bootstrap
+    // failed (e.g. it raced a graph switch) — say so and stop.
+    if (!isMainWindow()) {
+      return (
+        <div className="flex h-screen w-screen flex-col items-center justify-center gap-1 px-8 text-center text-sm text-text-muted">
+          <p>This window couldn’t open the graph. Close it and reopen from the main window.</p>
+          {error !== null ? <p className="text-xs">{error}</p> : null}
+        </div>
+      )
+    }
     return <GraphChooser />
   }
 

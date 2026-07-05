@@ -123,6 +123,8 @@ export {
   watchStop,
   subscribeIndexChanges,
   subscribeIndexApplied,
+  subscribeIndexWritten,
+  subscribeNoteMoved,
   subscribeFileChanges,
   emitFileChanges,
   setLocalWriteEcho,

@@ -22,6 +22,7 @@ export {
   type MobileStorageKind,
 } from '../ipc/commands'
 export { confirmQuit, subscribeQuitRequested } from '../app/quit'
+export { WINDOW_NAVIGATE_EVENT, subscribeWindowNavigate } from '../app/window-events'
 export { toggleDevtools } from '../app/devtools'
 export {
   agentSkillStatus,
@@ -82,13 +83,18 @@ export {
   recentGraphSchema,
   fileMetaSchema,
   graphImportSummarySchema,
+  windowBootstrapSchema,
   type GraphInfo,
   type RecentGraph,
   type FileMeta,
   type GraphImportSummary,
+  type WindowBootstrap,
 } from '../graph/schemas'
 export {
   openGraph,
+  openNoteWindow,
+  windowBootstrap,
+  closeNoteWindows,
   createGraph,
   importReflectV1Zip,
   markReflectV1ImportOwnWrites,
