@@ -32,6 +32,11 @@ export interface GraphIndex {
    */
   stop: () => Promise<void>
   /**
+   * Wait for the current sync pass (if any) to finish, without aborting it.
+   * The refresh coalescer serializes reruns off this.
+   */
+  settled: () => Promise<void>
+  /**
    * Fully close the active index lifecycle: abort any reconcile, drop the live
    * subscription, stop the file watcher, and report idle progress.
    */
@@ -51,6 +56,13 @@ export interface GraphIndex {
    * open supersedes this one. Call only after the graph row is committed.
    */
   sync: (generation: number, isStale: () => boolean) => void
+  /**
+   * Re-run the sync pass, coalescing concurrent triggers (resume, poll-end,
+   * watch-failed can fire together): while one refresh is settling, further
+   * calls fold into a single queued rerun instead of stacking abort/restart
+   * cycles — on a large graph each stacked cycle was a full pass.
+   */
+  refresh: (generation: number, isStale: () => boolean) => void
 }
 
 /** Stage of the index lifecycle that failed, for `onError` reporting. */
@@ -80,6 +92,12 @@ export interface GraphIndexOptions {
    * in-app rename.
    */
   onMoved?: (from: string, to: string) => void
+  /**
+   * Called as a sync pass advances through the file listing (`done`,
+   * `total`) — the substrate for a "Preparing your notes… 400 of 3,000"
+   * surface during a first index. Superseded passes stop reporting.
+   */
+  onFileProgress?: (done: number, total: number) => void
 }
 
 /**
@@ -88,7 +106,7 @@ export interface GraphIndexOptions {
  * keeps one instance (e.g. in a ref) across graph switches.
  */
 export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
-  const { onError, onProgress, onApplied, onMoved } = options
+  const { onError, onProgress, onApplied, onMoved, onFileProgress } = options
   let abort: AbortController | null = null
   let done: Promise<void> = Promise.resolve()
   // Boxed so the async sync pass can read/replace the active subscription without
@@ -98,6 +116,10 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
 
   async function stop(): Promise<void> {
     abort?.abort()
+    await done.catch(() => {})
+  }
+
+  async function settled(): Promise<void> {
     await done.catch(() => {})
   }
 
@@ -136,6 +158,15 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
           generation,
           signal: controller.signal,
           ...(onMoved !== undefined ? { onMoved } : {}),
+          ...(onFileProgress !== undefined
+            ? {
+                onFileProgress: (progressDone: number, total: number) => {
+                  if (!isStale()) {
+                    onFileProgress(progressDone, total)
+                  }
+                },
+              }
+            : {}),
         })
         if (isStale()) {
           return
@@ -164,5 +195,33 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
     })()
   }
 
-  return { stop, close, open, sync }
+  let refreshRunning = false
+  let refreshQueued = false
+
+  function refresh(generation: number, isStale: () => boolean): void {
+    if (refreshRunning) {
+      refreshQueued = true
+      return
+    }
+    refreshRunning = true
+    void (async () => {
+      try {
+        do {
+          refreshQueued = false
+          // Settle (abort) any in-flight pass first so two passes never write
+          // concurrently, then bail if a newer open superseded this graph.
+          await stop()
+          if (isStale()) {
+            return
+          }
+          sync(generation, isStale)
+          await settled()
+        } while (refreshQueued)
+      } finally {
+        refreshRunning = false
+      }
+    })()
+  }
+
+  return { stop, settled, close, open, sync, refresh }
 }

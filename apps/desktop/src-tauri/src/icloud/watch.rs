@@ -46,7 +46,7 @@ pub fn icloud_watch_stop(app: tauri::AppHandle) -> AppResult<()> {
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 mod platform {
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::ptr::NonNull;
     use std::sync::{LazyLock, Mutex};
 
@@ -59,7 +59,8 @@ mod platform {
         NSArray, NSCopying, NSDate, NSMetadataItem, NSMetadataItemFSContentChangeDateKey,
         NSMetadataItemPathKey, NSMetadataQuery, NSMetadataQueryDidFinishGatheringNotification,
         NSMetadataQueryDidUpdateNotification, NSMetadataQueryUbiquitousDocumentsScope,
-        NSMetadataUbiquitousItemDownloadingStatusCurrent,
+        NSMetadataQueryUpdateAddedItemsKey, NSMetadataQueryUpdateChangedItemsKey,
+        NSMetadataQueryUpdateRemovedItemsKey, NSMetadataUbiquitousItemDownloadingStatusCurrent,
         NSMetadataUbiquitousItemDownloadingStatusKey,
         NSMetadataUbiquitousItemHasUnresolvedConflictsKey, NSNotification, NSNotificationCenter,
         NSNumber, NSOperationQueue, NSPredicate, NSString,
@@ -68,6 +69,15 @@ mod platform {
     use tauri::Emitter;
 
     use crate::error::{AppError, AppResult};
+
+    /// How long the query buckets live updates before delivering one
+    /// `DidUpdate` notification. During an initial mass download thousands of
+    /// files flip to current one by one; without an explicit interval each
+    /// flip can arrive as its own notification, and every notification costs
+    /// a JS `index:changed` round downstream. Two seconds keeps "a Mac edit
+    /// appears in seconds" while collapsing a download burst into a handful
+    /// of batches.
+    const UPDATE_BATCHING_INTERVAL_S: f64 = 2.0;
 
     /// The live query plus everything that must stay alive (and on the main
     /// thread) with it.
@@ -87,6 +97,16 @@ mod platform {
     /// downloaded). Plain Rust — safe to touch from the delivery queue.
     static SNAPSHOT: LazyLock<Mutex<HashMap<String, Option<u64>>>> =
         LazyLock::new(|| Mutex::new(HashMap::new()));
+
+    /// Graph-relative paths whose download this watch already requested.
+    /// The OS treats repeat requests as no-ops, but *issuing* them is not
+    /// free: during an initial sync every update round used to re-request
+    /// every still-pending placeholder — O(N) `NSFileManager` calls per
+    /// round, O(N²) across a large download. Each path is nudged once;
+    /// completion (or removal) clears it so a later eviction can re-nudge.
+    /// A download that silently stalls is retried by the resume-path
+    /// `icloud_download_pending` walk, which requests unconditionally.
+    static NUDGED: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 
     /// The watcher's change event, matching `watcher::FileChange`.
     #[derive(Debug, Clone, Serialize)]
@@ -176,7 +196,9 @@ mod platform {
             return; // superseded while queued — a newer install/stop owns the lifecycle
         }
         SNAPSHOT.lock().expect("snapshot lock").clear();
+        NUDGED.lock().expect("nudge lock").clear();
         let query = NSMetadataQuery::new();
+        query.setNotificationBatchingInterval(UPDATE_BATCHING_INTERVAL_S);
 
         let scope: Retained<NSString> = unsafe { NSMetadataQueryUbiquitousDocumentsScope.copy() };
         let scopes = NSArray::from_retained_slice(&[scope]);
@@ -270,7 +292,100 @@ mod platform {
         ));
     }
 
-    /// One gathering/update round: snapshot the results, diff, emit.
+    /// One tracked item's state, extracted from its `NSMetadataItem`.
+    struct ItemState {
+        /// Graph-relative note path.
+        rel: String,
+        /// Absolute path, for download requests.
+        abs: String,
+        /// True when the content is local ("current"); false for placeholders
+        /// and partial downloads.
+        downloaded: bool,
+        /// Content-change date (epoch ms), when the item reports one.
+        mtime: Option<u64>,
+        /// The provider's unresolved-conflict flag.
+        conflict: bool,
+    }
+
+    impl ItemState {
+        /// The snapshot value for this item: `Some(mtime)` once local,
+        /// `None` while a placeholder.
+        fn snapshot_state(&self) -> Option<u64> {
+            self.downloaded.then(|| self.mtime.unwrap_or(0))
+        }
+    }
+
+    /// Extract the tracked state from one metadata item; `None` for items
+    /// outside the graph's note directories.
+    fn item_state(item: &NSMetadataItem, roots: &[String]) -> Option<ItemState> {
+        let abs = attr_string(item, unsafe { NSMetadataItemPathKey })?;
+        let rel = tracked_note_relpath(&abs, roots)?;
+        let downloaded = attr_string(item, unsafe {
+            NSMetadataUbiquitousItemDownloadingStatusKey
+        })
+        .is_some_and(|status| {
+            status == unsafe { NSMetadataUbiquitousItemDownloadingStatusCurrent }.to_string()
+        });
+        let mtime = attr_date_ms(item, unsafe { NSMetadataItemFSContentChangeDateKey });
+        let conflict = attr_bool(item, unsafe {
+            NSMetadataUbiquitousItemHasUnresolvedConflictsKey
+        });
+        Some(ItemState {
+            rel,
+            abs,
+            downloaded,
+            mtime,
+            conflict,
+        })
+    }
+
+    /// What one notification round produced: the file events to emit and the
+    /// paths the provider reports as conflicted.
+    struct Round {
+        changes: Vec<FileChange>,
+        conflicts: Vec<String>,
+    }
+
+    /// Pure half of the nudge bookkeeping: mark placeholders not yet nudged
+    /// this watch (returning their absolute paths, for the caller to
+    /// request), and clear completed ones so a later eviction re-nudges.
+    fn plan_nudges(nudged: &mut HashSet<String>, items: &[ItemState]) -> Vec<String> {
+        let mut request: Vec<String> = Vec::new();
+        for item in items {
+            if item.downloaded {
+                nudged.remove(&item.rel);
+            } else if nudged.insert(item.rel.clone()) {
+                request.push(item.abs.clone());
+            }
+        }
+        request
+    }
+
+    /// Request downloads for the placeholders [`plan_nudges`] marked.
+    fn nudge_pending(items: &[ItemState]) {
+        let request = {
+            let mut nudged = NUDGED.lock().expect("nudge lock");
+            plan_nudges(&mut nudged, items)
+        };
+        for abs in request {
+            crate::icloud::storage::request_download(std::path::Path::new(&abs));
+        }
+    }
+
+    /// The items the provider flags as carrying unresolved conflict versions.
+    fn conflicted_rels(items: &[ItemState]) -> Vec<String> {
+        items
+            .iter()
+            .filter(|item| item.conflict)
+            .map(|item| item.rel.clone())
+            .collect()
+    }
+
+    /// One gathering/update round. Updates apply the notification's own
+    /// added/changed/removed delta — O(changed items); a full results
+    /// enumeration here would be O(all items) per round, O(n²) across an
+    /// initial mass download. The gather round (and an update without a
+    /// usable delta) still snapshots the full listing.
     fn handle_notification(
         app: &tauri::AppHandle,
         roots: &[String],
@@ -285,100 +400,160 @@ mod platform {
             return;
         };
 
-        query.disableUpdates();
-        let results = query.results();
-        let mut current: HashMap<String, Option<u64>> = HashMap::new();
-        let mut conflicts: Vec<String> = Vec::new();
-        let mut undownloaded: Vec<String> = Vec::new();
-        for item in results.iter() {
-            let Ok(item) = item.downcast::<NSMetadataItem>() else {
-                continue;
-            };
-            let Some(path) = attr_string(&item, unsafe { NSMetadataItemPathKey }) else {
-                continue;
-            };
-            let Some(rel) = tracked_note_relpath(&path, roots) else {
-                continue;
-            };
-            if attr_bool(&item, unsafe {
-                NSMetadataUbiquitousItemHasUnresolvedConflictsKey
-            }) {
-                conflicts.push(rel.clone());
+        let is_update = &*notification.name() == unsafe { NSMetadataQueryDidUpdateNotification };
+        let round = if is_update {
+            match update_delta(notification, roots) {
+                Some((upserted, removed)) => update_round(&upserted, &removed),
+                None => full_round(&query, roots),
             }
-            let downloaded = attr_string(&item, unsafe {
-                NSMetadataUbiquitousItemDownloadingStatusKey
-            })
-            .is_some_and(|status| {
-                status == unsafe { NSMetadataUbiquitousItemDownloadingStatusCurrent }.to_string()
-            });
-            let mtime = attr_date_ms(&item, unsafe { NSMetadataItemFSContentChangeDateKey });
-            if !downloaded {
-                undownloaded.push(path);
-            }
-            current.insert(
-                rel,
-                if downloaded {
-                    Some(mtime.unwrap_or(0))
-                } else {
-                    None
-                },
-            );
-        }
-        query.enableUpdates();
+        } else {
+            full_round(&query, roots)
+        };
 
-        // Nudge every non-current item the moment the query reports it —
-        // iOS never downloads content on its own, and waiting for the next
-        // app resume is exactly the sync lag users notice. Repeat requests
-        // for in-flight downloads are OS no-ops, and completion flips the
-        // item to current, which fires another update that upserts it.
-        for path in &undownloaded {
-            crate::icloud::storage::request_download(std::path::Path::new(path));
+        if emit_file_changes && !round.changes.is_empty() {
+            let _ = app.emit("index:changed", round.changes);
         }
-
-        let mut snapshot = SNAPSHOT.lock().expect("snapshot lock");
-        if emit_file_changes {
-            let changes = snapshot_changes(&snapshot, &current);
-            if !changes.is_empty() {
-                let _ = app.emit("index:changed", changes);
-            }
-        }
-        *snapshot = current;
-        drop(snapshot);
-
-        if !conflicts.is_empty() {
+        if !round.conflicts.is_empty() {
+            let mut conflicts = round.conflicts;
             conflicts.sort();
             let _ = app.emit("icloud:conflicts", conflicts);
         }
     }
 
-    /// Diff one results listing against the previous snapshot (the pure heart
-    /// of [`handle_notification`], kept free of Objective-C so it is unit
-    /// testable). Upserts only for content that is **local** (downloaded) and
-    /// new or mtime-changed; removes only for paths gone from the listing
-    /// entirely. An evicted item stays listed in a placeholder state (`None`)
-    /// and produces no event in either direction — eviction is not deletion,
-    /// and its bytes aren't local to upsert — until iCloud downloads it again.
-    fn snapshot_changes(
-        previous: &HashMap<String, Option<u64>>,
-        current: &HashMap<String, Option<u64>>,
+    /// Apply one update notification's delta: nudge new placeholders, fold
+    /// the delta into the snapshot, and drop nudge marks for removed items.
+    fn update_round(upserted: &[ItemState], removed: &[String]) -> Round {
+        nudge_pending(upserted);
+        let changes = {
+            let mut snapshot = SNAPSHOT.lock().expect("snapshot lock");
+            apply_update_delta(&mut snapshot, upserted, removed)
+        };
+        {
+            let mut nudged = NUDGED.lock().expect("nudge lock");
+            for rel in removed {
+                nudged.remove(rel);
+            }
+        }
+        Round {
+            changes,
+            conflicts: conflicted_rels(upserted),
+        }
+    }
+
+    /// Snapshot the query's full results listing — the gather round, and the
+    /// fallback for an update notification without a usable delta. Expressed
+    /// through [`apply_update_delta`] (every listed item as an upsert, every
+    /// snapshot row missing from the listing as a remove) so the full and
+    /// incremental paths share one set of diff rules and can never drift.
+    fn full_round(query: &NSMetadataQuery, roots: &[String]) -> Round {
+        query.disableUpdates();
+        let results = query.results();
+        let mut items: Vec<ItemState> = Vec::new();
+        for item in results.iter() {
+            let Ok(item) = item.downcast::<NSMetadataItem>() else {
+                continue;
+            };
+            if let Some(state) = item_state(&item, roots) {
+                items.push(state);
+            }
+        }
+        query.enableUpdates();
+
+        nudge_pending(&items);
+        let listed: HashSet<&str> = items.iter().map(|item| item.rel.as_str()).collect();
+        {
+            // Placeholders that vanished from the listing can't complete —
+            // drop their nudge marks along with the snapshot rows.
+            let mut nudged = NUDGED.lock().expect("nudge lock");
+            nudged.retain(|rel| listed.contains(rel.as_str()));
+        }
+        let changes = {
+            let mut snapshot = SNAPSHOT.lock().expect("snapshot lock");
+            let removed: Vec<String> = snapshot
+                .keys()
+                .filter(|rel| !listed.contains(rel.as_str()))
+                .cloned()
+                .collect();
+            apply_update_delta(&mut snapshot, &items, &removed)
+        };
+        Round {
+            changes,
+            conflicts: conflicted_rels(&items),
+        }
+    }
+
+    /// The added/changed/removed items an update notification carries in its
+    /// `userInfo`. `None` when the dictionary is missing entirely (fall back
+    /// to a full round); empty arrays are a real "nothing tracked changed".
+    fn update_delta(
+        notification: &NSNotification,
+        roots: &[String],
+    ) -> Option<(Vec<ItemState>, Vec<String>)> {
+        let info = notification.userInfo()?;
+        let items_for = |key: &NSString| -> Vec<Retained<NSMetadataItem>> {
+            let value: Option<Retained<AnyObject>> =
+                unsafe { msg_send![&*info, objectForKey: key] };
+            let Some(value) = value else {
+                return Vec::new();
+            };
+            let Ok(array) = value.downcast::<NSArray>() else {
+                return Vec::new();
+            };
+            array
+                .iter()
+                .filter_map(|item| item.downcast::<NSMetadataItem>().ok())
+                .collect()
+        };
+        let mut upserted: Vec<ItemState> = Vec::new();
+        for key in [unsafe { NSMetadataQueryUpdateAddedItemsKey }, unsafe {
+            NSMetadataQueryUpdateChangedItemsKey
+        }] {
+            for item in items_for(key) {
+                if let Some(state) = item_state(&item, roots) {
+                    upserted.push(state);
+                }
+            }
+        }
+        let removed: Vec<String> = items_for(unsafe { NSMetadataQueryUpdateRemovedItemsKey })
+            .iter()
+            .filter_map(|item| {
+                let path = attr_string(item, unsafe { NSMetadataItemPathKey })?;
+                tracked_note_relpath(&path, roots)
+            })
+            .collect();
+        Some((upserted, removed))
+    }
+
+    /// Apply a delta to the snapshot, returning the events to emit — the one
+    /// home of the diff rules (both the incremental update path and the
+    /// full-listing round route through it, kept free of Objective-C so it is
+    /// unit testable): upserts only for content that is **local**
+    /// (downloaded) and new or mtime-changed; removes only for paths gone
+    /// from the listing entirely; and an eviction (downloaded → placeholder)
+    /// is silent in both directions — eviction is not deletion, and its bytes
+    /// aren't local to upsert — until iCloud downloads the item again.
+    fn apply_update_delta(
+        snapshot: &mut HashMap<String, Option<u64>>,
+        upserted: &[ItemState],
+        removed: &[String],
     ) -> Vec<FileChange> {
         let mut changes: Vec<FileChange> = Vec::new();
-        for (rel, state) in current {
+        for item in upserted {
+            let state = item.snapshot_state();
+            let previous = snapshot.insert(item.rel.clone(), state);
             let Some(mtime) = state else {
-                continue; // not downloaded: bytes aren't local, never an upsert
+                continue; // placeholder (or eviction): bytes aren't local
             };
-            if previous.get(rel).copied().flatten() != Some(*mtime) {
+            if previous.flatten() != Some(mtime) {
                 changes.push(FileChange {
-                    path: rel.clone(),
+                    path: item.rel.clone(),
                     kind: "upsert".to_string(),
-                    modified_ms: Some(*mtime),
+                    modified_ms: Some(mtime),
                 });
             }
         }
-        for rel in previous.keys() {
-            // Absent from the listing entirely = deleted. (Evicted items
-            // stay listed with a non-current status — not removes.)
-            if !current.contains_key(rel) {
+        for rel in removed {
+            if snapshot.remove(rel).is_some() {
                 changes.push(FileChange {
                     path: rel.clone(),
                     kind: "remove".to_string(),
@@ -432,14 +607,26 @@ mod platform {
 
     #[cfg(test)]
     mod tests {
-        use super::{root_variants, snapshot_changes, tracked_note_relpath};
-        use std::collections::HashMap;
+        use super::{
+            apply_update_delta, plan_nudges, root_variants, tracked_note_relpath, ItemState,
+        };
+        use std::collections::{HashMap, HashSet};
 
         fn state(entries: &[(&str, Option<u64>)]) -> HashMap<String, Option<u64>> {
             entries
                 .iter()
                 .map(|(rel, mtime)| (rel.to_string(), *mtime))
                 .collect()
+        }
+
+        fn item(rel: &str, downloaded: bool, mtime: Option<u64>) -> ItemState {
+            ItemState {
+                rel: rel.to_string(),
+                abs: format!("/container/Notes/{rel}"),
+                downloaded,
+                mtime,
+                conflict: false,
+            }
         }
 
         fn shapes(changes: &[super::FileChange]) -> Vec<(String, String, Option<u64>)> {
@@ -453,14 +640,16 @@ mod platform {
 
         #[test]
         fn upserts_need_local_bytes_and_a_new_mtime() {
-            let previous = state(&[("notes/same.md", Some(1))]);
-            let current = state(&[
-                ("notes/same.md", Some(1)),    // unchanged: no event
-                ("notes/changed.md", Some(2)), // new content: upsert
-                ("notes/stub.md", None),       // listed but not downloaded: no event
-            ]);
+            // A full listing applied as a delta (how `full_round` uses it):
+            // every listed item upserts, removes come precomputed.
+            let mut snapshot = state(&[("notes/same.md", Some(1))]);
+            let listing = vec![
+                item("notes/same.md", true, Some(1)),    // unchanged: no event
+                item("notes/changed.md", true, Some(2)), // new content: upsert
+                item("notes/stub.md", false, Some(9)),   // not downloaded: no event
+            ];
             assert_eq!(
-                shapes(&snapshot_changes(&previous, &current)),
+                shapes(&apply_update_delta(&mut snapshot, &listing, &[])),
                 vec![(
                     "notes/changed.md".to_string(),
                     "upsert".to_string(),
@@ -471,24 +660,97 @@ mod platform {
 
         #[test]
         fn eviction_is_not_deletion_but_disappearance_is() {
-            let previous = state(&[("notes/evicted.md", Some(1)), ("notes/deleted.md", Some(1))]);
+            let mut snapshot =
+                state(&[("notes/evicted.md", Some(1)), ("notes/deleted.md", Some(1))]);
             // The evicted note stays listed placeholder-state; the deleted one
             // is gone from the listing entirely.
-            let current = state(&[("notes/evicted.md", None)]);
+            let listing = vec![item("notes/evicted.md", false, None)];
+            let removed = vec!["notes/deleted.md".to_string()];
             assert_eq!(
-                shapes(&snapshot_changes(&previous, &current)),
+                shapes(&apply_update_delta(&mut snapshot, &listing, &removed)),
                 vec![("notes/deleted.md".to_string(), "remove".to_string(), None)]
             );
         }
 
         #[test]
-        fn a_finished_download_upserts_the_note() {
-            let previous = state(&[("notes/a.md", None)]);
-            let current = state(&[("notes/a.md", Some(5))]);
+        fn plan_nudges_requests_each_placeholder_once() {
+            let mut nudged: HashSet<String> = HashSet::new();
+            let stub = item("notes/a.md", false, None);
+
+            // First sighting: request it. Every later round: already marked.
             assert_eq!(
-                shapes(&snapshot_changes(&previous, &current)),
+                plan_nudges(&mut nudged, std::slice::from_ref(&stub)),
+                vec!["/container/Notes/notes/a.md".to_string()]
+            );
+            assert!(plan_nudges(&mut nudged, std::slice::from_ref(&stub)).is_empty());
+
+            // Completion clears the mark, so a later eviction re-nudges.
+            let downloaded = item("notes/a.md", true, Some(5));
+            assert!(plan_nudges(&mut nudged, std::slice::from_ref(&downloaded)).is_empty());
+            assert!(!nudged.contains("notes/a.md"));
+            assert_eq!(
+                plan_nudges(&mut nudged, std::slice::from_ref(&stub)),
+                vec!["/container/Notes/notes/a.md".to_string()]
+            );
+        }
+
+        #[test]
+        fn update_delta_applies_incrementally_with_the_same_rules() {
+            let mut snapshot = state(&[
+                ("notes/same.md", Some(1)),
+                ("notes/evictee.md", Some(3)),
+                ("notes/deleted.md", Some(4)),
+            ]);
+            let upserted = vec![
+                item("notes/same.md", true, Some(1)), // unchanged mtime: no event
+                item("notes/changed.md", true, Some(2)), // new content: upsert
+                item("notes/stub.md", false, Some(9)), // placeholder: tracked, silent
+                item("notes/evictee.md", false, Some(3)), // eviction: silent, stays listed
+            ];
+            let removed = vec![
+                "notes/deleted.md".to_string(),
+                "notes/unknown.md".to_string(), // never tracked: no event
+            ];
+            let changes = apply_update_delta(&mut snapshot, &upserted, &removed);
+            assert_eq!(
+                shapes(&changes),
+                vec![
+                    (
+                        "notes/changed.md".to_string(),
+                        "upsert".to_string(),
+                        Some(2)
+                    ),
+                    ("notes/deleted.md".to_string(), "remove".to_string(), None),
+                ]
+            );
+            // The snapshot now carries the delta: the placeholder and the
+            // evictee as `None`, the arrival's mtime, and no deleted row —
+            // exactly what a later full round must diff against.
+            assert_eq!(
+                snapshot,
+                state(&[
+                    ("notes/same.md", Some(1)),
+                    ("notes/changed.md", Some(2)),
+                    ("notes/stub.md", None),
+                    ("notes/evictee.md", None),
+                ])
+            );
+        }
+
+        #[test]
+        fn a_download_completion_in_an_update_upserts_once() {
+            let mut snapshot = state(&[("notes/a.md", None)]);
+            let changes =
+                apply_update_delta(&mut snapshot, &[item("notes/a.md", true, Some(5))], &[]);
+            assert_eq!(
+                shapes(&changes),
                 vec![("notes/a.md".to_string(), "upsert".to_string(), Some(5))]
             );
+            // The same completion reported again (e.g. an attribute-only
+            // change round) is snapshot-equal — no duplicate event.
+            let changes =
+                apply_update_delta(&mut snapshot, &[item("notes/a.md", true, Some(5))], &[]);
+            assert!(changes.is_empty());
         }
 
         #[test]
