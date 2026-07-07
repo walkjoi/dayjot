@@ -129,6 +129,7 @@ describe('createBackgroundReconciler', () => {
     expect(calls).toBe(2) // listener removed on dispose
   })
 
+
   it('runs onDispose teardowns once, and immediately when already disposed', () => {
     const before = vi.fn()
     const after = vi.fn()

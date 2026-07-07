@@ -152,6 +152,13 @@ pub fn run() {
     #[cfg(mobile)]
     let builder = builder.plugin(tauri_plugin_keyboard::init());
 
+    // The native audio-memo recorder is mobile-only too: desktop records
+    // through the webview's MediaRecorder (`use-audio-recorder.ts`), while
+    // mobile capture must survive the webview (interruptions, backgrounding),
+    // so it runs on AVAudioRecorder behind this plugin.
+    #[cfg(mobile)]
+    let builder = builder.plugin(tauri_plugin_recording::init());
+
     // The main window starts hidden (`visible: false`); on desktop the
     // window-state plugin reveals it after restoring geometry, but mobile has
     // no such plugin, so show it here or the UI would never appear.
@@ -279,6 +286,27 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app, event| match &event {
+            // The lock-screen widget opens `reflect://record-audio`; hand it
+            // to the recording plugin's persisted action queue (the V1
+            // handshake) so the request survives webview churn and cold
+            // starts. Desktop scheme opens flow through
+            // tauri-plugin-deep-link to the frontend instead.
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
+            tauri::RunEvent::Opened { urls } => {
+                #[cfg(mobile)]
+                {
+                    use tauri_plugin_recording::RecordingExt;
+                    for url in urls {
+                        if url.scheme() == "reflect" && url.host_str() == Some("record-audio") {
+                            if let Err(err) = app.recording().queue_action("recordAudio") {
+                                tracing::warn!(error = %err, "queueing the record-audio action failed");
+                            }
+                        }
+                    }
+                }
+                #[cfg(not(mobile))]
+                let _ = urls;
+            }
             tauri::RunEvent::ExitRequested { code, api, .. } => {
                 // A user/OS-initiated quit (⌘Q — no exit code) with live
                 // webviews defers so the frontend can flush dirty note

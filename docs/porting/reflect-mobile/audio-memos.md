@@ -1,13 +1,34 @@
 # Porting audio memos (mobile)
 
-**v2 status: later wave — the first post-release wave per the product
-owner.** Desktop v2 audio memos have shipped (raw-first recording into the
-graph + async BYOK transcription — see the desktop
-[audio-memos porting doc](../audio-memos.md)); the mobile wave reuses that
-pipeline. V1's server-upload design is forbidden in v2, but V1's
-*reliability engineering* is the bar to meet. This is the most engineered
-feature in V1 mobile and the clearest expression of its design philosophy:
-**critical capture must not depend on the webview being alive.**
+**v2 status: all three waves implemented; physical-device pass owed.**
+Desktop v2 audio memos shipped first (raw-first recording into the graph +
+async BYOK transcription — see the desktop
+[audio-memos porting doc](../audio-memos.md)). The mobile in-app wave reuses
+that pipeline over a native recorder: `plugins/tauri-plugin-recording`
+(AVAudioRecorder → a native staging directory, interruption/route-change/cap
+stops, 10 Hz metering events), the shared capture queue extracted to
+`apps/desktop/src/hooks/use-audio-memo-pipeline.ts`, and a mobile provider
+(`apps/desktop/src/mobile/audio-memo-provider.tsx`) that ingests staged
+files — including an orphan scan on launch/foreground for stops the webview
+never saw. The reliability wave added `UIBackgroundModes: audio` (a memo
+keeps recording through screen lock and backgrounding; the audio session is
+active only while capturing) and a mount-time reconcile that stops-and-saves
+a recording that outlived its JS (webview reload/crash) instead of leaving a
+hidden hot microphone. The entry-points wave added the native-action
+handshake (persisted queue → `actions_ready` → deliver → confirm; see
+[native-entry-points](./native-entry-points.md)), Siri App Intents, the
+home-screen quick action, the lock-screen/home-screen record widget
+(`RecordingWidget` appex, `reflect://record-audio`), and the Live Activity
+with an iOS 17 stop intent. Notably absent vs. this doc's original sketch:
+an App Group **audio** inbox — recording always happens in the main app
+process (widgets can't record), so the plugin's app-sandbox staging
+directory remains the can't-lose buffer and nothing extension-side writes
+audio. Still owed: the physical-device pass (entry points, interruptions,
+lock-screen continuation). V1's server-upload design is forbidden in v2,
+but V1's *reliability engineering* is the bar to meet.
+This is the most engineered feature in V1 mobile and the clearest
+expression of its design philosophy: **critical capture must not depend on
+the webview being alive.**
 
 ## What V1 mobile does
 
