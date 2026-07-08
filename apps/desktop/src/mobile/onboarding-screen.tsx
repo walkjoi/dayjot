@@ -1,9 +1,10 @@
 import { useState, type ReactElement } from 'react'
-import { HardDrive } from 'lucide-react'
+import { Cloud, HardDrive } from 'lucide-react'
 import { InlineAlert } from '@/components/inline-alert'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useAsyncAction } from '@/hooks/use-async-action'
+import { OnboardingIcloudHeader } from '@/mobile/onboarding-icloud-header'
 import { OnboardingIcloudSection } from '@/mobile/onboarding-icloud-section'
 import { useGraph } from '@/providers/graph-provider'
 
@@ -17,13 +18,12 @@ type PendingChoice = string | 'icloud-create' | 'local' | null
  * where their notes live, gated by the `mobileOnboarded` setting in
  * {@link GraphProvider}.
  *
- * iCloud Drive leads (Plan 21): it is the primary way a graph syncs between
- * iPhone and Mac, so the hero block ({@link OnboardingIcloudSection}) lists
- * every graph already in the app's iCloud container plus a create row.
- * **Choose a folder on this device** opens the app-sandbox root instead (and is
- * promoted to the only storage card when iCloud is unavailable). Every
- * path ends in `completeOnboarding(kind, root)`, which opens the chosen root
- * and records the flag + storage kind + graph name.
+ * iCloud Drive leads (Plan 21): it is the primary way notes sync between
+ * iPhone and Mac, so the hero block ({@link OnboardingIcloudSection}) either
+ * continues with iCloud or lists existing note sets in the app's iCloud
+ * container. **Keep notes on this device** opens the app-sandbox root instead.
+ * Every path ends in `completeOnboarding(kind, root)`, which opens the chosen
+ * root and records the flag + storage kind + graph name.
  *
  * The screen renders before the iCloud container has resolved (the boot no
  * longer waits on it — see `useMobileGraphBoot`): while
@@ -56,12 +56,22 @@ export function MobileOnboardingScreen(): ReactElement {
         paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)',
       }}
     >
-      <div className="my-auto flex w-full flex-col gap-6">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold tracking-tight">Welcome to Reflect</h1>
-        </div>
+      <div className="mx-auto flex w-full max-w-md flex-col gap-7 py-6">
+        <header className="flex flex-col gap-4 pt-2">
+          <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Cloud aria-hidden className="size-5" strokeWidth={1.75} />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-[28px] font-semibold leading-tight tracking-tight">
+              Start with iCloud sync
+            </h1>
+            <p className="text-sm leading-6 text-text-secondary">
+              Keep your notes up to date across iPhone, iPad, and Mac with iCloud Drive.
+            </p>
+          </div>
+        </header>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {icloudReady || icloudPending ? (
             <OnboardingIcloudSection
               pending={icloudPending}
@@ -74,23 +84,15 @@ export function MobileOnboardingScreen(): ReactElement {
                 runChoice('icloud-create', () => completeOnboarding('icloud', root))
               }
             />
-          ) : null}
+          ) : (
+            <IcloudUnavailableSection />
+          )}
 
-          <section className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-text-secondary">
-                <HardDrive aria-hidden className="size-4" strokeWidth={1.75} />
-              </div>
-              <div className="min-w-0 flex-1 space-y-1">
-                <h2 className="text-sm font-semibold">This device</h2>
-                <p className="text-xs text-text-muted">
-                  Stored locally in Reflect on this device. Sync with GitHub later from Settings.
-                </p>
-              </div>
-            </div>
+          <div className="flex flex-col items-center gap-1 px-4 text-center">
             <Button
-              variant={icloudReady || icloudPending ? 'outline' : 'default'}
-              className="w-full justify-start text-left"
+              variant="ghost"
+              size="sm"
+              className="text-text-secondary"
               onClick={() => runChoice('local', () => completeOnboarding('local'))}
               disabled={action.pending || mobileStorageInfo === null}
             >
@@ -99,18 +101,24 @@ export function MobileOnboardingScreen(): ReactElement {
               ) : (
                 <HardDrive aria-hidden strokeWidth={1.75} />
               )}
-              {pendingChoice === 'local' ? 'Setting up…' : 'Choose a folder on this device'}
+              {pendingChoice === 'local' ? 'Setting up…' : 'Or, use this device only'}
             </Button>
-          </section>
-          {!icloudReady && !icloudPending ? (
-            <p className="text-center text-xs text-text-muted">
-              Sign in to iCloud on this device to sync notes with iCloud Drive.
-            </p>
-          ) : null}
+          </div>
         </div>
 
         {action.error !== null ? <InlineAlert tone="error">{action.error}</InlineAlert> : null}
       </div>
     </div>
+  )
+}
+
+function IcloudUnavailableSection(): ReactElement {
+  return (
+    <section className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
+      <OnboardingIcloudHeader description="Turn on iCloud Drive to keep your notes synced between devices." />
+      <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs leading-5 text-text-muted">
+        Sign in to iCloud on this device, then reopen Reflect.
+      </p>
+    </section>
   )
 }
