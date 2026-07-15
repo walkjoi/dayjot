@@ -5,6 +5,7 @@ import {
   errorMessage,
   hasBridge,
   listNotes,
+  normalizeChatSystemPrompt,
   type AiProviderConfig,
   type EditorTextSize,
   type ThemePreference,
@@ -15,6 +16,7 @@ import { marketingVersion } from '@/lib/marketing-version'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'
 import { AddAiProviderDrawer } from '@/mobile/add-ai-provider-drawer'
 import { AiProviderActionsDrawer } from '@/mobile/ai-provider-actions-drawer'
+import { ChatSystemPromptDrawer } from '@/mobile/chat-system-prompt-drawer'
 import { ConnectGithubDrawer } from '@/mobile/connect-github-drawer'
 import { MobileScreenHeader } from '@/mobile/screen-header'
 import {
@@ -74,6 +76,7 @@ export function MobileSettings(): ReactElement {
     setDefaultModel,
   } = useAiProviders()
   const [addProviderOpen, setAddProviderOpen] = useState(false)
+  const [systemPromptOpen, setSystemPromptOpen] = useState(false)
   // The managed provider sticks around after close so the exit animation has
   // content; `manageOpen` alone drives visibility (the edit-sheet pattern).
   const [managedProvider, setManagedProvider] = useState<AiProviderConfig | null>(null)
@@ -187,6 +190,11 @@ export function MobileSettings(): ReactElement {
               />
             ))}
             <SettingsActionRow label="Add AI provider" onPress={() => setAddProviderOpen(true)} />
+            <SettingsNavRow
+              label="System prompt"
+              value={normalizeChatSystemPrompt(settings.chatSystemPrompt) === '' ? 'Default' : 'Custom'}
+              onPress={() => setSystemPromptOpen(true)}
+            />
           </SettingsGroup>
 
           {repo !== null || status !== null || canConnect ? (
@@ -242,6 +250,12 @@ export function MobileSettings(): ReactElement {
         onMakeDefault={makeDefault}
         onSetDefaultModel={setDefaultModel}
         onRemove={removeProvider}
+      />
+      <ChatSystemPromptDrawer
+        value={settings.chatSystemPrompt}
+        open={systemPromptOpen}
+        onOpenChange={setSystemPromptOpen}
+        onSave={(chatSystemPrompt) => updateSettings({ chatSystemPrompt })}
       />
     </div>
   )
