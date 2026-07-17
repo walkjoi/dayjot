@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react'
 import { useCommandState } from 'cmdk'
 import { ChevronsUpDownIcon } from 'lucide-react'
-import { aiModelLabel, type AiModelOption, type AiProviderId } from '@reflect/core'
+import { aiModelLabel, type AiModelOption, type AiProviderId } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import {
   Command,

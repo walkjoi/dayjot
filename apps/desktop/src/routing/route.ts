@@ -7,7 +7,7 @@
  * note route carries `path` — the reserved frontmatter `id` can join it later
  * without breaking the shape.
  */
-import { dailyPath, dateFromDailyPath, isDaily } from '@reflect/core'
+import { dailyPath, dateFromDailyPath, isDaily } from '@dayjot/core'
 import { isIsoDate } from '@/lib/dates'
 
 export type Route =

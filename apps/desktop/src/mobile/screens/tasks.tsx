@@ -6,7 +6,7 @@ import {
   getOpenTasks,
   hasBridge,
   type OpenTask,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useRecentlyCompleted } from '@/lib/tasks/recently-completed'

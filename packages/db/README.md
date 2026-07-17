@@ -1,6 +1,6 @@
-# @reflect/db
+# @dayjot/db
 
-The Kysely schema and dialect for Reflect's local SQLite index.
+The Kysely schema and dialect for DayJot's local SQLite index.
 
 ## Design
 
@@ -24,14 +24,14 @@ Two properties are load-bearing:
 
 Timestamps surface as **epoch-millisecond numbers** (SQLite has no date type);
 booleans as **`0 | 1` integers** — readers map them to real booleans at the
-getter layer (see `NoteRow.isPrivate` in `@reflect/core`).
+getter layer (see `NoteRow.isPrivate` in `@dayjot/core`).
 
 ## Schema generation
 
 `Database` types are generated from the Rust migrations:
 
 ```bash
-pnpm --filter @reflect/db db:codegen   # rebuilds src/schema.gen.ts
+pnpm --filter @dayjot/db db:codegen   # rebuilds src/schema.gen.ts
 ```
 
 Never hand-edit `schema.gen.ts`; add a migration in

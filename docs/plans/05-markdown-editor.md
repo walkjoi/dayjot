@@ -13,14 +13,14 @@ applied here).
 
 **In:** integrating meowdown, live-preview via `MarkMode`, the save pipeline, keyboard
 ergonomics, note-switch + external-reload via imperative content, image/asset handling,
-and the extensions Reflect must add (wiki-links, images, task checkboxes).
+and the extensions DayJot must add (wiki-links, images, task checkboxes).
 **Out:** backlink autocomplete UI (Plan 07 builds on the wiki-link node added here), AI
 patch application UI (Plan 10), split-pane (deferred; leave seams).
 
 ## Decision: use meowdown (committed)
 
 The editor is chosen: **meowdown**, the ProseKit-based markdown WYSIWYG editor. Why it
-fits Reflect's "markdown is the source of truth" constraint better than a typical
+fits DayJot's "markdown is the source of truth" constraint better than a typical
 ProseMirror rich editor:
 
 - It parses markdown with **`@lezer/markdown`** (GFM) and **retains the syntax characters
@@ -62,12 +62,12 @@ import { createEditor } from '@prosekit/core'
 Key consequence: `<Editor>` is **uncontrolled** — changing `initialContent` later is
 ignored. To show a different note (Plan 06 navigation) or reload after an external change,
 either **remount** with `key={notePath}` or drive the instance imperatively
-(`editor.setContent(markdownToDoc(editor, md))`). Reflect standardizes on one of these
+(`editor.setContent(markdownToDoc(editor, md))`). DayJot standardizes on one of these
 (see step 3).
 
 ## Coverage vs gaps
 
-| Provided by meowdown today | Reflect must add (this plan / Plan 07) |
+| Provided by meowdown today | DayJot must add (this plan / Plan 07) |
 |---|---|
 | paragraph, heading, blockquote, list, code block (highlight TBD), table, horizontal rule | **`[[wiki links]]`** view decorations + the shared Lezer scanner (→ Plan 07 autocomplete) |
 | marks: strong, em, code, strikethrough, link | **images** — Lezer parses `Image`, but there is no PM `image` node yet |
@@ -75,12 +75,12 @@ either **remount** with `key={notePath}` or drive the instance imperatively
 
 Gaps are met by writing local ProseKit/Lezer extensions and, where it makes sense,
 upstreaming to meowdown (same author as ProseKit). Wiki-links are the priority because
-they are Reflect's organizing primitive.
+they are DayJot's organizing primitive.
 
 ## Delivery split (decided 2026-06-09)
 
 - **05a** — steps 1–6 plus the keymap registry seed from step 9: the composed editor
-  (meowdown + Reflect extensions), wiki-link chips, the save pipeline + external-change
+  (meowdown + DayJot extensions), wiki-link chips, the save pipeline + external-change
   reconciliation (`useNoteDocument`), DS-token styling, and the workspace bound to a real
   persistent note (`notes/welcome.md`, created on first open) until Plan 06 brings
   navigation.
@@ -132,7 +132,7 @@ they are Reflect's organizing primitive.
    *strips any mark not in its computed set*, so a custom mark would be removed (or
    fight the engine with ping-ponging appendTransactions). Decorations never touch the
    document — serialization is byte-identical by construction. Detection reuses the
-   canonical grammar via `scanInlineWikiLinks` (`@reflect/core`), and the syntax spans
+   canonical grammar via `scanInlineWikiLinks` (`@dayjot/core`), and the syntax spans
    follow meowdown's own MarkMode reveal contract (`.show` near the caret). If Plan 07
    needs a real inline node, the path is upstreaming `WikiLink` into meowdown itself
    (first-party), not fighting it from outside. Resolution uses Plan 03's shared
@@ -149,7 +149,7 @@ they are Reflect's organizing primitive.
    [Plan 18 (Tasks)](18-tasks.md) step 1, where tasks-as-a-feature land too.)
 
 9. **Keyboard ergonomics (product identity).** meowdown ships base keymap/commands/
-   history. Layer Reflect shortcuts (bold/italic, toggle heading, toggle checkbox, indent/
+   history. Layer DayJot shortcuts (bold/italic, toggle heading, toggle checkbox, indent/
    outdent, move line, zen mode) into a **central keymap registry** so Plan 06
    (navigation), 07 (`[[`), 08 (`⌘K`), and 10 (AI sidebar) share one source of truth and
    never collide.
@@ -163,7 +163,7 @@ they are Reflect's organizing primitive.
   because syntax is retained in-doc.
 - **`<Editor>` is uncontrolled** — note switching/reload use imperative `setContent` (or
   remount-by-key), never prop changes.
-- **Reflect owns three editor extensions:** wiki-links, images, task checkboxes.
+- **DayJot owns three editor extensions:** wiki-links, images, task checkboxes.
 - **One central keymap registry** owns all shortcuts app-wide.
 - **The editor writes files + fires reindex; it never blocks on the index.**
 - **Libraries:** meowdown (`@meowdown/react`/`core`) + ProseKit + `@lezer/markdown`,

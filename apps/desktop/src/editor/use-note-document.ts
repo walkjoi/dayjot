@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { readNote, writeNote, type FileChange } from '@reflect/core'
+import { readNote, writeNote, type FileChange } from '@dayjot/core'
 import { useFileChanges } from '@/lib/use-file-changes'
 import { createDocumentBinding, type DocumentBinding } from './document-binding'
 import type { NoteEditorHandle } from './note-editor'
@@ -13,7 +13,7 @@ import { checkRoundTrip } from './roundtrip'
 
 /**
  * React adapter over the {@link createNoteSession} document state machine: one
- * session per open `(path, generation)`, wired to the `@reflect/core` file
+ * session per open `(path, generation)`, wired to the `@dayjot/core` file
  * commands, the watcher event stream, and the editor's imperative handle. All
  * save/conflict/protection semantics live in `note-session.ts`, and the
  * create/adopt/teardown/hand-off lifecycle (a rename retargets the live

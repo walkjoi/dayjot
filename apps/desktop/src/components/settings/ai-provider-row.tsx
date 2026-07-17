@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { Trash2 } from 'lucide-react'
-import { aiModelLabel, aiProvider, errorMessage, type AiProviderConfig } from '@reflect/core'
+import { aiModelLabel, aiProvider, errorMessage, type AiProviderConfig } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { startOperation } from '@/lib/operations'
 import { ModelCombobox } from './model-combobox'

@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react'
 import { useForm } from 'react-hook-form'
-import { errorMessage } from '@reflect/core'
+import { errorMessage } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,

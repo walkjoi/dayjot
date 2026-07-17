@@ -92,7 +92,7 @@ describe('drainCaptureInbox', () => {
     expect(outcome).toEqual({ pending: 1, drained: 1, deduped: 0, invalid: 0, stopped: null })
     const note = files.get(IDENTITY.notePath)
     expect(note).toContain(
-      '## Page Text\n\n<!-- reflect-capture-page-text:start -->\nFirst paragraph.\n\nSecond paragraph.\n<!-- reflect-capture-page-text:end -->',
+      '## Page Text\n\n<!-- dayjot-capture-page-text:start -->\nFirst paragraph.\n\nSecond paragraph.\n<!-- dayjot-capture-page-text:end -->',
     )
   })
 

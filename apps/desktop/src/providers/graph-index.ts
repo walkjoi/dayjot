@@ -4,7 +4,7 @@ import {
   syncIndex,
   watchStart,
   watchStop,
-} from '@reflect/core'
+} from '@dayjot/core'
 
 /**
  * The active graph's index lifecycle, factored out of `GraphProvider` so the

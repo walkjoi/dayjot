@@ -12,7 +12,7 @@ import {
   splitFrontmatter,
   writeNote,
   type ContactMatch,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { openSession } from '@/editor/open-documents'
 import { commitNoteFrontmatter, readNoteSource } from '@/lib/note-frontmatter'
 

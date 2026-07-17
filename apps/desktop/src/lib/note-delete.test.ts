@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import type { NoteSession } from '@/editor/note-session'
 import { openSession } from '@/editor/open-documents'
 import { deleteOpenNote } from './note-delete'

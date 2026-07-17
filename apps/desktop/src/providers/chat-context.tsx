@@ -4,7 +4,7 @@ import type {
   ChatModelOption,
   ChatModelSelection,
   ChatTurn,
-} from '@reflect/core'
+} from '@dayjot/core'
 import type { ChatAttachment } from '@/lib/chat-attachments'
 
 /**

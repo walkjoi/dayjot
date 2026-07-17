@@ -1,4 +1,4 @@
-//! The `reflect` binary: clap surface + exit-code mapping. All behavior lives
+//! The `dayjot` binary: clap surface + exit-code mapping. All behavior lives
 //! in the library modules so integration tests exercise the same code paths.
 
 use std::path::PathBuf;
@@ -6,19 +6,19 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
-use reflect_cli::error::CliError;
-use reflect_cli::{commands, graph};
+use dayjot_cli::error::CliError;
+use dayjot_cli::{commands, graph};
 
-/// Read and discover notes in a Reflect graph.
+/// Read and discover notes in a DayJot graph.
 ///
-/// The graph resolves from --graph, then $REFLECT_GRAPH, then the nearest
-/// ancestor of the current directory containing .reflect/. Notes marked
+/// The graph resolves from --graph, then $DAYJOT_GRAPH, then the nearest
+/// ancestor of the current directory containing .dayjot/. Notes marked
 /// `private: true` are never returned. Exit codes: 0 ok, 1 error, 2 usage,
 /// 3 not found or private, 4 search index missing.
 #[derive(Parser)]
-#[command(name = "reflect", version)]
+#[command(name = "dayjot", version)]
 struct Cli {
-    /// Graph directory (default: nearest ancestor with .reflect/, or $REFLECT_GRAPH)
+    /// Graph directory (default: nearest ancestor with .dayjot/, or $DAYJOT_GRAPH)
     #[arg(long, global = true, value_name = "PATH")]
     graph: Option<PathBuf>,
 
@@ -56,7 +56,7 @@ enum Command {
         /// A YYYY-MM-DD date, graph-relative path, note title, or alias
         note: String,
     },
-    /// Open a note in the Reflect app via its reflect:// deep link
+    /// Open a note in the DayJot app via its dayjot:// deep link
     Open {
         /// A YYYY-MM-DD date, graph-relative path, note title, or alias
         note: String,
@@ -81,7 +81,7 @@ fn main() -> ExitCode {
     match run(&Cli::parse()) {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
-            eprintln!("reflect: {err}");
+            eprintln!("dayjot: {err}");
             ExitCode::from(err.exit_code())
         }
     }

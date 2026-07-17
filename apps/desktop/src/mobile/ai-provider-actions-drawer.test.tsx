@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
-import type { AiProviderConfig } from '@reflect/core'
+import type { AiProviderConfig } from '@dayjot/core'
 
 /** The per-provider management sheet: make-default and remove wiring. */
 

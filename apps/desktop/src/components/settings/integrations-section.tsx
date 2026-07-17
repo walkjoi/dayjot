@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactElement } from 'react'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { requestContactsAccess } from '@reflect/core'
+import { requestContactsAccess } from '@dayjot/core'
 import { InlineAlert } from '@/components/inline-alert'
 import {
   useContactsAuthorization,
@@ -106,7 +106,7 @@ export function IntegrationsSection(): ReactElement | null {
           {showDenied ? (
             <div className="px-4 pb-3.5">
               <InlineAlert tone="warning">
-                Reflect doesn’t have contacts access.{' '}
+                DayJot doesn’t have contacts access.{' '}
                 <button
                   type="button"
                   className="font-medium underline underline-offset-2"
@@ -128,7 +128,7 @@ export function IntegrationsSection(): ReactElement | null {
           {showPrompt ? (
             <div className="px-4 pb-3.5">
               <InlineAlert tone="warning">
-                Reflect hasn’t asked for contacts access yet.{' '}
+                DayJot hasn’t asked for contacts access yet.{' '}
                 <button
                   type="button"
                   className="font-medium underline underline-offset-2"

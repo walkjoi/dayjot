@@ -1,11 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { runDeviceFlow, setBridge } from '@reflect/core'
+import { runDeviceFlow, setBridge } from '@dayjot/core'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { GithubAuthStep } from './github-auth-step'
 
-// The Reflect GitHub App is registered, so the device flow leads and the PAT
+// The DayJot GitHub App is registered, so the device flow leads and the PAT
 // path sits behind a "use a personal access token instead" toggle. The
 // keychain is the bridge fake; GET /user (instant token validation) goes
 // through the mocked Tauri HTTP plugin. The device-flow tests stub core's
@@ -14,8 +14,8 @@ import { GithubAuthStep } from './github-auth-step'
 
 vi.mock('@tauri-apps/plugin-http', () => ({ fetch: vi.fn() }))
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: vi.fn(async () => {}) }))
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   runDeviceFlow: vi.fn(),
 }))
 const httpFetch = vi.mocked(tauriFetch)

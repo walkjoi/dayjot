@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { aiProvider, errorMessage, validateApiKey } from '@reflect/core'
+import { aiProvider, errorMessage, validateApiKey } from '@dayjot/core'
 import { providerFetch } from '@/lib/provider-fetch'
 import type { NewAiProvider } from '@/hooks/use-ai-providers'
 

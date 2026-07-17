@@ -115,7 +115,7 @@ describe('chatSystemPrompt', () => {
     expect(prompt).not.toContain('Daily notes span')
   })
 
-  it('appends nonblank user instructions without removing Reflect’s built-in rules', () => {
+  it('appends nonblank user instructions without removing DayJot’s built-in rules', () => {
     const prompt = chatSystemPrompt({
       today: '2026-06-12',
       context: null,

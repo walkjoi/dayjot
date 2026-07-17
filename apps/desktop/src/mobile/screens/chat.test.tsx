@@ -8,7 +8,7 @@ import type {
   ChatStreamEvent,
   Settings,
   StreamChatOptions,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { ChatProvider } from '@/providers/chat-provider'
 import { RouterProvider, useRouter } from '@/routing/router'
 
@@ -25,8 +25,8 @@ const streamChat = vi.hoisted(() =>
 )
 const getSecret = vi.hoisted(() => vi.fn<(name: string) => Promise<string | null>>())
 const loadChatGraphContext = vi.hoisted(() => vi.fn<(graphName: string) => Promise<null>>())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   streamChat,
   getSecret,
   loadChatGraphContext,

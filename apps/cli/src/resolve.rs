@@ -143,7 +143,7 @@ pub fn resolve_note(
         Some((first, rest)) => {
             if !rest.is_empty() {
                 eprintln!(
-                    "reflect: note: {} other match(es) for '{trimmed}': {}",
+                    "dayjot: note: {} other match(es) for '{trimmed}': {}",
                     rest.len(),
                     rest.join(", ")
                 );

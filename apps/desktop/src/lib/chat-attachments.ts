@@ -1,4 +1,4 @@
-import type { ChatAttachment } from '@reflect/core'
+import type { ChatAttachment } from '@dayjot/core'
 import { base64Of } from '@/lib/base64'
 
 /**
@@ -6,7 +6,7 @@ import { base64Of } from '@/lib/base64'
  * is read once into a {@link ChatAttachment} whose `data:` URL serves double
  * duty — it is the `<img src>` for the composer preview and the transcript
  * bubble, and the image payload the AI SDK sends to the provider. The type
- * itself lives in `@reflect/core` (it is part of the persisted conversation
+ * itself lives in `@dayjot/core` (it is part of the persisted conversation
  * model); this module owns only the browser side — reading `File`s into it.
  *
  * Oversized images are downscaled before they enter the attachment (Plan 23):
@@ -14,7 +14,7 @@ import { base64Of } from '@/lib/base64'
  * payload, the saved conversation row, and webview memory at full resolution.
  */
 
-export type { ChatAttachment } from '@reflect/core'
+export type { ChatAttachment } from '@dayjot/core'
 
 /**
  * Long-edge cap for attached images. Providers tile images at roughly this

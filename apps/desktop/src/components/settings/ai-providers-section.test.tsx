@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge, settingsSchema, type AiProviderConfig, type Settings } from '@reflect/core'
+import { setBridge, settingsSchema, type AiProviderConfig, type Settings } from '@dayjot/core'
 import { SettingsProvider } from '@/providers/settings-provider'
 import { resetOperations } from '@/lib/operations'
 import { AiProvidersSection } from './ai-providers-section'

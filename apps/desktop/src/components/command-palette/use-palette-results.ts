@@ -6,7 +6,7 @@ import {
   retrieve,
   searchWithFilters,
   suggestWikiTargets,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { listCommands } from '@/lib/commands/registry'
 import { todayIso } from '@/lib/dates'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'

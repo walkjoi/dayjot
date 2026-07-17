@@ -100,7 +100,7 @@ export async function buildNoteProjection(
  *
  * The re-applied notes broadcast through {@link emitIndexApplied} — the same
  * post-apply signal the live indexer emits — because these writes bypass the
- * watcher pipeline entirely (`.reflect.md` files are untracked by design).
+ * watcher pipeline entirely (`.dayjot.md` files are untracked by design).
  * Without it, subscribers that follow the index (the embedding sync above
  * all, which must re-embed the notes so the new description text reaches the
  * semantic leg too) would never hear about description-driven changes.
@@ -421,7 +421,7 @@ export async function reconcileIndex(options: IndexPassOptions): Promise<void> {
 
   // Id-based move healing (Plan 17): a row whose file vanished plus a new
   // file carrying the same frontmatter id is a rename observed after the
-  // fact — an external tool or a sync pull moved it while Reflect wasn't
+  // fact — an external tool or a sync pull moved it while DayJot wasn't
   // looking. Move the rows instead of delete+create, so embedding vectors
   // survive. Best-effort throughout: any failure degrades to the plain pass
   // below (the arrival is indexed fresh, the removal loop drops the orphan).

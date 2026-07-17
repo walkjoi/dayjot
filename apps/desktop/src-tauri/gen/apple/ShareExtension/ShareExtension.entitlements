@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.app.reflect</string>
+		<string>group.app.dayjot</string>
 	</array>
 </dict>
 </plist>

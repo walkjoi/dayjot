@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type ReactElement } from 'react'
-import { dailyPath } from '@reflect/core'
+import { dailyPath } from '@dayjot/core'
 import { NotePane } from '@/components/note-pane'
 import { formatDayLabel } from '@/lib/dates'
 import { cn } from '@/lib/utils'
@@ -114,7 +114,7 @@ export function DaySlide({
             tinted on today. Shares the note body's gutter. */}
         <h2
           className={cn(
-            'reflect-daily-subject pt-4 pb-1',
+            'dayjot-daily-subject pt-4 pb-1',
             MOBILE_CONTENT_GUTTER,
             day === today && 'text-accent',
           )}

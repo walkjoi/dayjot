@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DescriptionRejectedError } from '../ai/describe-page'
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 import {
   addSpool,
   CAPTURE_URL,
@@ -71,7 +71,7 @@ describe('reconcileCaptureEnrichment', () => {
     ].join('\n\n')
     await drainOne({
       selection:
-        'quoted text\n\n<!-- reflect-capture-page-text:start -->\n\n## Page Text\n\nnot actual page text',
+        'quoted text\n\n<!-- dayjot-capture-page-text:start -->\n\n## Page Text\n\nnot actual page text',
       contentText,
     })
     scrapeMock.mockResolvedValue({
@@ -307,7 +307,7 @@ describe('reconcileCaptureEnrichment', () => {
       description: 'A description available without the keychain.',
       siteName: null,
     })
-    getSecretMock.mockRejectedValue(new ReflectError('io', 'keychain is unavailable'))
+    getSecretMock.mockRejectedValue(new DayJotError('io', 'keychain is unavailable'))
 
     const outcome = await reconcile()
 
@@ -436,7 +436,7 @@ describe('reconcileCaptureEnrichment', () => {
 
   it('a transient scrape failure stops the pass; the next pass retries', async () => {
     await drainOne()
-    scrapeMock.mockRejectedValueOnce(new ReflectError('network', 'offline'))
+    scrapeMock.mockRejectedValueOnce(new DayJotError('network', 'offline'))
 
     const first = await reconcile()
     expect(first.stopped?.reason).toBe('network')
@@ -448,7 +448,7 @@ describe('reconcileCaptureEnrichment', () => {
 
   it('a permanent scrape failure enriches without meta tags', async () => {
     await drainOne()
-    scrapeMock.mockRejectedValue(new ReflectError('parse', 'not an HTML page'))
+    scrapeMock.mockRejectedValue(new DayJotError('parse', 'not an HTML page'))
 
     const outcome = await reconcile()
 
@@ -513,7 +513,7 @@ describe('reconcileCaptureEnrichment', () => {
       description: 'A description available without AI.',
       siteName: null,
     })
-    describeMock.mockRejectedValue(new ReflectError('auth', 'key rejected'))
+    describeMock.mockRejectedValue(new DayJotError('auth', 'key rejected'))
 
     const outcome = await reconcile()
 
@@ -526,7 +526,7 @@ describe('reconcileCaptureEnrichment', () => {
     expect(files.get(DAILY)).toContain('|A title available without AI]]')
 
     scrapeMock.mockClear()
-    scrapeMock.mockRejectedValue(new ReflectError('network', 'offline'))
+    scrapeMock.mockRejectedValue(new DayJotError('network', 'offline'))
     describeMock.mockResolvedValue({ title: null, description: 'A description from the retry.' })
     const retry = await reconcile()
 
@@ -654,7 +654,7 @@ describe('reconcileCaptureEnrichment', () => {
       .mockImplementationOnce(async (path, contents) => {
         files.set(path, contents)
       })
-      .mockRejectedValueOnce(new ReflectError('io', 'disk full'))
+      .mockRejectedValueOnce(new DayJotError('io', 'disk full'))
 
     const first = await reconcile({ providers: NO_PROVIDERS })
 

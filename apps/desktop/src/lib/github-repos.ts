@@ -1,4 +1,4 @@
-import { parseGithubRemote, type GithubRepoRef } from '@reflect/core'
+import { parseGithubRemote, type GithubRepoRef } from '@dayjot/core'
 
 /**
  * Parse what a user types into a "which repository" field — `owner/name` or a
@@ -23,5 +23,5 @@ export function suggestRepoName(graphName: string | undefined): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-  return slug.length > 0 ? `${slug}-backup` : 'reflect-backup'
+  return slug.length > 0 ? `${slug}-backup` : 'dayjot-backup'
 }

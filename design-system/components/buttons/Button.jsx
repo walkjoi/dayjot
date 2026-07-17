@@ -1,7 +1,7 @@
 import React from 'react'
 
 /**
- * Reflect Button — the real variants from the product.
+ * DayJot Button — the real variants from the product.
  * Primary = solid indigo-600 (every confirming action). Secondary = soft
  * indigo. White = bordered neutral. Text/ghost = chromeless. Space = the
  * glassmorphic marketing button for the dark "deep space" surface.

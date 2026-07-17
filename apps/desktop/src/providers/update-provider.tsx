@@ -7,7 +7,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import { hasBridge } from '@reflect/core'
+import { hasBridge } from '@dayjot/core'
 import { useMainWindowEffect } from '@/hooks/use-main-window-effect'
 import {
   createUpdateController,

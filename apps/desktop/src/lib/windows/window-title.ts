@@ -1,5 +1,5 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { hasBridge } from '@reflect/core'
+import { hasBridge } from '@dayjot/core'
 
 /**
  * Set this webview's OS window title. Best-effort and shell-only: browser

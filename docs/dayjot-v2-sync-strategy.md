@@ -1,8 +1,8 @@
-# Reflect V2 Sync Strategy
+# DayJot V2 Sync Strategy
 
 This document captures the current V2 sync direction. It focuses on a storage/sync adapter model, with AI-assisted conflict resolution sitting above the adapters.
 
-It complements [Reflect V2 Product Vision](./reflect-v2-product-vision.md).
+It complements [DayJot V2 Product Vision](./dayjot-v2-product-vision.md).
 
 > **Status (2026-06-12) — what actually shipped in the first release** (see
 > [Plan 12](./plans/12-backup-and-sync.md) and
@@ -31,7 +31,7 @@ It complements [Reflect V2 Product Vision](./reflect-v2-product-vision.md).
 
 ## Strategy
 
-Reflect V2 should treat sync as an adapter-backed capability, not as a single hard-coded backend.
+DayJot V2 should treat sync as an adapter-backed capability, not as a single hard-coded backend.
 
 The app should define a stable internal sync interface. Different adapters can implement that interface over time:
 
@@ -44,7 +44,7 @@ The app should define a stable internal sync interface. Different adapters can i
 
 Git/GitHub should be treated as the first serious adapter target because it gives free backup, history, merge bases, and an open mental model. But Git should not leak into the product as commits, branches, rebases, remotes, or merge markers. The app should hide those mechanics behind plain product states.
 
-Reflect should not host a sync API for the V2 core product. If an adapter needs a network service, it should talk directly from the app to a user-approved provider such as GitHub, a Git remote, iCloud Drive, Dropbox, Google Drive, or another open/protocol-based service. Reflect should own the local UX and adapter interface, not a proprietary server path.
+DayJot should not host a sync API for the V2 core product. If an adapter needs a network service, it should talk directly from the app to a user-approved provider such as GitHub, a Git remote, iCloud Drive, Dropbox, Google Drive, or another open/protocol-based service. DayJot should own the local UX and adapter interface, not a proprietary server path.
 
 The product should distinguish:
 
@@ -54,11 +54,11 @@ The product should distinguish:
 
 V2 first wave should commit to backup, local ownership, and a sync adapter boundary. A full multi-device sync implementation can remain TBD until the markdown file format, conflict model, and mobile story are clearer.
 
-GitHub setup should let the user choose the repository. Reflect should not assume it owns a managed private repo, though it can guide repository setup, configure safe ignore defaults, and explain recovery behavior.
+GitHub setup should let the user choose the repository. DayJot should not assume it owns a managed private repo, though it can guide repository setup, configure safe ignore defaults, and explain recovery behavior.
 
 ## Adapter Boundary
 
-Adapters should translate provider-specific behavior into Reflect-native sync events.
+Adapters should translate provider-specific behavior into DayJot-native sync events.
 
 An adapter should be responsible for:
 
@@ -71,11 +71,11 @@ An adapter should be responsible for:
 - Preserving enough raw data for recovery.
 - Creating local checkpoints before risky operations or background sync writes.
 
-Adapters should not own markdown semantics, AI behavior, or final conflict-resolution policy. Those belong to Reflect's higher-level resolution layer.
+Adapters should not own markdown semantics, AI behavior, or final conflict-resolution policy. Those belong to DayJot's higher-level resolution layer.
 
 ## Generic Conflict Model
 
-Every adapter should normalize native conflicts into a Reflect conflict model.
+Every adapter should normalize native conflicts into a DayJot conflict model.
 
 Conceptual interface:
 
@@ -112,7 +112,7 @@ interface NoteVersion {
 
 This shape should be intentionally familiar to an AI model: a base version, a local version, and a remote version when available. If no base is available, the conflict becomes a two-way semantic merge.
 
-Notes with `private: true` must not be sent to cloud AI for conflict resolution. If a locked note has a content conflict, Reflect should use local diff/review tooling or explicitly defer to manual resolution.
+Notes with `private: true` must not be sent to cloud AI for conflict resolution. If a locked note has a content conflict, DayJot should use local diff/review tooling or explicitly defer to manual resolution.
 
 ## Resolution Model
 
@@ -137,15 +137,15 @@ Every accepted resolution should be applied after a local checkpoint exists. Thi
 
 ## AI-Assisted Conflict Resolution
 
-Reflect should use AI to make sync conflicts humane.
+DayJot should use AI to make sync conflicts humane.
 
 Flow:
 
 1. Adapter detects a conflict.
 2. Adapter emits a `SyncConflict`.
-3. Reflect parses the conflicting markdown versions into a structured diff.
+3. DayJot parses the conflicting markdown versions into a structured diff.
 4. The AI copilot proposes a merged markdown note when the note is not locked from cloud AI.
-5. Reflect shows the proposed resolution as a reviewable patch.
+5. DayJot shows the proposed resolution as a reviewable patch.
 6. User accepts, edits, or rejects the proposed resolution for note-body conflicts.
 7. Adapter applies the accepted resolution after checkpointing.
 8. Raw conflicting versions remain recoverable.
@@ -163,7 +163,7 @@ AI conflict resolution should be a product layer above all adapters. Git may be 
 
 ## Git Adapter
 
-A Git adapter can use normal Git mechanics internally while exposing a simple Reflect UX.
+A Git adapter can use normal Git mechanics internally while exposing a simple DayJot UX.
 
 Possible implementation mapping:
 
@@ -185,9 +185,9 @@ The product should not require the user to understand Git. Suggested user-facing
 
 Git remains valuable even if it is only used for backup/history at first. If AI-assisted resolution works well, Git can plausibly support consumer-grade sync without exposing Git complexity.
 
-Reflect should create automatic checkpoints opportunistically after meaningful changes and before risky sync operations. It should avoid committing every save as a user-meaningful event because that would create noisy history and unnecessary sync churn.
+DayJot should create automatic checkpoints opportunistically after meaningful changes and before risky sync operations. It should avoid committing every save as a user-meaningful event because that would create noisy history and unnecessary sync churn.
 
-GitHub credentials should live in per-device OS keychain or secure storage. They must not be written to markdown files, committed to Git, or stored in the ignored `.reflect/` directory unless a later security design explicitly replaces this default.
+GitHub credentials should live in per-device OS keychain or secure storage. They must not be written to markdown files, committed to Git, or stored in the ignored `.dayjot/` directory unless a later security design explicitly replaces this default.
 
 ## iCloud Drive Adapter
 
@@ -223,7 +223,7 @@ Examples:
 - Dropbox/Google Drive-style adapters can detect duplicate conflict files.
 - Future protocol sync can map its native revisions into `base`, `local`, and `remote`.
 
-The point is not that all adapters behave the same. The point is that Reflect should translate provider behavior into the same resolution workflow.
+The point is not that all adapters behave the same. The point is that DayJot should translate provider behavior into the same resolution workflow.
 
 ## UX Principles
 
@@ -248,11 +248,11 @@ Attachments should be normal files under the workspace `assets/` directory and r
 
 GitHub backup needs guardrails for large binaries. First-wave V2 should warn when attachments are likely to make GitHub backup slow, expensive, or unreliable. Git LFS, user-chosen object storage, or another binary sync adapter can be explored later, but they should not be required for the first GitHub adapter.
 
-Generated indexes and local state under `.reflect/` should be ignored by GitHub backup by default.
+Generated indexes and local state under `.dayjot/` should be ignored by GitHub backup by default.
 
 ## Open Questions
 
-- How should Reflect authenticate GitHub without making setup feel developer-oriented?
+- How should DayJot authenticate GitHub without making setup feel developer-oriented?
 - How should iCloud optimized-storage placeholders be handled for indexing and sync?
 - What metadata is required in markdown frontmatter to make conflict resolution safer?
 - Which trivial non-content conflicts are safe enough to auto-resolve?

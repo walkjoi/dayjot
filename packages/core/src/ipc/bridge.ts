@@ -1,7 +1,7 @@
 /**
- * The pluggable transport between `@reflect/core` and the native shell.
+ * The pluggable transport between `@dayjot/core` and the native shell.
  *
- * `@reflect/core` is platform-agnostic: nothing in this package imports
+ * `@dayjot/core` is platform-agnostic: nothing in this package imports
  * `@tauri-apps/*`. A host installs a bridge once at startup — the desktop app
  * adapts Tauri's `invoke`/`listen` (see `apps/desktop/src/lib/tauri-bridge.ts`),
  * tests install in-memory fakes via {@link setBridge}, and future hosts (the
@@ -12,7 +12,7 @@
 /** Tears down a subscription created by {@link IpcBridge.listen}. */
 export type Unlisten = () => void
 
-/** The two native primitives `@reflect/core` needs from its host. */
+/** The two native primitives `@dayjot/core` needs from its host. */
 export interface IpcBridge {
   /** Invoke a native command, resolving with its raw (untyped) response. */
   invoke: (command: string, args: Record<string, unknown>) => Promise<unknown>

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
-import type { NoteRow } from '@reflect/core'
+import type { NoteRow } from '@dayjot/core'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { formatDayLabel } from '@/lib/dates'
 import { monthLabel, monthOf } from '@/lib/month-grid'
@@ -18,8 +18,8 @@ const useNoteRow = vi.hoisted(() => vi.fn<(path: string) => NoteRow | null>(() =
 const openRouteInNewWindow = vi.hoisted(() =>
   vi.fn<(route: NoteRoute) => Promise<boolean>>(),
 )
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   dailyDatesInRange,
   readNote,

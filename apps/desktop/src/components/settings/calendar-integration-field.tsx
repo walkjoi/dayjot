@@ -1,7 +1,7 @@
 import { useMemo, type ReactElement, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { canReadCalendars, requestCalendarAccess, type CalendarInfo } from '@reflect/core'
+import { canReadCalendars, requestCalendarAccess, type CalendarInfo } from '@dayjot/core'
 import { InlineAlert } from '@/components/inline-alert'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -98,8 +98,8 @@ export function CalendarIntegrationField(): ReactElement | null {
       <div>
         <InlineAlert tone="error">
           {status === 'notDetermined'
-            ? 'Reflect needs permission to read your calendars.'
-            : 'Reflect can’t read your calendars. Allow it under Privacy & Security → Calendars.'}
+            ? 'DayJot needs permission to read your calendars.'
+            : 'DayJot can’t read your calendars. Allow it under Privacy & Security → Calendars.'}
         </InlineAlert>
         <div className="mt-2">
           {status === 'notDetermined' ? (
@@ -148,7 +148,7 @@ export function CalendarIntegrationField(): ReactElement | null {
               <DialogHeader>
                 <DialogTitle>Choose calendars</DialogTitle>
                 <DialogDescription>
-                  Select the calendars Reflect shows beside your daily note.
+                  Select the calendars DayJot shows beside your daily note.
                 </DialogDescription>
               </DialogHeader>
               <div className="max-h-[min(28rem,70vh)] overflow-y-auto pr-1">

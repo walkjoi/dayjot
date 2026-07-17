@@ -1,6 +1,6 @@
 import { useCallback, type ReactNode } from 'react'
 import type { WikilinkHoverHit } from '@meowdown/core'
-import { resolveExistingWikiTarget, splitFrontmatter, type DateFormat } from '@reflect/core'
+import { resolveExistingWikiTarget, splitFrontmatter, type DateFormat } from '@dayjot/core'
 import { WikiLinkHoverPreview } from '@/components/wiki-link-hover-preview'
 import { readExistingNoteSource } from '@/lib/read-existing-note-source'
 
@@ -18,7 +18,7 @@ function isSvgAsset(path: string): boolean {
 
 function previewRasterUrl(url: string): string {
   const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}reflect-preview=raster`
+  return `${url}${separator}dayjot-preview=raster`
 }
 
 /**

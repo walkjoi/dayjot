@@ -9,8 +9,8 @@ const io = vi.hoisted(() => ({
   readNote: vi.fn(),
   writeNote: vi.fn(),
 }))
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   readNote: io.readNote,
   writeNote: io.writeNote,
 }))

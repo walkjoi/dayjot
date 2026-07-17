@@ -1,7 +1,7 @@
 import React from 'react'
 
 /**
- * MenuItem — Reflect's sidebar / dropdown row. Leading icon + label, with the
+ * MenuItem — DayJot's sidebar / dropdown row. Leading icon + label, with the
  * translucent grey hover wash and selected state from the real app. An
  * optional shortcut keycap appears on the right on hover.
  */

@@ -1,4 +1,4 @@
-//! The `reflect-asset://` custom protocol: serves graph `assets/` files to
+//! The `dayjot-asset://` custom protocol: serves graph `assets/` files to
 //! the webview **off the UI thread**.
 //!
 //! WebKit delivers custom-scheme requests on the main thread and wry invokes
@@ -9,14 +9,14 @@
 //! runtime's blocking pool and responds when the bytes are ready, so a slow
 //! read costs the image a pop-in, never the app a freeze.
 //!
-//! URL shape: `reflect-asset://localhost/<generation>/<graph-relative path>`,
-//! built by `convertFileSrc(…, 'reflect-asset')` in the frontend (which
+//! URL shape: `dayjot-asset://localhost/<generation>/<graph-relative path>`,
+//! built by `convertFileSrc(…, 'dayjot-asset')` in the frontend (which
 //! percent-encodes the whole path into one segment). The generation pins the
 //! request to the graph session that issued it, exactly like mutating
 //! commands — a request racing a graph switch is refused, never resolved
 //! against the new graph. The path must live under `assets/` and passes the
 //! shared symlink-aware traversal guard before any IO.
-//! Passive previews append `?reflect-preview=raster`; those responses are
+//! Passive previews append `?dayjot-preview=raster`; those responses are
 //! served only when byte sniffing identifies PNG, JPEG, GIF, or WebP content,
 //! so an SVG renamed with a raster extension cannot load subresources there.
 
@@ -30,8 +30,8 @@ use super::GraphState;
 
 /// The scheme name, shared with the `lib.rs` registration. The frontend and
 /// the CSP `img-src` grant in `tauri.conf.json` spell it out literally.
-pub(crate) const SCHEME: &str = "reflect-asset";
-const PREVIEW_RASTER_QUERY: &str = "reflect-preview=raster";
+pub(crate) const SCHEME: &str = "dayjot-asset";
+const PREVIEW_RASTER_QUERY: &str = "dayjot-preview=raster";
 
 /// Protocol entry point (`register_asynchronous_uri_scheme_protocol`). Runs
 /// on the webview's calling thread — on WebKit, the app's main thread — so it
@@ -184,12 +184,12 @@ mod tests {
 
     #[test]
     fn recognizes_only_the_explicit_preview_raster_query() {
-        assert!(requests_preview_raster(Some("reflect-preview=raster")));
+        assert!(requests_preview_raster(Some("dayjot-preview=raster")));
         assert!(requests_preview_raster(Some(
-            "cache=1&reflect-preview=raster"
+            "cache=1&dayjot-preview=raster"
         )));
         assert!(!requests_preview_raster(None));
-        assert!(!requests_preview_raster(Some("reflect-preview=svg")));
+        assert!(!requests_preview_raster(Some("dayjot-preview=svg")));
     }
 
     #[test]

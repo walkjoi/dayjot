@@ -60,7 +60,7 @@ Daily carousel, the mobile editor/keyboard experience, audio memos, the
 share extension, native entry points, and the mobile sync/offline
 contracts. Those docs defer to
 [Plan 19](../plans/19-mobile.md) and the
-[mobile grounding brief](../reflect-v2-mobile-grounding-brief.md).
+[mobile grounding brief](../dayjot-v2-mobile-grounding-brief.md).
 
 ## Conventions
 

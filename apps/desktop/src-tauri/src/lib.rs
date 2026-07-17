@@ -1,7 +1,7 @@
-//! The Reflect desktop shell: native primitives only.
+//! The DayJot desktop shell: native primitives only.
 //!
 //! Per the architecture conventions, Rust owns *capabilities* (file IO, SQLite,
-//! watching, recents) and TypeScript (`@reflect/core`) owns *policy and
+//! watching, recents) and TypeScript (`@dayjot/core`) owns *policy and
 //! composition* — a command here never encodes product rules beyond the
 //! primitive it exposes. Each module wires one capability:
 //! [`fs`] (graph file IO), [`db`] (SQLite index), [`watcher`] (file events),
@@ -56,7 +56,7 @@ use tauri::{Emitter, Manager};
 /// Returns the application version from Tauri's resolved package metadata.
 ///
 /// The canonical round-trip example for the IPC boundary: the frontend reaches
-/// it only through `@reflect/core`'s typed, zod-validated `getAppVersion`.
+/// it only through `@dayjot/core`'s typed, zod-validated `getAppVersion`.
 #[tauri::command]
 fn app_version<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> String {
     app.package_info().version.to_string()
@@ -64,7 +64,7 @@ fn app_version<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> String {
 
 /// Builds the HTTP User-Agent from the same resolved version shown in the UI.
 pub(crate) fn app_user_agent<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> String {
-    format!("Reflect/{}", app.package_info().version)
+    format!("DayJot/{}", app.package_info().version)
 }
 
 #[cfg(test)]
@@ -80,7 +80,7 @@ mod app_metadata_tests {
             .expect("mock app");
 
         assert_eq!(app_version(app.handle().clone()), "7.8.9-beta.4");
-        assert_eq!(app_user_agent(app.handle()), "Reflect/7.8.9-beta.4");
+        assert_eq!(app_user_agent(app.handle()), "DayJot/7.8.9-beta.4");
     }
 }
 
@@ -129,7 +129,7 @@ pub fn run() {
 
     // Single-instance must be the first plugin so a second launch is caught
     // before any other state spins up: its `deep-link` feature hands the
-    // launching instance's `reflect://` URL to the deep-link plugin, and the
+    // launching instance's `dayjot://` URL to the deep-link plugin, and the
     // callback re-focuses the running window. macOS delivers scheme opens to
     // the running app natively; this is the Windows/Linux equivalent.
     #[cfg(desktop)]
@@ -142,7 +142,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init());
 
-    // Deep links (`reflect://`) are desktop-only for now: the scheme is
+    // Deep links (`dayjot://`) are desktop-only for now: the scheme is
     // registered at bundle time (`plugins.deep-link` in tauri.conf.json) and
     // the frontend consumes URLs through `onOpenUrl`.
     #[cfg(desktop)]
@@ -356,7 +356,7 @@ pub fn run() {
                     windows::reopen_main_window(app);
                 }
             }
-            // The lock-screen widget opens `reflect://record-audio`; hand it
+            // The lock-screen widget opens `dayjot://record-audio`; hand it
             // to the recording plugin's persisted action queue (the V1
             // handshake) so the request survives webview churn and cold
             // starts. Desktop scheme opens flow through
@@ -365,7 +365,7 @@ pub fn run() {
             tauri::RunEvent::Opened { urls } => {
                 #[cfg(mobile)]
                 for url in urls {
-                    if url.scheme() == "reflect" && url.host_str() == Some("record-audio") {
+                    if url.scheme() == "dayjot" && url.host_str() == Some("record-audio") {
                         // This callback runs on the main thread, and
                         // `run_mobile_plugin` blocks its caller until the
                         // Swift command resolves — which `queueAction` does

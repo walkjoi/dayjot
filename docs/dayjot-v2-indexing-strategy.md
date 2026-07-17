@@ -1,13 +1,13 @@
-# Reflect V2 Indexing Strategy
+# DayJot V2 Indexing Strategy
 
 This document captures the current V2 indexing direction. It focuses on using a local database for fast lookup, search, backlinks, semantic search, and AI context while keeping markdown files as the durable source of truth.
 
-It complements [Reflect V2 Product Vision](./reflect-v2-product-vision.md).
+It complements [DayJot V2 Product Vision](./dayjot-v2-product-vision.md).
 
 > **Status (2026-06-12) — shipped as designed**, with these specifics:
 >
-> - SQLite lives at `<graph>/.reflect/index.sqlite`; migrations are shared between the
->   desktop writer and the read-only `reflect` CLI via the `index-schema` crate.
+> - SQLite lives at `<graph>/.dayjot/index.sqlite`; migrations are shared between the
+>   desktop writer and the read-only `dayjot` CLI via the `index-schema` crate.
 > - Canonical parser: `@lezer/markdown` (GFM + a first-party wiki-link extension),
 >   shared by the editor and the indexer. Note identity: lowercase ULID `id:` in
 >   frontmatter plus readable slug filenames (Plan 17).
@@ -22,17 +22,17 @@ It complements [Reflect V2 Product Vision](./reflect-v2-product-vision.md).
 
 ## Strategy
 
-Reflect V2 should use a local projection database.
+DayJot V2 should use a local projection database.
 
 Markdown files should remain the user's durable source of truth. The local database should make the app fast, searchable, and AI-native, but it should be rebuildable from the markdown workspace wherever practical.
 
 SQLite is the committed first default because it is local, durable, embeddable, portable, well understood, and compatible with desktop and mobile app architectures. It can store structured projections, full-text search tables, and vector-search data via extensions or companion libraries.
 
-The first implementation should store SQLite and generated local state under an ignored `.reflect/` directory inside the workspace. This keeps the workspace self-contained while keeping binary indexes and transient state out of GitHub backup and file-sync providers.
+The first implementation should store SQLite and generated local state under an ignored `.dayjot/` directory inside the workspace. This keeps the workspace self-contained while keeping binary indexes and transient state out of GitHub backup and file-sync providers.
 
 ## Why A Local Database Is Needed
 
-A pure markdown-folder app is portable, but it is not enough for Reflect's intended UX.
+A pure markdown-folder app is portable, but it is not enough for DayJot's intended UX.
 
 V2 needs fast local access to:
 
@@ -56,7 +56,7 @@ Scanning markdown files on every interaction would make the app feel slow, espec
 The default rule should be:
 
 - Markdown files are the durable content source.
-- SQLite stores rebuildable projections and local app state under ignored `.reflect/`.
+- SQLite stores rebuildable projections and local app state under ignored `.dayjot/`.
 - Any non-rebuildable database state must be deliberately justified.
 
 Rebuildable projections include:
@@ -83,7 +83,7 @@ Potentially non-rebuildable local state includes:
 - Conflict review state.
 - AI conversation history (shipped as the durable `chat_*` tables — the one sanctioned non-rebuildable exception; rebuilds must preserve them).
 
-Secrets do not belong in SQLite or `.reflect/` unless a later security design explicitly chooses encrypted local storage there. BYOK model keys and GitHub credentials should live in per-device OS keychain or secure storage.
+Secrets do not belong in SQLite or `.dayjot/` unless a later security design explicitly chooses encrypted local storage there. BYOK model keys and GitHub credentials should live in per-device OS keychain or secure storage.
 
 ## Suggested SQLite Projections
 
@@ -144,7 +144,7 @@ Rebuild triggers:
 
 - First workspace open.
 - App upgrade that changes parser/index schema.
-- User edits files outside Reflect.
+- User edits files outside DayJot.
 - Sync adapter pulls changes.
 - Embedding model changes.
 - User manually requests repair.
@@ -154,7 +154,7 @@ Rebuild should preserve non-rebuildable local state when possible. It should be 
 
 ## File Watching
 
-Because markdown files can be edited outside Reflect, the app needs robust file watching.
+Because markdown files can be edited outside DayJot, the app needs robust file watching.
 
 The indexer should handle:
 
@@ -190,11 +190,11 @@ Notes with `private: true` may remain in local lexical and semantic indexes, but
 
 The indexing layer and sync layer should be separate but coordinated.
 
-Sync adapters should write or update markdown files, then notify the indexer. The indexer should parse changed files and update projections. Conflicts should be recorded in the local database using the normalized conflict model described in [Reflect V2 Sync Strategy](./reflect-v2-sync-strategy.md).
+Sync adapters should write or update markdown files, then notify the indexer. The indexer should parse changed files and update projections. Conflicts should be recorded in the local database using the normalized conflict model described in [DayJot V2 Sync Strategy](./dayjot-v2-sync-strategy.md).
 
 The local database should not become the sync source of truth unless a future decision explicitly changes the architecture.
 
-The `.reflect/` directory should be ignored by GitHub backup by default. It may contain rebuildable indexes and non-content local state, but the sync layer should treat markdown and attachment files as the durable data boundary.
+The `.dayjot/` directory should be ignored by GitHub backup by default. It may contain rebuildable indexes and non-content local state, but the sync layer should treat markdown and attachment files as the durable data boundary.
 
 ## Mobile Indexing
 

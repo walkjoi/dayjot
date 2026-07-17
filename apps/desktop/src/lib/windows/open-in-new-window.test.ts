@@ -4,8 +4,8 @@ const hasBridge = vi.hoisted(() => vi.fn(() => true))
 const openNoteWindow = vi.hoisted(() => vi.fn<(link: string) => Promise<void>>())
 const isMobileSurface = vi.hoisted(() => vi.fn(() => false))
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge,
   openNoteWindow,
 }))
@@ -45,7 +45,7 @@ describe('isNewWindowClick', () => {
 describe('openRouteInNewWindow', () => {
   it('opens the route’s deep link', async () => {
     await expect(openRouteInNewWindow({ kind: 'note', path: 'notes/foo.md' })).resolves.toBe(true)
-    expect(openNoteWindow).toHaveBeenCalledWith('reflect://note/notes%2Ffoo.md')
+    expect(openNoteWindow).toHaveBeenCalledWith('dayjot://note/notes%2Ffoo.md')
   })
 
   it('shares one native request between concurrent opens of the same note', async () => {
@@ -94,17 +94,17 @@ describe('openRouteInNewWindow', () => {
 
 describe('openDeepLinkInNewWindow', () => {
   it('opens addressing links verbatim', async () => {
-    await expect(openDeepLinkInNewWindow('reflect://note/Some%20Note')).resolves.toBe(true)
-    expect(openNoteWindow).toHaveBeenCalledWith('reflect://note/Some%20Note')
+    await expect(openDeepLinkInNewWindow('dayjot://note/Some%20Note')).resolves.toBe(true)
+    expect(openNoteWindow).toHaveBeenCalledWith('dayjot://note/Some%20Note')
   })
 
   it('declines capture links — they are writes, not places', async () => {
-    await expect(openDeepLinkInNewWindow('reflect://append?text=hi')).resolves.toBe(false)
+    await expect(openDeepLinkInNewWindow('dayjot://append?text=hi')).resolves.toBe(false)
     expect(openNoteWindow).not.toHaveBeenCalled()
   })
 
   it('declines malformed links', async () => {
-    await expect(openDeepLinkInNewWindow('reflect://nonsense/x')).resolves.toBe(false)
+    await expect(openDeepLinkInNewWindow('dayjot://nonsense/x')).resolves.toBe(false)
     expect(openNoteWindow).not.toHaveBeenCalled()
   })
 })

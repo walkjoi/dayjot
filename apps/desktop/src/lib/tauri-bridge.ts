@@ -1,11 +1,11 @@
 import { invoke, isTauri } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { setBridge, type IpcBridge } from '@reflect/core'
+import { setBridge, type IpcBridge } from '@dayjot/core'
 
 /**
- * Adapts Tauri's IPC primitives to the `@reflect/core` bridge contract. This is
+ * Adapts Tauri's IPC primitives to the `@dayjot/core` bridge contract. This is
  * the only place the desktop app touches `@tauri-apps/api` for command/event
- * transport — everything else goes through the typed `@reflect/core` bindings.
+ * transport — everything else goes through the typed `@dayjot/core` bindings.
  */
 export const tauriBridge: IpcBridge = {
   invoke: (command, args) => invoke(command, args),

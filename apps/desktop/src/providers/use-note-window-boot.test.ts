@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { WindowBootstrap } from '@reflect/core'
+import type { WindowBootstrap } from '@dayjot/core'
 
 const windowBootstrap = vi.hoisted(() => vi.fn<() => Promise<WindowBootstrap>>())
 const subscribeIndexWritten = vi.hoisted(() =>
@@ -13,8 +13,8 @@ const isMainWindow = vi.hoisted(() => vi.fn(() => false))
 const dispatchDeepLink = vi.hoisted(() => vi.fn())
 const throttledInvalidateIndexQueries = vi.hoisted(() => vi.fn())
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   windowBootstrap,
   subscribeIndexWritten,
   subscribeWindowNavigate,
@@ -32,7 +32,7 @@ import { useNoteWindowBoot } from './use-note-window-boot'
 const BOOT: WindowBootstrap = {
   graph: { root: '/g', name: 'g', generation: 3 },
   indexGeneration: 5,
-  initialDeepLink: 'reflect://note/notes%2Ffoo.md',
+  initialDeepLink: 'dayjot://note/notes%2Ffoo.md',
 }
 
 function mount() {
@@ -70,11 +70,11 @@ describe('useNoteWindowBoot', () => {
   })
 
   it('falls back to the intake for a target only the index can answer', async () => {
-    windowBootstrap.mockResolvedValue({ ...BOOT, initialDeepLink: 'reflect://note/Meeting%20Notes' })
+    windowBootstrap.mockResolvedValue({ ...BOOT, initialDeepLink: 'dayjot://note/Meeting%20Notes' })
     const { onAdopted } = mount()
     await waitFor(() => expect(onAdopted).toHaveBeenCalled())
     expect(getInitialWindowRoute()).toBeNull()
-    expect(dispatchDeepLink).toHaveBeenCalledWith('reflect://note/Meeting%20Notes')
+    expect(dispatchDeepLink).toHaveBeenCalledWith('dayjot://note/Meeting%20Notes')
   })
 
   it('skips the deep-link dispatch when none is pending (a reload)', async () => {

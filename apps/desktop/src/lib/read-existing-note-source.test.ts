@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { readNote } from '@reflect/core'
+import { readNote } from '@dayjot/core'
 import { openSession } from '@/editor/open-documents'
 import { readExistingNoteSource } from './read-existing-note-source'
 
-vi.mock('@reflect/core', () => ({
+vi.mock('@dayjot/core', () => ({
   readNote: vi.fn(),
 }))
 

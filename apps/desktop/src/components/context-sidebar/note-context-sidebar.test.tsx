@@ -8,8 +8,8 @@ import { RouterProvider, useRouter } from '@/routing/router'
 import { NoteContextSidebar } from './note-context-sidebar'
 
 const relatedNotes = vi.hoisted(() => vi.fn())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   relatedNotes,
 }))

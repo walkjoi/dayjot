@@ -27,12 +27,12 @@ const isStoreBuild = process.env['WXT_STORE_BUILD'] === 'true'
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   vite: () => ({ plugins: [tailwindcss()] }),
-  // A stable, human-readable store artifact: `reflect-capture-<version>-chrome.zip`.
-  zip: { name: 'reflect-capture' },
+  // A stable, human-readable store artifact: `dayjot-capture-<version>-chrome.zip`.
+  zip: { name: 'dayjot-capture' },
   manifest: {
-    name: 'Reflect Capture',
-    description: 'Save the page you are reading into Reflect.',
-    homepage_url: 'https://github.com/team-reflect/reflect-open',
+    name: 'DayJot Capture',
+    description: 'Save the page you are reading into DayJot.',
+    homepage_url: 'https://github.com/walkjoi/dayjot',
     // Unpacked dev/CI loads pin the ID; the store rejects `key`, so drop it there.
     ...(isStoreBuild ? {} : { key: PUBLIC_KEY }),
     // `activeTab` (granted by the action click / shortcut) covers the
@@ -48,7 +48,7 @@ export default defineConfig({
     commands: {
       [SAVE_CURRENT_PAGE_COMMAND]: {
         suggested_key: { default: 'Ctrl+Shift+K', mac: 'Command+Shift+K' },
-        description: 'Save the current page to Reflect',
+        description: 'Save the current page to DayJot',
       },
     },
   },

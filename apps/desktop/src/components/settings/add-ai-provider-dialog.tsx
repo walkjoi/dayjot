@@ -1,6 +1,6 @@
 import { useEffect, type ReactElement } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { AI_PROVIDERS, aiProvider, aiProviderIdSchema, type AiProviderId } from '@reflect/core'
+import { AI_PROVIDERS, aiProvider, aiProviderIdSchema, type AiProviderId } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,

@@ -15,8 +15,8 @@ interface ConnectGithubDrawerProps {
 }
 
 const STEP_DESCRIPTIONS: Record<ConnectWizardStep, string> = {
-  repo: 'Back up this graph to a private GitHub repository and sync it with Reflect on your other devices.',
-  auth: 'Sign in so Reflect can push your backups.',
+  repo: 'Back up this graph to a private GitHub repository and sync it with DayJot on your other devices.',
+  auth: 'Sign in so DayJot can push your backups.',
   finish: 'Connecting your repository…',
 }
 
@@ -64,7 +64,7 @@ function ConnectWizardSheet({
   // Never derived from the graph name: the local graph's display name is the
   // sandbox folder's basename — literally "Documents".
   const wizard = useConnectGithubWizard({
-    suggestedRepoName: 'reflect-backup',
+    suggestedRepoName: 'dayjot-backup',
     onClose,
     ...(pollIntervalMs !== undefined ? { pollIntervalMs } : {}),
   })

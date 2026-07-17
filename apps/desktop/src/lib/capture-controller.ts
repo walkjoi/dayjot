@@ -9,7 +9,7 @@ import {
   toAppError,
   type AiProvidersState,
   type ReconcileStop,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { createBackgroundReconciler } from '@/lib/background-reconciler'
 import { startOperation } from '@/lib/operations'
 import { providerFetch } from '@/lib/provider-fetch'

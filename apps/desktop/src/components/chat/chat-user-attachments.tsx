@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { ChatAttachment } from '@reflect/core'
+import type { ChatAttachment } from '@dayjot/core'
 import {
   Attachment,
   AttachmentGroup,

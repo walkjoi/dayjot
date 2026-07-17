@@ -67,7 +67,7 @@ export interface DrainCaptureInboxOutcome {
   drained: number
   /** Of `drained`, how many refreshed an existing same-day entry in place. */
   deduped: number
-  /** Unparseable spool files quarantined under `.reflect/inbox-rejected/`. */
+  /** Unparseable spool files quarantined under `.dayjot/inbox-rejected/`. */
   invalid: number
   /** Why spool files remain, or `null` when the inbox drained. */
   stopped: ReconcileStop | null

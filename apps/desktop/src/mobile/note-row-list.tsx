@@ -1,7 +1,7 @@
 import { type ReactElement, type ReactNode } from 'react'
 import { Pin } from 'lucide-react'
 import { Virtualizer } from 'virtua'
-import type { HighlightSegment } from '@reflect/core'
+import type { HighlightSegment } from '@dayjot/core'
 import { formatRecencyLabel } from '@/lib/dates'
 import { useSettings } from '@/providers/settings-provider'
 

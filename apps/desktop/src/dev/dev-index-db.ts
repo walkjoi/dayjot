@@ -1,5 +1,5 @@
 import sqlite3InitModule, { type Database, type SqlValue } from '@sqlite.org/sqlite-wasm'
-import { encodeTaskBreadcrumbs, ReflectError, type IndexedNote } from '@reflect/core'
+import { encodeTaskBreadcrumbs, DayJotError, type IndexedNote } from '@dayjot/core'
 
 /**
  * The dev bridge's SQLite index: the real `crates/index-schema` migrations
@@ -193,7 +193,7 @@ export async function createDevIndexDb(): Promise<DevIndexDb> {
     moveNote: (from, to) => {
       const occupied = db.selectValue('SELECT 1 FROM notes WHERE path = ?', [to])
       if (occupied !== undefined) {
-        throw new ReflectError('io', `cannot move note: ${to} is already indexed`)
+        throw new DayJotError('io', `cannot move note: ${to} is already indexed`)
       }
       // Mirrors the Rust caller: the child tables reference `notes(path)`, so
       // the parent-key update needs deferred FK checks — which only apply

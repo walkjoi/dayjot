@@ -1,7 +1,7 @@
 import { useEffect, useState, type MouseEvent, type ReactElement } from 'react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { Check, Copy, RefreshCw } from 'lucide-react'
-import { errorMessage } from '@reflect/core'
+import { errorMessage } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useNoteRow } from '@/hooks/use-note-row'

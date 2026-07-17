@@ -1,6 +1,6 @@
 import { useDeferredValue, useState, type ReactElement } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { hasBridge, parseSearchQuery, searchWithFilters } from '@reflect/core'
+import { hasBridge, parseSearchQuery, searchWithFilters } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'

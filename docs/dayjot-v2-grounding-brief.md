@@ -1,23 +1,23 @@
-# Reflect V2 Grounding Brief
+# DayJot V2 Grounding Brief
 
-**Purpose:** Provide a broad, implementation-oriented overview of the current Reflect app so a V2 agent can understand the existing product model, feature surface, UX assumptions, constraints, and likely migration implications.
+**Purpose:** Provide a broad, implementation-oriented overview of the current DayJot app so a V2 agent can understand the existing product model, feature surface, UX assumptions, constraints, and likely migration implications.
 
-**Decision status:** This brief is grounding material from the V1/Academy docs. It is not the source of truth for V2 product decisions. When this brief conflicts with the newer V2 decision docs, defer to [Reflect V2 Product Vision](./reflect-v2-product-vision.md), [Reflect V2 Indexing Strategy](./reflect-v2-indexing-strategy.md), and [Reflect V2 Sync Strategy](./reflect-v2-sync-strategy.md).
+**Decision status:** This brief is grounding material from the V1/Academy docs. It is not the source of truth for V2 product decisions. When this brief conflicts with the newer V2 decision docs, defer to [DayJot V2 Product Vision](./dayjot-v2-product-vision.md), [DayJot V2 Indexing Strategy](./dayjot-v2-indexing-strategy.md), and [DayJot V2 Sync Strategy](./dayjot-v2-sync-strategy.md).
 
-**Primary sources:** Reflect Academy / Notion pages browsed via the Notion connector on 2026-06-08. Source links are listed at the end.
+**Primary sources:** DayJot Academy / Notion pages browsed via the Notion connector on 2026-06-08. Source links are listed at the end.
 
 ---
 
 ## 1. Executive Summary
 
-Reflect is a personal note-taking and knowledge-management app built around a deliberately simple model:
+DayJot is a personal note-taking and knowledge-management app built around a deliberately simple model:
 
 - **Daily notes are the default capture surface.** Users are encouraged to put journals, meeting notes, bookmarks, tasks, and loose thoughts into today's daily note.
-- **The product is graph-first, not hierarchy-first.** Reflect explicitly rejects folder hierarchy as the core organization system. Its model is association: notes link to other notes using backlinks, with tags layered on for categorization.
+- **The product is graph-first, not hierarchy-first.** DayJot explicitly rejects folder hierarchy as the core organization system. Its model is association: notes link to other notes using backlinks, with tags layered on for categorization.
 - **The interface is minimal but keyboard-driven.** The product emphasizes speed, command palette usage, slash commands, backlinks, and keyboard shortcuts.
-- **Reflect is not just an editor.** It also includes capture surfaces, AI actions, search, publishing, integrations, tasks, audio transcription, import/export, and an API.
+- **DayJot is not just an editor.** It also includes capture surfaces, AI actions, search, publishing, integrations, tasks, audio transcription, import/export, and an API.
 - **Security and data ownership are core constraints.** Notes, images, and files are end-to-end encrypted client-side. This affects API design, server capability, search/indexing, AI, publishing, and recovery.
-- **The app tries to stay narrow in core UI and outsource breadth to integrations.** Calendar, contacts, Zapier, Readwise, Kindle, browser extensions, iOS share sheet, and deep links extend Reflect without cluttering the main interface.
+- **The app tries to stay narrow in core UI and outsource breadth to integrations.** Calendar, contacts, Zapier, Readwise, Kindle, browser extensions, iOS share sheet, and deep links extend DayJot without cluttering the main interface.
 
 V2 should preserve the strong parts of the product's mental model—fast capture, daily notes, backlinks, graph-based recall, trust, and data portability—while revisiting old constraints around encryption, AI, task depth, sync architecture, mobile parity, local-first behavior, and structured knowledge extraction. Current V2 direction intentionally does not preserve V1's E2EE-first architecture.
 
@@ -25,7 +25,7 @@ V2 should preserve the strong parts of the product's mental model—fast capture
 
 ## 2. Current Product Philosophy
 
-Reflect's underlying philosophy is that memory is associative and temporal. The app mirrors that through two primitives:
+DayJot's underlying philosophy is that memory is associative and temporal. The app mirrors that through two primitives:
 
 1. **Time:** daily notes form an infinite chronological spine.
 2. **Association:** backlinks connect entities, concepts, people, companies, places, books, meetings, and ideas.
@@ -33,12 +33,12 @@ Reflect's underlying philosophy is that memory is associative and temporal. The 
 The app's docs explicitly say:
 
 - Users should put everything into today's daily note by default.
-- Reflect has "no hierarchy, only association."
+- DayJot has "no hierarchy, only association."
 - Backlinks are the main mechanism for organization.
 - Tags are separate from backlinks: tags categorize; backlinks associate.
 - The product aims to be minimal and avoid feature clutter.
 
-This implies Reflect is closer to a **personal memory graph** than a document workspace. It is designed for fast personal capture and later recall, not team collaboration or database-heavy project management.
+This implies DayJot is closer to a **personal memory graph** than a document workspace. It is designed for fast personal capture and later recall, not team collaboration or database-heavy project management.
 
 ---
 
@@ -117,7 +117,7 @@ Known tag examples include:
 
 ### 3.6 Tasks vs Checklists
 
-Reflect distinguishes tasks from checklists:
+DayJot distinguishes tasks from checklists:
 
 - **Tasks** are concrete todo items. They appear in the Tasks tab.
 - **Checklists** are temporary lists such as shopping lists. They do not appear in the Tasks tab.
@@ -134,7 +134,7 @@ The docs frame tasks as intentionally simple: enough to cover the common case, n
 
 ### 4.1 Fast Keyboard-First Operation
 
-Reflect is designed to be usable almost entirely from the keyboard. Important shortcuts include:
+DayJot is designed to be usable almost entirely from the keyboard. Important shortcuts include:
 
 - `[[` — create backlink
 - `cmd k` — search / command overlay
@@ -254,7 +254,7 @@ V2 considerations:
 
 ## 5.3 Journaling
 
-Reflect includes a default journaling template accessible by typing `/journal` in a daily note. Users can customize templates in preferences.
+DayJot includes a default journaling template accessible by typing `/journal` in a daily note. Users can customize templates in preferences.
 
 V2 considerations:
 
@@ -291,7 +291,7 @@ V2 considerations:
 
 ## 5.6 Search
 
-Reflect has both quick search and advanced search.
+DayJot has both quick search and advanced search.
 
 Advanced search filters include:
 
@@ -314,7 +314,7 @@ V2 considerations:
 
 ## 5.7 AI Palette
 
-Reflect includes an AI palette accessible with `cmd j`.
+DayJot includes an AI palette accessible with `cmd j`.
 
 Workflow:
 
@@ -376,7 +376,7 @@ V2 considerations:
 
 ## 5.9 Web Bookmarking and Highlight Capture
 
-Reflect supports web capture via:
+DayJot supports web capture via:
 
 - Chrome extension
 - Safari extension
@@ -392,7 +392,7 @@ Browser capture behavior:
 
 Mobile capture:
 
-- If iOS app is installed, Reflect appears in the iOS share menu.
+- If iOS app is installed, DayJot appears in the iOS share menu.
 - Highlighted text is saved along with the website.
 
 V2 considerations:
@@ -411,7 +411,7 @@ V2 considerations:
 
 ## 5.10 Publishing Notes
 
-Reflect has one-click publishing:
+DayJot has one-click publishing:
 
 - User clicks publish under note actions.
 - Note becomes publicly available behind a long hard-to-guess URL.
@@ -421,7 +421,7 @@ Reflect has one-click publishing:
 
 Important encryption implication:
 
-- Publishing requires decrypting the note client-side and sending it to Reflect servers so they can render it publicly.
+- Publishing requires decrypting the note client-side and sending it to DayJot servers so they can render it publicly.
 
 V2 considerations:
 
@@ -433,7 +433,7 @@ V2 considerations:
 
 ## 5.11 Calendar and Contacts
 
-Reflect can connect:
+DayJot can connect:
 
 - Google
 - iCloud
@@ -462,7 +462,7 @@ V2 considerations:
 
 ## 5.12 Audio Memos
 
-Reflect supports audio memos through transcription.
+DayJot supports audio memos through transcription.
 
 Capabilities:
 
@@ -472,7 +472,7 @@ Capabilities:
 - Audio uploads and transcribes in background.
 - Transcript is added to daily note after a few minutes.
 - Users can add helper text for difficult words/names in profile preferences.
-- macOS caches raw audio recordings locally in `~/Library/Caches/app.reflect.AudioRecorder/`, allowing recovery if transcription fails.
+- macOS caches raw audio recordings locally in `~/Library/Caches/app.dayjot.AudioRecorder/`, allowing recovery if transcription fails.
 
 Use cases mentioned:
 
@@ -494,7 +494,7 @@ V2 considerations:
 
 ## 5.13 Integrations
 
-Reflect's integration philosophy is explicit: keep the UI simple, integrate with other apps to gain power without clutter.
+DayJot's integration philosophy is explicit: keep the UI simple, integrate with other apps to gain power without clutter.
 
 Current integrations include:
 
@@ -514,9 +514,9 @@ Current integrations include:
 Zapier examples:
 
 - Add Trello cards or Asana tasks to the daily note.
-- Add Google Docs and Slack notes to Reflect.
+- Add Google Docs and Slack notes to DayJot.
 - Save emails and Tweets to notes.
-- Sync Strava data with Reflect.
+- Sync Strava data with DayJot.
 
 Readwise examples:
 
@@ -536,7 +536,7 @@ V2 considerations:
 
 ## 5.14 Kindle Sync
 
-Reflect can sync Kindle books, highlights, and comments. Current behavior:
+DayJot can sync Kindle books, highlights, and comments. Current behavior:
 
 - Books, highlights, and comments are imported as individual notes.
 - Imported book notes are tagged `#book`.
@@ -557,7 +557,7 @@ V2 considerations:
 
 ## 5.15 API
 
-Reflect has a REST API.
+DayJot has a REST API.
 
 Capabilities described:
 
@@ -572,7 +572,7 @@ Major constraint:
 Auth:
 
 - OAuth 2.
-- OAuth credentials are created through Reflect developer settings.
+- OAuth credentials are created through DayJot developer settings.
 - Users can generate an access token from the interface, effectively like an API key.
 - PKCE is supported for clients without shipping secret keys.
 - Requests use `Authorization: Bearer YOUR_ACCESS_TOKEN`.
@@ -580,7 +580,7 @@ Auth:
 V2 considerations:
 
 - Existing V1 API behavior should be treated as append-first automation rather than full data access.
-- Current V2 direction is read/discovery CLI first through commands such as `reflect search`, `reflect show`, `reflect today`, and note path lookup.
+- Current V2 direction is read/discovery CLI first through commands such as `dayjot search`, `dayjot show`, `dayjot today`, and note path lookup.
 - Manual edits to markdown files are the write path. A separate write CLI is not needed initially.
 - Local servers and broader automation surfaces should be deferred until the markdown, sync, and permission model is clearer.
 
@@ -588,10 +588,10 @@ V2 considerations:
 
 ## 5.16 Deep Links
 
-Reflect supports custom URL deep links using:
+DayJot supports custom URL deep links using:
 
 ```text
-reflect://reflect?command=<command_name>&<parameter1>=<value1>&...
+dayjot://dayjot?command=<command_name>&<parameter1>=<value1>&...
 ```
 
 Supported commands documented:
@@ -621,7 +621,7 @@ V2 considerations:
 
 ## 5.17 Import, Export, and Backups
 
-Reflect emphasizes data portability.
+DayJot emphasizes data portability.
 
 Imports supported:
 
@@ -633,19 +633,19 @@ Imports supported:
 - Roam Research JSON
 - Mem.ai JSON beta
 - Logseq JSON beta
-- Other Reflect instances JSON
+- Other DayJot instances JSON
 
 Export formats:
 
-- Reflect JSON
-- Reflect CSV
+- DayJot JSON
+- DayJot CSV
 - Markdown zip
 - HTML zip
 
 Backups:
 
 - Notes sync securely to cloud when online.
-- Reflect also makes daily backups to the user's hard drive.
+- DayJot also makes daily backups to the user's hard drive.
 - Local backups may help if servers fail or the user loses their password.
 
 Caveat:
@@ -664,13 +664,13 @@ V2 considerations:
 
 ## 5.18 Security and Encryption
 
-Reflect's docs state:
+DayJot's docs state:
 
 - Note contents are end-to-end encrypted.
 - Notes are encrypted client-side before being sent to servers.
 - The cipher is XChaCha20-Poly1305.
 - The user's encryption password is the key and never leaves the machine.
-- Server-side note data is an encrypted blob that Reflect cannot read.
+- Server-side note data is an encrypted blob that DayJot cannot read.
 - Images and files added to notes are also end-to-end encrypted.
 - The encryption library is public on GitHub under `team-reflect/kiss-crypto`.
 - Doyensec audited the security and encryption design and found it well-architected at the design level, with sound cryptographic primitive usage.
@@ -679,7 +679,7 @@ Important caveats:
 
 - AI processing sends selected text to external AI servers.
 - Audio transcription sends raw audio to an external transcription API.
-- Publishing requires sending decrypted note content to Reflect servers.
+- Publishing requires sending decrypted note content to DayJot servers.
 - The docs acknowledge that users must ultimately trust the client, because web/desktop clients can be updated.
 - Password loss can permanently lock users out unless they have recovery kit, active session, keychain backup, or local backup.
 
@@ -702,7 +702,7 @@ V2 considerations:
 
 ## 5.19 Note History
 
-Reflect continually records edits to notes. Users can:
+DayJot continually records edits to notes. Users can:
 
 - View all note changes.
 - Restore a revision to a new note.
@@ -718,7 +718,7 @@ V2 considerations:
 
 ## 5.20 Tasks
 
-Reflect has a Tasks tab aggregating tasks across notes. Capabilities:
+DayJot has a Tasks tab aggregating tasks across notes. Capabilities:
 
 - View tasks across daily and regular notes.
 - Edit tasks.
@@ -730,7 +730,7 @@ Reflect has a Tasks tab aggregating tasks across notes. Capabilities:
 
 Product positioning:
 
-- The docs state Reflect's first priority remains note-taking.
+- The docs state DayJot's first priority remains note-taking.
 - Tasks are intentionally simple.
 - Advanced task management such as recurring tasks is left to dedicated task managers.
 
@@ -798,7 +798,7 @@ Important relationships:
 
 The major hard parts for V2:
 
-1. **E2EE vs search/AI/API.** Reflect's privacy model limits what the server can do.
+1. **E2EE vs search/AI/API.** DayJot's privacy model limits what the server can do.
 2. **Graph UX vs entity normalization.** Backlinks are easy, but canonical people/companies/projects may need aliases and merging.
 3. **Daily note as universal inbox.** Powerful, but can become cluttered without good extraction and resurfacing.
 4. **Tasks as note-native objects.** Need clear semantics around completion, scheduling, archiving, and source note preservation.
@@ -871,14 +871,14 @@ The major hard parts for V2:
 ### 8.5 Audio Capture Workflow
 
 1. User records memo on desktop/mobile/lock screen.
-2. Reflect uploads and transcribes.
+2. DayJot uploads and transcribes.
 3. Transcript appears in daily note.
 4. User optionally uses AI palette to summarize or extract article outline/action items.
 
 ### 8.6 Automation Workflow
 
 1. External system calls API, Zapier, or deep link.
-2. Reflect appends content to daily note or creates tasks/notes.
+2. DayJot appends content to daily note or creates tasks/notes.
 3. User later organizes through backlinks/tags/search.
 
 ---
@@ -887,7 +887,7 @@ The major hard parts for V2:
 
 ### 9.1 Preserve the Core Identity
 
-Do not turn Reflect into generic Notion, Linear, or Apple Notes. The strongest identity is:
+Do not turn DayJot into generic Notion, Linear, or Apple Notes. The strongest identity is:
 
 - Fast personal capture
 - Daily-note timeline
@@ -920,7 +920,7 @@ source → raw capture → normalized object → daily note insertion / target n
 
 ### 9.3 Unify Commands Across UI, API, and Deep Links
 
-Reflect currently has commands in:
+DayJot currently has commands in:
 
 - `cmd k`
 - Slash menu
@@ -989,7 +989,7 @@ V2 could improve the system by adding optional entity typing without making the 
 Possible upgrade:
 
 - Backlink remains simple: `[[Alice]]`
-- Behind the scenes, Reflect can suggest type/person/contact/project/book.
+- Behind the scenes, DayJot can suggest type/person/contact/project/book.
 - Aliases and canonicalization solve case sensitivity and abbreviation problems.
 - Merging/splitting entities handles messy real-world usage.
 
@@ -1038,14 +1038,14 @@ The worst path is half-building a complex task manager and losing the simplicity
 
 ### 9.8 Preserve Portability Through Markdown
 
-The docs make data portability part of Reflect's values. V2 should satisfy that promise through its storage model rather than a parallel import/export product area.
+The docs make data portability part of DayJot's values. V2 should satisfy that promise through its storage model rather than a parallel import/export product area.
 
 Minimum viable V2 portability:
 
 - Notes are plain markdown files under `daily/` and `notes/`.
 - Attachments live as normal files under `assets/` and use relative markdown links.
 - Backlinks, tags, tasks, and daily-note dates remain readable in markdown.
-- `.reflect/` stays out of the durable portability contract except for deliberately documented durable local tables such as `chat_*`.
+- `.dayjot/` stays out of the durable portability contract except for deliberately documented durable local tables such as `chat_*`.
 - Users can copy or zip the graph folder directly.
 - Reflect V1 migration relies on the V1 exporter producing a V2-compatible graph shape, not a separate V2 import surface.
 
@@ -1065,11 +1065,11 @@ Some earlier V2 questions have now been answered in the decision docs. This sect
 - **Data model**: keep V2 note-first. Use readable markdown files, stable IDs, aliases, and case-insensitive backlink resolution.
 - **Entities**: do not introduce a typed entity layer in the first wave. Canonical people, companies, projects, and other entities can emerge later as projections over notes and aliases.
 - **AI model**: use BYOK/cloud generative AI first. Treat local generative models as a later possibility. Keep local embeddings separate from generative AI.
-- **API and automation**: start with read/discovery CLI operations such as `reflect search`, `reflect show`, `reflect today`, and path lookup. Manual markdown edits are the write path. Do not introduce Reflect-hosted APIs for the V2 core product.
+- **API and automation**: start with read/discovery CLI operations such as `dayjot search`, `dayjot show`, `dayjot today`, and path lookup. Manual markdown edits are the write path. Do not introduce DayJot-hosted APIs for the V2 core product.
 - **Tasks**: deferred from the first release; now planned as a post-release add-on (Plan 18). As decided here: lightweight markdown-backed projections (GFM checkboxes + a `tasks` table + a Tasks view) rather than a full task-management system.
 - **Contacts and calendar**: defer as first-wave surfaces, but preserve them as future memory context for meetings, backlinks, daily notes, and AI.
 - **Daily AI automation**: allow opt-in background extraction into reviewable suggestions. Do not silently mutate notes with summaries, entities, backlinks, or tasks.
-- **Links**: basic Chrome link capture shipped (Plan 11: extension hands URL/title/selection/screenshot to the desktop app via the native host/inbox bridge; desktop owns BYOK AI and markdown/asset writes; no Reflect-hosted link-description API). Safari, mobile share targets, and full article clipping remain later work.
+- **Links**: basic Chrome link capture shipped (Plan 11: extension hands URL/title/selection/screenshot to the desktop app via the native host/inbox bridge; desktop owns BYOK AI and markdown/asset writes; no DayJot-hosted link-description API). Safari, mobile share targets, and full article clipping remain later work.
 - **Audio**: **shipped in the first release** (ahead of the original deferral): raw-first audio memos with async BYOK cloud transcription, explicit privacy UX, and `private: true` cloud-processing lockouts.
 - **Publishing and templates**: defer both. They should not block the first-wave editor, storage, search, sync, and AI foundation.
 
@@ -1088,9 +1088,9 @@ Some earlier V2 questions have now been answered in the decision docs. This sect
 
 These were the main Notion pages browsed and summarized.
 
-- Reflect Academy — `https://app.notion.com/p/1a9f144d807f48cb881659dcb6ec4122`
-- Getting started with Reflect — `https://app.notion.com/p/794d18568c3b49e69316c6c02d6880ce`
-- How to use Reflect — `https://app.notion.com/p/0d71231504634ff9add4f08c0bc75764`
+- DayJot Academy — `https://app.notion.com/p/1a9f144d807f48cb881659dcb6ec4122`
+- Getting started with DayJot — `https://app.notion.com/p/794d18568c3b49e69316c6c02d6880ce`
+- How to use DayJot — `https://app.notion.com/p/0d71231504634ff9add4f08c0bc75764`
 - Using backlinks and tags — `https://app.notion.com/p/f066808e9f984295ae62923f20d5be64`
 - Keyboard shortcuts — `https://app.notion.com/p/2029970fc8da44e49e1dfdaea42eddab`
 - Split pane view — `https://app.notion.com/p/e8f4d8e854484127bf6e00522eba8cfe`
@@ -1108,7 +1108,7 @@ These were the main Notion pages browsed and summarized.
 - Kindle sync — `https://app.notion.com/p/ddb5feaa90b441d58b637cdfe0ee66e4`
 - API — `https://app.notion.com/p/49686f8195fa423f8ba42721914b3672`
 - Tasks — `https://app.notion.com/p/5ccdd956e82b4372b1bd5c82d4777ceb`
-- Reflect Tasks Beta — `https://app.notion.com/p/feb4413a201a41599826aff40468e916`
+- DayJot Tasks Beta — `https://app.notion.com/p/feb4413a201a41599826aff40468e916`
 - Deep links — `https://app.notion.com/p/0fe21ab7b08580c88c1bfb1e3a7400be`
 - Roadmap — `https://app.notion.com/p/3f958dc8917e40e698af2898bead7104`
 
@@ -1116,11 +1116,11 @@ These were the main Notion pages browsed and summarized.
 
 ## 12. Bottom Line for the V2 Agent
 
-Reflect today is best understood as:
+DayJot today is best understood as:
 
 > An end-to-end encrypted personal memory graph centered on daily notes, backlinks, fast capture, and recall, extended through AI, search, integrations, audio transcription, publishing, tasks, and import/export.
 
-The V2 rewrite should not start from a generic notes-app architecture. It should start from the constraints and promises that make Reflect distinct:
+The V2 rewrite should not start from a generic notes-app architecture. It should start from the constraints and promises that make DayJot distinct:
 
 - Daily notes as time-based memory
 - Backlinks as associative memory

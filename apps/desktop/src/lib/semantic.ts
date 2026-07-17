@@ -4,7 +4,7 @@ import {
   embedStatus,
   subscribeEmbedStatus,
   type EmbedStatus,
-} from '@reflect/core'
+} from '@dayjot/core'
 
 /**
  * Semantic-search loading (Plan 09). The model is ~90MB and downloads from
@@ -16,7 +16,7 @@ import {
  */
 
 /** Where the opt-in lived before it moved into the settings document. */
-const LEGACY_ENABLED_KEY = 'reflect.semantic.enabled'
+const LEGACY_ENABLED_KEY = 'dayjot.semantic.enabled'
 
 /**
  * Read-and-clear the pre-settings localStorage opt-in. Returns true exactly

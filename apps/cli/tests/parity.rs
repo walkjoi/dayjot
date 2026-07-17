@@ -11,10 +11,10 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-use reflect_cli::hash::hash_content;
-use reflect_cli::keys::fold_key;
-use reflect_cli::note_file::{parse_note_meta, walk_notes};
-use reflect_cli::search::build_fts_match;
+use dayjot_cli::hash::hash_content;
+use dayjot_cli::keys::fold_key;
+use dayjot_cli::note_file::{parse_note_meta, walk_notes};
+use dayjot_cli::search::build_fts_match;
 
 fn corpus_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parity")

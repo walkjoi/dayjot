@@ -5,7 +5,7 @@
 //! in `Cargo.toml`). With it on, the methods below exist in release too, so a
 //! shipped app can always be opened up and debugged.
 //!
-//! The frontend binds ⌘⇧I to {@link toggle_devtools} (`@reflect/core`'s
+//! The frontend binds ⌘⇧I to {@link toggle_devtools} (`@dayjot/core`'s
 //! `toggleDevtools`); on macOS the webview's native ⌘⌥I and right-click
 //! "Inspect Element" work as well once the feature is compiled in.
 

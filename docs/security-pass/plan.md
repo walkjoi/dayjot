@@ -7,7 +7,7 @@ Date: 2026-06-15
 
 ## Threat Model
 
-Reflect Open is a local-first, open-source Tauri 2 note-taking app.  Notes are plain markdown files stored on the user's filesystem; the optional GitHub sync backend is the only persistent remote surface. The AI layer is strictly BYOK — no Reflect infrastructure.
+DayJot Open is a local-first, open-source Tauri 2 note-taking app.  Notes are plain markdown files stored on the user's filesystem; the optional GitHub sync backend is the only persistent remote surface. The AI layer is strictly BYOK — no DayJot infrastructure.
 
 **Realistic threat actors**
 
@@ -27,7 +27,7 @@ Reflect Open is a local-first, open-source Tauri 2 note-taking app.  Notes are p
 
 **Out of scope (not realistic)**
 
-- Server-side attacks (there is no Reflect server)
+- Server-side attacks (there is no DayJot server)
 - Physical device access
 - Compromise of the user's GitHub account itself
 

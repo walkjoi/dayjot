@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Reflect Beta",
-  "identifier": "app.reflect.desktop.beta",
+  "productName": "DayJot Beta",
+  "identifier": "app.dayjot.desktop.beta",
   "app": {
     "windows": [
       {
-        "title": "Reflect Beta",
+        "title": "DayJot Beta",
         "width": 1300,
         "height": 650,
         "titleBarStyle": "Overlay",
@@ -22,17 +22,12 @@
       "icons-beta/128x128@2x.png",
       "icons-beta/icon.icns",
       "icons-beta/icon.ico"
-    ],
-    "macOS": {
-      "files": {
-        "embedded.provisionprofile": "Reflect-beta.provisionprofile"
-      }
-    }
+    ]
   },
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/team-reflect/reflect-open/releases/download/updater-beta/latest.json"
+        "https://github.com/walkjoi/dayjot/releases/download/updater-beta/latest.json"
       ]
     }
   }

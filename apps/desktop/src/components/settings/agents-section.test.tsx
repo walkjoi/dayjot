@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import { AgentsSection } from './agents-section'
 
 const platform = vi.hoisted(() => ({ isMacosDesktop: true }))
@@ -24,9 +24,9 @@ let uninstallCalls: Array<Record<string, unknown>>
 
 function statusPayload(): Record<string, unknown> {
   return {
-    skillName: 'reflect-personal',
-    skillPath: '/Users/me/.agents/skills/reflect-personal/SKILL.md',
-    cliPath: '/Applications/Reflect.app/Contents/MacOS/reflect',
+    skillName: 'dayjot-personal',
+    skillPath: '/Users/me/.agents/skills/dayjot-personal/SKILL.md',
+    cliPath: '/Applications/DayJot.app/Contents/MacOS/dayjot',
     installState,
   }
 }
@@ -84,7 +84,7 @@ describe('AgentsSection', () => {
 
     await waitFor(() => expect(screen.getByText('Installed')).toBeTruthy())
     expect(installCalls).toEqual([{ generation: GRAPH.generation }])
-    expect(screen.getByText('/Users/me/.agents/skills/reflect-personal/SKILL.md')).toBeTruthy()
+    expect(screen.getByText('/Users/me/.agents/skills/dayjot-personal/SKILL.md')).toBeTruthy()
   })
 
   it('offers an update for a stale install and removal for any managed one', async () => {
@@ -102,7 +102,7 @@ describe('AgentsSection', () => {
     installState = 'conflict'
     renderSection()
 
-    await screen.findByText(/Reflect doesn’t manage/)
+    await screen.findByText(/DayJot doesn’t manage/)
     expect(screen.queryByRole('button', { name: 'Install skill' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Remove' })).toBeNull()
   })

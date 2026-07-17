@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { upsertFrontmatter } from '@reflect/core'
+import { upsertFrontmatter } from '@dayjot/core'
 import { onNoteMoved } from '@/lib/note-moves'
 import type { NoteSession } from './note-session'
 import { openSession, registerOpenDocument, retargetOpenDocument } from './open-documents'
@@ -24,8 +24,8 @@ const io = vi.hoisted(() => ({
   slugPathForTitle: vi.fn(),
   moveNoteIndexed: vi.fn(),
 }))
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   rewriteLinksForTitleChange: io.rewriteLinksForTitleChange,
   getLinkSources: io.getLinkSources,
   readNote: io.readNote,

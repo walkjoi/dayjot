@@ -8,7 +8,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import { errorMessage, hasBridge, type GraphInfo } from '@reflect/core'
+import { errorMessage, hasBridge, type GraphInfo } from '@dayjot/core'
 import { useAudioMemoPipeline, type PendingAudioCapture } from '@/hooks/use-audio-memo-pipeline'
 import type { AudioMemoPhase } from '@/providers/audio-memo-provider'
 import { hapticImpactLight } from '@/mobile/haptics'
@@ -87,7 +87,7 @@ const MobileAudioMemoContext = createContext<MobileAudioMemoContextValue | null>
 const MAX_DURATION_MS = 10 * 60_000
 
 const MIC_DENIED_REASON =
-  'Microphone access was denied. Allow it for Reflect in the Settings app.'
+  'Microphone access was denied. Allow it for DayJot in the Settings app.'
 
 interface MobileAudioMemoProviderProps {
   graph: GraphInfo

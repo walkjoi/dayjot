@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useRef, useState, type ReactElement } from 'react'
 import type { ExitBoundaryHandler } from '@meowdown/core'
-import { detectConflictMarkers, isDaily, isTemplatePath, untitledNoteSeed } from '@reflect/core'
+import { detectConflictMarkers, isDaily, isTemplatePath, untitledNoteSeed } from '@dayjot/core'
 import { BacklinksPanel } from '@/components/backlinks-panel'
 import { ConflictNoteView } from '@/components/conflict-note-view'
 import { InlineAlert } from '@/components/inline-alert'
@@ -144,7 +144,7 @@ export function NotePaneComponent({
     // stream chrome, not content (decided 2026-06-09). Templates too — see
     // the `template` note above.
     trackRenames: !dailyNote && !template,
-    // A missing ordinary note opens as a name-me template (old Reflect's
+    // A missing ordinary note opens as a name-me template (old DayJot's
     // new-note flow): the seed — `id:` frontmatter plus an empty H1 the
     // caret lands in, ghosted "Untitled" by the title placeholder — only
     // reaches disk if the user edits, and typing names the note. Daily
@@ -231,13 +231,13 @@ export function NotePaneComponent({
   }, [dailyDate, onExitBoundary])
 
   if (document.status === 'loading') {
-    // `reflect-note-loading` keeps the hint invisible for the first beat:
+    // `dayjot-note-loading` keeps the hint invisible for the first beat:
     // local reads resolve in milliseconds, and the text flashing on every
     // daily-stream row reads as flicker while the stream anchors.
     return (
       <div
         className={cn(
-          'reflect-note-loading px-1 py-2 text-sm text-text-muted',
+          'dayjot-note-loading px-1 py-2 text-sm text-text-muted',
           gutterClassName,
           editorClassName,
           className,
@@ -285,7 +285,7 @@ export function NotePaneComponent({
   }
 
   // A note that opens with an empty body starts on an empty bullet when the
-  // setting is on (old Reflect's every-note default). The seed only changes what
+  // setting is on (old DayJot's every-note default). The seed only changes what
   // the editor shows; persistence is untouched, so a not-yet-created daily
   // placeholder stays uncreated until the user types — see `default-bullet.ts`.
   const editorSeed = editorBodyWithDefaultBullet(
@@ -365,10 +365,10 @@ export function NotePaneComponent({
         // Daily notes carry no title semantics (the date is their subject),
         // so an empty leading H1 there is just an empty heading.
         {...(dailyNote ? {} : { titlePlaceholder: 'Untitled' })}
-        // `reflect-note-surface` opts this primary editor into the reading
+        // `dayjot-note-surface` opts this primary editor into the reading
         // text size (Settings → Editor); compact MarkdownView previews that
-        // also carry `reflect-editor` keep their own context size.
-        className={cn('reflect-note-surface', gutterClassName, editorClassName)}
+        // also carry `dayjot-editor` keep their own context size.
+        className={cn('dayjot-note-surface', gutterClassName, editorClassName)}
         handleRef={handleRef}
         onExitBoundary={handleExitBoundary}
       >

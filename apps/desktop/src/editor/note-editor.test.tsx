@@ -475,25 +475,25 @@ describe('NoteEditor link opening', () => {
     expect(openUrl).not.toHaveBeenCalled()
   })
 
-  it('routes a reflect:// link through the in-app deep-link intake, not the URL opener', () => {
+  it('routes a dayjot:// link through the in-app deep-link intake, not the URL opener', () => {
     renderEditor()
 
     const event = new MouseEvent('click')
-    act(() => captured.props?.onLinkClick?.({ href: 'reflect://note/abc123', event }))
+    act(() => captured.props?.onLinkClick?.({ href: 'dayjot://note/abc123', event }))
 
-    expect(dispatchDeepLink).toHaveBeenCalledWith('reflect://note/abc123')
+    expect(dispatchDeepLink).toHaveBeenCalledWith('dayjot://note/abc123')
     expect(openUrl).not.toHaveBeenCalled()
   })
 
-  it('⌘-click sends a reflect:// link to a new window instead of dispatching', async () => {
+  it('⌘-click sends a dayjot:// link to a new window instead of dispatching', async () => {
     openDeepLinkInNewWindow.mockResolvedValue(true)
     renderEditor()
 
     const event = new MouseEvent('click', { metaKey: true })
-    act(() => captured.props?.onLinkClick?.({ href: 'reflect://note/abc123', event }))
+    act(() => captured.props?.onLinkClick?.({ href: 'dayjot://note/abc123', event }))
 
     await waitFor(() =>
-      expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('reflect://note/abc123'),
+      expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('dayjot://note/abc123'),
     )
     expect(dispatchDeepLink).not.toHaveBeenCalled()
   })
@@ -503,9 +503,9 @@ describe('NoteEditor link opening', () => {
     renderEditor()
 
     const event = new MouseEvent('click', { metaKey: true })
-    act(() => captured.props?.onLinkClick?.({ href: 'reflect://append?text=hi', event }))
+    act(() => captured.props?.onLinkClick?.({ href: 'dayjot://append?text=hi', event }))
 
-    await waitFor(() => expect(dispatchDeepLink).toHaveBeenCalledWith('reflect://append?text=hi'))
+    await waitFor(() => expect(dispatchDeepLink).toHaveBeenCalledWith('dayjot://append?text=hi'))
   })
 })
 

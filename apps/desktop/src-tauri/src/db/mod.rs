@@ -1,8 +1,8 @@
 //! SQLite index layer (Plan 04).
 //!
-//! The graph's rebuildable projection lives at `<graph>/.reflect/index.sqlite`,
+//! The graph's rebuildable projection lives at `<graph>/.dayjot/index.sqlite`,
 //! backed by the bundled SQLite (FTS5 compiled in) with sqlite-vec registered for
-//! Plan 09. Parsing/extraction happens in TS (`@reflect/core`, Plan 03); this
+//! Plan 09. Parsing/extraction happens in TS (`@dayjot/core`, Plan 03); this
 //! module owns the schema/migrations ([`migrations`]), all writes — one
 //! transaction per batch, generation-gated here in the command layer
 //! ([`write`] holds the row logic) — plus a read-only `db_query` bridge
@@ -111,7 +111,7 @@ pub fn index_open(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<u64> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect index open");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot index open");
     let root = graph
         .0
         .lock()
@@ -142,7 +142,7 @@ fn apply_in_txn(
     generation: u64,
     notes: &[IndexedNote],
 ) -> AppResult<bool> {
-    let _background_task = background_task::scoped(background_tasks, "Reflect index update");
+    let _background_task = background_task::scoped(background_tasks, "DayJot index update");
     let mut state = lock_state(index)?;
     if state.generation != generation {
         return Ok(false);
@@ -203,7 +203,7 @@ pub fn index_remove<R: tauri::Runtime>(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect index remove");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot index remove");
     {
         let mut state = lock_state(&index)?;
         if state.generation != generation {
@@ -253,7 +253,7 @@ pub fn note_move_indexed<R: tauri::Runtime>(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect note move");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot note move");
     let root = crate::fs::root_for_generation(&graph, generation)?;
     {
         let mut state = lock_state(&index)?;
@@ -304,7 +304,7 @@ pub fn index_move<R: tauri::Runtime>(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect index move");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot index move");
     {
         let mut state = lock_state(&index)?;
         if state.generation != generation {
@@ -365,7 +365,7 @@ pub fn index_touch(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect index touch");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot index touch");
     let mut state = lock_state(&index)?;
     if state.generation != generation {
         return Ok(());
@@ -391,7 +391,7 @@ pub fn index_meta_set(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect index metadata");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot index metadata");
     let state = lock_state(&index)?;
     if state.generation != generation {
         return Ok(());
@@ -415,7 +415,7 @@ pub fn index_clear<R: tauri::Runtime>(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect index clear");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot index clear");
     {
         let state = lock_state(&index)?;
         if state.generation != generation {
@@ -441,7 +441,7 @@ pub fn chat_message_save(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect chat save");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot chat save");
     let mut state = lock_state(&index)?;
     if state.generation != generation {
         return Ok(());
@@ -461,7 +461,7 @@ pub fn chat_conversation_delete(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect chat delete");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot chat delete");
     let state = lock_state(&index)?;
     if state.generation != generation {
         return Ok(());
@@ -480,7 +480,7 @@ pub fn embed_apply(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect embeddings update");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot embeddings update");
     let mut state = lock_state(&index)?;
     if state.generation != generation {
         return Ok(());
@@ -500,7 +500,7 @@ pub fn embed_remove(
     index: State<IndexState>,
     background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "Reflect embeddings remove");
+    let _background_task = background_task::scoped(&background_tasks, "DayJot embeddings remove");
     let mut state = lock_state(&index)?;
     if state.generation != generation {
         return Ok(());

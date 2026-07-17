@@ -21,19 +21,19 @@ struct RecordProvider: TimelineProvider {
 }
 
 /// The "start an audio memo" widget (V1's lock-screen widget, rebuilt beside
-/// the Tauri shell): tapping opens the app through `reflect://record-audio`,
+/// the Tauri shell): tapping opens the app through `dayjot://record-audio`,
 /// which the Rust shell hands to the recording plugin's persisted action
 /// queue — recording starts once the webview is ready, and the request
 /// survives cold starts and webview crashes (the V1 handshake).
 struct RecordAudioWidget: Widget {
   var body: some WidgetConfiguration {
-    StaticConfiguration(kind: "app.reflect.record-audio", provider: RecordProvider()) { _ in
+    StaticConfiguration(kind: "app.dayjot.record-audio", provider: RecordProvider()) { _ in
       RecordAudioWidgetView()
-        .widgetURL(URL(string: "reflect://record-audio"))
+        .widgetURL(URL(string: "dayjot://record-audio"))
         .widgetBackgroundCompat()
     }
     .configurationDisplayName("Record audio memo")
-    .description("Start recording an audio memo in Reflect.")
+    .description("Start recording an audio memo in DayJot.")
     .supportedFamilies([.accessoryCircular, .systemSmall])
   }
 }

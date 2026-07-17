@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { EditorMarkdownSyntax, EditorTextSize } from '@reflect/core'
+import type { EditorMarkdownSyntax, EditorTextSize } from '@dayjot/core'
 import { cn } from '@/lib/utils'
 import { useSettings } from '@/providers/settings-provider'
 import { SettingsField } from './field'

@@ -9,7 +9,7 @@ import {
   templateSlugPathForTitle,
   upsertFrontmatter,
   writeNote,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { moveNoteCarryingSession } from '@/editor/move-note'
 import type { NoteEditorHandle } from '@/editor/note-editor'
 import { openSession } from '@/editor/open-documents'

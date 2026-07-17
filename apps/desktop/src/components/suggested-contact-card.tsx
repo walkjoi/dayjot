@@ -1,7 +1,7 @@
 import { useState, type ReactElement } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { UserRound } from 'lucide-react'
-import { errorMessage } from '@reflect/core'
+import { errorMessage } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { suggestedContactQueryKey, useSuggestedContact } from '@/hooks/use-suggested-contact'
 import { addContactToNote, ignoreContactSuggestion } from '@/lib/note-contact'

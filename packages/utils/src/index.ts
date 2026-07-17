@@ -1,5 +1,5 @@
 /**
- * `@reflect/utils` — small, dependency-free helpers shared across the workspace.
+ * `@dayjot/utils` — small, dependency-free helpers shared across the workspace.
  */
 export {
   addDaysIso,

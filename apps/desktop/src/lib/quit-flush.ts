@@ -1,5 +1,5 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { confirmQuit, hasBridge, subscribeQuitRequested } from '@reflect/core'
+import { confirmQuit, hasBridge, subscribeQuitRequested } from '@dayjot/core'
 import { flushOpenDocuments } from '@/editor/open-documents'
 import { flushBackup } from '@/lib/backup-flush'
 import { isMacosDesktop } from '@/lib/platform'

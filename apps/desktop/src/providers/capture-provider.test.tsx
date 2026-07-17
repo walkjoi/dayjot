@@ -1,7 +1,7 @@
 import { cleanup, render, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GraphInfo } from '@reflect/core'
+import type { GraphInfo } from '@dayjot/core'
 
 const controller = vi.hoisted(() => ({
   start: vi.fn(),
@@ -17,7 +17,7 @@ const hasBridge = vi.hoisted(() => vi.fn(() => true))
 const isMobileSurface = vi.hoisted(() => vi.fn(() => false))
 
 vi.mock('@/lib/capture-controller', () => ({ createCaptureController }))
-vi.mock('@reflect/core', () => ({ captureHostRegister, captureSharedInboxRelay, hasBridge }))
+vi.mock('@dayjot/core', () => ({ captureHostRegister, captureSharedInboxRelay, hasBridge }))
 vi.mock('@/lib/platform-surface', () => ({ isMobileSurface }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({

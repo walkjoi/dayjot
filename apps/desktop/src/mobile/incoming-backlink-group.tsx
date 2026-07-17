@@ -29,7 +29,7 @@ interface IncomingBacklinkGroupProps {
  * that toggles just this group — desktop reveals it on hover, which doesn't
  * exist on touch, and both the title and the chevron are full-height (44px)
  * touch targets. The group chevron deliberately overrides the section-level
- * toggle (old Reflect's behavior): collapsing the section collapses every
+ * toggle (old DayJot's behavior): collapsing the section collapses every
  * group, after which one source can be peeked at without re-expanding the
  * rest. Groups are separated by hairline rules rather than boxed rows.
  */

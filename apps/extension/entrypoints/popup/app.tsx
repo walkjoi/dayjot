@@ -23,16 +23,16 @@ type SaveState =
   | { phase: 'held'; result: FlushResult }
   | { phase: 'failed'; message: string }
 
-const RELEASES_URL = 'https://github.com/team-reflect/reflect-open/releases/latest'
+const RELEASES_URL = 'https://github.com/walkjoi/dayjot/releases/latest'
 
 function holdMessage(result: FlushResult): string {
   switch (result.holdReason) {
     case 'no-host':
-      return 'Install Reflect to finish saving — the capture is kept and retries automatically.'
+      return 'Install DayJot to finish saving — the capture is kept and retries automatically.'
     case 'no-graph':
-      return 'Open Reflect and pick a graph first — the capture is kept and retries automatically.'
+      return 'Open DayJot and pick a graph first — the capture is kept and retries automatically.'
     default:
-      return 'Reflect could not be reached — the capture is kept and retries automatically.'
+      return 'DayJot could not be reached — the capture is kept and retries automatically.'
   }
 }
 
@@ -171,14 +171,14 @@ export function CapturePopup(): ReactElement {
         disabled={busy}
         className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-text-on-brand hover:bg-accent-hover disabled:opacity-60"
       >
-        {save.phase === 'saving' ? 'Saving…' : 'Save to Reflect'}
+        {save.phase === 'saving' ? 'Saving…' : 'Save to DayJot'}
       </button>
       {save.phase === 'held' ? (
         <p className="text-xs text-text-muted">
           {holdMessage(save.result)}{' '}
           {save.result.holdReason === 'no-host' ? (
             <a href={RELEASES_URL} target="_blank" rel="noreferrer" className="text-accent underline">
-              Download Reflect
+              Download DayJot
             </a>
           ) : null}
         </p>
@@ -188,7 +188,7 @@ export function CapturePopup(): ReactElement {
       ) : null}
       {save.phase === 'idle' && heldCount > 0 ? (
         <p className="text-xs text-text-muted">
-          {heldCount} earlier {heldCount === 1 ? 'capture' : 'captures'} waiting for Reflect.
+          {heldCount} earlier {heldCount === 1 ? 'capture' : 'captures'} waiting for DayJot.
         </p>
       ) : null}
     </form>

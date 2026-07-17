@@ -2,7 +2,7 @@ import type { CloudGraphContext, CloudSafe } from '../checkers'
 import { normalizeChatSystemPrompt } from '../../settings/schema'
 
 /**
- * The grounded chat system prompt (Plan 10). Reflect's chat is deliberately
+ * The grounded chat system prompt (Plan 10). DayJot's chat is deliberately
  * note-grounded — search first, cite what you used, never invent notes —
  * mirroring V1's grounded copilot rather than a free-floating chatbot.
  */
@@ -16,7 +16,7 @@ export interface SystemPromptInput {
    * semantic matching.
    */
   semanticSearchEnabled: boolean
-  /** User-authored instructions appended after Reflect's built-in rules. */
+  /** User-authored instructions appended after DayJot's built-in rules. */
   customSystemPrompt: string
   /**
    * Graph-level grounding block ({@link CloudGraphContext}), or `null` when
@@ -34,7 +34,7 @@ export function chatSystemPrompt({
 }: SystemPromptInput): string {
   const customInstructions = normalizeChatSystemPrompt(customSystemPrompt)
   return [
-    'You are Reflect’s assistant, embedded in the user’s personal note graph.',
+    'You are DayJot’s assistant, embedded in the user’s personal note graph.',
     `Today’s date is ${today}. Daily notes are markdown files named daily/YYYY-MM-DD.md; other notes live under notes/.`,
     ...graphOverviewLines(context),
     '',

@@ -18,7 +18,7 @@ checkpoints).
 **Unlocks:** a graph that reads as plain markdown on GitHub/Finder/Obsidian — the
 "boring vault durability" promise of the product vision, kept at the filename level.
 
-**Libraries:** none new. The slugger is hand-rolled in `@reflect/core`
+**Libraries:** none new. The slugger is hand-rolled in `@dayjot/core`
 (`markdown/slug.ts`): the constraint set (Windows reserved names, byte caps,
 case folding, CJK preservation) is bespoke, small, and property-testable;
 off-the-shelf slugifiers transliterate or strip non-Latin scripts.
@@ -75,7 +75,7 @@ later surface), daily notes (untouched in every respect — `daily/YYYY-MM-DD.md
 
 ## Steps
 
-1. **Slugger** (`@reflect/core` `markdown/slug.ts`). `slugForTitle(title): string`:
+1. **Slugger** (`@dayjot/core` `markdown/slug.ts`). `slugForTitle(title): string`:
    NFC-normalize → lowercase (Unicode-aware) → keep `\p{L}\p{N}`, map whitespace
    and separator runs to single `-` → strip everything else (covers `/ \ : * ? "
    < > |`, control chars) → trim leading/trailing `-`/`.` → cap at 60 code
@@ -165,7 +165,7 @@ later surface), daily notes (untouched in every respect — `daily/YYYY-MM-DD.md
 - **Filename = derived artifact, title = source of truth.** The slug is a
   *projection* of the title, like the index is a projection of the files. Users
   never edit filenames in-app; external filename edits are tolerated (the
-  indexer keys by path and re-indexes) but never "corrected" by Reflect.
+  indexer keys by path and re-indexes) but never "corrected" by DayJot.
 - **Pure slug, suffix only on collision** (decided 2026-06-11): `meeting.md`,
   `meeting-2.md` — not `meeting-01kts4w0.md`. Readability is the point; the
   id-tail variant taxes every filename to ease a rare case that `id:`
@@ -180,7 +180,7 @@ later surface), daily notes (untouched in every respect — `daily/YYYY-MM-DD.md
 - **Only settled in-app title changes move files.** Sync pulls, external edits,
   reconciles, and rebuilds never rename a file. This single rule prevents move
   loops with external tools and other devices. The complement: when something
-  *else* renames a file, Reflect **heals by id** — the reconcile and the
+  *else* renames a file, DayJot **heals by id** — the reconcile and the
   watcher recognize the moved identity and migrate the projection rows rather
   than treating it as delete+create.
 - **A rename is never a re-embed.** The transactional move carries

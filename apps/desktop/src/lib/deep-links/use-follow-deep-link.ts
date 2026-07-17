@@ -8,7 +8,7 @@ import {
 } from '@/lib/windows/open-in-new-window'
 import { useLinkIntentGuard } from '@/lib/windows/use-link-intent-guard'
 
-/** Follow one in-app `reflect://` link. */
+/** Follow one in-app `dayjot://` link. */
 export type FollowDeepLink = (href: string, event?: NewWindowClickEvent) => void
 
 /**

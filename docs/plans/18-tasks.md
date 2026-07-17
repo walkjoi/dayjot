@@ -23,7 +23,7 @@ round-trips task lists byte-faithfully** (verified 2026-06-12 — `+ [ ] buy mil
 call mum\n` round-trips unchanged, including wiki links and tags inside the item), and
 its ProseMirror schema already models tasks first-class: a `list` node with
 `kind: "task"` and a `checked` attr. Task notes no longer open protected. What's
-missing is purely Reflect-side: interactivity, extraction, projection, and the view.
+missing is purely DayJot-side: interactivity, extraction, projection, and the view.
 
 ## Scope
 
@@ -36,14 +36,14 @@ links and daily-note inheritance; square checklist syntax excluded from aggregat
 recurrence, reminders, priorities, projects, statuses, dependencies, calendar sync,
 external task integrations, editing task *text* inside the Tasks view, archived-state
 markers in markdown, AI task extraction (later, over this projection), CLI
-`reflect tasks` (later; trivial once the table exists).
+`dayjot tasks` (later; trivial once the table exists).
 
 ## Key decisions / contracts
 
 - **A task is a round Meowdown checkbox item.** `+ [ ] text` / `+ [x] text`. No
   typed-entity layer: the files stay meaningful in Meowdown and any markdown tool
   that preserves list markers. Lezer parses these as `Task`/`TaskMarker` via the
-  GFM extension in `grammar.ts`; Reflect additionally checks the physical list marker.
+  GFM extension in `grammar.ts`; DayJot additionally checks the physical list marker.
 - **V1's task-vs-checklist distinction maps to marker shape.** Round task checkboxes
   (`+ [ ]`) aggregate into Tasks. Square checklist checkboxes (`- [ ]`, `* [ ]`, and
   ordered checkbox items) remain ordinary note checklists and are excluded from the
@@ -187,7 +187,7 @@ CREATE INDEX tasks_open_by_date ON tasks (checked, scheduled);
 - Toggling from the Tasks view updates the markdown file, the index, and an open
   editor; toggling against a stale index refuses loudly and recovers via reindex —
   never writes a wrong edit.
-- Deleting `.reflect/` and reopening reproduces the identical tasks projection;
+- Deleting `.dayjot/` and reopening reproduces the identical tasks projection;
   renaming/moving a note keeps its task rows; external edits re-project within the
   watcher debounce.
 - The Tasks view includes `private: true` notes (local surface); nothing task-related

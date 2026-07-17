@@ -1,5 +1,5 @@
 import { useId, useState, type ReactElement } from 'react'
-import { errorMessage } from '@reflect/core'
+import { errorMessage } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'

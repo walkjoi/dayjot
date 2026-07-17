@@ -29,7 +29,7 @@ fn report(name: &str, result: Result<(), String>) {
 
 fn check_keychain() -> Result<(), String> {
     let entry =
-        keyring::Entry::new("app.reflect.plan19-spike", "probe").map_err(|err| err.to_string())?;
+        keyring::Entry::new("app.dayjot.plan19-spike", "probe").map_err(|err| err.to_string())?;
     entry
         .set_password("plan19")
         .map_err(|err| err.to_string())?;
@@ -100,7 +100,7 @@ fn check_git(app: &AppHandle) -> Result<(), String> {
     let tree_id = index.write_tree().map_err(|err| err.to_string())?;
     let tree = repo.find_tree(tree_id).map_err(|err| err.to_string())?;
     let signature =
-        git2::Signature::now("plan19-spike", "spike@reflect.app").map_err(|err| err.to_string())?;
+        git2::Signature::now("plan19-spike", "spike@dayjot.app").map_err(|err| err.to_string())?;
     repo.commit(Some("HEAD"), &signature, &signature, "spike", &tree, &[])
         .map_err(|err| err.to_string())?;
     drop(tree);

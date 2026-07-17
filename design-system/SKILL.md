@@ -1,6 +1,6 @@
 ---
-name: reflect-design
-description: Use this skill to generate well-branded interfaces and assets for Reflect (reflect.app, the minimalist networked note-taking app), either for production or throwaway prototypes/mocks/etc. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping.
+name: dayjot-design
+description: Use this skill to generate well-branded interfaces and assets for DayJot (the minimalist networked note-taking app; visual language inherited from Reflect, reflect.app), either for production or throwaway prototypes/mocks/etc. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping.
 user-invocable: true
 ---
 
@@ -20,7 +20,7 @@ artifacts _or_ production code, depending on the need.
   iconography, and a file index. **Start here.**
 - `styles.css` — link this one file to inherit every token + the Inter webfont.
 - `tokens/` — colors (indigo brand + cool greys + marketing purples; `.dark` and
-  `.reflect-space` theme scopes), typography, spacing/radii/shadow/motion.
+  `.dayjot-space` theme scopes), typography, spacing/radii/shadow/motion.
 - `assets/` — Inter Variable fonts, the graph app icon, logo, and graph hero image.
 - `components/` — React primitives (Button, IconButton, ShortcutKey, Input,
   SearchField, Checkbox, Toggle, Card, Badge, Avatar, MenuItem). Each has a
@@ -30,7 +30,7 @@ artifacts _or_ production code, depending on the need.
 - `ui_kits/marketing/` — the deep-space homepage.
 
 ## The one-paragraph brief
-Reflect is a fast, minimalist, **networked** note-taking app — a writing tool where
+DayJot is a fast, minimalist, **networked** note-taking app — a writing tool where
 prose is the hero and chrome is quiet. Two surfaces share one purple soul: the **app**
 is a calm near-white (or deep-navy dark) canvas with **indigo `#4F46E5`** as the only
 saturated accent and cool grey everything-else; the **marketing site** is a near-black

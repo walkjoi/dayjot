@@ -1,4 +1,4 @@
-A square, chromeless icon button — sidebar arrows, toolbar actions. Hover/active paints Reflect's grey wash.
+A square, chromeless icon button — sidebar arrows, toolbar actions. Hover/active paints DayJot's grey wash.
 
 ```jsx
 <IconButton label="Record audio"><Mic size={16} /></IconButton>

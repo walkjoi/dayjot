@@ -8,7 +8,7 @@ retrieval to search and AI.
 **Unlocks:** Plan 10 (AI context retrieval rides this layer).
 
 **Architecture:** the embedding runtime (model download + `embed`) is a Rust primitive;
-chunking, the `retrieve()` API, and ranking live in `@reflect/core` (`actions/embeddings`,
+chunking, the `retrieve()` API, and ranking live in `@dayjot/core` (`actions/embeddings`,
 `actions/search`). See [Architecture & Conventions](architecture-conventions.md).
 
 **Libraries:** `fastembed` (Rust, local embeddings) + `sqlite-vec` (vectors). See
@@ -62,7 +62,7 @@ embedding execution should leave the WebView for performance.
   sentence-embedding model (e.g. `all-MiniLM-L6-v2` / `bge-small`). The **model is
   downloaded on demand**, not bundled, with device-capability checks + a graceful
   "semantic search unavailable" state on unsupported devices.
-- **Storage:** `sqlite-vec` virtual tables in the same `.reflect/index.sqlite` (loaded in
+- **Storage:** `sqlite-vec` virtual tables in the same `.dayjot/index.sqlite` (loaded in
   Rust alongside FTS5, Plan 04).
 - **Record the embedding model/runtime per vector** so the index can be rebuilt when the
   model changes.

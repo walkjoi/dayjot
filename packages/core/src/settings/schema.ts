@@ -33,7 +33,7 @@ export const editorSpellCheckSchema = z.boolean().catch(true)
 
 /**
  * Whether a note that opens with an empty body starts the editor on a single
- * empty bullet — old Reflect's every-note default. On by default.
+ * empty bullet — old DayJot's every-note default. On by default.
  *
  * The bullet is an **editor affordance only**, never persisted on its own: an
  * empty list item serializes to nothing (`docToMarkdown` drops it), so an
@@ -47,7 +47,7 @@ export const editorDefaultBulletSchema = z.boolean().catch(true)
 
 /**
  * Whether pressing Return at the end of a heading starts a new bullet on the
- * next line — old Reflect's "type a title, then bullet" capture flow. On by
+ * next line — old DayJot's "type a title, then bullet" capture flow. On by
  * default.
  *
  * Independent of {@link editorDefaultBulletSchema}: that seeds an empty note's
@@ -76,7 +76,7 @@ export type EditorTextSize = z.infer<typeof editorTextSizeSchema>
 /**
  * Whether note content stretches across the available desktop pane instead
  * of staying in the default centered reading column. Off by default to
- * preserve Reflect Open's existing layout.
+ * preserve DayJot Open's existing layout.
  */
 export const editorFullWidthSchema = z.boolean().catch(false)
 
@@ -191,7 +191,7 @@ export const semanticSearchEnabledSchema = z.boolean().catch(false)
 
 /**
  * Whether new eligible images/PDFs added under `assets/` are automatically
- * described by the configured AI provider into a managed `.reflect.md` description
+ * described by the configured AI provider into a managed `.dayjot.md` description
  * (Plan 20). On by default — only new assets, gated to those referenced by
  * public notes; existing assets are never auto-scanned (the Settings backfill
  * action handles those, with a cost warning). Off disables the automatic path
@@ -202,7 +202,7 @@ export const describeAssetsSchema = z.boolean().catch(true)
 /**
  * Whether audio-memo transcripts receive a best-effort AI formatting pass
  * before they are written as Markdown. On by default, matching the original
- * Reflect preference. Turning it off keeps the transcription provider's raw
+ * DayJot preference. Turning it off keeps the transcription provider's raw
  * body; transcript-derived title generation remains enabled.
  */
 export const transcriptionFormatSchema = z.boolean().catch(true)
@@ -310,8 +310,8 @@ export const graphColorsSchema = z
   })
 
 /**
- * The cloud AI providers Reflect can call directly (BYOK — the user's own
- * keys, no Reflect-hosted proxy).
+ * The cloud AI providers DayJot can call directly (BYOK — the user's own
+ * keys, no DayJot-hosted proxy).
  */
 export const aiProviderIdSchema = z.enum(['openai', 'anthropic', 'google', 'openrouter'])
 
@@ -371,7 +371,7 @@ export function normalizeChatSystemPrompt(value: string): string {
 
 /**
  * Additional instructions the user wants included in every AI chat system
- * prompt. Reflect's built-in grounding and privacy rules remain in place;
+ * prompt. DayJot's built-in grounding and privacy rules remain in place;
  * this text is appended after them so users can configure tone, format, and
  * other assistant behavior. Empty (the default) adds nothing. Oversized
  * hand-edited values are truncated so the prompt cannot consume the model's
@@ -407,7 +407,7 @@ export type AiPromptMode = z.infer<typeof aiPromptModeSchema>
 /**
  * One saved AI selection prompt: a label for the picker and a body sent to
  * the provider. The body may reference the selection with the
- * `{{selectedText}}` placeholder (old Reflect's syntax, so saved v1 prompts
+ * `{{selectedText}}` placeholder (old DayJot's syntax, so saved v1 prompts
  * port over verbatim); a body without the placeholder gets the selection
  * appended after it.
  */

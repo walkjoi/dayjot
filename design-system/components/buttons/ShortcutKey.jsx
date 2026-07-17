@@ -1,7 +1,7 @@
 import React from 'react'
 
 /**
- * ShortcutKey — Reflect renders keyboard shortcuts as small, low-contrast
+ * ShortcutKey — DayJot renders keyboard shortcuts as small, low-contrast
  * keycaps (⌘K, mod+shift+d). Pass a shortcut string; `mod` becomes ⌘ on
  * Apple, Ctrl elsewhere. `ghost` is the faint inline style used inside the
  * search field.

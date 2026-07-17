@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react'
 import { Circle, CircleCheck } from 'lucide-react'
-import type { OpenTask } from '@reflect/core'
+import type { OpenTask } from '@dayjot/core'
 import { TaskText } from '@/components/tasks/task-text'
 import { formatShortDate } from '@/lib/dates'
 import { taskKey } from '@/lib/tasks/task-identity'

@@ -2,7 +2,7 @@
 
 **Goal:** Define the canonical markdown parse/serialize layer: a stable AST, frontmatter
 handling, `[[wiki link]]` extraction, and **lossless round-tripping** that tolerates
-edits made outside Reflect.
+edits made outside DayJot.
 
 **Depends on:** Plan 02 (file IO).
 **Unlocks:** Plan 04 (index reads parsed structure), 05 (editor renders it), 07
@@ -23,7 +23,7 @@ Markdown is the source of truth, so the parser is load-bearing. Two hard require
 
 1. **External-edit tolerance:** a user (or `git pull`, or Obsidian) may have changed the
    file. Invalid/unknown frontmatter must never make a note unreadable.
-2. **Round-trip fidelity:** Reflect-driven edits (e.g. rename rewrite, AI patch) must not
+2. **Round-trip fidelity:** DayJot-driven edits (e.g. rename rewrite, AI patch) must not
    reflow/normalize the whole file, or sync (Plan 12) drowns in spurious diffs.
 
 ## Steps
@@ -84,7 +84,7 @@ Markdown is the source of truth, so the parser is load-bearing. Two hard require
    §3) — `resolve.ts` owns only the pure normalization + the `Resolution` type; the
    index-backed resolver lands in Plan 04/07.
 
-6. **Tests.** Golden round-trip corpus (Reflect notes, Obsidian notes, GFM edge cases,
+6. **Tests.** Golden round-trip corpus (DayJot notes, Obsidian notes, GFM edge cases,
    broken frontmatter, mixed line endings). Property test: `serialize(parse(x))` is
    stable and minimal-diff for representative inputs.
 

@@ -1,6 +1,6 @@
-//! Shared schema + migrations for `<graph>/.reflect/index.sqlite` (Plan 04/14).
+//! Shared schema + migrations for `<graph>/.dayjot/index.sqlite` (Plan 04/14).
 //!
-//! The desktop app (writer) and the `reflect` CLI (read-only) both depend on
+//! The desktop app (writer) and the `dayjot` CLI (read-only) both depend on
 //! this crate, so the schema can never skew between them. Everything that
 //! creates or migrates the schema sits behind the `vec` feature — the vec0
 //! virtual tables (Plan 09) require the sqlite-vec extension. Read-only
@@ -15,9 +15,9 @@
 //! migrations (0004, 0006) and `index_clear` must never touch them.
 
 /// Directory inside a graph that holds the index (and marks a dir as a graph).
-pub const REFLECT_DIR: &str = ".reflect";
+pub const DAYJOT_DIR: &str = ".dayjot";
 
-/// The index database's filename inside [`REFLECT_DIR`].
+/// The index database's filename inside [`DAYJOT_DIR`].
 pub const INDEX_FILE: &str = "index.sqlite";
 
 /// `user_version` after every migration has run. Read-only consumers compare
@@ -154,14 +154,14 @@ mod schema {
             .map_err(|err| SchemaError::Migration(format!("to version {version}: {err}")))
     }
 
-    /// Open (creating if needed) and migrate `<root>/.reflect/index.sqlite`.
+    /// Open (creating if needed) and migrate `<root>/.dayjot/index.sqlite`.
     pub fn open_index_at(root: &Path) -> Result<Connection, SchemaError> {
         register_sqlite_vec()?;
-        let dir = root.join(super::REFLECT_DIR);
+        let dir = root.join(super::DAYJOT_DIR);
         std::fs::create_dir_all(&dir)?;
         let mut conn = Connection::open(dir.join(super::INDEX_FILE))?;
         // Another PROCESS can hold this database too — a second app flavor on
-        // the same graph, or the `reflect` CLI (which sets its own timeout).
+        // the same graph, or the `dayjot` CLI (which sets its own timeout).
         // Wait briefly for a cross-process lock to clear instead of failing
         // writes instantly with SQLITE_BUSY ("database is locked").
         conn.busy_timeout(std::time::Duration::from_secs(5))?;

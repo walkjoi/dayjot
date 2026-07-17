@@ -12,7 +12,7 @@ type PageTextListener = (message: unknown) => Promise<ExtractPageTextResponse> |
 
 declare global {
   interface Window {
-    __reflectCaptureTextListener?: PageTextListener
+    __dayjotCaptureTextListener?: PageTextListener
   }
 }
 
@@ -98,7 +98,7 @@ function extractPageText(expectedUrl: string): ExtractPageTextResponse {
 export default defineContentScript({
   registration: 'runtime',
   main() {
-    const previousListener = window.__reflectCaptureTextListener
+    const previousListener = window.__dayjotCaptureTextListener
     if (previousListener) {
       browser.runtime.onMessage.removeListener(previousListener)
     }
@@ -110,7 +110,7 @@ export default defineContentScript({
       }
       return Promise.resolve(extractPageText(request.data.expectedUrl))
     }
-    window.__reflectCaptureTextListener = listener
+    window.__dayjotCaptureTextListener = listener
     browser.runtime.onMessage.addListener(listener)
   },
 })

@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import { onNoteMoved } from '@/lib/note-moves'
 import { flushOpenDocuments } from './open-documents'
 import type { NoteEditorHandle } from './note-editor'

@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react'
 import { Check } from 'lucide-react'
-import { foldTag, type NoteTagFacet } from '@reflect/core'
+import { foldTag, type NoteTagFacet } from '@dayjot/core'
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer'
 import { cn } from '@/lib/utils'
 

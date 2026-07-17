@@ -1,8 +1,8 @@
 //! Agent-skill install (Settings → Agents): writes a per-graph `SKILL.md`
 //! under `~/.agents/skills/` so coding agents (Claude Code and friends)
-//! discover the open graph and read it through the bundled `reflect` CLI.
+//! discover the open graph and read it through the bundled `dayjot` CLI.
 //!
-//! The skill is named after the graph (`reflect-<slug>`), and the rendered
+//! The skill is named after the graph (`dayjot-<slug>`), and the rendered
 //! content bakes in the graph root and the CLI's on-disk path. A managed
 //! marker — an HTML comment carrying the sha256 of the rendered template —
 //! makes updates safe: a file without the marker (or with the right marker
@@ -24,15 +24,15 @@ use crate::fs::{current_root, root_for_generation, GraphState};
 /// `{{GRAPH_ROOT}}`, and `{{CLI_PATH}}`.
 const SKILL_TEMPLATE: &str = include_str!("../skills/graph-skill.md");
 
-const MANAGED_PREFIX: &str = "<!-- reflect-managed: sha256=";
+const MANAGED_PREFIX: &str = "<!-- dayjot-managed: sha256=";
 const MANAGED_SUFFIX: &str = " -->";
 
 /// The CLI sidecar, staged beside the app binary by the Tauri bundler (and
 /// beside the dev binary by `tauri dev`) — same layout as the capture host.
 const CLI_BINARY: &str = if cfg!(windows) {
-    "reflect.exe"
+    "dayjot.exe"
 } else {
-    "reflect"
+    "dayjot"
 };
 
 /// Where the installed skill file stands relative to what this app would
@@ -182,7 +182,7 @@ fn classify(
 }
 
 /// The staged CLI sidecar, next to the running executable in both dev
-/// (`target/debug/`) and the bundle (`Reflect.app/Contents/MacOS/`).
+/// (`target/debug/`) and the bundle (`DayJot.app/Contents/MacOS/`).
 fn cli_path() -> AppResult<PathBuf> {
     let exe = std::env::current_exe().map_err(|err| AppError::io(err.to_string()))?;
     let dir = exe
@@ -196,7 +196,7 @@ fn context_for(root: &Path, skills_root: &Path, cli: PathBuf) -> SkillContext {
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let skill_name = format!("reflect-{}", slugify(&graph_name));
+    let skill_name = format!("dayjot-{}", slugify(&graph_name));
     let rendered = render_skill(
         &skill_name,
         &graph_name,
@@ -259,7 +259,7 @@ pub fn skill_install(generation: u64, state: State<GraphState>) -> AppResult<Ski
     let status = status_of(&context)?;
     match status.install_state {
         SkillInstallState::Conflict => Err(AppError::io(format!(
-            "{} exists but was not written by Reflect — move it aside first",
+            "{} exists but was not written by DayJot — move it aside first",
             context.target.display()
         ))),
         SkillInstallState::Current => Ok(status),
@@ -302,7 +302,7 @@ pub fn skill_uninstall(generation: u64, state: State<GraphState>) -> AppResult<S
     match status.install_state {
         SkillInstallState::Missing => Ok(status),
         SkillInstallState::Conflict => Err(AppError::io(format!(
-            "{} was not written by Reflect — not removing it",
+            "{} was not written by DayJot — not removing it",
             context.target.display()
         ))),
         SkillInstallState::Current | SkillInstallState::Stale => {
@@ -332,23 +332,23 @@ mod tests {
         context_for(
             graph,
             dir,
-            PathBuf::from("/Applications/Reflect.app/Contents/MacOS/reflect"),
+            PathBuf::from("/Applications/DayJot.app/Contents/MacOS/dayjot"),
         )
     }
 
     #[test]
     fn render_bakes_in_the_graph_and_cli() {
         let context = test_context(Path::new("/skills"), Path::new("/graphs/Personal"));
-        assert_eq!(context.skill_name, "reflect-personal");
+        assert_eq!(context.skill_name, "dayjot-personal");
         assert_eq!(
             context.target,
-            Path::new("/skills/reflect-personal/SKILL.md")
+            Path::new("/skills/dayjot-personal/SKILL.md")
         );
-        assert!(context.managed_content.contains("name: reflect-personal"));
+        assert!(context.managed_content.contains("name: dayjot-personal"));
         assert!(context.managed_content.contains("/graphs/Personal"));
         assert!(context
             .managed_content
-            .contains("/Applications/Reflect.app/Contents/MacOS/reflect"));
+            .contains("/Applications/DayJot.app/Contents/MacOS/dayjot"));
         assert!(context
             .managed_content
             .contains("git -C \"/graphs/Personal\""));
@@ -441,9 +441,9 @@ mod tests {
         let renamed = context_for(
             Path::new("/graphs/Personal Renamed"),
             temp.path(),
-            PathBuf::from("/Applications/Reflect.app/Contents/MacOS/reflect"),
+            PathBuf::from("/Applications/DayJot.app/Contents/MacOS/dayjot"),
         );
-        assert_eq!(renamed.skill_name, "reflect-personal-renamed");
+        assert_eq!(renamed.skill_name, "dayjot-personal-renamed");
 
         // User edits below the marker turn the file into a conflict.
         let mut edited = context.managed_content.clone();

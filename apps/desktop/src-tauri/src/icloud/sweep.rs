@@ -178,7 +178,7 @@ fn run_sweep(
     // must not eat a base recorded moments earlier in the same pass. Paths
     // this sweep itself *removed* (folded duplicates) leave the set again —
     // they made the pre-sweep listing but their files are gone, and keeping
-    // them would strand their bases under `.reflect/sync-base/` for a sweep.
+    // them would strand their bases under `.dayjot/sync-base/` for a sweep.
     let mut live: BTreeSet<&str> = files.iter().map(|file| file.path.as_str()).collect();
     for change in &outcome.changed {
         if change.kind == "upsert" {
@@ -474,7 +474,7 @@ fn apply_file_resolution(
 /// Fold creation-collision duplicates back into their canonical note. iCloud
 /// renames the losing side of a same-name creation to `name 2.md` — with
 /// deterministic daily filenames that is the *most common* conflict shape.
-/// Reflect's own collision suffixes are hyphenated (Plan 17), so the
+/// DayJot's own collision suffixes are hyphenated (Plan 17), so the
 /// space-digit shape is unambiguously iCloud's.
 fn fold_collision_duplicates(
     root: &Path,
@@ -693,7 +693,7 @@ mod tests {
 
     fn graph() -> tempfile::TempDir {
         let dir = tempdir().unwrap();
-        for sub in ["daily", "notes", ".reflect"] {
+        for sub in ["daily", "notes", ".dayjot"] {
             fs::create_dir_all(dir.path().join(sub)).unwrap();
         }
         dir
@@ -753,7 +753,7 @@ mod tests {
         // The duplicate's content is archived, not just deleted.
         let archive_dir = root
             .path()
-            .join(".reflect/conflict-archive/daily/2026-07-04 2.md");
+            .join(".dayjot/conflict-archive/daily/2026-07-04 2.md");
         assert_eq!(fs::read_dir(archive_dir).unwrap().count(), 1);
         // Changes report the remove + the rewrite for direct reindexing.
         let kinds: Vec<(&str, &str)> = outcome
@@ -915,7 +915,7 @@ mod tests {
         .unwrap();
 
         // Nothing was recorded anywhere in the store.
-        assert!(!root.path().join(".reflect/sync-base").exists());
+        assert!(!root.path().join(".dayjot/sync-base").exists());
     }
 
     #[test]
@@ -959,7 +959,7 @@ mod tests {
         // the version store would hold it and run the real fold.
         let root = graph();
         write(root.path(), "daily/2026-07-04.md", "- seed\n- mac line\n");
-        let store = root.path().join(".reflect/fake-version-store.md");
+        let store = root.path().join(".dayjot/fake-version-store.md");
         fs::write(&store, "- seed\n- phone line\n").unwrap();
         let shadow = ShadowStore::new(root.path());
         shadow.record("daily/2026-07-04.md", "- seed\n").unwrap();
@@ -988,7 +988,7 @@ mod tests {
         // Both originals are archived before anything is written.
         let archived = root
             .path()
-            .join(".reflect/conflict-archive/daily/2026-07-04.md");
+            .join(".dayjot/conflict-archive/daily/2026-07-04.md");
         assert_eq!(fs::read_dir(archived).unwrap().count(), 2);
     }
 
@@ -996,7 +996,7 @@ mod tests {
     fn resolve_file_marks_overlapping_edits_and_labels_the_device() {
         let root = graph();
         write(root.path(), "notes/a.md", "shared line mac\n");
-        let store = root.path().join(".reflect/fake-store.md");
+        let store = root.path().join(".dayjot/fake-store.md");
         fs::write(&store, "shared line phone\n").unwrap();
         let shadow = ShadowStore::new(root.path());
         shadow.record("notes/a.md", "shared line\n").unwrap();
@@ -1029,7 +1029,7 @@ mod tests {
         modified_ms: u64,
         device: &str,
     ) -> VersionRef {
-        let store = root.join(".reflect").join(name);
+        let store = root.join(".dayjot").join(name);
         fs::write(&store, content).unwrap();
         VersionRef {
             store_path: store,

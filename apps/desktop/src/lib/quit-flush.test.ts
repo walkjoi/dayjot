@@ -32,7 +32,7 @@ vi.mock('@tauri-apps/api/window', () => ({
   }),
 }))
 
-vi.mock('@reflect/core', () => ({
+vi.mock('@dayjot/core', () => ({
   confirmQuit: core.confirmQuit,
   hasBridge: () => true,
   subscribeQuitRequested: async (handler: () => void) => {

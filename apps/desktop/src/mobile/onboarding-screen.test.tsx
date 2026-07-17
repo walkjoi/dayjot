@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { MobileStorageInfo } from '@reflect/core'
+import type { MobileStorageInfo } from '@dayjot/core'
 import { MobileOnboardingScreen } from './onboarding-screen'
 
 const completeOnboarding = vi.hoisted(() => vi.fn(async (_kind: string, _root?: string) => {}))
@@ -119,7 +119,7 @@ describe('MobileOnboardingScreen', () => {
       screen.getByText('Turn on iCloud Drive to keep your notes synced between devices.'),
     ).toBeTruthy()
     expect(
-      screen.getByText('Sign in to iCloud on this device, then reopen Reflect.'),
+      screen.getByText('Sign in to iCloud on this device, then reopen DayJot.'),
     ).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Or, use this device only' })).toBeTruthy()
   })

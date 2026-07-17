@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactElement, type ReactNode } from 'react'
-import type { GraphInfo } from '@reflect/core'
+import type { GraphInfo } from '@dayjot/core'
 import { handleDeepLink, type DeepLinkIo } from '@/lib/deep-links/handle'
 import { setDeepLinkHandler } from '@/lib/deep-links/intake'
 import { parseDeepLink } from '@/lib/deep-links/parse'
@@ -10,7 +10,7 @@ import {
 import { useRouter } from '@/routing/router'
 
 /**
- * Routes incoming `reflect://` URLs into the open graph session: attaches
+ * Routes incoming `dayjot://` URLs into the open graph session: attaches
  * this workspace's handler to the app-lifetime intake (`intake.ts`), which
  * replays anything that arrived before a graph was open. No UI — outcomes
  * surface as navigation or a toast inside {@link handleDeepLink}.

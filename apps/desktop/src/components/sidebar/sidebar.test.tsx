@@ -8,7 +8,7 @@ import {
   type GraphInfo,
   type PinnedNote,
   type Settings,
-} from '@reflect/core'
+} from '@dayjot/core'
 import type { CommandContext } from '@/lib/commands/types'
 import type { NoteRoute, Route } from '@/routing/route'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -42,8 +42,8 @@ const updateSettingsWith = vi.hoisted(() =>
   vi.fn<(updater: (current: Settings) => Partial<Settings>) => void>(),
 )
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getPinnedNotes,
 }))

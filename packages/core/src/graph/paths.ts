@@ -59,11 +59,11 @@ export function audioMemoPath(name: string): string {
 
 /**
  * Suffix of a managed asset-description file (Plan 20): the AI description +
- * OCR for an asset lives beside it as `<asset>.reflect.md`.
+ * OCR for an asset lives beside it as `<asset>.dayjot.md`.
  */
-export const DESCRIPTION_SUFFIX = '.reflect.md'
+export const DESCRIPTION_SUFFIX = '.dayjot.md'
 
-/** Graph-relative description path for an asset (`assets/x.png` → `assets/x.png.reflect.md`). */
+/** Graph-relative description path for an asset (`assets/x.png` → `assets/x.png.dayjot.md`). */
 export function descriptionPathFor(assetPath: string): string {
   return `${assetPath}${DESCRIPTION_SUFFIX}`
 }

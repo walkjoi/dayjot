@@ -21,7 +21,7 @@ the original release scope and are **in** scope for the privacy/signing review.
 
 1. **Onboarding / first run.** A calm flow: pick/create a graph (Plan 02), optional
    GitHub backup setup (Plan 12), optional BYOK key (Plan 10) — all skippable so the app
-   is useful immediately. Seed a short "How to use Reflect" note. Model app-ready as the
+   is useful immediately. Seed a short "How to use DayJot" note. Model app-ready as the
    explicit states from Plan 06 (no auth/encryption/billing gates exist in V2).
 
 2. **Keyboard completeness + discoverability.** Audit the central keymap (Plan 05) so
@@ -38,21 +38,21 @@ the original release scope and are **in** scope for the privacy/signing review.
 
 5. **Error, repair & recovery UX.** Surface index repair (Plan 04), backup failures (Plan
    12), and provider/key errors (Plan 10) in plain language
-   with a clear next action. Verify the recovery story end-to-end: delete `.reflect/` →
+   with a clear next action. Verify the recovery story end-to-end: delete `.dayjot/` →
    rebuild loses nothing; raw conflict versions recoverable.
 
 6. **Privacy review (release gate).** End-to-end audit that `private: true` is enforced at
    every external call site — copilot (Plan 10), retrieval (Plan 09), audio transcription,
    capture enrichment/meta fetch (Plan 11), and conflict resolution (Plan 12). Confirm
-   secrets are keychain-only (never markdown/Git/`.reflect/`) and that no Reflect-hosted
+   secrets are keychain-only (never markdown/Git/`.dayjot/`) and that no DayJot-hosted
    API exists in the core path. Document exactly what leaves the device and when.
 
 7. **Signing & notarization.** Apple Developer ID signing + notarization for the Tauri
    bundle; verify Gatekeeper-clean install. **Every bundled native dylib must be signed
    with the hardened runtime** — notably the ONNX/embedding runtime (Plan 9) and any
    sqlite-vec/native-messaging-host binaries — for both arm64 and x64; an unsigned nested
-   binary fails notarization. Bundle the `reflect` CLI (Plan 14) and
-   `reflect-capture-host` (Plan 11) through the macOS Tauri overlay; consider a Homebrew
+   binary fails notarization. Bundle the `dayjot` CLI (Plan 14) and
+   `dayjot-capture-host` (Plan 11) through the macOS Tauri overlay; consider a Homebrew
    cask. Confirm **first release is notarized non-sandboxed** (security-scoped bookmarks,
    Plan 02, only needed if we later sandbox for the App Store). Native-messaging host
    manifests are rewritten on launch for detected browsers, so packaging must verify both
@@ -73,8 +73,8 @@ the original release scope and are **in** scope for the privacy/signing review.
    generated-schema drift check, Rust fmt/clippy/test, Tauri sidecar staging before Rust
    compilation, and a release workflow that runs the repo's `pnpm release:macos publish`
    script to build, code-sign + notarize, **updater-sign**, and publish a GitHub Release
-   with the DMG, updater artifacts, and `latest.json` manifest. Bundles the `reflect` CLI
-   and `reflect-capture-host` sidecars.
+   with the DMG, updater artifacts, and `latest.json` manifest. Bundles the `dayjot` CLI
+   and `dayjot-capture-host` sidecars.
 
 10. **Auto-update (Tauri best practices).** Ship first-class auto-update with the official
     plugin — `tauri-plugin-updater` (Rust) + `@tauri-apps/plugin-updater` (JS), paired with
@@ -84,7 +84,7 @@ the original release scope and are **in** scope for the privacy/signing review.
       (`TAURI_SIGNING_PRIVATE_KEY`). The plugin verifies every downloaded payload against the
       pubkey — distinct from Apple notarization (step 7).
     - **Endpoint:** host the `latest.json` manifest + signed artifacts on **GitHub Releases**
-      (static, free, no Reflect-hosted API — consistent with the no-hosted-API principle; this
+      (static, free, no DayJot-hosted API — consistent with the no-hosted-API principle; this
       is release distribution, not a runtime data service). Config
       `plugins.updater.endpoints` with the `{{target}}`/`{{arch}}`/`{{current_version}}`
       template. macOS updater artifact is the `.app.tar.gz` + `.sig`.
@@ -94,9 +94,9 @@ the original release scope and are **in** scope for the privacy/signing review.
       states (`Update available` → `Downloading` → `Restart to update`), download with
       progress, verify, install, and `relaunch()`. Never block the editor; let the user defer.
     - **Channels:** start with a single stable channel; leave room for a beta channel later.
-    - **Flavors (shipped):** three coexisting apps via `--config` overlays — Reflect
-      (stable, `app.reflect.desktop`, shipped blue/violet icon), Reflect Beta (`…​.beta`,
-      purple/violet), Reflect Dev (`…​.dev`, green, no updates). Beta/dev icons are the stable
+    - **Flavors (shipped):** three coexisting apps via `--config` overlays — DayJot
+      (stable, `app.dayjot.desktop`, shipped blue/violet icon), DayJot Beta (`…​.beta`,
+      purple/violet), DayJot Dev (`…​.dev`, green, no updates). Beta/dev icons are the stable
       artwork recolored via `magick -modulate`. `release:macos` derives the flavor from the
       version channel. See docs/macos-distribution.md → Build flavors.
     - **Release automation (shipped):** versioning moved to release-please, which
@@ -121,7 +121,7 @@ and open their note folder to find portable markdown files.
 
 - First run reaches a writable today's note in seconds, with backup/AI optional+skippable.
 - Every core workflow is keyboard-reachable; `⌘/` lists shortcuts.
-- a11y + perf budgets met; deleting `.reflect/` fully rebuilds with no data loss.
+- a11y + perf budgets met; deleting `.dayjot/` fully rebuilds with no data loss.
 - Privacy review passes: `private: true` enforced everywhere; secrets keychain-only; no
   hosted API in the core path.
 - Signed, notarized DMG installs Gatekeeper-clean; CLI and capture host are bundled; CI

@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState, type KeyboardEvent, type ReactElement } from 'react'
 import { Command } from 'cmdk'
-import { parseHighlights } from '@reflect/core'
+import { parseHighlights } from '@dayjot/core'
 import { CalendarDays, FileText } from 'lucide-react'
 import { Kbd } from '@/components/kbd'
 import { ShortcutKeys } from '@/components/shortcut-keys'
@@ -160,31 +160,31 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
               closePalette()
             }
           }}
-          className="reflect-palette"
+          className="dayjot-palette"
         >
           <Command.Input
             autoFocus
             value={query}
             onValueChange={setQuery}
             placeholder="Search notes, or > for commands…"
-            className="reflect-palette-input"
+            className="dayjot-palette-input"
           />
           <div className={cn(splitLayout && 'flex h-[min(60vh,36rem)]')}>
             <Command.List
-              className={cn('reflect-palette-list', splitLayout && 'reflect-palette-list-split')}
+              className={cn('dayjot-palette-list', splitLayout && 'dayjot-palette-list-split')}
             >
               {searchFailed ? (
-                <div role="alert" className="reflect-palette-empty">
+                <div role="alert" className="dayjot-palette-empty">
                   Search unavailable — the index didn’t answer.
                 </div>
               ) : null}
               {resultsSettled && !searchFailed ? (
-                <Command.Empty className="reflect-palette-empty">No results</Command.Empty>
+                <Command.Empty className="dayjot-palette-empty">No results</Command.Empty>
               ) : null}
               {sections.notes.length > 0 ? (
                 <Command.Group
                   heading={query.trim() === '' ? 'Recent' : 'Notes'}
-                  className="reflect-palette-group"
+                  className="dayjot-palette-group"
                 >
                   {sections.notes.map((entry) => {
                     const Icon = entry.date !== null ? CalendarDays : FileText
@@ -203,7 +203,7 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
                           }
                         }}
                         onSelect={() => openNote(entry)}
-                        className="reflect-palette-item"
+                        className="dayjot-palette-item"
                       >
                         <span className="flex items-center gap-2.5">
                           <Icon
@@ -233,7 +233,7 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
                 </Command.Group>
               ) : null}
               {sections.commands.length > 0 ? (
-                <Command.Group heading="Commands" className="reflect-palette-group">
+                <Command.Group heading="Commands" className="dayjot-palette-group">
                   {sections.commands.map((command) => {
                     const Icon = commandIcon(command.id)
                     return (
@@ -245,7 +245,7 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
                           closePalette()
                           void runCommand(command.id, context)
                         }}
-                        className="reflect-palette-item"
+                        className="dayjot-palette-item"
                       >
                         <span className="flex items-center gap-2.5">
                           <Icon

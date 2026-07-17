@@ -20,8 +20,8 @@
 	<true/>
 	<!-- iCloud Drive document sync (Plan 21). These are *restricted*
 	     entitlements: codesign only honors them when a provisioning profile
-	     granting them is embedded in the app — that's Reflect.provisionprofile
-	     (stable) / Reflect-beta.provisionprofile, placed at
+	     granting them is embedded in the app — that's DayJot.provisionprofile
+	     (stable) / DayJot-beta.provisionprofile, placed at
 	     Contents/embedded.provisionprofile by `bundle.macOS.files` before
 	     signing. The profiles are bound to the Developer ID Application
 	     certificate expiring 2027-02-01 (portal id AZZYZ7YTGR); a certificate
@@ -31,7 +31,7 @@
 	     apps sync through, and container ids are permanent. -->
 	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array>
-		<string>iCloud.app.reflect</string>
+		<string>iCloud.app.dayjot</string>
 	</array>
 	<key>com.apple.developer.icloud-services</key>
 	<array>
@@ -39,7 +39,7 @@
 	</array>
 	<key>com.apple.developer.ubiquity-container-identifiers</key>
 	<array>
-		<string>iCloud.app.reflect</string>
+		<string>iCloud.app.dayjot</string>
 	</array>
 </dict>
 </plist>

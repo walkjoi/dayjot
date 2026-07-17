@@ -20,7 +20,7 @@ export function ProtectedNoteView({ content }: ProtectedNoteViewProps): ReactEle
         example task lists), so it’s open read-only to protect your file. Edit it in
         another tool for now.
       </InlineAlert>
-      <pre className="reflect-protected-note whitespace-pre-wrap text-sm leading-relaxed">
+      <pre className="dayjot-protected-note whitespace-pre-wrap text-sm leading-relaxed">
         {content}
       </pre>
     </div>

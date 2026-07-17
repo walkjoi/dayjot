@@ -1,26 +1,26 @@
 ### Purpose
 
-This document helps AI agents and automated systems interact with the Reflect repo safely and effectively. It summarizes setup, workflows, CI parity, testing, directories, and environment variables.
+This document helps AI agents and automated systems interact with the DayJot repo safely and effectively. It summarizes setup, workflows, CI parity, testing, directories, and environment variables.
 
-### What is Reflect
+### What is DayJot
 
-Reflect is a modern note‑taking tool with a TypeScript codebase. This repo contains Reflect V2, a rewrite of the original Reflect code-base to make it offline-first, markdown backed, and open source.
+DayJot is a modern note‑taking tool with a TypeScript codebase: offline-first, markdown backed, and open source. DayJot is an independent fork of Reflect V2 (`team-reflect/reflect-open`); "Reflect V1" in docs and code refers to the original commercial Reflect app, which DayJot can still import exports from.
 
 ### Product Principles
 
 Drawn from the product docs — read these for deeper context:
-[V1 Overview](docs/reflect-v1-overview.md) · [V2 Product Vision](docs/reflect-v2-product-vision.md) · [V2 Grounding Brief](docs/reflect-v2-grounding-brief.md) · [Indexing Strategy](docs/reflect-v2-indexing-strategy.md) · [Sync Strategy](docs/reflect-v2-sync-strategy.md)
+[V1 Overview](docs/reflect-v1-overview.md) · [V2 Product Vision](docs/dayjot-v2-product-vision.md) · [V2 Grounding Brief](docs/dayjot-v2-grounding-brief.md) · [Indexing Strategy](docs/dayjot-v2-indexing-strategy.md) · [Sync Strategy](docs/dayjot-v2-sync-strategy.md)
 
 
 - **Daily notes first.** The app opens to today's note. All capture flows into the daily note by default.
 - **Association over hierarchy.** `[[Wiki Links]]` replace folders. The note graph is the organizing model; there are no folders.
-- **Markdown is the source of truth.** Notes are `.md` files (`daily/YYYY-MM-DD.md`, `notes/`). SQLite under `.reflect/` is a rebuildable projection of the notes — with one durable exception: the `chat_*` tables hold AI chat history, which is not derivable from markdown. Index wipes and rebuilds must leave them untouched.
-- **No Reflect-hosted APIs.** LLM calls go directly to user-approved providers (OpenAI, Anthropic, etc.). Sync goes to GitHub/iCloud/Git. Never proxy through Reflect infrastructure.
-- **BYOK AI.** AI features use user-supplied keys. Never assume Reflect operates AI infrastructure.
+- **Markdown is the source of truth.** Notes are `.md` files (`daily/YYYY-MM-DD.md`, `notes/`). SQLite under `.dayjot/` is a rebuildable projection of the notes — with one durable exception: the `chat_*` tables hold AI chat history, which is not derivable from markdown. Index wipes and rebuilds must leave them untouched.
+- **No DayJot-hosted APIs.** LLM calls go directly to user-approved providers (OpenAI, Anthropic, etc.). Sync goes to GitHub/iCloud/Git. Never proxy through DayJot infrastructure.
+- **BYOK AI.** AI features use user-supplied keys. Never assume DayJot operates AI infrastructure.
 - **`private: true` is a hard block.** Notes with this frontmatter flag must never have their content sent to any external service — AI, transcription, or otherwise. Enforce at every call site.
 - **Keyboard-native UX.** Every core workflow must be reachable from the keyboard. This is product identity, not polish.
 - **Minimal UI.** Do less, and do it well. Don't add surfaces that compete with the editor.
-- **Secrets in the OS keychain.** API keys and credentials never go in markdown, Git, or `.reflect/`.
+- **Secrets in the OS keychain.** API keys and credentials never go in markdown, Git, or `.dayjot/`.
 - **Portable data.** Full export (JSON, markdown, HTML) must work from day one.
 - **No Electron.** Desktop shell is Tauri.
 - **MIT open-source core.** Write as if the code is public and will be critiqued.
@@ -85,20 +85,20 @@ Local unit tests:
 pnpm test --run path/to/test
 ```
 
-Rust tests (the Cargo workspace: desktop shell, `reflect` CLI, index-schema crate):
+Rust tests (the Cargo workspace: desktop shell, `dayjot` CLI, index-schema crate):
 
 ```bash
 # Prefer per-crate runs; cargo test --workspace also works
-cargo test -p reflect-cli
-cargo test -p reflect-open
+cargo test -p dayjot-cli
+cargo test -p dayjot-desktop
 ```
 
 **Before any cargo build/check/test that compiles the desktop crate** (including
-`--workspace` commands and clippy), the sidecars (the `reflect` CLI and the
-`reflect-capture-host` native-messaging host) must be staged once per checkout:
+`--workspace` commands and clippy), the sidecars (the `dayjot` CLI and the
+`dayjot-capture-host` native-messaging host) must be staged once per checkout:
 
 ```bash
-pnpm --filter @reflect/desktop sidecar
+pnpm --filter @dayjot/desktop sidecar
 ```
 
 Otherwise tauri-build fails with `resource path binaries/<name>-<triple> doesn't exist`
@@ -106,57 +106,57 @@ Otherwise tauri-build fails with `resource path binaries/<name>-<triple> doesn't
 
 ### Repo layout
 
-Reflect is a **Turborepo + pnpm monorepo** around a **Tauri 2** desktop/mobile app: a
+DayJot is a **Turborepo + pnpm monorepo** around a **Tauri 2** desktop/mobile app: a
 React + TypeScript frontend bundled by Vite, embedded in a Rust native shell. The Rust
 crates form a single **Cargo workspace** rooted at the repository root.
 
 ```
-reflect-open/
+dayjot/
 ├── apps/
-│   ├── desktop/            # @reflect/desktop — the Tauri 2 app
+│   ├── desktop/            # @dayjot/desktop — the Tauri 2 app
 │   │   ├── src/            # React frontend (main.tsx, app.tsx, components/, editor/,
 │   │   │                   #   hooks/, providers/, routing/); calls Rust via @tauri-apps/api
-│   │   ├── src-tauri/      # Tauri native shell (Rust crate `reflect-open`)
+│   │   ├── src-tauri/      # Tauri native shell (Rust crate `dayjot-desktop`)
 │   │   │   ├── src/        # lib.rs (#[tauri::command] handlers, plugins), db/, fs/,
 │   │   │   │               #   watcher.rs, embed.rs, recents.rs, secrets.rs, settings.rs
 │   │   │   ├── tauri.conf.json          # build hooks, windows, bundle targets (incl. iOS)
-│   │   │   ├── tauri.<platform>.conf.json  # desktop overlays: bundle the reflect CLI sidecar
+│   │   │   ├── tauri.<platform>.conf.json  # desktop overlays: bundle the dayjot CLI sidecar
 │   │   │   ├── capabilities/            # Tauri 2 permission grants (e.g. default.json)
 │   │   │   ├── icons/                   # App icons for desktop/mobile bundles
 │   │   │   ├── gen/                     # Generated schemas + platform projects (no hand-edits)
 │   │   │   └── ios.project.yml          # iOS XcodeGen template
-│   │   ├── scripts/        # build-sidecar.mjs (stages the reflect CLI for bundling)
+│   │   ├── scripts/        # build-sidecar.mjs (stages the dayjot CLI for bundling)
 │   │   ├── dist/           # Vite build output (frontendDist in tauri.conf.json)
 │   │   └── public/         # Static assets served by Vite
-│   ├── cli/                # `reflect` — self-contained Rust read/discovery CLI (see docs/cli.md)
-│   ├── extension/          # @reflect/extension — Chrome MV3 capture extension (WXT; see its README)
-│   └── native-host/        # `reflect-capture-host` — native-messaging spooler sidecar (Plan 11)
+│   ├── cli/                # `dayjot` — self-contained Rust read/discovery CLI (see docs/cli.md)
+│   ├── extension/          # @dayjot/extension — Chrome MV3 capture extension (WXT; see its README)
+│   └── native-host/        # `dayjot-capture-host` — native-messaging spooler sidecar (Plan 11)
 ├── packages/
-│   ├── core/               # @reflect/core — ALL TS business logic (markdown/, indexing/,
+│   ├── core/               # @dayjot/core — ALL TS business logic (markdown/, indexing/,
 │   │                       #   graph/, embeddings/, ai/, settings/, ipc/)
-│   └── db/                 # @reflect/db — generated Kysely schema + the IPC dialect
+│   └── db/                 # @dayjot/db — generated Kysely schema + the IPC dialect
 ├── crates/
-│   └── index-schema/       # Shared SQLite migrations for <graph>/.reflect/index.sqlite
+│   └── index-schema/       # Shared SQLite migrations for <graph>/.dayjot/index.sqlite
 │                           #   (one schema for the desktop writer + CLI reader)
 ├── design-system/          # Design tokens, components, and UI guidelines (see design-system/readme.md)
-├── docs/                   # Product/architecture docs + docs/plans/ (Reflect V2)
-├── Cargo.toml              # Root Cargo workspace (reflect-open, reflect-cli, reflect-capture-host, reflect-index-schema)
+├── docs/                   # Product/architecture docs + docs/plans/ (DayJot V2)
+├── Cargo.toml              # Root Cargo workspace (dayjot-desktop, dayjot-cli, dayjot-capture-host, dayjot-index-schema)
 └── turbo.json, pnpm-workspace.yaml
 ```
 
 ### Related repos
 
 - **Meowdown:** the local checkout lives at `~/repos/meowdown`. Meowdown is the
-  first-party hybrid/live-preview Markdown editor that Reflect uses through
+  first-party hybrid/live-preview Markdown editor that DayJot uses through
   `@meowdown/core` and `@meowdown/react`. When investigating editor behavior,
   markdown round-tripping, keybindings, slash menus, wiki links, task checkboxes,
   paste/drop handling, or mobile editor quirks, check that repo as well as this
   one. If the root cause is in Meowdown, fix it there and open the PR against the
-  Meowdown project rather than papering over it in Reflect.
+  Meowdown project rather than papering over it in DayJot.
 
 **Design system**
 
-All UI work should follow the Reflect design system documented in [`design-system/readme.md`](design-system/readme.md). Key resources:
+All UI work should follow the DayJot design system documented in [`design-system/readme.md`](design-system/readme.md). Key resources:
 
 - `design-system/tokens/` — CSS custom properties for color, typography, spacing, and motion
 - `design-system/components/` — reusable React primitives (Button, Input, Badge, etc.)
@@ -176,9 +176,9 @@ pnpm dev              # turbo dev across packages (Vite on http://localhost:1420
                       #   add ?platform=ios to the URL to preview the MOBILE tree in a
                       #   plain browser (dev-only in-memory bridge + seeded demo graph)
 pnpm tauri dev        # Full Tauri app with hot reload (stages the CLI sidecar first)
-pnpm tauri:dev        # `pnpm tauri dev` with the dev overlay → the "Reflect Dev" flavor (green icon, own identifier; coexists with Reflect / Reflect Beta)
+pnpm tauri:dev        # `pnpm tauri dev` with the dev overlay → the "DayJot Dev" flavor (green icon, own identifier; coexists with DayJot / DayJot Beta)
 pnpm build            # turbo build pipeline → apps/desktop/dist/
-pnpm tauri build      # Native app bundle, incl. the reflect CLI sidecar
+pnpm tauri build      # Native app bundle, incl. the dayjot CLI sidecar
 pnpm release:macos    # Signed + notarized macOS build for distribution (docs/macos-distribution.md)
 pnpm release:macos publish  # The above, then fill and undraft the release-please draft release
 pnpm tauri:ios:dev "iPhone 17 Pro"  # Run the Tauri iOS target in the simulator (docs/contributing/mobile-simulator.md)
@@ -191,7 +191,7 @@ pnpm release:ios testflight --build-number=123 --wait  # Build and upload the iO
 The mobile app is the Tauri iOS target of `apps/desktop`, not a separate
 package. Use `pnpm tauri:ios:dev "iPhone 17 Pro"` from the repo root (or
 `pnpm tauri:ios:dev --host` for a physical device); debug builds are the dev
-flavor (`app.reflect.ios.dev`, shown as `Reflect Dev`) and need that script's
+flavor (`app.dayjot.ios.dev`, shown as `DayJot Dev`) and need that script's
 config overlay, so do not run plain `tauri ios dev`. List
 available simulator names with `xcrun simctl list devices available`. The first
 run can be quiet while Xcode compiles Rust, Swift plugin code, and native
@@ -207,11 +207,11 @@ and `altool` unless debugging the helper itself. Start with
 `pnpm release:ios testflight --build-number=<number> --wait` or upload an
 existing IPA with `pnpm release:ios upload --ipa=<path> --wait`.
 
-The iOS bundle identifier is `app.reflect.ios`, intentionally separate from the
+The iOS bundle identifier is `app.dayjot.ios`, intentionally separate from the
 old Capacitor TestFlight app (`app.reflect.ReflectMobile`). The release helper
 verifies the IPA bundle identifier and `ITSAppUsesNonExemptEncryption=false`
 before upload. See `docs/ios-testflight.md` for App Store Connect setup, local
-keychain fallback (`reflect-notary`), API key CI secrets, and troubleshooting.
+keychain fallback (`dayjot-notary`), API key CI secrets, and troubleshooting.
 
 # Code Conventions
 

@@ -32,7 +32,7 @@ use self::resolve::resolve;
 /// state in `lib.rs` (`graph_import_cancel` trips it).
 pub use self::import::ImportCancel;
 
-/// Atomic byte write staged under `.reflect/tmp/`, shared with the conflict
+/// Atomic byte write staged under `.dayjot/tmp/`, shared with the conflict
 /// machinery (shadow bases, resolution writes) so every graph write follows
 /// the same crash-safe, sync-clean path.
 pub(crate) use self::io::atomic_write_bytes;
@@ -55,7 +55,7 @@ pub(crate) use self::io::icloud_placeholder_target;
 pub(crate) use self::io::mark_dir_local_only;
 pub(crate) use self::io::modified_ms;
 /// The lexical traversal guard, shared with the conflict stores that mirror
-/// note paths under `.reflect/` (shadow bases, conflict archive).
+/// note paths under `.dayjot/` (shadow bases, conflict archive).
 pub(crate) use self::resolve::ensure_relative;
 /// The full traversal guard, shared with sibling modules that address graph
 /// files (capture promotes screenshots into `assets/`).
@@ -236,7 +236,7 @@ pub fn graph_create(path: String, state: State<GraphState>) -> AppResult<GraphIn
 /// directly under the current root; existing files are never replaced (and
 /// never fail the import — identical files skip, conflicting notes rename,
 /// conflicting daily notes merge). Attachments the notes link to on Firebase
-/// Storage or Reflect's asset CDN are downloaded into `assets/` first and the
+/// Storage or DayJot's asset CDN are downloaded into `assets/` first and the
 /// links rewritten, so the imported graph doesn't depend on Reflect V1's
 /// infrastructure staying up. Progress is emitted as `import:progress` events,
 /// and [`graph_import_cancel`] aborts the run before anything lands in the
@@ -493,8 +493,8 @@ pub(crate) fn move_note_file(root: &Path, from: &str, to: &str) -> AppResult<()>
 
 /// Send a note to the OS trash (recoverable), not a hard delete (pinned to
 /// `generation`). Mobile has no OS trash: the file moves into the graph-local
-/// `.reflect/trash/` instead (Plan 19), the same recoverability promise, and
-/// `.reflect/` is already excluded from sync and indexing.
+/// `.dayjot/trash/` instead (Plan 19), the same recoverability promise, and
+/// `.dayjot/` is already excluded from sync and indexing.
 #[tauri::command]
 pub fn note_delete(path: String, generation: u64, state: State<GraphState>) -> AppResult<()> {
     let root = root_for_generation(&state, generation)?;
@@ -585,12 +585,12 @@ fn os_trash_delete(abs: &Path) -> AppResult<()> {
     ctx.delete(abs).map_err(|err| AppError::io(err.to_string()))
 }
 
-/// Move a deleted file under `<graph>/.reflect/trash/`, stamping the name
+/// Move a deleted file under `<graph>/.dayjot/trash/`, stamping the name
 /// with epoch millis — and a counter beyond that — until the name is free
 /// (repeat deletes of `a.md`, even within one millisecond).
 #[cfg(mobile)]
 fn move_to_graph_trash(root: &Path, abs: &Path) -> AppResult<()> {
-    let trash_dir = root.join(".reflect").join("trash");
+    let trash_dir = root.join(".dayjot").join("trash");
     fs::create_dir_all(&trash_dir)?;
     let name = abs
         .file_name()
@@ -726,10 +726,10 @@ mod move_tests {
 
     #[test]
     fn asset_file_url_percent_encodes_local_paths() {
-        let path = std::env::temp_dir().join("Reflect Cat Photo.png");
+        let path = std::env::temp_dir().join("DayJot Cat Photo.png");
         let url = asset_file_url(&path).unwrap();
 
         assert_eq!(url.scheme(), "file");
-        assert!(url.as_str().contains("Reflect%20Cat%20Photo.png"));
+        assert!(url.as_str().contains("DayJot%20Cat%20Photo.png"));
     }
 }

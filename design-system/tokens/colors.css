@@ -1,7 +1,7 @@
 /* ============================================================
-   Reflect — Color tokens
+   DayJot — Color tokens
    ------------------------------------------------------------
-   Reflect has two faces that share one purple soul:
+   DayJot has two faces that share one purple soul:
 
    1. THE APP  — a calm, near-white (or deep-navy dark) canvas
       built on a shadcn-style HSL token set. Indigo is the only
@@ -146,9 +146,9 @@
 
 /* ============================================================
    SPACE theme — the marketing site surface.
-   Apply .reflect-space to a full-bleed wrapper.
+   Apply .dayjot-space to a full-bleed wrapper.
    ============================================================ */
-.reflect-space {
+.dayjot-space {
   --surface-app:    var(--space-black);
   --text:           #ffffff;
   --text-secondary: rgba(255,255,255,.62);

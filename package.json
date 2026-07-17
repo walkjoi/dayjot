@@ -1,5 +1,5 @@
 {
-  "name": "@reflect/monorepo",
+  "name": "@dayjot/monorepo",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -9,17 +9,17 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "lint": "oxlint apps packages && pnpm --filter @reflect/desktop lint:react",
+    "lint": "oxlint apps packages && pnpm --filter @dayjot/desktop lint:react",
     "lint:fix": "oxlint --fix apps packages",
     "check": "pnpm typecheck && pnpm lint",
-    "tauri": "pnpm --filter @reflect/desktop tauri",
-    "release:ios": "pnpm --filter @reflect/desktop release:ios",
-    "release:macos": "pnpm --filter @reflect/desktop release:macos",
-    "release:testflight": "pnpm --filter @reflect/desktop release:ios testflight",
-    "tauri:dev": "pnpm --filter @reflect/desktop tauri:dev",
-    "tauri:ios:dev": "pnpm --filter @reflect/desktop tauri:ios:dev",
-    "tauri:build:dev": "pnpm --filter @reflect/desktop tauri:build:dev",
-    "tauri:build:beta": "pnpm --filter @reflect/desktop tauri:build:beta"
+    "tauri": "pnpm --filter @dayjot/desktop tauri",
+    "release:ios": "pnpm --filter @dayjot/desktop release:ios",
+    "release:macos": "pnpm --filter @dayjot/desktop release:macos",
+    "release:testflight": "pnpm --filter @dayjot/desktop release:ios testflight",
+    "tauri:dev": "pnpm --filter @dayjot/desktop tauri:dev",
+    "tauri:ios:dev": "pnpm --filter @dayjot/desktop tauri:ios:dev",
+    "tauri:build:dev": "pnpm --filter @dayjot/desktop tauri:build:dev",
+    "tauri:build:beta": "pnpm --filter @dayjot/desktop tauri:build:beta"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

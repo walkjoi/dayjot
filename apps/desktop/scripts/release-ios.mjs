@@ -1,9 +1,9 @@
-// Build and upload Reflect's iOS app to TestFlight.
+// Build and upload DayJot's iOS app to TestFlight.
 //
 // Usage:
 //   pnpm release:ios build --build-number=123
 //   pnpm release:ios testflight --wait
-//   pnpm release:ios upload --ipa=apps/desktop/src-tauri/gen/apple/build/arm64/Reflect.ipa
+//   pnpm release:ios upload --ipa=apps/desktop/src-tauri/gen/apple/build/arm64/DayJot.ipa
 //
 // The App Store Connect API key is used twice when present:
 //   1. Tauri/xcodebuild provisioning auth via APPLE_API_KEY* env vars
@@ -20,11 +20,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const DEFAULT_EXPORT_METHOD = 'app-store-connect'
 const EXPORT_METHODS = new Set(['app-store-connect', 'release-testing', 'debugging', 'validation'])
-const IOS_BUNDLE_IDENTIFIER = 'app.reflect.ios'
+const IOS_BUNDLE_IDENTIFIER = 'app.dayjot.ios'
 const OLD_CAPACITOR_BUNDLE_IDENTIFIER = 'app.reflect.ReflectMobile'
 const NON_EXEMPT_ENCRYPTION_KEY = 'ITSAppUsesNonExemptEncryption'
-const KEYCHAIN_SERVICE = 'reflect-notary'
-const SHARE_EXTENSION_APP_GROUP = 'group.app.reflect'
+const KEYCHAIN_SERVICE = 'dayjot-notary'
+const SHARE_EXTENSION_APP_GROUP = 'group.app.dayjot'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const appDir = join(here, '..')
@@ -188,7 +188,7 @@ function firstExistingPath(paths) {
 }
 
 function stageApiKeyContent({ keyId, rawContent }) {
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-ios-api-key-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-ios-api-key-'))
   const keyPath = join(tempDir, `AuthKey_${keyId}.p8`)
   writeFileSync(keyPath, normalizeApiKeyContent(rawContent), { mode: 0o600 })
   return {
@@ -309,7 +309,7 @@ function resolveInputPath(path) {
 function readIpaInfoPlistRawValue(ipa, key) {
   const listing = capture('unzip', ['-Z1', ipa])
   const infoPlistPath = findIpaInfoPlistPath(listing)
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-ios-ipa-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-ios-ipa-'))
   const infoPlist = join(tempDir, 'Info.plist')
   try {
     const plist = execFileSync('unzip', ['-p', ipa, infoPlistPath])
@@ -350,7 +350,7 @@ function assertIpaExportCompliance(ipa) {
   if (!isFalsePlistValue(value)) {
     fail(
       `IPA Info.plist has ${NON_EXEMPT_ENCRYPTION_KEY}=${value}, expected false.\n` +
-        '  Reflect iOS currently uses only exempt encryption; update export-compliance\n' +
+        '  DayJot iOS currently uses only exempt encryption; update export-compliance\n' +
         '  docs and App Store Connect answers before uploading if that changes.',
     )
   }
@@ -372,7 +372,7 @@ function assertIpaAppexEntitlements(ipa) {
         '  Check that ios.project.yml still embeds ShareExtension.',
     )
   }
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-ios-appex-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-ios-appex-'))
   try {
     execFileSync('unzip', ['-q', ipa, 'Payload/*', '-d', tempDir])
     for (const appexPath of appexPaths) {

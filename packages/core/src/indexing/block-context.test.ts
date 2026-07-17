@@ -55,7 +55,7 @@ describe('blockContextAt', () => {
   })
 
   it('shows only the heading line for a mention in the note title H1', () => {
-    // Divergence from old Reflect, where titles lived outside the document: the
+    // Divergence from old DayJot, where titles lived outside the document: the
     // section rule would inline the entire note for a title mention.
     const content = '# Meeting with [[Target]]\n\nagenda item one\n\nagenda item two\n'
     expect(blockContextAt(content, posOf(content, '[[Target]]'))).toBe(

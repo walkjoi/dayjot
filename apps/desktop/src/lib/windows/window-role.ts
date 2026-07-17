@@ -1,5 +1,5 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { hasBridge } from '@reflect/core'
+import { hasBridge } from '@dayjot/core'
 
 /**
  * Which window this webview is: the main window (the config-declared `main`

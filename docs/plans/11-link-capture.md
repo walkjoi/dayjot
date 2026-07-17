@@ -8,7 +8,7 @@
 >
 > **Status (2026-06-14): Implemented.** The pipeline below is built end-to-end:
 > `apps/extension` (WXT MV3, popup + queue + ⌘⇧K), `apps/native-host`
-> (`reflect-capture-host`, bundled as a second sidecar), the capture inbox +
+> (`dayjot-capture-host`, bundled as a second sidecar), the capture inbox +
 > watcher carve-out, `drainCaptureInbox`/`reconcileCaptureEnrichment` in
 > `packages/core/src/actions/capture.ts`, and the desktop controller
 > (`apps/desktop/src/lib/capture-controller.ts`). Two deliberate narrowings for
@@ -20,7 +20,7 @@
 > "enough phase-1 content" condition below is always met) plus the daily
 > `[[Links]]` backlink; enrichment status lives in the capture note's
 > frontmatter (`captureStatus: pending | done | skipped`). The macOS Tauri
-> overlay bundles both sidecars (`binaries/reflect`, `binaries/reflect-capture-host`).
+> overlay bundles both sidecars (`binaries/dayjot`, `binaries/dayjot-capture-host`).
 
 **Goal:** Launch-grade web capture: a Chrome extension hands URL/title/selection/
 screenshot to the **installed desktop app** through a local **capture inbox**; the
@@ -30,12 +30,12 @@ spooled immediately and enriched asynchronously later.
 
 **Depends on:** Plan 02 (writes/assets), Plan 06 (append-to-today), Plan 10 (BYOK AI +
 keychain + privacy).
-**Unlocks:** the capture half of Reflect's daily-first spine.
+**Unlocks:** the capture half of DayJot's daily-first spine.
 **Research:** bridge options, app-closed behavior, and the mobile story are captured in
 this plan.
 
 **Architecture:** the extension lives in `apps/extension`; all durable writes, AI
-enrichment, and privacy checks go through `apps/desktop` + `@reflect/core`
+enrichment, and privacy checks go through `apps/desktop` + `@dayjot/core`
 (`actions/capture`). See [Architecture & Conventions](architecture-conventions.md).
 
 **Libraries:** WXT (Chrome extension framework, TS), `image` (Rust, screenshot
@@ -53,7 +53,7 @@ extraction / read-later (deferred), dedup-heavy clipping (basic dedup only).
 
 ## Architecture (inverted from V1: desktop owns writes)
 
-V1 called a Reflect-hosted `link-description-api`. V2 must not. Instead:
+V1 called a DayJot-hosted `link-description-api`. V2 must not. Instead:
 
 - The **extension** captures and forwards; it stores **no model keys** and makes **no AI
   calls** — enrichment never happens in the extension.
@@ -74,7 +74,7 @@ the inbox *is* the IPC:
   way the raw link is never lost, and no daemon or open port exists.
 - The host locates the inbox via a pointer file the app maintains in a fixed app-data
   location (active graph). No graph configured → the host returns a typed error the
-  extension surfaces ("open Reflect and pick a graph first").
+  extension surfaces ("open DayJot and pick a graph first").
 - The host is a tiny dedicated Rust crate bundled as a Tauri sidecar (`externalBin`,
   signed/notarized with the app — verify [tauri#11992](https://github.com/tauri-apps/tauri/issues/11992)
   in the code spike). **Not** a dual-mode main binary (browser kills the host on
@@ -90,8 +90,8 @@ the inbox *is* the IPC:
   (payload size is not a reason). If ever built, copy Joplin's model: loopback-only
   bind, `/ping` discovery, accept/reject pairing dialog minting a token, Host-header
   validation. Reject unauthenticated requests.
-- **Not** a `reflect://` deep link (~2 KB practical URL budget; no structured payloads/
-  retries) except as a URL-only last resort, and **never** a Reflect-hosted relay.
+- **Not** a `dayjot://` deep link (~2 KB practical URL budget; no structured payloads/
+  retries) except as a URL-only last resort, and **never** a DayJot-hosted relay.
 
 ### Two-phase write: raw now, enrich later
 
@@ -117,7 +117,7 @@ Every capture lands in two phases so saving never waits on the network or AI:
 2. **Native-messaging host (sidecar) + manifest registration.** Tiny Rust crate built in
    `beforeBuildCommand`, bundled via `externalBin`; pure-stdio discipline (log to
    stderr). Deserializes the capture envelope using typed Rust structs (generated from
-   or manually mirroring the shared `@reflect/core` zod schema — Zod does not run in
+   or manually mirroring the shared `@dayjot/core` zod schema — Zod does not run in
    Rust; the TS schema is the single source of truth and the Rust structs must match it),
    writes the validated envelope + screenshot into the inbox
    atomically, acks **queued** on success or a typed error on failure. The host never

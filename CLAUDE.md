@@ -1,4 +1,4 @@
-# Reflect - Claude Code Guide
+# DayJot - Claude Code Guide
 
 See [AGENTS.md](AGENTS.md) for the full project overview, tech stack, database tables, code conventions, and development cycle.
 

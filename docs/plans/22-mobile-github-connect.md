@@ -42,7 +42,7 @@ mobile (Plan 16's agent-auth transport has no phone story).
   keychain as well as the macOS one.
 - **Core auth.** `runDeviceFlow` (poll policy included),
   `saveGithubAuth`/`loadGithubAuth`, `createGithubRepo`/`getGithubRepo` —
-  all platform-neutral TS in `@reflect/core`. The device flow is *always*
+  all platform-neutral TS in `@dayjot/core`. The device flow is *always*
   configured: `GITHUB_APP_CLIENT_ID` is a hardcoded constant in
   `packages/core/src/sync/github-auth.ts`, not a build-time env var, so iOS
   builds need no injection.
@@ -135,7 +135,7 @@ leftover from the pre-iCloud mobile onboarding that no longer exists.
     into `suggestRepoName` here:** the local graph's display name is the
     sandbox folder's basename — literally "Documents" — so desktop's
     `suggestRepoName(graph?.name)` would suggest `documents-backup`. Mobile
-    passes no name and takes the `reflect-backup` fallback.
+    passes no name and takes the `dayjot-backup` fallback.
   - *Auth step:* reuse `GithubAuthStep` as-is — it is deliberately
     surface-agnostic (device flow + PAT fallback). Touch-specific styling
     tweaks only if something actually breaks in the sheet.

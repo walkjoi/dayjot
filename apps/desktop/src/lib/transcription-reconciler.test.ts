@@ -4,7 +4,7 @@ import type {
   FileChange,
   ReconcileAudioMemosInput,
   ReconcileAudioMemosOutcome,
-} from '@reflect/core'
+} from '@dayjot/core'
 import {
   createTranscriptionReconciler,
   type TranscriptionReconciler,
@@ -18,8 +18,8 @@ const subscribeFileChanges = vi.hoisted(() =>
 )
 const failOperation = vi.hoisted(() => vi.fn<(message: string) => void>())
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   reconcileAudioMemos,
   subscribeFileChanges,
   hasBridge: () => true,

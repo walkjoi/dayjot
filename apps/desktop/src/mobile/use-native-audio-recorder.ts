@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { addPluginListener, invoke } from '@tauri-apps/api/core'
-import { base64ToBytes } from '@reflect/core'
+import { base64ToBytes } from '@dayjot/core'
 import { z } from 'zod'
 
 /**

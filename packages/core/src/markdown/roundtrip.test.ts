@@ -4,11 +4,11 @@ import { parseNote } from './extract'
 
 /**
  * Golden corpus + non-destructiveness gates (Plan 03). Markdown is the source of
- * truth and files may be edited outside Reflect, so the bar is: every input
+ * truth and files may be edited outside DayJot, so the bar is: every input
  * parses into a usable note, and position-based edits touch only what they must.
  */
 const CORPUS = {
-  reflect: '---\nid: 01HXX\naliases: [pjx]\n---\n# Project X\n\nLinks [[Charlotte]] and #status/active.\n',
+  dayjot: '---\nid: 01HXX\naliases: [pjx]\n---\n# Project X\n\nLinks [[Charlotte]] and #status/active.\n',
   obsidian: '# Notes\n\nSee [[Some Page|alias]] and ![img](assets/a.png) and [ext](https://x.com).\n',
   gfm: '## Tasks\n\n- [ ] todo\n- [x] done\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n~~strike~~\n',
   brokenFrontmatter: '---\nfoo: [unclosed\n---\n# Still Readable\n\n[[Linked]]\n',
@@ -33,8 +33,8 @@ describe('markdown corpus', () => {
     expect(note.wikiLinks.map((w) => w.target)).toEqual(['Linked'])
   })
 
-  it('separates the Reflect fixture into frontmatter, links, and tags', () => {
-    const note = parseNote({ path: 'notes/reflect.md', source: CORPUS.reflect })
+  it('separates the DayJot fixture into frontmatter, links, and tags', () => {
+    const note = parseNote({ path: 'notes/reflect.md', source: CORPUS.dayjot })
     expect(note.id).toBe('01HXX')
     expect(note.title).toBe('Project X')
     expect(note.wikiLinks.map((w) => w.target)).toEqual(['Charlotte'])

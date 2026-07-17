@@ -3,7 +3,7 @@ import React from 'react'
 /**
  * Avatar — circular identity chip. Pass `src` for a photo (testimonials) or
  * let it render initials on a deterministic indigo-tinted background. The
- * `graphColor` variant renders Reflect's small round graph-color dot.
+ * `graphColor` variant renders DayJot's small round graph-color dot.
  */
 export function Avatar({ src, name = '', size = 32, graphColor, style = {} }) {
   if (graphColor) {

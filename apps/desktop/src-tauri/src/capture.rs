@@ -1,9 +1,9 @@
 //! Link-capture primitives (Plan 11): the capture-inbox commands the drain
 //! action composes, the screenshot promote/downscale step, the bounded
 //! meta-scrape fetch, and the native-messaging plumbing (pointer file +
-//! browser host manifests) that lets the `reflect-capture-host` sidecar spool
+//! browser host manifests) that lets the `dayjot-capture-host` sidecar spool
 //! captures while this app is closed. Policy — what gets written where, the
-//! privacy gate, enrichment — lives in `@reflect/core` (`actions/capture`);
+//! privacy gate, enrichment — lives in `@dayjot/core` (`actions/capture`);
 //! this module only moves bytes.
 
 use std::fs;
@@ -19,12 +19,12 @@ use crate::fs::{current_root, modified_ms, root_for_generation, FileMeta, GraphS
 /// The native-messaging host name browsers route on; must match the name the
 /// extension passes to `runtime.sendNativeMessage`.
 #[cfg(any(target_os = "macos", test))]
-const HOST_NAME: &str = "app.reflect.capture";
+const HOST_NAME: &str = "app.dayjot.capture";
 
 /// The sidecar binary, staged beside the app binary by the Tauri bundler (and
 /// beside the dev binary by `tauri dev`).
 #[cfg(target_os = "macos")]
-const HOST_BINARY: &str = "reflect-capture-host";
+const HOST_BINARY: &str = "dayjot-capture-host";
 
 /// Extension IDs allowed to launch the host. The first is the dev/unpacked ID,
 /// pinned by the `key` field in `apps/extension/wxt.config.ts`; the second is
@@ -36,7 +36,7 @@ const EXTENSION_ORIGINS: [&str; 2] = [
 ];
 
 /// Graph-relative spool directory the host writes and the drain reads.
-const INBOX_DIR: &str = ".reflect/inbox";
+const INBOX_DIR: &str = ".dayjot/inbox";
 
 // ---- pointer file ------------------------------------------------------------
 
@@ -45,7 +45,7 @@ const INBOX_DIR: &str = ".reflect/inbox";
 /// as a typed host error, never a silent mis-spool.
 fn pointer_path() -> AppResult<PathBuf> {
     let base = dirs::config_dir().ok_or_else(|| AppError::io("no OS config dir"))?;
-    Ok(base.join("reflect-open").join("capture-pointer.json"))
+    Ok(base.join("dayjot-desktop").join("capture-pointer.json"))
 }
 
 fn pointer_json(root: &Path) -> String {
@@ -86,7 +86,7 @@ fn atomic_write_bytes_to(path: &Path, contents: &[u8]) -> AppResult<()> {
 fn host_manifest_json(host_path: &Path) -> String {
     serde_json::to_string_pretty(&serde_json::json!({
         "name": HOST_NAME,
-        "description": "Reflect link capture",
+        "description": "DayJot link capture",
         "path": host_path.to_string_lossy(),
         "type": "stdio",
         "allowed_origins": EXTENSION_ORIGINS,
@@ -141,7 +141,7 @@ fn register_manifests(app_support: &Path, host_path: &Path) -> AppResult<usize> 
 }
 
 /// The staged host binary, next to the running executable in both dev
-/// (`target/debug/`) and the bundle (`Reflect.app/Contents/MacOS/`).
+/// (`target/debug/`) and the bundle (`DayJot.app/Contents/MacOS/`).
 #[cfg(target_os = "macos")]
 fn host_binary_path() -> AppResult<PathBuf> {
     let exe = std::env::current_exe().map_err(|err| AppError::io(err.to_string()))?;
@@ -214,7 +214,7 @@ pub fn capture_inbox_list(generation: u64, state: State<GraphState>) -> AppResul
             path: format!("{INBOX_DIR}/{name}"),
             size: meta.len(),
             modified_ms: modified_ms(&meta).unwrap_or(0),
-            placeholder: false, // the inbox lives under `.reflect/`, never synced/evicted
+            placeholder: false, // the inbox lives under `.dayjot/`, never synced/evicted
         });
     }
     out.sort_by(|first, second| first.path.cmp(&second.path));
@@ -278,8 +278,8 @@ pub fn capture_inbox_remove(
 }
 
 /// Where the drain quarantines spool files it cannot parse. Outside
-/// `.reflect/inbox/`, so nothing here re-triggers the watcher or a drain.
-const INBOX_REJECTED_DIR: &str = ".reflect/inbox-rejected";
+/// `.dayjot/inbox/`, so nothing here re-triggers the watcher or a drain.
+const INBOX_REJECTED_DIR: &str = ".dayjot/inbox-rejected";
 
 fn quarantine_spool(root: &Path, name: &str) -> AppResult<()> {
     let source = inbox_file(root, name)?;
@@ -316,9 +316,9 @@ pub fn capture_inbox_reject(
 /// debug configuration compiles the Rust dev profile, so `debug_assertions`
 /// tracks the flavor exactly.
 #[cfg(all(target_os = "ios", debug_assertions))]
-const SHARED_GROUP_ID: &str = "group.app.reflect.dev";
+const SHARED_GROUP_ID: &str = "group.app.dayjot.dev";
 #[cfg(all(target_os = "ios", not(debug_assertions)))]
-const SHARED_GROUP_ID: &str = "group.app.reflect";
+const SHARED_GROUP_ID: &str = "group.app.dayjot";
 
 /// The envelope spool directory inside the App Group container. The extension
 /// creates it lazily; a missing directory relays as zero.
@@ -326,7 +326,7 @@ const SHARED_GROUP_ID: &str = "group.app.reflect";
 const SHARED_INBOX_DIR: &str = "inbox";
 
 /// Where oversized shared spools are quarantined, beside the shared inbox —
-/// moved, never deleted, mirroring the drain's `.reflect/inbox-rejected/`.
+/// moved, never deleted, mirroring the drain's `.dayjot/inbox-rejected/`.
 const SHARED_REJECTED_DIR: &str = "inbox-rejected";
 
 /// A `.json.tmp` older than this is debris from an extension crash between
@@ -496,7 +496,7 @@ fn classify_fetch_error(err: reqwest::Error) -> AppError {
 /// byte cap, redirect limit, http(s) only). Lives here rather than widening
 /// the webview's HTTP-plugin capability to every URL — the only thing that
 /// can reach arbitrary hosts is this bounded, HTML-only primitive, and the
-/// privacy gate in `@reflect/core` runs before it is ever called.
+/// privacy gate in `@dayjot/core` runs before it is ever called.
 #[tauri::command]
 pub async fn capture_meta_fetch<R: tauri::Runtime>(
     url: String,
@@ -558,14 +558,14 @@ mod tests {
     #[test]
     fn manifest_pins_name_path_and_origins() {
         let manifest = host_manifest_json(Path::new(
-            "/Applications/Reflect.app/Contents/MacOS/reflect-capture-host",
+            "/Applications/DayJot.app/Contents/MacOS/dayjot-capture-host",
         ));
         let parsed: serde_json::Value = serde_json::from_str(&manifest).unwrap();
-        assert_eq!(parsed["name"], "app.reflect.capture");
+        assert_eq!(parsed["name"], "app.dayjot.capture");
         assert_eq!(parsed["type"], "stdio");
         assert_eq!(
             parsed["path"],
-            "/Applications/Reflect.app/Contents/MacOS/reflect-capture-host"
+            "/Applications/DayJot.app/Contents/MacOS/dayjot-capture-host"
         );
         assert_eq!(
             parsed["allowed_origins"],
@@ -597,11 +597,11 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         fs::create_dir_all(dir.path().join("Google/Chrome")).unwrap();
         let written =
-            register_manifests(dir.path(), Path::new("/bundle/reflect-capture-host")).unwrap();
+            register_manifests(dir.path(), Path::new("/bundle/dayjot-capture-host")).unwrap();
         assert_eq!(written, 1);
         let manifest = dir
             .path()
-            .join("Google/Chrome/NativeMessagingHosts/app.reflect.capture.json");
+            .join("Google/Chrome/NativeMessagingHosts/app.dayjot.capture.json");
         assert!(manifest.is_file());
     }
 

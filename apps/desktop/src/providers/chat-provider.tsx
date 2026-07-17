@@ -29,7 +29,7 @@ import {
   type ChatStreamEvent,
   type ChatTurn,
   type GraphInfo,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { toChatAttachment, type ChatAttachment } from '@/lib/chat-attachments'
 import { todayIso } from '@/lib/dates'
 import { isMobileSurface } from '@/lib/platform-surface'
@@ -51,7 +51,7 @@ import { useSettings } from '@/providers/settings-provider'
  * model history are one record, and the history a new turn resends is derived
  * from them.
  *
- * Conversations persist to the graph's index DB (`@reflect/core`'s chat
+ * Conversations persist to the graph's index DB (`@dayjot/core`'s chat
  * store): each turn is saved when sent (the user half) and again when it
  * settles, so a relaunch restores the conversation exactly. On mount the
  * latest conversation is resumed unless it has been idle past

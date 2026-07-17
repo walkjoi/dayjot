@@ -3,10 +3,10 @@
 GitHub gets the guided in-app flow (Settings → Backup → Connect GitHub…).
 Every other git host — GitLab, Gitea, Codeberg, GitHub Enterprise, your own
 server, a bare repo on a NAS — works with zero UI: wire the remote yourself
-and Reflect's sync loop adopts it (Plan 16).
+and DayJot's sync loop adopts it (Plan 16).
 
 The contract: **if `ssh -T git@host` works in your terminal, sync works.**
-Reflect authenticates SSH remotes through your ssh-agent — it never asks for,
+DayJot authenticates SSH remotes through your ssh-agent — it never asks for,
 stores, or manages credentials for non-GitHub hosts, and the managed GitHub
 sign-in is never sent anywhere but github.com. HTTPS URLs for non-GitHub
 hosts aren't supported yet (that's Plan 16 V2, via git credential helpers) —
@@ -21,7 +21,7 @@ git remote add origin git@gitlab.com:you/notes.git   # any SSH remote
 ssh -T git@gitlab.com   # confirms key auth works and records the host key
 ```
 
-Then open (or refocus) the graph in Reflect. Settings → Backup shows the
+Then open (or refocus) the graph in DayJot. Settings → Backup shows the
 remote, edits back up automatically a few moments after you stop typing, and
 pulls/merges run on launch and focus — conflict handling included, same as
 GitHub.
@@ -48,9 +48,9 @@ Failures surface in Settings → Backup (and the sidebar dot) and retry on
 focus — sync never wedges.
 
 - **"the SSH agent offered no key this host accepts"** — `ssh-add` your key,
-  confirm `ssh -T git@<host>` works, refocus Reflect.
+  confirm `ssh -T git@<host>` works, refocus DayJot.
 - **Unknown host key** — connect once with `ssh <host>` so it lands in
-  `~/.ssh/known_hosts`. Reflect never bypasses host-key verification.
+  `~/.ssh/known_hosts`. DayJot never bypasses host-key verification.
 - **HTTPS remote** — refused at adoption with this same advice: switch it to
   the SSH URL, `git remote set-url origin git@host:owner/repo.git`.
 

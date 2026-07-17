@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createElement, type ReactNode } from 'react'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import { resetOperations } from '@/lib/operations'
 import { useNoteTrash } from './use-note-trash'
 

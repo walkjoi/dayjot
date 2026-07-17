@@ -1,6 +1,6 @@
 import { cleanup, render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { IndexAppliedListener } from '@reflect/core'
+import type { IndexAppliedListener } from '@dayjot/core'
 import { EmbeddingsSync } from './embeddings-sync'
 
 const core = vi.hoisted(() => ({
@@ -8,8 +8,8 @@ const core = vi.hoisted(() => ({
   embedRemove: vi.fn(async () => {}),
   subscribeIndexApplied: vi.fn(),
 }))
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   embedNote: core.embedNote,
   embedRemove: core.embedRemove,
   subscribeIndexApplied: core.subscribeIndexApplied,

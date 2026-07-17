@@ -14,7 +14,7 @@ import type { OpenTask } from './queries'
  * all (no due date, in a regular note) groups under its note's title.
  *
  * Lives in core (not the desktop view) so the same grouping serves any surface —
- * the desktop list today, a `reflect tasks` CLI later — without re-deriving it.
+ * the desktop list today, a `dayjot tasks` CLI later — without re-deriving it.
  * Pure: the caller supplies `today` (an ISO `YYYY-MM-DD`, the app's local day).
  */
 

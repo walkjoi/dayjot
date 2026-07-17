@@ -1,10 +1,10 @@
 //! Reflect V1 export import.
 //!
-//! Reflect V1 now exports the same markdown graph layout Reflect Open reads:
+//! Reflect V1 now exports the same markdown graph layout DayJot Open reads:
 //! `daily/`, `notes/`, optional `assets/`, plus ignorable local metadata. The
 //! import path is therefore a bounded archive extraction into the active graph,
 //! not a content migration — with one addition: attachments the notes link
-//! straight to Firebase Storage or Reflect's asset CDN are downloaded into
+//! straight to Firebase Storage or DayJot's asset CDN are downloaded into
 //! `assets/` and the links rewritten (see [`super::import_assets`]).
 //!
 //! The flow is three phases so nothing lands in the graph until everything is
@@ -18,10 +18,10 @@
 //! move), a conflicting daily note has the imported entry's body appended
 //! (one day, one note — the merge is idempotent across re-imports), and a
 //! conflicting asset lands suffixed with the imported notes' literal
-//! `assets/…` links rewritten to follow it. Every real V1 import hits at
-//! least one conflict (a fresh graph seeds `notes/how-to-use-reflect.md`,
-//! which V1 exports also carry), so a fatal conflict policy would fail
-//! practically every import.
+//! `assets/…` links rewritten to follow it. Real V1 imports routinely hit
+//! conflicts (re-imports, dailies on both sides, and upstream Reflect's
+//! seeded `notes/how-to-use-reflect.md` colliding with a graph that carries
+//! one), so a fatal conflict policy would fail practically every import.
 
 use std::collections::{HashMap, HashSet};
 use std::ffi::OsString;
@@ -454,7 +454,7 @@ enum NotePlan {
 /// Directory listings cached per parent, to tell a true same-name file from
 /// a filesystem alias: on case-insensitive volumes `Path::exists` also
 /// matches names that differ only by case folding (macOS APFS folds `ß` to
-/// `ss`, so `füße.md` and `füsse.md` are one path), which Reflect treats as
+/// `ss`, so `füße.md` and `füsse.md` are one path), which DayJot treats as
 /// distinct notes. Listings are cached lazily per directory; writes must be
 /// recorded via [`DirNames::record`] to keep a loaded listing current.
 #[derive(Default)]
@@ -737,7 +737,7 @@ fn wrapper_prefix(paths: &[String]) -> Option<String> {
         }
     }
     let shared = shared?;
-    if matches!(shared, "daily" | "notes" | "assets" | ".reflect") {
+    if matches!(shared, "daily" | "notes" | "assets" | ".dayjot") {
         return None;
     }
     Some(shared.to_string())
@@ -762,7 +762,7 @@ fn sanitized_relative(raw: &str, prefix: Option<&str>) -> Option<String> {
     }
     let first = *parts.first()?;
     let last = *parts.last()?;
-    if matches!(first, ".reflect" | ".git" | "__MACOSX") || is_junk(last) {
+    if matches!(first, ".dayjot" | ".git" | "__MACOSX") || is_junk(last) {
         return None;
     }
     Some(parts.join("/"))
@@ -1012,11 +1012,11 @@ mod tests {
         write_zip(
             &zip_path,
             &[
-                ("Reflect/.gitignore", "ignored"),
-                ("Reflect/.reflect/index.sqlite", "stale"),
-                ("Reflect/.git/config", "git"),
-                ("Reflect/notes/.DS_Store", "junk"),
-                ("Reflect/notes/a.md", "# A\n"),
+                ("DayJot/.gitignore", "ignored"),
+                ("DayJot/.dayjot/index.sqlite", "stale"),
+                ("DayJot/.git/config", "git"),
+                ("DayJot/notes/.DS_Store", "junk"),
+                ("DayJot/notes/a.md", "# A\n"),
             ],
         );
 
@@ -1024,12 +1024,12 @@ mod tests {
 
         assert_eq!(summary.imported_files, 1);
         assert!(root.path().join("notes/a.md").is_file());
-        assert!(!root.path().join(".reflect/index.sqlite").exists());
+        assert!(!root.path().join(".dayjot/index.sqlite").exists());
         assert!(!root.path().join(".git/config").exists());
         assert!(!root.path().join("notes/.DS_Store").exists());
     }
 
-    /// The reported migration blocker: a fresh graph seeds
+    /// The reported migration blocker: upstream Reflect seeded
     /// `notes/how-to-use-reflect.md` and every V1 export carries its own
     /// differing copy, so a fatal conflict policy failed practically every
     /// import. A conflicting note now lands under a suffixed name, with the
@@ -1505,7 +1505,7 @@ mod tests {
     ) -> AppResult<ImportSummary> {
         let prepared = prepare_zip_import_from(root, zip_path, &[prefix])?;
         let downloads = tauri::async_runtime::block_on(prepared.download_assets(
-            "Reflect/test",
+            "DayJot/test",
             no_cancel(),
             no_progress(),
         ))?;
@@ -1592,7 +1592,7 @@ mod tests {
             return;
         };
         let downloads = tauri::async_runtime::block_on(prepared.download_assets(
-            "Reflect/test",
+            "DayJot/test",
             no_cancel(),
             no_progress(),
         ))
@@ -1704,7 +1704,7 @@ mod tests {
         let record = Arc::clone(&seen);
 
         tauri::async_runtime::block_on(prepared.download_assets(
-            "Reflect/test",
+            "DayJot/test",
             no_cancel(),
             Arc::new(move |done, total| record.lock().unwrap().push((done, total))),
         ))
@@ -1729,7 +1729,7 @@ mod tests {
         let cancelled = Arc::new(AtomicBool::new(true));
 
         let result = tauri::async_runtime::block_on(prepared.download_assets(
-            "Reflect/test",
+            "DayJot/test",
             cancelled,
             no_progress(),
         ));

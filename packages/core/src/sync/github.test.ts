@@ -339,12 +339,13 @@ describe('newRepoUrl', () => {
     expect(url.origin + url.pathname).toBe('https://github.com/new')
     expect(url.searchParams.get('name')).toBe('my notes-backup')
     expect(url.searchParams.get('visibility')).toBe('private')
-    expect(url.searchParams.get('description')).toBe('Reflect notes backup')
+    expect(url.searchParams.get('description')).toBe('DayJot notes backup')
   })
 })
 
 describe('githubAppInstallUrl', () => {
   it('points at the registered app’s installation page', () => {
+    // Still the upstream Reflect GitHub App — see GITHUB_APP_CLIENT_ID.
     expect(githubAppInstallUrl()).toBe(
       'https://github.com/apps/reflect-github-app/installations/new',
     )

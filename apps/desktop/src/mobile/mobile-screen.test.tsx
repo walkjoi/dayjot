@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { format } from 'date-fns'
 import { StrictMode, type ReactElement } from 'react'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import {
   clearFormattingToolbar,
   publishFormattingToolbar,
@@ -113,8 +113,8 @@ const indexFns = vi.hoisted(() => ({
     indexedLinkCount: 0,
   })),
 }))
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getBacklinksWithContext: indexFns.getBacklinksWithContext,
 }))

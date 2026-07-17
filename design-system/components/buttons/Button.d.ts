@@ -1,7 +1,7 @@
 import React from 'react'
 
 /**
- * ButtonProps — Reflect's button primitive.
+ * ButtonProps — DayJot's button primitive.
  *
  * @startingPoint section="Buttons" subtitle="Primary / secondary / white / text / space variants" viewport="700x140"
  */

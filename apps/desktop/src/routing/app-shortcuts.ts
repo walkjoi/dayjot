@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { dailyPath } from '@reflect/core'
+import { dailyPath } from '@dayjot/core'
 import { usePalette } from '@/components/command-palette/palette-provider'
 import { registerKeymap } from '@/editor/keymap'
 import { APP_COMMANDS } from '@/lib/commands/app-commands'

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import {
   registerNoteEditorHandle,
   unregisterNoteEditorHandle,

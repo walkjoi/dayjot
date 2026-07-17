@@ -1,24 +1,24 @@
 # Plan 14 — CLI (Read / Discovery)
 
-**Goal:** A small read/discovery CLI over the graph — `reflect today`, `reflect search`,
-`reflect show`, path lookup — so notes are scriptable and agent-friendly without a hosted
+**Goal:** A small read/discovery CLI over the graph — `dayjot today`, `dayjot search`,
+`dayjot show`, path lookup — so notes are scriptable and agent-friendly without a hosted
 API. Ships as a **self-contained Rust binary**, bundled with the desktop app as a Tauri
 sidecar.
 
 **Depends on:** Plan 02 (graph layout), Plan 03 (doc-model contracts), Plan 04 (index
 schema). **Supersedes** the earlier decision (here and in
 [Architecture & Conventions](architecture-conventions.md)) that the CLI would be a Node
-TS app reusing `@reflect/core` — see "Architecture" below for why.
+TS app reusing `@dayjot/core` — see "Architecture" below for why.
 **Unlocks:** `~/.agents` discovery workflows; terminal/automation access; Plan 15 bundles
 and distributes the binary.
 
 ## Scope
 
 **In:** read/discovery commands operating directly on the graph's markdown files and the
-`.reflect/index.sqlite` projection; plain + JSON output; graph resolution (flag → env →
+`.dayjot/index.sqlite` projection; plain + JSON output; graph resolution (flag → env →
 cwd); Cargo workspace bootstrap; Tauri sidecar bundling.
 **Out:** a write CLI (manual markdown edits are the write path — explicitly no write CLI
-first wave), Reflect-hosted endpoints, a long-running local server, shell completions/man
+first wave), DayJot-hosted endpoints, a long-running local server, shell completions/man
 pages (nicety, later), Homebrew/standalone distribution and the in-app "Install CLI
 command" action (Plan 15), a recents-based graph fallback (see "Graph resolution").
 
@@ -32,8 +32,8 @@ mutates notes.
 
 ## Architecture: a self-contained Rust binary
 
-The CLI is a **Rust crate at `apps/cli`** (package `reflect-cli`, binary **`reflect`**)
-that reads the graph's markdown files itself and opens `.reflect/index.sqlite` itself —
+The CLI is a **Rust crate at `apps/cli`** (package `dayjot-cli`, binary **`dayjot`**)
+that reads the graph's markdown files itself and opens `.dayjot/index.sqlite` itself —
 no Node runtime, no running desktop app, no IPC.
 
 Why Rust here, despite the "business logic lives in TS core" rule
@@ -53,7 +53,7 @@ Why Rust here, despite the "business logic lives in TS core" rule
   into distribution.
 
 The cost is deliberate, bounded duplication: the read-side contract exists in TS
-(`@reflect/core`) and now also in Rust. It is guarded by **parity tests** (below) and
+(`@dayjot/core`) and now also in Rust. It is guarded by **parity tests** (below) and
 documented as a frozen contract; the CLI must never grow its own parser/indexer beyond it.
 
 ### Workspace & crate layout
@@ -62,11 +62,11 @@ There is no Cargo workspace today (single crate at `apps/desktop/src-tauri`). Th
 creates one:
 
 ```text
-reflect-open/
+dayjot-desktop/
 ├── Cargo.toml                  # [workspace] members; resolver = "2"; root Cargo.lock
 ├── apps/
-│   ├── desktop/src-tauri/      # existing app crate (reflect-open) — joins the workspace
-│   └── cli/                    # NEW: package `reflect-cli`, [[bin]] name = "reflect"
+│   ├── desktop/src-tauri/      # existing app crate (dayjot-desktop) — joins the workspace
+│   └── cli/                    # NEW: package `dayjot-cli`, [[bin]] name = "dayjot"
 └── crates/
     └── index-schema/           # NEW: shared schema crate (see below)
 ```
@@ -101,15 +101,15 @@ tz/DST-correct), `sha2` (SHA-256 content hashes, matching the TS indexer), `saph
 Resolve the active graph in this order; first hit wins, clear error if none:
 
 1. `--graph <path>` (global flag),
-2. `REFLECT_GRAPH` env var,
+2. `DAYJOT_GRAPH` env var,
 3. **walk up from the current directory** (git-style) to the nearest directory containing
-   `.reflect/`.
+   `.dayjot/`.
 
-A directory *is* a graph iff it contains `.reflect/` (the Plan 02 bootstrap contract; its
+A directory *is* a graph iff it contains `.dayjot/` (the Plan 02 bootstrap contract; its
 `meta.json` carries `schemaVersion`). An explicit `--graph`/env path that is not a graph
 errors with that hint rather than falling through. **Deliberately no recents-config
 fallback** (`recent-graphs.json` from Plan 02): the CLI must be deterministic for
-scripts/agents and self-contained from desktop app-config; a `reflect graphs` discovery
+scripts/agents and self-contained from desktop app-config; a `dayjot graphs` discovery
 command can revisit this later.
 
 ## The two read layers
@@ -125,7 +125,7 @@ command can revisit this later.
   filename stem; a daily's title is its date.
 - Fold keys matching `foldKey` (trim + lowercase) for title/alias matching.
 
-**Index layer** (`.reflect/index.sqlite`, used by `search` and to accelerate `show`/`path`):
+**Index layer** (`.dayjot/index.sqlite`, used by `search` and to accelerate `show`/`path`):
 
 - Open **read-only** (`SQLITE_OPEN_READ_ONLY`, `PRAGMA query_only=ON` belt-and-braces,
   `busy_timeout` ~2s to coexist with the desktop writer; the DB is WAL). If a read-only
@@ -133,7 +133,7 @@ command can revisit this later.
   back to file-only behavior with a warning instead of failing the command.
 - **Schema guard:** compare `PRAGMA user_version` to `index-schema`'s
   `LATEST_SCHEMA_VERSION`. Newer than the CLI → warn ("index is newer than this CLI;
-  update Reflect") and still attempt the stable query subset: `notes`, `aliases`,
+  update DayJot") and still attempt the stable query subset: `notes`, `aliases`,
   `note_keys`, `search_fts`, `index_meta`. Never touch `embedding_*`/vec tables (the vec0
   module is not loaded; querying them would error).
 - **Staleness detection** (drives the `search` warning): walk `daily/`+`notes/` `.md`
@@ -155,11 +155,11 @@ errors go to stderr** so piped/JSON output stays clean. Exit codes:
 `0` ok · `1` runtime error · `2` usage (clap) · `3` not found / private ·
 `4` index missing or unusable (`search` only).
 
-- **`reflect today [--path]`** — print today's daily note (local date via `jiff`).
+- **`dayjot today [--path]`** — print today's daily note (local date via `jiff`).
   File-only; no index needed. `--path` prints the absolute path **even if the file does
   not exist yet** (dailies are created lazily — lets editors/scripts create it); without
   `--path`, a missing daily is exit 3.
-- **`reflect search <query> [--limit N=20]`** — lexical search over the FTS index.
+- **`dayjot search <query> [--limit N=20]`** — lexical search over the FTS index.
   Build the `MATCH` expression exactly like `buildFtsMatch` (each whitespace-split term
   double-quoted, embedded quotes doubled; empty query → empty result), rank exactly like
   the desktop's palette search: **title-boosted bm25** (`bm25(search_fts, 0, 10.0, 1.0)`,
@@ -169,15 +169,15 @@ errors go to stderr** so piped/JSON output stays clean. Exit codes:
   emission — so a note flagged private after the last index run never reaches stdout
   even from a stale row (same file-over-index rule as `show`). A stale index
   **warns on stderr and still returns rows** (and sets `"stale": true` in JSON); a
-  missing/unopenable index is exit 4 with "open the graph in Reflect to build the index" —
+  missing/unopenable index is exit 4 with "open the graph in DayJot to build the index" —
   the CLI never runs the indexer or mutates the DB.
-- **`reflect show <note>`** — resolve and print a note. Resolution order mirrors
+- **`dayjot show <note>`** — resolve and print a note. Resolution order mirrors
   `resolveWikiLink` plus a path convenience: calendar-valid `YYYY-MM-DD` → daily; exact
   graph-relative (or in-graph absolute) path; title fold-key; alias fold-key. Index-backed
   when the index is present (`notes.title_key` / `aliases.alias_key`, `ORDER BY path
   LIMIT 1` for deterministic collisions, others noted on stderr); **file-scan fallback**
   (derive titles/aliases per the file layer) when it is absent.
-- **`reflect path <note>`** — resolve to an absolute path and print it (for piping into
+- **`dayjot path <note>`** — resolve to an absolute path and print it (for piping into
   editors/tools). A `YYYY-MM-DD` argument prints the would-be daily path like
   `today --path`.
 
@@ -215,27 +215,27 @@ Tauri 2's first-party mechanism for shipping a CLI with the app is
 [`bundle.externalBin`](https://v2.tauri.app/develop/sidecar/) (sidecars). Verified
 specifics, and how we wire it:
 
-- **Config:** `"externalBin": ["binaries/reflect"]` — placed in **desktop platform
+- **Config:** `"externalBin": ["binaries/dayjot"]` — placed in **desktop platform
   overlay configs** (`tauri.macos.conf.json`, `tauri.windows.conf.json`,
   `tauri.linux.conf.json`), not the shared `tauri.conf.json`, because sidecars are
   unsupported on iOS/Android and the bundle currently targets iOS too.
 - **Naming:** the on-disk file must be triple-suffixed —
-  `src-tauri/binaries/reflect-<target-triple>[.exe]`; Tauri strips the suffix when
+  `src-tauri/binaries/dayjot-<target-triple>[.exe]`; Tauri strips the suffix when
   copying it next to the app binary. A sidecar may not share the app **crate's package
-  name** (`reflect-open`), so `reflect` is safe.
+  name** (`dayjot-desktop`), so `dayjot` is safe.
 - **Build hook (there is no first-party Rust-sidecar build integration):**
   `apps/desktop/scripts/build-sidecar.mjs`, prepended to `beforeDevCommand` *and*
   `beforeBuildCommand` (tauri-build requires the file to exist before the app crate
   compiles, **dev included**). It: no-ops when `TAURI_ENV_PLATFORM` is ios/android;
   resolves the triple from `TAURI_ENV_TARGET_TRIPLE` (set by Tauri for before-commands),
   falling back to `rustc --print host-tuple`; runs
-  `cargo build --release -p reflect-cli --target <triple>` — the **explicit `--target`
+  `cargo build --release -p dayjot-cli --target <triple>` — the **explicit `--target`
   matters**: it keeps the artifact in `target/<triple>/release/`, away from
   `target/release/` where tauri-build copies the de-suffixed sidecar (a known
   overwrite clash), and is what makes cross-compilation work; then copies the artifact to
-  `binaries/reflect-<triple>[.exe]` (the `binaries/` dir is gitignored).
-- **Where it lands:** macOS `Reflect.app/Contents/MacOS/reflect`; Windows NSIS
-  `$INSTDIR\reflect.exe`; Linux `.deb` `/usr/bin/reflect` (**on PATH for free**);
+  `binaries/dayjot-<triple>[.exe]` (the `binaries/` dir is gitignored).
+- **Where it lands:** macOS `DayJot.app/Contents/MacOS/dayjot`; Windows NSIS
+  `$INSTDIR\dayjot.exe`; Linux `.deb` `/usr/bin/dayjot` (**on PATH for free**);
   AppImage internal-only (documented limitation).
 - **Signing:** free on macOS — Tauri signs sidecars inside-out with the hardened runtime
   (default-on) before signing the bundle, so notarization (Plan 15) covers the CLI with
@@ -245,7 +245,7 @@ specifics, and how we wire it:
   ever spawns the CLI would it need `tauri-plugin-shell` + a `shell:allow-execute`
   sidecar scope entry.)
 - **PATH for users:** Linux deb is automatic; macOS gets a VS-Code-style "Install
-  `reflect` command" in-app action (symlink `Contents/MacOS/reflect` →
+  `dayjot` command" in-app action (symlink `Contents/MacOS/dayjot` →
   `/usr/local/bin`, admin-prompted) and/or Homebrew in **Plan 15**; Windows via an NSIS
   `installerHooks` PATH entry, also Plan 15. Until then, `cargo install --path apps/cli`
   is the dev install.
@@ -271,9 +271,9 @@ specifics, and how we wire it:
    for `search`.
 7. **Sidecar bundling:** `build-sidecar.mjs`, platform overlay configs, hook wiring;
    verify `pnpm tauri dev` still works and `pnpm tauri build` produces a bundle
-   containing a runnable `reflect`.
+   containing a runnable `dayjot`.
 8. **Docs:** `docs/cli.md` — commands, flags, exit codes, JSON schemas, the agent
-   discovery hook (`~/.agents` workflows drive Reflect reads through these stable
+   discovery hook (`~/.agents` workflows drive DayJot reads through these stable
    outputs). Update [Libraries](libraries.md) + the Plan 14 consequence in
    [Architecture & Conventions](architecture-conventions.md) (done alongside this plan).
 9. **Tests.** `today` prints/locates the right file with no index present; `search` ranks
@@ -291,7 +291,7 @@ specifics, and how we wire it:
 - **Rust binary, not Node TS** (supersedes the prior decision): self-contained
   distribution + Tauri sidecar bundling outweigh TS-core reuse for a read-only surface.
   The duplicated read-side contract is frozen, tiny, and parity-tested.
-- **Graph = nearest `.reflect/`**: flag → env → cwd walk-up; **no desktop-config
+- **Graph = nearest `.dayjot/`**: flag → env → cwd walk-up; **no desktop-config
   fallback**.
 - **`private: true` notes are invisible to the CLI** — excluded from `search`, refused by
   `show`/`today`/`path` (exit 3), **no override flag**; the resolved file's own
@@ -304,10 +304,10 @@ specifics, and how we wire it:
 
 ## Acceptance criteria
 
-- `cargo build -p reflect-cli` yields a single self-contained `reflect`; `today`,
+- `cargo build -p dayjot-cli` yields a single self-contained `dayjot`; `today`,
   `search`, `show`, `path` work against a graph with no desktop app running, resolved
-  from the cwd by default or `--graph`/`REFLECT_GRAPH` explicitly.
-- `today`/`show`/`path` succeed with `.reflect/index.sqlite` absent; `search` exits 4
+  from the cwd by default or `--graph`/`DAYJOT_GRAPH` explicitly.
+- `today`/`show`/`path` succeed with `.dayjot/index.sqlite` absent; `search` exits 4
   with a helpful message.
 - A graph edited externally makes `search` warn stale (stderr + `"stale": true`) while
   still returning index rows; other commands stay correct.
@@ -315,7 +315,7 @@ specifics, and how we wire it:
   there is no flag that overrides this.
 - `--json` output matches the documented schemas (snapshot tests); parity tests pin the
   TS↔Rust contract.
-- `pnpm tauri build` bundles a signed, runnable `reflect` sidecar; `pnpm tauri dev` and
+- `pnpm tauri build` bundles a signed, runnable `dayjot` sidecar; `pnpm tauri dev` and
   iOS builds are unaffected.
 - `cargo fmt`/`clippy`/`test --workspace` and the existing `pnpm check` + codegen-drift
   CI all pass.

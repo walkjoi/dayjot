@@ -23,6 +23,6 @@ describe('useNoteWindowTitle', () => {
 
   it('falls back to the app name while the title is unknown', () => {
     renderHook(() => useNoteWindowTitle(null))
-    expect(setWindowTitle).toHaveBeenLastCalledWith('Reflect')
+    expect(setWindowTitle).toHaveBeenLastCalledWith('DayJot')
   })
 })

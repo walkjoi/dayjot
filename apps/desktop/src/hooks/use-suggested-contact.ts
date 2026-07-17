@@ -10,7 +10,7 @@ import {
   splitFrontmatter,
   suggestContactForTitle,
   type ContactMatch,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { readNoteSource } from '@/lib/note-frontmatter'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'
 import { useGraph } from '@/providers/graph-provider'

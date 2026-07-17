@@ -1,6 +1,6 @@
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { type OpenTask } from '@reflect/core'
+import { type OpenTask } from '@dayjot/core'
 import { makeOpenTask as task } from './open-task-fixture'
 import { taskKey } from './task-identity'
 import { type TaskActions } from './use-task-actions'

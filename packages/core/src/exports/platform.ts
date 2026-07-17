@@ -62,7 +62,7 @@ export {
   errorMessage,
   isAppError,
   toAppError,
-  ReflectError,
+  DayJotError,
   type AppError,
 } from '../errors'
 export {

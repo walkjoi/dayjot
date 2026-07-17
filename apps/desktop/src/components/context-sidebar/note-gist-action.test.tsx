@@ -1,7 +1,7 @@
 import { cleanup, render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { NoteRow } from '@reflect/core'
+import type { NoteRow } from '@dayjot/core'
 import { resetNoteRowOverlays, setNoteRowOverlay } from '@/hooks/note-row-overlay'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { NoteGistAction } from './note-gist-action'

@@ -1,9 +1,9 @@
-//! `reflect` — read/discovery CLI over a Reflect graph (Plan 14).
+//! `dayjot` — read/discovery CLI over a DayJot graph (Plan 14).
 //!
 //! Self-contained: reads the graph's markdown files directly and opens
-//! `.reflect/index.sqlite` strictly read-only — no Node runtime, no running
+//! `.dayjot/index.sqlite` strictly read-only — no Node runtime, no running
 //! desktop app, no IPC. The modules mirror the small read-side contract owned
-//! by `@reflect/core` (paths, fold keys, frontmatter, title derivation,
+//! by `@dayjot/core` (paths, fold keys, frontmatter, title derivation,
 //! hashing, FTS match syntax); each one names its TS counterpart and is
 //! parity-tested against the same expected values. Keep this surface frozen —
 //! the CLI must never grow its own parser or indexer beyond it.

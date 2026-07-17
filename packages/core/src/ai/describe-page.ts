@@ -1,6 +1,6 @@
 import { APICallError, generateObject, NoObjectGeneratedError, type UserContent } from 'ai'
 import { z } from 'zod'
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 import { wikiLinkSafe } from '../markdown/edit'
 import type { AiProviderConfig } from '../settings/schema'
 import { languageModel } from './language-model'
@@ -85,10 +85,10 @@ function classify(cause: unknown): Error {
   if (APICallError.isInstance(cause)) {
     const status = cause.statusCode ?? 0
     if (status === 401 || status === 403) {
-      return new ReflectError('auth', `the provider rejected the API key (${status})`)
+      return new DayJotError('auth', `the provider rejected the API key (${status})`)
     }
     if (status === 429 || status >= 500) {
-      return new ReflectError('network', `the provider is unavailable (${status})`)
+      return new DayJotError('network', `the provider is unavailable (${status})`)
     }
     if (status >= 400) {
       return new DescriptionRejectedError(cause.message)
@@ -98,7 +98,7 @@ function classify(cause: unknown): Error {
     return new DescriptionRejectedError(cause.message)
   }
   if (cause instanceof DOMException && cause.name === 'TimeoutError') {
-    return new ReflectError('network', 'the description request timed out')
+    return new DayJotError('network', 'the description request timed out')
   }
   return cause instanceof Error ? cause : new Error(String(cause))
 }
@@ -140,7 +140,7 @@ function normalizedTitle(candidate: string): string | null {
 }
 
 /**
- * Generate the title and description. Throws {@link ReflectError} (`auth`,
+ * Generate the title and description. Throws {@link DayJotError} (`auth`,
  * `network`) for transient/credential failures the caller should retry later,
  * and {@link DescriptionRejectedError} when the provider refuses this capture
  * itself.

@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react'
-import { foldTag, isTagName } from '@reflect/core'
+import { foldTag, isTagName } from '@dayjot/core'
 import { X } from 'lucide-react'
 import { useSettings } from '@/providers/settings-provider'
 import { SettingsField } from './field'

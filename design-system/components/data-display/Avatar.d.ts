@@ -7,7 +7,7 @@ export interface AvatarProps {
   name?: string
   /** Diameter in px. Default 32. */
   size?: number
-  /** Render Reflect's small round graph-color dot in this hex instead. */
+  /** Render DayJot's small round graph-color dot in this hex instead. */
   graphColor?: string
   style?: React.CSSProperties
 }

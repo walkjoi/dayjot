@@ -33,8 +33,8 @@ dist-ssr
 /target
 *.tsbuildinfo
 
-# Reflect graph index + local state (rebuildable projection; never committed)
-.reflect/
+# DayJot graph index + local state (rebuildable projection; never committed)
+.dayjot/
 
 # Claude Code session artifacts (shared hooks in settings.json stay tracked)
 .claude/*

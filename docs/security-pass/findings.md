@@ -146,5 +146,5 @@ defence-in-depth pattern.
 | **AI private enforcement** | `CloudSafe<T>` brand type forces every AI-bound payload through `assertCloudAllowed()` or `cloudSafe*()` constructors. TOCTOU live re-check from disk at every call site. |
 | **Capture inbox traversal** | `inbox_file()` rejects filenames with path separators or leading dots. |
 | **Capture envelope validation** | `captureEnvelopeSchema` validates `url` as `z.url().refine(isHttpUrl)`. |
-| **GitHub OAuth token storage** | `secret_*` IPC commands store/retrieve only from the OS keychain under the `reflect-open` service. |
+| **GitHub OAuth token storage** | `secret_*` IPC commands store/retrieve only from the OS keychain under the `dayjot-desktop` service. |
 | **HTML meta scraping** | `parsePageMeta` uses `DOMParser` (no script execution); scraped values capped at 500 chars before storage. |

@@ -1,4 +1,4 @@
-import type { OpenTask } from '@reflect/core'
+import type { OpenTask } from '@dayjot/core'
 
 /** The fields that identify a task: its note and the marker's offset in that note. */
 type TaskIdentity = Pick<OpenTask, 'notePath' | 'markerOffset'>

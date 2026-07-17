@@ -16,7 +16,7 @@ import {
   isNotePath,
   loadGithubAuth,
   parseGithubRemote,
-  ReflectError,
+  DayJotError,
   subscribeFileChanges,
   type ChangedFile,
   type GithubRepoRef,
@@ -24,7 +24,7 @@ import {
   type SyncEngine,
   type SyncStatus,
   type Unlisten,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { setBackupFlusher } from '@/lib/backup-flush'
 import { invalidateGithubAuth } from '@/lib/github-auth-state'
 import { startOperation } from '@/lib/operations'
@@ -216,7 +216,7 @@ export function createBackupController(options: BackupControllerOptions): Backup
    */
   async function adoptEngine(next: SyncEngine): Promise<boolean> {
     engine = next
-    // Spooled capture envelopes (`.reflect/inbox/`) are git-ignored and
+    // Spooled capture envelopes (`.dayjot/inbox/`) are git-ignored and
     // drained within seconds — they must not tick the commit debounce. The
     // drain's own note writes arrive as ordinary changes right after.
     const subscription = await subscribeFileChanges((changes) => {
@@ -385,7 +385,7 @@ export function createBackupController(options: BackupControllerOptions): Backup
   async function requireToken(): Promise<string> {
     const token = await getGithubToken(providerFetch)
     if (token === null) {
-      throw new ReflectError('auth', 'Connect GitHub first (no credential stored)')
+      throw new DayJotError('auth', 'Connect GitHub first (no credential stored)')
     }
     return token
   }
@@ -412,7 +412,7 @@ export function createBackupController(options: BackupControllerOptions): Backup
       }
       const [owner, repoName, ...rest] = repo.fullName.split('/')
       if (owner === undefined || repoName === undefined || rest.length > 0) {
-        throw new ReflectError('parse', `unexpected repository name from GitHub: ${repo.fullName}`)
+        throw new DayJotError('parse', `unexpected repository name from GitHub: ${repo.fullName}`)
       }
       // Align with the account's default branch for new repos so the first
       // push creates the branch GitHub already considers the default.

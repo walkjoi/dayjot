@@ -6,7 +6,7 @@ import {
   rewriteLinksForTitleChange,
   slugPathForTitle,
   writeNote,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { placeOldTitleAlias } from './alias-placement'
 import { moveNoteCarryingSession } from './move-note'
 import type { NoteContentOrigin } from './note-session'

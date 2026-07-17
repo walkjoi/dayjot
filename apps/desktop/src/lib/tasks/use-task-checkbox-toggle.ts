@@ -1,4 +1,4 @@
-import { type OpenTask } from '@reflect/core'
+import { type OpenTask } from '@dayjot/core'
 import { useTaskCheckboxAction } from '@/lib/tasks/use-task-checkbox-action'
 
 /**

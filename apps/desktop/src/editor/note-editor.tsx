@@ -8,7 +8,7 @@ import {
   type Ref,
 } from 'react'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { errorMessage, type TimeFormat } from '@reflect/core'
+import { errorMessage, type TimeFormat } from '@dayjot/core'
 import {
   type AcceptPendingReplacementOptions,
   type ExitBoundaryHandler,
@@ -46,10 +46,10 @@ import { cn } from '@/lib/utils'
 type WikilinkHoverRenderer = (hit: WikilinkHoverHit) => ReactNode | Promise<ReactNode>
 
 /**
- * Reflect's note editor: a thin wrapper over `@meowdown/react`'s
+ * DayJot's note editor: a thin wrapper over `@meowdown/react`'s
  * `<MeowdownEditor>`. meowdown owns the editing surface (wiki-link clicks,
  * image rendering/persistence, headings, placeholder, the `[[` menu); this
- * wrapper only adapts Reflect's prop shapes and exposes the imperative handle
+ * wrapper only adapts DayJot's prop shapes and exposes the imperative handle
  * the document pipeline binds to.
  *
  * The component is **uncontrolled**: `initialContent` is read once. Showing a
@@ -330,7 +330,7 @@ export function NoteEditor({
         })
         return
       }
-      // A `reflect://` link routes through the in-app deep-link pipeline —
+      // A `dayjot://` link routes through the in-app deep-link pipeline —
       // the OS opener would deny the scheme (and a round-trip could land on
       // another installed flavor). ⌘-click sends an *addressing* link to a
       // new window instead; a declined open (capture link, browser dev)
@@ -406,7 +406,7 @@ export function NoteEditor({
         // syntax ([[ wiki links, code spans, --- fences) — Plan 19 gate.
         // Autocorrect is independent and stays on (EditorInputTraits).
         spellCheck={isTouchEditorSurface() ? false : spellCheck}
-        // Reflect's implementation-neutral `12h`/`24h` maps to meowdown's
+        // DayJot's implementation-neutral `12h`/`24h` maps to meowdown's
         // `12`/`24` here at the boundary, like `markModeFromSyntax`.
         timeFormat={timeFormat === '24h' ? '24' : '12'}
         caretGlide={smoothCaretAnimation}
@@ -416,7 +416,7 @@ export function NoteEditor({
         // which a touch webview can express. Turning it off also drops the drop
         // indicator, which meowdown gates on the same prop.
         blockHandle={isTouchEditorSurface() ? false : blockHandle}
-        editorClassName={cn('reflect-editor', className)}
+        editorClassName={cn('dayjot-editor', className)}
         {...(titlePlaceholder !== undefined ? { placeholder: titlePlaceholder } : {})}
         onDocChange={handleDocChange}
         onWikilinkClick={handleWikilinkClick}
@@ -439,7 +439,7 @@ export function NoteEditor({
         <EditorInputTraits />
         <FormattingToolbarBridge />
         {renderWikilinkHoverCard !== undefined ? (
-          <WikilinkHoverCard className="reflect-hover-card">
+          <WikilinkHoverCard className="dayjot-hover-card">
             {renderWikilinkHoverCard}
           </WikilinkHoverCard>
         ) : null}

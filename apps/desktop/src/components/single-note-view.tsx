@@ -38,7 +38,7 @@ export function SingleNoteView({ path, dailyDate, heading }: SingleNoteViewProps
           lazy
           autoFocus
           className="flex grow flex-col"
-          gutterClassName="reflect-content-gutter"
+          gutterClassName="dayjot-content-gutter"
           editorClassName="grow"
         />
       </div>

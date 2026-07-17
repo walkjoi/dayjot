@@ -7,7 +7,7 @@ import {
   getNote,
   hasBridge,
   readNote,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { CONFLICT_SIDE_DOT } from '@/components/conflict-note-view'
 import { InlineAlert } from '@/components/inline-alert'
 import { Button } from '@/components/ui/button'

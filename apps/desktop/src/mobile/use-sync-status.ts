@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getConflictedNotes, hasBridge } from '@reflect/core'
+import { getConflictedNotes, hasBridge } from '@dayjot/core'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'
 import { mobileSyncStatus, type MobileSyncStatus } from '@/mobile/sync-status'
 import { useGraph } from '@/providers/graph-provider'

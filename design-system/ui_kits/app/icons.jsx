@@ -1,5 +1,5 @@
-/* Reflect app icons — thin-stroke line set (Lucide-style, 1.75 stroke) to
-   match Reflect's hand-built SVG icons. Exported to window for the kit. */
+/* DayJot app icons — thin-stroke line set (Lucide-style, 1.75 stroke) to
+   match DayJot's hand-built SVG icons. Exported to window for the kit. */
 const RIcon = (paths, vb = 24) => ({ size = 16, ...p }) => (
   <svg width={size} height={size} viewBox={`0 0 ${vb} ${vb}`} fill="none" stroke="currentColor"
        strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}>

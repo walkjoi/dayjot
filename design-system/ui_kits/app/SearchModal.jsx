@@ -1,5 +1,5 @@
-/* Reflect app — ⌘K command / search modal. Elevated card over a dim scrim. */
-const NS_S = 'ReflectDesignSystem_06b075'
+/* DayJot app — ⌘K command / search modal. Elevated card over a dim scrim. */
+const NS_S = 'DayJotDesignSystem_06b075'
 
 function SearchModal({ open, onClose, onOpenNote }) {
   const { Card, ShortcutKey } = window[NS_S]
@@ -16,7 +16,7 @@ function SearchModal({ open, onClose, onOpenNote }) {
 
   const results = [
     { icon: <I.Pencil size={15} />, label: 'Jump to today', meta: 'Daily notes' },
-    { icon: <I.Sparkles size={15} />, label: 'Ask Reflect AI…', meta: 'AI' },
+    { icon: <I.Sparkles size={15} />, label: 'Ask DayJot AI…', meta: 'AI' },
     { icon: <I.List size={15} />, label: 'Morning routine', meta: 'Note' },
     { icon: <I.List size={15} />, label: 'Design sync', meta: 'Note' },
     { icon: <I.Calendar size={15} />, label: 'The Beginning of Infinity', meta: 'Note' },

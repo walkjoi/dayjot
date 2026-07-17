@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getPinnedNotes, hasBridge, type PinnedNote } from '@reflect/core'
+import { getPinnedNotes, hasBridge, type PinnedNote } from '@dayjot/core'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'
 import { useGraph } from '@/providers/graph-provider'
 

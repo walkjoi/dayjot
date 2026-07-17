@@ -1,4 +1,4 @@
-import { splitFrontmatter } from '@reflect/core'
+import { splitFrontmatter } from '@dayjot/core'
 
 /**
  * Whether a note's visible markdown body has no authored content. Frontmatter

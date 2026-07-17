@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react'
 import { MoreHorizontal, Pin, PinOff, Share, Trash2 } from 'lucide-react'
-import { errorMessage } from '@reflect/core'
+import { errorMessage } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -34,7 +34,7 @@ interface NoteActionsMenuProps {
  * and delete-to-trash. Pin reflects the index's pinned set; {@link shareNote}
  * hands the note's body to the OS share sheet via the Web Share API
  * (`navigator.share`); delete confirms first (it's destructive, even if
- * recoverable from `.reflect/trash/`) and routes through
+ * recoverable from `.dayjot/trash/`) and routes through
  * {@link deleteOpenNote} so the open session is discarded rather than flushed.
  */
 export function NoteActionsMenu({ path, onDeleted }: NoteActionsMenuProps): ReactElement {

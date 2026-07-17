@@ -3,7 +3,7 @@ import React from 'react'
 /**
  * IconButton — a square, chromeless icon target (sidebar nav arrows,
  * toolbar actions, audio record). Hover paints the translucent grey wash
- * Reflect uses across menus and list rows.
+ * DayJot uses across menus and list rows.
  */
 export function IconButton({
   size = 28,

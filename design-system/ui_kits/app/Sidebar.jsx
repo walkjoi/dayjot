@@ -1,6 +1,6 @@
-/* Reflect app — left sidebar. Composes SearchField, IconButton, MenuItem,
+/* DayJot app — left sidebar. Composes SearchField, IconButton, MenuItem,
    ShortcutKey, Avatar from the design system bundle. */
-const NS = 'ReflectDesignSystem_06b075'
+const NS = 'DayJotDesignSystem_06b075'
 
 function Sidebar({ screen, onNavigate, onOpenSearch, pinned, selectedNote, onOpenNote }) {
   const { SearchField, IconButton, MenuItem, ShortcutKey, Avatar } = window[NS]

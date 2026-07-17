@@ -1,4 +1,4 @@
-import { splitFrontmatter } from '@reflect/core'
+import { splitFrontmatter } from '@dayjot/core'
 import { openSession } from '@/editor/open-documents'
 
 /**

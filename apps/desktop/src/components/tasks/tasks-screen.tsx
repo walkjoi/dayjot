@@ -15,7 +15,7 @@ import {
   hasBridge,
   type OpenTask,
   type TaskGroup,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useNoteLinkNavigation } from '@/hooks/use-note-link-navigation'

@@ -1,5 +1,5 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { hasBridge } from '@reflect/core'
+import { hasBridge } from '@dayjot/core'
 
 /**
  * The transport for direct app → AI-provider calls (BYOK, Plan 10). Inside

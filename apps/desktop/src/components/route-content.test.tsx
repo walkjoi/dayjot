@@ -2,7 +2,7 @@ import { act, render, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement } from 'react'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import { PaletteProvider, usePalette } from '@/components/command-palette/palette-provider'
 import { flushOpenDocuments } from '@/editor/open-documents'
 import type { NoteEditorHandle } from '@/editor/note-editor'
@@ -80,8 +80,8 @@ const indexFns = vi.hoisted(() => ({
   })),
   relatedNotes: vi.fn(async () => []),
 }))
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getBacklinksWithContext: indexFns.getBacklinksWithContext,
   relatedNotes: indexFns.relatedNotes,

@@ -48,8 +48,8 @@ function urlHost(url: string): string {
   }
 }
 
-const PAGE_TEXT_START = '<!-- reflect-capture-page-text:start -->'
-const PAGE_TEXT_END = '<!-- reflect-capture-page-text:end -->'
+const PAGE_TEXT_START = '<!-- dayjot-capture-page-text:start -->'
+const PAGE_TEXT_END = '<!-- dayjot-capture-page-text:end -->'
 
 /** The capture's display title: the page title, else the URL's host. */
 export function displayTitle(envelope: Pick<CaptureEnvelope, 'title' | 'url'>): string {

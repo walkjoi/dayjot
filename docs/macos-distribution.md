@@ -1,6 +1,6 @@
 # macOS Distribution Builds
 
-How to produce a signed, notarized macOS build of Reflect for distribution outside the
+How to produce a signed, notarized macOS build of DayJot for distribution outside the
 Mac App Store.
 
 ```bash
@@ -28,7 +28,7 @@ The helper lives at `apps/desktop/scripts/release-macos.mjs` and is exposed as
 2. **An Apple ID on the team with an app-specific password** for notarization. Create the
    password at [account.apple.com](https://account.apple.com) → Sign-In and Security →
    App-Specific Passwords, then run `pnpm release:macos setup`. The setup command stores
-   it in your login keychain (item `reflect-notary`) — the password never touches shell
+   it in your login keychain (item `dayjot-notary`) — the password never touches shell
    history or the repo.
 
 3. **Xcode Command Line Tools** (`xcode-select --install`) for `notarytool` and `stapler`.
@@ -36,7 +36,7 @@ The helper lives at `apps/desktop/scripts/release-macos.mjs` and is exposed as
 4. **The updater signing key** (for `publish`). Auto-update payloads are verified against
    the minisign public key committed in `tauri.conf.json` (`plugins.updater.pubkey`) —
    distinct from Apple signing. `pnpm release:macos setup-updater` generates the keypair,
-   stores the private key in your login keychain (item `reflect-updater`), and prints the
+   stores the private key in your login keychain (item `dayjot-updater`), and prints the
    public key to commit. **Losing the private key strands every installed app** (they
    reject anything not signed with it), so back it up; rotating it only reaches users via
    a release signed with the old key that ships the new pubkey.
@@ -56,7 +56,7 @@ can still build unsigned bundles with plain `pnpm tauri build`.
 1. Auto-detects the Developer ID identity from the keychain and derives the team ID.
 2. Loads notarization credentials (keychain item, or environment variables — see
    [Releasing from CI](#releasing-from-ci) below).
-3. Runs `pnpm tauri build --target <target> --bundles app`, which stages the `reflect`
+3. Runs `pnpm tauri build --target <target> --bundles app`, which stages the `dayjot`
    CLI sidecar for that target and signs the app bundle. The release helper then
    re-signs the bundled sidecars without the app's restricted entitlements, re-signs the
    `.app` with its entitlement file plus the flavor-specific identity entitlements from
@@ -79,8 +79,8 @@ can still build unsigned bundles with plain `pnpm tauri build`.
    stapled tickets — and fails loudly if any check is off.
 
 Bundles land under `target/<target-triple>/release/bundle/`, for example
-`target/aarch64-apple-darwin/release/bundle/macos/Reflect.app` and
-`target/x86_64-apple-darwin/release/bundle/dmg/Reflect_<version>_x86_64.dmg`.
+`target/aarch64-apple-darwin/release/bundle/macos/DayJot.app` and
+`target/x86_64-apple-darwin/release/bundle/dmg/DayJot_<version>_x86_64.dmg`.
 
 ## Commands and flags
 
@@ -141,7 +141,7 @@ before merging one.
    polish the changelog if needed (edit the PR branch — release-please regenerates the
    PR when new commits land, so polish last), and **merge it**.
 3. Everything else is automatic, ending with the `updater-beta` feed refresh and the
-   TestFlight upload. Installed Reflect Beta apps pick up the update.
+   TestFlight upload. Installed DayJot Beta apps pick up the update.
 4. The stable Release PR stays open and is rebased by the next push; merge it whenever
    the channel is ready to graduate.
 
@@ -217,7 +217,7 @@ release-please created when the Release PR merged, or — when no release exists
 creating one itself. The release carries two notarized DMGs, two
 updater archives (one per architecture, each with its `.sig`), and a single
 `latest.json` manifest with both `darwin-aarch64` and `darwin-x86_64` platform entries.
-Published DMGs use fixed names (`Reflect_aarch64.dmg` and `Reflect_x86_64.dmg`
+Published DMGs use fixed names (`DayJot_aarch64.dmg` and `DayJot_x86_64.dmg`
 for stable) because the release tag already identifies the version. That keeps
 `releases/latest/download/<asset>` stable across releases. Updater archives remain
 versioned because each manifest points at an immutable release payload.
@@ -251,8 +251,8 @@ GitHub **pre-release** automatically. `releases/latest` ignores pre-releases, so
 stable installs never see a beta.
 
 Beta builds use the dedicated `updater-beta` release instead. Every non-draft beta
-publish replaces its `latest.json`, `Reflect.Beta_aarch64.dmg`, and
-`Reflect.Beta_x86_64.dmg` assets with `--clobber`. The fixed DMG names give the README
+publish replaces its `latest.json`, `DayJot.Beta_aarch64.dmg`, and
+`DayJot.Beta_x86_64.dmg` assets with `--clobber`. The fixed DMG names give the README
 permanent fresh-install links, while the manifest still points installed apps at the
 immutable versioned updater archives. Draft beta releases do not update the moving
 assets. The DMGs are replaced before `latest.json`; if that downstream job fails, rerun
@@ -269,15 +269,15 @@ build time, so releases are branch-independent.
 Cutting a beta means merging the beta Release PR; a stable release means merging the
 stable Release PR (see [Cutting a release](#cutting-a-release-release-prs) above).
 
-## Build flavors (Reflect / Reflect Beta / Reflect Dev)
+## Build flavors (DayJot / DayJot Beta / DayJot Dev)
 
 Three flavors ship as distinct, coexisting apps:
 
 | Flavor       | Version        | productName  | identifier                 | Icon         | Updater feed      |
 | ------------ | -------------- | ------------ | -------------------------- | ------------ | ----------------- |
-| Reflect      | `X.Y.Z`        | Reflect      | `app.reflect.desktop`      | blue/violet  | `releases/latest` |
-| Reflect Beta | `X.Y.Z-beta.N` | Reflect Beta | `app.reflect.desktop.beta` | purple/violet | `updater-beta`    |
-| Reflect Dev  | local builds   | Reflect Dev  | `app.reflect.desktop.dev`  | green        | `updater-dev-noop` (no-op) |
+| DayJot      | `X.Y.Z`        | DayJot      | `app.dayjot.desktop`      | blue/violet  | `releases/latest` |
+| DayJot Beta | `X.Y.Z-beta.N` | DayJot Beta | `app.dayjot.desktop.beta` | purple/violet | `updater-beta`    |
+| DayJot Dev  | local builds   | DayJot Dev  | `app.dayjot.desktop.dev`  | green        | `updater-dev-noop` (no-op) |
 
 The base `tauri.conf.json` is the stable flavor and uses the shipped gradient icon
 (`icons/`). Beta and dev are config overlays (`src-tauri/tauri.beta.conf.json`,
@@ -295,26 +295,26 @@ off anyway). The stable feed is pinned into stable builds at build time by
 
 Distinct identifiers give each flavor its own webview storage and embeddings cache.
 Settings, recent graphs and keychain secrets are currently **shared** across flavors (the
-`reflect-open` config dir and keychain service are hardcoded, not derived from the
+`dayjot-desktop` config dir and keychain service are hardcoded, not derived from the
 identifier).
 
 Local builds:
 
 ```bash
-pnpm tauri:dev                                   # run Reflect Dev (green), isolated identifier
-pnpm tauri:build:dev                             # bundle Reflect Dev
-pnpm tauri:build:beta                            # bundle Reflect Beta locally (unsigned)
+pnpm tauri:dev                                   # run DayJot Dev (green), isolated identifier
+pnpm tauri:build:dev                             # bundle DayJot Dev
+pnpm tauri:build:beta                            # bundle DayJot Beta locally (unsigned)
 pnpm release:macos --flavor=beta --no-notarize   # signed-only beta, for local checks
 ```
 
 Because GitHub rewrites spaces in uploaded asset names to dots, the updater manifest URL
-for "Reflect Beta" is sanitized to `Reflect.Beta.app.tar.gz` in `writeUpdaterManifest`.
+for "DayJot Beta" is sanitized to `DayJot.Beta.app.tar.gz` in `writeUpdaterManifest`.
 Do not "fix" the space back, or beta auto-update 404s.
 
-**Beta tester migration (one-time):** before flavors, beta builds were a plain "Reflect"
-(`app.reflect.desktop`) that merely polled the beta feed. The first flavored beta is a new
-app (`app.reflect.desktop.beta`, "Reflect Beta"), so existing beta installs do not migrate
-cleanly. Tell testers to delete the old "Reflect" beta and install "Reflect Beta" fresh.
+**Beta tester migration (one-time):** before flavors, beta builds were a plain "DayJot"
+(`app.dayjot.desktop`) that merely polled the beta feed. The first flavored beta is a new
+app (`app.dayjot.desktop.beta`, "DayJot Beta"), so existing beta installs do not migrate
+cleanly. Tell testers to delete the old "DayJot" beta and install "DayJot Beta" fresh.
 Stable installs are unaffected (same identifier and the shipped icon).
 
 ## Releasing from CI
@@ -329,8 +329,8 @@ Each build job runs the same DMG notarization, Gatekeeper checks, and updater ar
 signing as a local release, then uploads its artifacts to the workflow. A final publish
 job downloads both sets, writes the combined `latest.json`, and fills the release-please
 draft release: it keeps the changelog body, appends the Mac download chooser that maps
-Apple Silicon to `Reflect_aarch64.dmg` and Intel to `Reflect_x86_64.dmg` (with
-`Reflect.Beta` names for beta releases), and undrafts the release as its last step. The
+Apple Silicon to `DayJot_aarch64.dmg` and Intel to `DayJot_x86_64.dmg` (with
+`DayJot.Beta` names for beta releases), and undrafts the release as its last step. The
 downstream beta-sync job then downloads the canonical DMGs and manifest from that
 tagged release before refreshing `updater-beta`. The workflow normally runs via
 `workflow_call` from
@@ -353,7 +353,7 @@ under **Settings → Secrets and variables → Actions**:
 | `APPLE_API_KEY` | App Store Connect API key ID, for notarization (preferred in CI — not tied to a personal Apple ID) |
 | `APPLE_API_ISSUER` | The API key's issuer UUID |
 | `APPLE_API_KEY_CONTENT` | The `.p8` key file's content; the workflow stages it on disk and sets `APPLE_API_KEY_PATH`, the variable the script reads |
-| `TAURI_SIGNING_PRIVATE_KEY` | The updater private key: `security find-generic-password -s reflect-updater -w \| base64 --decode` |
+| `TAURI_SIGNING_PRIVATE_KEY` | The updater private key: `security find-generic-password -s dayjot-updater -w \| base64 --decode` |
 
 Notes:
 
@@ -378,8 +378,8 @@ on the runner keychain setup.
 - **Notarization fails (`status: Invalid`)** — the script automatically prints the notary
   log, which lists each offending file. Common cause: a binary that wasn't signed with
   hardened runtime.
-- **Bundled `reflect` or `reflect-capture-host` exits `Killed: 9`** — check its
-  entitlements with `codesign -d --entitlements :- Reflect.app/Contents/MacOS/reflect`.
+- **Bundled `dayjot` or `dayjot-capture-host` exits `Killed: 9`** — check its
+  entitlements with `codesign -d --entitlements :- DayJot.app/Contents/MacOS/dayjot`.
   Sidecars must not carry the app's restricted iCloud entitlements; the release verifier
   launches both sidecars to catch this.
 - **Intel sidecar launch fails on Apple Silicon with `Bad CPU type in executable`** —

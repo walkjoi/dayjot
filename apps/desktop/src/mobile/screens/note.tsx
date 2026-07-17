@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react'
-import { isUntitledNotePath } from '@reflect/core'
+import { isUntitledNotePath } from '@dayjot/core'
 import { NotePane } from '@/components/note-pane'
 import { IncomingBacklinks } from '@/mobile/incoming-backlinks'
 import { MOBILE_CONTENT_GUTTER } from '@/mobile/mobile-content-gutter'

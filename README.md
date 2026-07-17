@@ -1,22 +1,26 @@
-# Reflect
+# DayJot
 
 Plain-file notes for Mac and iPhone: daily notes, wiki links, local search,
 and optional AI over your own Markdown.
 
-[![Release](https://img.shields.io/github/v/release/team-reflect/reflect-open)](https://github.com/team-reflect/reflect-open/releases/latest)
-[![CI](https://github.com/team-reflect/reflect-open/actions/workflows/ci.yml/badge.svg)](https://github.com/team-reflect/reflect-open/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/walkjoi/dayjot)](https://github.com/walkjoi/dayjot/releases/latest)
+[![CI](https://github.com/walkjoi/dayjot/actions/workflows/ci.yml/badge.svg)](https://github.com/walkjoi/dayjot/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Reflect is an open-source note-taking app built around a folder of Markdown
+DayJot is an open-source note-taking app built around a folder of Markdown
 files. It opens to today's note, lets `[[wiki links]]` connect people,
 projects, and ideas, and keeps search and backlinks fast without turning your
 notes into an app-only database.
 
-The app does not require a Reflect account. Notes live in a folder you choose,
+The app does not require a DayJot account. Notes live in a folder you choose,
 and optional services such as AI providers, transcription, iCloud, GitHub, or
 another git remote are connected directly by the user.
 
-<img width="2926" height="1800" alt="Reflect" src="https://github.com/user-attachments/assets/6da0e0d2-3f25-4fc4-850c-b764548c3abe" />
+DayJot is an independent fork of
+[Reflect](https://github.com/team-reflect/reflect-open) (MIT), renamed and
+maintained separately. Importing a Reflect V1 export is still supported.
+
+<img width="2926" height="1800" alt="DayJot" src="https://github.com/user-attachments/assets/6da0e0d2-3f25-4fc4-850c-b764548c3abe" />
 
 ## Features
 
@@ -35,24 +39,28 @@ another git remote are connected directly by the user.
   from Chrome.
 - **Sync choices:** use iCloud Drive for file sync, or git/GitHub for
   versioned backup.
-- **CLI:** `reflect today`, `reflect search`, and `reflect show` are available
+- **CLI:** `dayjot today`, `dayjot search`, and `dayjot show` are available
   for scripts and agents. See [docs/cli.md](docs/cli.md).
 
 ## Install
 
 1. **Install the Mac app.** Download the latest release for your Mac:
-   - **Stable:** [Apple silicon (M-series)](https://github.com/team-reflect/reflect-open/releases/latest/download/Reflect_aarch64.dmg) · [Intel](https://github.com/team-reflect/reflect-open/releases/latest/download/Reflect_x86_64.dmg)
-   - **Beta:** [Apple silicon (M-series)](https://github.com/team-reflect/reflect-open/releases/download/updater-beta/Reflect.Beta_aarch64.dmg) · [Intel](https://github.com/team-reflect/reflect-open/releases/download/updater-beta/Reflect.Beta_x86_64.dmg)
+   - **Stable:** [Apple silicon (M-series)](https://github.com/walkjoi/dayjot/releases/latest/download/DayJot_aarch64.dmg) · [Intel](https://github.com/walkjoi/dayjot/releases/latest/download/DayJot_x86_64.dmg)
+   - **Beta:** [Apple silicon (M-series)](https://github.com/walkjoi/dayjot/releases/download/updater-beta/DayJot.Beta_aarch64.dmg) · [Intel](https://github.com/walkjoi/dayjot/releases/download/updater-beta/DayJot.Beta_x86_64.dmg)
 
-   Each build is signed, notarized, and auto-updated from GitHub Releases. You
-   can also [view all releases](https://github.com/team-reflect/reflect-open/releases).
-2. **Install the iOS beta.** Join
-   [TestFlight](https://testflight.apple.com/join/j2eEz43d). The iOS app uses
-   the same plain-file graph and sync options as the Mac app.
-3. **Install the Chrome extension.** Add
-   [Reflect Capture from the Chrome Web Store](https://chromewebstore.google.com/detail/reflect-capture/ccabifmooehighoonjeiololjfofkhkd)
-   to save the current page, selected text, screenshots, and optional page text
-   from Chrome.
+   Releases produced by this repo's pipeline are signed, notarized, and
+   auto-updated from GitHub Releases (this requires your own Apple Developer
+   credentials — see [docs/macos-distribution.md](docs/macos-distribution.md)).
+   You can also [view all releases](https://github.com/walkjoi/dayjot/releases).
+2. **Install the iOS beta.** The iOS app uses the same plain-file graph and
+   sync options as the Mac app. Distributing it through TestFlight requires
+   your own App Store Connect setup — see
+   [docs/ios-testflight.md](docs/ios-testflight.md).
+3. **Install the Chrome extension.** Build and load
+   [the capture extension](apps/extension/README.md) from source to save the
+   current page, selected text, screenshots, and optional page text from
+   Chrome. (The Chrome Web Store carries the upstream Reflect Capture listing,
+   which targets the Reflect app, not DayJot.)
 
 You can also [build from source](#building-from-source).
 
@@ -60,7 +68,7 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## Your Notes Are Files
 
-Reflect calls a notes folder a **graph**. A graph is a folder you can inspect,
+DayJot calls a notes folder a **graph**. A graph is a folder you can inspect,
 back up, sync, or edit with other tools:
 
 ```text
@@ -71,13 +79,13 @@ my-graph/
 └── audio-memos/            # Audio recordings and transcripts
 ```
 
-Markdown files are the source of truth. Reflect adds search, backlinks, tags,
+Markdown files are the source of truth. DayJot adds search, backlinks, tags,
 and related notes on top, but the files remain usable in any Markdown editor.
 
 ## Sync and Privacy
 
 For simple file sync across Apple devices, create your graph inside an
-iCloud-synced folder such as `iCloud Drive/ReflectGraph`.
+iCloud-synced folder such as `iCloud Drive/DayJotGraph`.
 
 For versioned backup or non-iCloud sync, connect GitHub in the app or add
 [any SSH git remote](docs/generic-git-remotes.md). Git sync stores the Markdown
@@ -96,8 +104,8 @@ Prerequisites:
 - Xcode Command Line Tools
 
 ```bash
-git clone https://github.com/team-reflect/reflect-open.git
-cd reflect-open
+git clone https://github.com/walkjoi/dayjot.git
+cd dayjot
 corepack enable
 pnpm install
 pnpm tauri dev
@@ -106,12 +114,12 @@ pnpm tauri build
 
 ## Project Layout
 
-Reflect is a pnpm/Turborepo monorepo:
+DayJot is a pnpm/Turborepo monorepo:
 
 ```text
-reflect-open/
+dayjot/
 ├── apps/desktop/          # Mac and iOS app
-├── apps/cli/              # `reflect` CLI
+├── apps/cli/              # `dayjot` CLI
 ├── apps/extension/        # Chrome capture extension
 ├── apps/native-host/      # Browser capture helper
 ├── packages/core/         # Shared TypeScript logic
@@ -136,7 +144,7 @@ pnpm test             # vitest; use --run path/to/test for one file
 pnpm check            # typecheck + lint
 
 # Rust tests that compile the desktop crate need sidecars staged first
-pnpm --filter @reflect/desktop sidecar
+pnpm --filter @dayjot/desktop sidecar
 cargo test --workspace
 ```
 
@@ -155,11 +163,11 @@ pnpm release:ios testflight --build-number=123 --wait
 
 ## Status
 
-Reflect is in beta and used daily. The current focus is the Mac app, iOS
+DayJot is in beta and used daily. The current focus is the Mac app, iOS
 companion, browser capture, local-first data model, and sync reliability.
 
 Windows, Android, and a plugin API are out of scope for now. See the
-[V2 product vision](docs/reflect-v2-product-vision.md) and the implementation
+[V2 product vision](docs/dayjot-v2-product-vision.md) and the implementation
 plans in [docs/plans/](docs/plans/) for the longer-term direction.
 
 ## License

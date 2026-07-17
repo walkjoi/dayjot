@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { parseConflictMarkers, type ConflictSide } from '@reflect/core'
+import { parseConflictMarkers, type ConflictSide } from '@dayjot/core'
 import { cn } from '@/lib/utils'
 
 /**
@@ -44,7 +44,7 @@ interface ConflictNoteViewProps {
 export function ConflictNoteView({ content }: ConflictNoteViewProps): ReactElement {
   const segments = parseConflictMarkers(content)
   return (
-    <div className="reflect-protected-note text-sm leading-relaxed">
+    <div className="dayjot-protected-note text-sm leading-relaxed">
       {segments.map((segment, index) =>
         segment.kind === 'text' ? (
           <pre key={index} className="whitespace-pre-wrap">

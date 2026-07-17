@@ -1,9 +1,9 @@
 import {
   indexedNoteSchema,
-  ReflectError,
+  DayJotError,
   type AppPlatform,
   type IpcBridge,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { z } from 'zod'
 import type { DevFileStore } from '@/dev/dev-file-store'
 import type { DevIndexDb } from '@/dev/dev-index-db'
@@ -114,7 +114,7 @@ export function createDevBridge(backend: DevBridgeBackend): IpcBridge {
         const { path } = pathArgsSchema.parse(args)
         const contents = files.read(path)
         if (contents === null) {
-          throw new ReflectError('notFound', `no such note: ${path}`)
+          throw new DayJotError('notFound', `no such note: ${path}`)
         }
         return contents
       }
@@ -125,7 +125,7 @@ export function createDevBridge(backend: DevBridgeBackend): IpcBridge {
       case 'note_create': {
         const { path, contents, generation } = createArgsSchema.parse(args)
         if (generation !== graphInfo.generation) {
-          throw new ReflectError(
+          throw new DayJotError(
             'io',
             'the graph changed since this command was issued; dropping it',
           )
@@ -145,10 +145,10 @@ export function createDevBridge(backend: DevBridgeBackend): IpcBridge {
       case 'note_move_indexed': {
         const { from, to } = moveArgsSchema.parse(args)
         if (!files.exists(from)) {
-          throw new ReflectError('notFound', `cannot move note: ${from} does not exist`)
+          throw new DayJotError('notFound', `cannot move note: ${from} does not exist`)
         }
         if (files.exists(to)) {
-          throw new ReflectError('io', `cannot move note: ${to} already exists`)
+          throw new DayJotError('io', `cannot move note: ${to} already exists`)
         }
         // Index first: it can refuse (occupied path), and a refused move must
         // leave the file untouched — the in-memory stand-in for Rust's
@@ -169,7 +169,7 @@ export function createDevBridge(backend: DevBridgeBackend): IpcBridge {
         const { path } = pathArgsSchema.parse(args)
         const contents = assets.get(path)
         if (contents === undefined) {
-          throw new ReflectError('notFound', `asset not found: ${path}`)
+          throw new DayJotError('notFound', `asset not found: ${path}`)
         }
         return contents
       }
@@ -268,7 +268,7 @@ export function createDevBridge(backend: DevBridgeBackend): IpcBridge {
 
       default:
         console.error(`[dev-bridge] unimplemented command "${command}"`, args)
-        throw new ReflectError('unknown', `dev bridge: unimplemented command "${command}"`)
+        throw new DayJotError('unknown', `dev bridge: unimplemented command "${command}"`)
     }
   }
 

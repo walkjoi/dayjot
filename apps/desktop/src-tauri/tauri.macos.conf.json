@@ -2,14 +2,11 @@
   "$schema": "https://schema.tauri.app/config/2",
   "bundle": {
     "externalBin": [
-      "binaries/reflect",
-      "binaries/reflect-capture-host"
+      "binaries/dayjot",
+      "binaries/dayjot-capture-host"
     ],
     "macOS": {
-      "entitlements": "Entitlements.plist",
-      "files": {
-        "embedded.provisionprofile": "Reflect.provisionprofile"
-      }
+      "entitlements": "Entitlements.plist"
     }
   }
 }

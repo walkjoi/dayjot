@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import type { NoteRow } from '@reflect/core'
+import type { NoteRow } from '@dayjot/core'
 import {
   applyNoteRowOverlay,
   getNoteRowOverlay,

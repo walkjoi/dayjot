@@ -3,7 +3,7 @@
 - **Status:** Proposed (decision deferred — this record exists to inform it)
 - **Date:** 2026-06-12
 - **Scope:** The write path between the React webview and the SQLite index
-  (`<graph>/.reflect/index.sqlite`). Reads are out of scope — they already ship
+  (`<graph>/.dayjot/index.sqlite`). Reads are out of scope — they already ship
   Kysely-compiled `SELECT`s over the read-only `db_query` bridge and that is not
   in question.
 - **Decision driver:** Could a generic, generation-gated, transactional
@@ -321,7 +321,7 @@ bad trade.
   opt-in; (b) the docs ship **no SQL-injection / untrusted-webview warning** —
   the security story is delegated entirely to "don't grant `allow-execute` if you
   don't want writes." It is acceptable practice **only for apps whose renderer is
-  trusted and renders no untrusted content** — exactly the assumption Reflect
+  trusted and renders no untrusted content** — exactly the assumption DayJot
   cannot make (untrusted markdown + LLM output, `csp: null`). (Mild mitigation:
   the plugin confines the DB file to `app_config_dir()`, so `load()` can't point
   at arbitrary paths — but that doesn't constrain SQL run against the allowed DB.)
@@ -353,7 +353,7 @@ bad trade.
   by Signal's own renderer XSS→RCE history (CVE-2018-11101, HTML injection in
   quoted replies). The most security-conscious mainstream Electron app in this
   class chose exactly Option A.
-- **Joplin** — an untrusted-markdown note app like Reflect — shipped a string of
+- **Joplin** — an untrusted-markdown note app like DayJot — shipped a string of
   XSS→RCE CVEs from content rendering (CVE-2018-1000534, CVE-2022-40277,
   CVE-2024-49362). The lesson isn't SQL-specific: it establishes that
   markdown-rendering note apps are a *proven* injection target, making "assume
@@ -364,7 +364,7 @@ bad trade.
 - **In-renderer SQLite (`wa-sqlite`/`absurd-sql`, and Logseq's DB version /
   Notion web)** dissolves the question differently — the DB lives *inside* the
   untrusted zone, so there's no IPC boundary to protect (a renderer XSS owns the
-  DB by construction). Reflect explicitly rejected this (Plan 04: the native
+  DB by construction). DayJot explicitly rejected this (Plan 04: the native
   process must hold the graph write lock; a wa-sqlite VFS bridging pages over IPC
   "reintroduces Rust into the data path"). Since we keep the DB in Rust *on
   purpose*, the boundary is worth keeping meaningful — a generic `db_execute`
@@ -374,10 +374,10 @@ bad trade.
 **Synthesis.** Raw-SQL-over-IPC exists and ships (`tauri-plugin-sql`), but it is
 *supported, not blessed*: off by default, gated only at all-or-nothing command
 granularity, shipped with no compromised-webview guidance — acceptable only under
-a "trusted first-party frontend, no untrusted content" assumption Reflect's
+a "trusted first-party frontend, no untrusted content" assumption DayJot's
 threat model explicitly violates. The security-conscious local-first apps that
 render untrusted content converge on **typed, whitelisted write channels**
-(Signal being the clearest exemplar). Reflect is squarely in the "renders
+(Signal being the clearest exemplar). DayJot is squarely in the "renders
 untrusted content" bucket, which puts it on the typed-command side of the
 consensus. (Evidence caveat: there is no *single* CVE for a SQL-bridge design
 flaw being exploited — the risk is inferred from the well-documented XSS/origin

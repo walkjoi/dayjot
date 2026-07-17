@@ -39,9 +39,9 @@ jobs:
 
       - name: Verify generated DB types are current
         run: |
-          pnpm --filter @reflect/db db:codegen
+          pnpm --filter @dayjot/db db:codegen
           git diff --exit-code packages/db/src/schema.gen.ts \
-            || (echo "::error::schema.gen.ts is stale — run 'pnpm --filter @reflect/db db:codegen' and commit the result." && exit 1)
+            || (echo "::error::schema.gen.ts is stale — run 'pnpm --filter @dayjot/db db:codegen' and commit the result." && exit 1)
 
       - name: Lint (oxlint)
         run: pnpm lint
@@ -50,7 +50,7 @@ jobs:
         run: pnpm typecheck
 
       - name: Test non-desktop packages
-        run: pnpm turbo run test --filter='!@reflect/desktop'
+        run: pnpm turbo run test --filter='!@dayjot/desktop'
 
       - name: Build
         run: pnpm build
@@ -80,7 +80,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Test desktop shard
-        run: pnpm --filter @reflect/desktop exec vitest run --shard=${{ matrix.shard }}/3
+        run: pnpm --filter @dayjot/desktop exec vitest run --shard=${{ matrix.shard }}/3
 
   rust:
     name: fmt · clippy · test (Rust)
@@ -136,7 +136,7 @@ jobs:
 
       # tauri-build requires the sidecar to exist before the desktop crate's
       # build script runs (clippy/test compile it), so stage the CLI first.
-      - name: Stage the reflect CLI sidecar
+      - name: Stage the dayjot CLI sidecar
         run: node apps/desktop/scripts/build-sidecar.mjs
 
       - name: Format check

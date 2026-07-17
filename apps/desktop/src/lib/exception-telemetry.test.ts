@@ -7,7 +7,7 @@ import {
 } from './exception-telemetry'
 
 describe('parseExceptionTelemetryDsn', () => {
-  it('accepts only the production Reflect Sentry project', () => {
+  it('accepts only the production DayJot Sentry project', () => {
     expect(
       parseExceptionTelemetryDsn(
         ' https://0123456789abcdef0123456789abcdef@o463484.ingest.us.sentry.io/4511705649971200 ',
@@ -35,7 +35,7 @@ describe('scrubExceptionEvent', () => {
       type: undefined,
       event_id: '0123456789abcdef0123456789abcdef',
       timestamp: 1_725_000_000,
-      release: 'reflect@0.4.0-beta.45',
+      release: 'dayjot@0.4.0-beta.45',
       environment: 'production',
       message: 'Could not open /Users/alex/Notes/Customers/Acme.md',
       transaction: '/Users/alex/Notes',
@@ -55,7 +55,7 @@ describe('scrubExceptionEvent', () => {
         images: [
           {
             type: 'sourcemap',
-            code_file: 'file:///Users/alex/reflect/dist/assets/main-ABC123.js',
+            code_file: 'file:///Users/alex/dayjot/dist/assets/main-ABC123.js',
             debug_id: '12345678-1234-1234-1234-123456789abc',
           },
           {
@@ -78,12 +78,12 @@ describe('scrubExceptionEvent', () => {
             stacktrace: {
               frames: [
                 {
-                  filename: 'file:///Users/alex/reflect/dist/assets/main-ABC123.js?graph=Customers',
+                  filename: 'file:///Users/alex/dayjot/dist/assets/main-ABC123.js?graph=Customers',
                   function: 'openDailyNote',
                   lineno: 42,
                   colno: 7,
                   in_app: true,
-                  abs_path: '/Users/alex/reflect/dist/assets/main-ABC123.js',
+                  abs_path: '/Users/alex/dayjot/dist/assets/main-ABC123.js',
                   context_line: 'throw new Error(note.title)',
                   pre_context: ['const title = note.title'],
                   post_context: ['sendRequest(note.content)'],
@@ -100,7 +100,7 @@ describe('scrubExceptionEvent', () => {
       type: undefined,
       event_id: '0123456789abcdef0123456789abcdef',
       timestamp: 1_725_000_000,
-      release: 'reflect@0.4.0-beta.45',
+      release: 'dayjot@0.4.0-beta.45',
       environment: 'production',
       level: 'error',
       platform: 'javascript',
@@ -140,7 +140,7 @@ describe('scrubExceptionEvent', () => {
     const event: ErrorEvent = {
       type: undefined,
       event_id: 'person@example.com',
-      release: 'reflect@0.4.0-/Users/alex',
+      release: 'dayjot@0.4.0-/Users/alex',
       environment: 'person@example.com',
       exception: {
         values: [
@@ -194,7 +194,7 @@ describe('createExceptionTelemetryOptions', () => {
   it('enables only exception integrations and disables ambient collection', () => {
     const options = createExceptionTelemetryOptions(
       'https://public@example.ingest.sentry.io/123',
-      'reflect@0.4.0-beta.45',
+      'dayjot@0.4.0-beta.45',
     )
 
     expect(options.defaultIntegrations).toBe(false)

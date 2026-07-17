@@ -5,6 +5,6 @@ export const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
 export function openRouterAttributionHeaders(): Record<string, string> {
   return {
     'HTTP-Referer': 'https://reflect.app',
-    'X-OpenRouter-Title': 'Reflect',
+    'X-OpenRouter-Title': 'DayJot',
   }
 }

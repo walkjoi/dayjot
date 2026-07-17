@@ -16,8 +16,8 @@ const readNote = vi.hoisted(() => vi.fn<(path: string) => Promise<string>>())
 const openRouteInNewWindow = vi.hoisted(() =>
   vi.fn<(route: NoteRoute) => Promise<boolean>>(),
 )
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   suggestWikiTargets,
   searchWithFilters,

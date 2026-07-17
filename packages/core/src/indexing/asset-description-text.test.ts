@@ -14,7 +14,7 @@ const readNoteMock = vi.mocked(readNote)
 
 const notFound = (): unknown => ({ kind: 'notFound', message: 'missing' })
 
-/** Description files keyed by their `.reflect.md` path. */
+/** Description files keyed by their `.dayjot.md` path. */
 const files = new Map<string, string>()
 
 beforeEach(() => {
@@ -36,37 +36,37 @@ describe('gatherAssetDescriptionText', () => {
 
   it('reads each asset description body, stripping frontmatter, joined', async () => {
     files.set(
-      'assets/a.png.reflect.md',
-      '---\nreflectAsset: true\nsource: assets/a.png\n---\n\nA flow diagram of the pipeline.\n',
+      'assets/a.png.dayjot.md',
+      '---\ndayjotAsset: true\nsource: assets/a.png\n---\n\nA flow diagram of the pipeline.\n',
     )
-    files.set('assets/b.pdf.reflect.md', '---\nreflectAsset: true\n---\n\nQ4 revenue report.\n')
+    files.set('assets/b.pdf.dayjot.md', '---\ndayjotAsset: true\n---\n\nQ4 revenue report.\n')
 
     const text = await gatherAssetDescriptionText(['assets/a.png', 'assets/b.pdf'])
 
     expect(text).toBe('A flow diagram of the pipeline.\n\nQ4 revenue report.')
-    expect(text).not.toContain('reflectAsset')
+    expect(text).not.toContain('dayjotAsset')
   })
 
   it('skips assets with no description file', async () => {
-    files.set('assets/a.png.reflect.md', '---\nreflectAsset: true\n---\n\nDescribed.\n')
+    files.set('assets/a.png.dayjot.md', '---\ndayjotAsset: true\n---\n\nDescribed.\n')
     // assets/b.pdf has no description yet
     expect(await gatherAssetDescriptionText(['assets/a.png', 'assets/b.pdf'])).toBe('Described.')
   })
 
   it('folds an asset referenced twice only once', async () => {
-    files.set('assets/a.png.reflect.md', '---\nreflectAsset: true\n---\n\nOnce.\n')
+    files.set('assets/a.png.dayjot.md', '---\ndayjotAsset: true\n---\n\nOnce.\n')
     expect(await gatherAssetDescriptionText(['assets/a.png', 'assets/a.png'])).toBe('Once.')
     expect(readNoteMock).toHaveBeenCalledTimes(1)
   })
 
   it('also folds a user-authored description file (no managed marker)', async () => {
-    files.set('assets/a.png.reflect.md', '# My own caption\n\nHand-written notes about this image.\n')
+    files.set('assets/a.png.dayjot.md', '# My own caption\n\nHand-written notes about this image.\n')
     const text = await gatherAssetDescriptionText(['assets/a.png'])
     expect(text).toContain('Hand-written notes about this image.')
   })
 
   it('caps the combined text', async () => {
-    files.set('assets/a.png.reflect.md', 'x'.repeat(MAX_ASSET_TEXT_CHARS + 5_000))
+    files.set('assets/a.png.dayjot.md', 'x'.repeat(MAX_ASSET_TEXT_CHARS + 5_000))
     const text = await gatherAssetDescriptionText(['assets/a.png'])
     expect(text.length).toBe(MAX_ASSET_TEXT_CHARS)
   })
@@ -79,8 +79,8 @@ describe('gatherAssetDescriptionText', () => {
 
 describe('gatherAssetDescriptionBodies', () => {
   it('returns per-asset bodies attributed to their asset paths', async () => {
-    files.set('assets/a.png.reflect.md', '---\nreflectAsset: true\n---\n\nA flow diagram.\n')
-    files.set('assets/b.pdf.reflect.md', '---\nreflectAsset: true\n---\n\nQ4 revenue report.\n')
+    files.set('assets/a.png.dayjot.md', '---\ndayjotAsset: true\n---\n\nA flow diagram.\n')
+    files.set('assets/b.pdf.dayjot.md', '---\ndayjotAsset: true\n---\n\nQ4 revenue report.\n')
 
     const bodies = await gatherAssetDescriptionBodies(['assets/a.png', 'assets/b.pdf'])
 
@@ -91,8 +91,8 @@ describe('gatherAssetDescriptionBodies', () => {
   })
 
   it('skips missing descriptions, empty bodies, and repeated assets', async () => {
-    files.set('assets/a.png.reflect.md', '---\nreflectAsset: true\n---\n\nDescribed.\n')
-    files.set('assets/empty.png.reflect.md', '---\nreflectAsset: true\n---\n\n  \n')
+    files.set('assets/a.png.dayjot.md', '---\ndayjotAsset: true\n---\n\nDescribed.\n')
+    files.set('assets/empty.png.dayjot.md', '---\ndayjotAsset: true\n---\n\n  \n')
 
     const bodies = await gatherAssetDescriptionBodies([
       'assets/a.png',
@@ -106,8 +106,8 @@ describe('gatherAssetDescriptionBodies', () => {
   })
 
   it('stops accumulating once the combined length reaches the cap', async () => {
-    files.set('assets/a.png.reflect.md', 'x'.repeat(MAX_ASSET_TEXT_CHARS))
-    files.set('assets/b.png.reflect.md', 'never reached')
+    files.set('assets/a.png.dayjot.md', 'x'.repeat(MAX_ASSET_TEXT_CHARS))
+    files.set('assets/b.png.dayjot.md', 'never reached')
 
     const bodies = await gatherAssetDescriptionBodies(['assets/a.png', 'assets/b.png'])
 

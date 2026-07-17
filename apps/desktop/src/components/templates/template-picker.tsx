@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { listTemplates } from '@reflect/core'
+import { listTemplates } from '@dayjot/core'
 import { FilePlus2, LayoutTemplate } from 'lucide-react'
 import {
   CommandDialog,

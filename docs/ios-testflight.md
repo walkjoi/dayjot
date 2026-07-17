@@ -1,6 +1,6 @@
 # iOS TestFlight Builds
 
-How to build Reflect's Tauri iOS target and upload it to TestFlight.
+How to build DayJot's Tauri iOS target and upload it to TestFlight.
 
 ```bash
 pnpm release:ios preflight
@@ -14,22 +14,22 @@ for `pnpm release:ios testflight`.
 
 ## What You Need
 
-1. **An App Store Connect app for `app.reflect.ios`.** The iOS template already
-   sets `PRODUCT_BUNDLE_IDENTIFIER` to `app.reflect.ios` and `DEVELOPMENT_TEAM`
+1. **An App Store Connect app for `app.dayjot.ios`.** The iOS template already
+   sets `PRODUCT_BUNDLE_IDENTIFIER` to `app.dayjot.ios` and `DEVELOPMENT_TEAM`
    to `789ULN5MZB`. This is intentionally separate from the old Capacitor mobile
    app (`app.reflect.ReflectMobile`), so TestFlight uploads from this repo do not
    replace the existing mobile app record. The release helper verifies the IPA
    bundle identifier before upload.
 
    The same iOS template sets `ITSAppUsesNonExemptEncryption` to `false`.
-   Reflect iOS currently uses only exempt encryption (standard HTTPS/Git
+   DayJot iOS currently uses only exempt encryption (standard HTTPS/Git
    transport and OS keychain storage), so App Store Connect can skip the
    repeated export-compliance questionnaire on later builds. If the mobile app
    grows non-exempt cryptography, update the Info.plist value and the App Store
    Connect encryption answers before uploading.
 
-2. **Signing access for `app.reflect.ios`.** For local builds, signing into Xcode
-   with a team account that can provision `app.reflect.ios` is enough for
+2. **Signing access for `app.dayjot.ios`.** For local builds, signing into Xcode
+   with a team account that can provision `app.dayjot.ios` is enough for
    `pnpm release:ios build`. For CI, use an App Store Connect API key with
    permission to manage signing and upload builds. When the API key is present,
    the release helper exposes it to Tauri/xcodebuild through environment
@@ -56,7 +56,7 @@ for `pnpm release:ios testflight`.
    ```
 
    `APPLE_PASSWORD` must be an app-specific password, not the Apple ID's normal
-   password. Locally, the helper also reuses the `reflect-notary` keychain item
+   password. Locally, the helper also reuses the `dayjot-notary` keychain item
    created by `pnpm release:macos setup`, passing the stored password to altool
    through `@env:APPLE_PASSWORD`.
 
@@ -86,7 +86,7 @@ pnpm release:ios preflight
 
 Checks Xcode/altool, the build number, signing auth, and upload auth before
 spending time on the native archive. It also verifies that App Store Connect has
-a separate app record for `app.reflect.ios`.
+a separate app record for `app.dayjot.ios`.
 
 ```bash
 pnpm release:ios build --build-number="$(date -u +%Y%m%d%H%M)"
@@ -108,12 +108,12 @@ waits for App Store Connect processing to finish. If `--build-number` and
 number before archiving.
 
 ```bash
-pnpm release:ios upload --ipa=apps/desktop/src-tauri/gen/apple/build/arm64/Reflect.ipa --wait
-pnpm release:ios validate --ipa=apps/desktop/src-tauri/gen/apple/build/arm64/Reflect.ipa
+pnpm release:ios upload --ipa=apps/desktop/src-tauri/gen/apple/build/arm64/DayJot.ipa --wait
+pnpm release:ios validate --ipa=apps/desktop/src-tauri/gen/apple/build/arm64/DayJot.ipa
 ```
 
 Uploads or validates an existing IPA. These commands support `APPLE_ID` +
-`APPLE_PASSWORD` (app-specific password), or the local `reflect-notary`
+`APPLE_PASSWORD` (app-specific password), or the local `dayjot-notary`
 keychain item, as a fallback to the API key.
 
 Pass `--export-method=release-testing` if App Store Connect or Xcode starts
@@ -143,16 +143,16 @@ workflow.
 
 ## Troubleshooting
 
-- **`exportArchive No Accounts`** or **`No profiles for 'app.reflect.ios' were
+- **`exportArchive No Accounts`** or **`No profiles for 'app.dayjot.ios' were
   found`**: xcodebuild could not provision the App Store build. Sign into Xcode
   with a team account that can create an App Store provisioning profile for
-  `app.reflect.ios`, or set the App Store Connect API key env vars.
-- **`Cannot determine the Apple ID from Bundle ID 'app.reflect.ios'`**: the
+  `app.dayjot.ios`, or set the App Store Connect API key env vars.
+- **`Cannot determine the Apple ID from Bundle ID 'app.dayjot.ios'`**: the
   bundle id exists for signing, but no App Store Connect app record exists yet.
-  Create a new iOS app in App Store Connect for `app.reflect.ios`; do not reuse
+  Create a new iOS app in App Store Connect for `app.dayjot.ios`; do not reuse
   the old Capacitor app record (`app.reflect.ReflectMobile`).
-- **`Automatic signing cannot register bundle identifier "app.reflect.ios.<ext>"`**
-  (with **`No profiles for 'app.reflect.ios.<ext>' were found`**): a NEW app
+- **`Automatic signing cannot register bundle identifier "app.dayjot.ios.<ext>"`**
+  (with **`No profiles for 'app.dayjot.ios.<ext>' were found`**): a NEW app
   extension target (ShareExtension, RecordingWidget, …) is shipping for the
   first time and its bundle identifier does not exist on the developer portal
   yet. The CI App Store Connect key can create provisioning profiles for
@@ -163,7 +163,7 @@ workflow.
 
   ```bash
   cd apps/desktop/src-tauri/gen/apple
-  xcodebuild -project reflect-open.xcodeproj -target <NewExtension> \
+  xcodebuild -project dayjot-desktop.xcodeproj -target <NewExtension> \
     -sdk iphoneos -configuration release -allowProvisioningUpdates build
   ```
 

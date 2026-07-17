@@ -4,7 +4,7 @@ import {
   hasBridge,
   isMobilePlatform,
   type AppPlatform,
-} from '@reflect/core'
+} from '@dayjot/core'
 
 /**
  * Close every note window before a graph switch or delete replaces the

@@ -4,7 +4,7 @@ import Foundation
   import AppIntents
 
   /// Siri / Shortcuts entry points for audio memos (audio-memos wave 3,
-  /// V1 parity: "Start recording in Reflect").
+  /// V1 parity: "Start recording in DayJot").
   ///
   /// These compile into the app target, so `perform()` runs in the app's own
   /// process — but in a different module from the recording plugin (a static
@@ -17,13 +17,13 @@ import Foundation
   struct StartRecordingIntent: AppIntent {
     static var title: LocalizedStringResource = "Start recording"
     static var description = IntentDescription(
-      "Start recording an audio memo that Reflect transcribes into your daily note.")
+      "Start recording an audio memo that DayJot transcribes into your daily note.")
     static var openAppWhenRun = true
 
     @MainActor
     func perform() async throws -> some IntentResult {
       NotificationCenter.default.post(
-        name: Notification.Name("app.reflect.recording.start-requested"), object: nil)
+        name: Notification.Name("app.dayjot.recording.start-requested"), object: nil)
       return .result()
     }
   }
@@ -31,19 +31,19 @@ import Foundation
   @available(iOS 16.0, *)
   struct StopRecordingSiriIntent: AppIntent {
     static var title: LocalizedStringResource = "Stop recording"
-    static var description = IntentDescription("Stop the audio memo Reflect is recording.")
+    static var description = IntentDescription("Stop the audio memo DayJot is recording.")
     static var openAppWhenRun = false
 
     @MainActor
     func perform() async throws -> some IntentResult {
       NotificationCenter.default.post(
-        name: Notification.Name("app.reflect.recording.stop-requested"), object: nil)
+        name: Notification.Name("app.dayjot.recording.stop-requested"), object: nil)
       return .result()
     }
   }
 
   @available(iOS 16.4, *)
-  struct ReflectAppShortcuts: AppShortcutsProvider {
+  struct DayJotAppShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
       AppShortcut(
         intent: StartRecordingIntent(),

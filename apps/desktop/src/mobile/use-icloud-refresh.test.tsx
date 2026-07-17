@@ -1,6 +1,6 @@
 import { renderHook, act, cleanup } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import { useICloudRefresh } from './use-icloud-refresh'
 
 const graphState = vi.hoisted<{

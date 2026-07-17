@@ -26,7 +26,7 @@ import {
   type AiPromptMode,
   type ChatModelOption,
   type CloudSafe,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { AiPreviewActions } from '@/editor/ai-menu/ai-preview-actions'
 import type { NoteEditorHandle } from '@/editor/note-editor'
 import { useAiPrompts } from '@/hooks/use-ai-prompts'
@@ -38,7 +38,7 @@ import { useRouter } from '@/routing/router'
 /**
  * The editor AI menu (the "run a prompt on the selection" flow): meowdown owns
  * the selection menu and the pending-replacement preview; this hook owns
- * Reflect's policy — the prompt list (saved + built-ins), the privacy gate, the
+ * DayJot's policy — the prompt list (saved + built-ins), the privacy gate, the
  * provider call, and the preview controls. Nothing is written to the note until
  * the user accepts the preview; a discarded run leaves the file byte-identical.
  */
@@ -239,7 +239,7 @@ export function useEditorAiMenu({
         label: prompt.label,
         onSelect: (context) => runPrompt(prompt, context),
       }))
-      // Old Reflect's "Ask anything to AI": the typed text itself runs as a
+      // Old DayJot's "Ask anything to AI": the typed text itself runs as a
       // one-off prompt, with the selection appended as fenced context.
       const adHoc = query.trim()
       if (adHoc) {

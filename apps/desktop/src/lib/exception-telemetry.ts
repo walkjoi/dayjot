@@ -38,7 +38,7 @@ const SAFE_MECHANISM_TYPES = new Set([
 ])
 
 const SAFE_SCRIPT_BASENAME = /^[A-Za-z0-9_.-]+\.(?:js|jsx|mjs|ts|tsx)$/
-const SAFE_RELEASE = /^reflect@\d+\.\d+\.\d+(?:-[a-z0-9.-]+)?$/
+const SAFE_RELEASE = /^dayjot@\d+\.\d+\.\d+(?:-[a-z0-9.-]+)?$/
 const SAFE_EVENT_ID = /^[a-f0-9]{32}$/
 const SAFE_DEBUG_ID = /^(?:[a-f0-9]{32}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/
 const SENTRY_DSN_SCHEMA = z
@@ -56,7 +56,7 @@ const SENTRY_DSN_SCHEMA = z
   )
   .transform((url) => url.toString())
 
-/** Accept only the production Reflect Sentry project DSN, while allowing public-key rotation. */
+/** Accept only the production DayJot Sentry project DSN, while allowing public-key rotation. */
 export function parseExceptionTelemetryDsn(value: string | undefined): string | null {
   const parsed = SENTRY_DSN_SCHEMA.safeParse(value?.trim())
   return parsed.success ? parsed.data : null
@@ -216,7 +216,7 @@ export function initializeExceptionTelemetry(): RootOptions {
   }
 
   try {
-    init(createExceptionTelemetryOptions(dsn, `reflect@${__REFLECT_VERSION__}`))
+    init(createExceptionTelemetryOptions(dsn, `dayjot@${__DAYJOT_VERSION__}`))
   } catch {
     return {}
   }

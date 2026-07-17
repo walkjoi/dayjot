@@ -1,7 +1,7 @@
 import { act, cleanup, render, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 
 // jsdom has no Tauri runtime; mirror the macOS/iOS URL shape the injected
 // `convertFileSrc` produces (one percent-encoded path segment).
@@ -151,12 +151,12 @@ describe('useAssetPersistence resolveImageUrl', () => {
     )
   })
 
-  it('maps a safe assets/ path onto the generation-pinned reflect-asset URL', () => {
+  it('maps a safe assets/ path onto the generation-pinned dayjot-asset URL', () => {
     installUploadBridge()
     render(<Host generation={3} />)
 
     expect(persistence!.resolveImageUrl('assets/cat.png')).toBe(
-      `reflect-asset://localhost/${encodeURIComponent('3/assets/cat.png')}`,
+      `dayjot-asset://localhost/${encodeURIComponent('3/assets/cat.png')}`,
     )
   })
 

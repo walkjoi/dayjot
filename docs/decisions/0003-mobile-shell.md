@@ -2,13 +2,13 @@
 
 - **Status:** Accepted
 - **Date:** 2026-06-12
-- **Scope:** The shell technology for the Reflect mobile companion app (iOS
+- **Scope:** The shell technology for the DayJot mobile companion app (iOS
   first, Android shortly after). The v1 product scope is deliberately small
   but **includes editing as a hard requirement** — browse daily notes, edit
   notes in place, create notes, lexical search, GitHub sync compatible with
   desktop (see [Plan 19](../plans/19-mobile.md)).
 - **Decision driver:** Which shell maximizes reuse of the existing stack
-  (React + Vite frontend, `@reflect/core` actions, Rust primitives: git2 sync,
+  (React + Vite frontend, `@dayjot/core` actions, Rust primitives: git2 sync,
   rusqlite FTS5 index, keychain) while staying App-Store-viable and
   Android-portable?
 - **Alternatives evaluated:** React Native (bare), Expo, Capacitor, Ionic
@@ -22,7 +22,7 @@
 One repo, one Rust core, one IPC layer, one frontend codebase with a mobile
 entry surface.
 
-The deciding asset is the Rust core. Reflect's hardest-won, most
+The deciding asset is the Rust core. DayJot's hardest-won, most
 correctness-critical code — the git sync engine over libgit2, the SQLite/FTS5
 index, keychain secrets — lives in the Tauri crate and compiles to
 `aarch64-apple-ios` as-is. Every alternative shell forfeits that and forces a
@@ -52,7 +52,7 @@ is bundled only by the desktop platform overlays.
 libgit2/OpenSSL — the GitHub HTTPS + device-flow token path is exactly the
 mobile-viable transport; rusqlite with FTS5; keyring's `apple-native` backend,
 which covers the iOS keychain), the Kysely-over-IPC read layer, all of
-`@reflect/core`, the design system, and the Vite toolchain.
+`@dayjot/core`, the design system, and the Vite toolchain.
 
 **What we pay (verified, mid-2026):**
 
@@ -176,7 +176,7 @@ frontend. We switch (or re-evaluate) if, during Plan 19's gate spikes:
 3. App Store review rejects the Tauri shell on grounds Capacitor demonstrably
    passes (4.2 / process model), after one appeal cycle.
 
-A fallback would keep `@reflect/core` and the frontend, and would require a
+A fallback would keep `@dayjot/core` and the frontend, and would require a
 Capacitor bridge implementing the same command surface plus a native sync
 plugin — significant, bounded work; not a rewrite.
 

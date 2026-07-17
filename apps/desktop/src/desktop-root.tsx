@@ -1,5 +1,5 @@
 import { useEffect, type ReactElement } from 'react'
-import { hasBridge, subscribeNoteMoved } from '@reflect/core'
+import { hasBridge, subscribeNoteMoved } from '@dayjot/core'
 import { App } from '@/app'
 import { followHealedMove } from '@/editor/move-note'
 import { OperationsStatus } from '@/components/operations-status'
@@ -21,11 +21,11 @@ import { UpdateProvider } from '@/providers/update-provider'
  */
 export function DesktopRoot(): ReactElement {
   // Deep-link intake starts with the surface, not the workspace: a
-  // `reflect://` URL that launched the app (or arrived on the graph chooser)
+  // `dayjot://` URL that launched the app (or arrived on the graph chooser)
   // buffers in `intake.ts` until a graph opens. Browser dev has no plugin.
   // Main window only: the plugin's event stream reaches every webview, and a
   // ⌘-clicked note window must not also navigate itself on OS-delivered URLs
-  // (in-note `reflect://` clicks still work — `dispatchDeepLink` and the
+  // (in-note `dayjot://` clicks still work — `dispatchDeepLink` and the
   // handler are per-webview state).
   useMainWindowEffect(() => {
     if (!hasBridge()) {

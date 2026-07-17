@@ -1,6 +1,6 @@
 //! Remote-asset localization for the Reflect V1 import.
 //!
-//! V1 notes link attachments straight at Firebase Storage and Reflect's asset
+//! V1 notes link attachments straight at Firebase Storage and DayJot's asset
 //! CDN. An import must not leave a graph depending on Reflect V1's
 //! infrastructure, so every such URL is downloaded into the graph's `assets/`
 //! directory and the markdown link is rewritten to the relative `assets/…`
@@ -48,7 +48,7 @@ pub(super) struct RemoteSpan {
 
 /// What a download attempt produced for one URL.
 pub(super) enum DownloadOutcome {
-    /// Bytes staged in `.reflect/tmp`, waiting for the import to persist them.
+    /// Bytes staged in `.dayjot/tmp`, waiting for the import to persist them.
     Fetched(FetchedAsset),
     /// The remote answered a permanent 4xx; the note keeps the remote link.
     Gone,
@@ -656,17 +656,17 @@ mod tests {
         let replacements = HashMap::from([
             (
                 reflect_user.to_string(),
-                "assets/reflect-user.png".to_string(),
+                "assets/dayjot-user.png".to_string(),
             ),
             (
                 reflect_graph.to_string(),
-                "assets/reflect-graph.png".to_string(),
+                "assets/dayjot-graph.png".to_string(),
             ),
             (firebase.to_string(), "assets/firebase.png".to_string()),
         ]);
         assert_eq!(
             rewrite_markdown(&markdown, V1_ASSET_URL_PREFIXES, &replacements),
-            "![](assets/reflect-user.png)\n\n![](assets/firebase.png)\n\n![](assets/reflect-graph.png)\n"
+            "![](assets/dayjot-user.png)\n\n![](assets/firebase.png)\n\n![](assets/dayjot-graph.png)\n"
         );
     }
 

@@ -70,7 +70,7 @@ banner. Keeps 08a purely about search + palette.
   results behind a half-formed filter. Chips UI can follow the grammar later.
 
 **`updated:` semantics note (accepted 2026-06-09):** the filter compares file
-`mtime`, which Reflect's own background writes also touch — a rename rewrite
+`mtime`, which DayJot's own background writes also touch — a rename rewrite
 updates every source file it edits, so `updated:D` can include notes the
 *system* wrote that day, not just the user. Accepted for the first wave; the
 durable fix is content-authored timestamps (frontmatter or index-tracked),

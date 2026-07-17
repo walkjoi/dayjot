@@ -3,7 +3,7 @@ import {
   normalizeWikiTarget,
   scanInlineWikiLinks,
   setTaskDueDate,
-} from '@reflect/core'
+} from '@dayjot/core'
 
 /**
  * Draft-side due-date reads/writes for the mobile quick-edit sheet. The sheet

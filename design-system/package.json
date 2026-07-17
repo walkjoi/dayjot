@@ -1,8 +1,8 @@
 {
-  "name": "@reflect/design-system",
+  "name": "@dayjot/design-system",
   "version": "0.1.0",
   "private": true,
-  "description": "Reflect design tokens, fonts, and UI primitives.",
+  "description": "DayJot design tokens, fonts, and UI primitives.",
   "exports": {
     "./styles.css": "./styles.css",
     "./tokens/*": "./tokens/*",

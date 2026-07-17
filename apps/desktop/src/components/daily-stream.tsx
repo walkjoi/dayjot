@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from 'react'
 import { Virtualizer, type VirtualizerHandle } from 'virtua'
-import { dailyPath } from '@reflect/core'
+import { dailyPath } from '@dayjot/core'
 import { NotePane } from '@/components/note-pane'
 import type { NoteEditorHandle } from '@/editor/note-editor'
 import { formatDayLabel, todayIso } from '@/lib/dates'
@@ -17,7 +17,7 @@ interface DailyStreamProps {
 }
 
 /**
- * The reading gutter (`.reflect-content-gutter` in styles/index.css): the old
+ * The reading gutter (`.dayjot-content-gutter` in styles/index.css): the old
  * scroll-container `px-6` and centered `max-w-2xl` column folded into one
  * `padding-inline` applied *inside* an element instead of around it. The element
  * spans the pane's full width with its content in a centered column, so the side
@@ -26,10 +26,10 @@ interface DailyStreamProps {
  * click anywhere in the note body, even the blank margin, still hits the editor.
  *
  * An ordinary class, not a `px-*` utility: on the editor it must out-cascade the
- * un-layered `.reflect-editor` padding reset, which every `@layer utilities` rule
+ * un-layered `.dayjot-editor` padding reset, which every `@layer utilities` rule
  * loses to regardless of order.
  */
-const CONTENT_GUTTER = 'reflect-content-gutter'
+const CONTENT_GUTTER = 'dayjot-content-gutter'
 
 /** The size guess virtua uses for a row it has not measured yet. */
 export const ESTIMATED_DAY_HEIGHT = 220
@@ -222,7 +222,7 @@ export function DailyStream({ target }: DailyStreamProps): ReactElement {
               {/* V1 renders the date as the note's H1-sized subject, with
                   today's tinted brand (its `highlightSubject`). */}
               <h2
-                className={cn('reflect-daily-subject mb-3', CONTENT_GUTTER, isToday && 'text-accent')}
+                className={cn('dayjot-daily-subject mb-3', CONTENT_GUTTER, isToday && 'text-accent')}
               >
                 {formatDayLabel(date, settings.dateFormat)}
               </h2>

@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react'
-import { errorMessage, isDaily } from '@reflect/core'
+import { errorMessage, isDaily } from '@dayjot/core'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {

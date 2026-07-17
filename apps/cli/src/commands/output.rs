@@ -1,6 +1,6 @@
 //! The `--json` output contracts (documented in `docs/cli.md`, locked by the
 //! integration tests) plus the human print helpers. Field names are camelCase
-//! to match the rest of Reflect's external JSON shapes.
+//! to match the rest of DayJot's external JSON shapes.
 
 use serde::Serialize;
 
@@ -37,7 +37,7 @@ pub struct OpenJson<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<&'a str>,
     pub path: &'a str,
-    /// The `reflect://` URL (docs/deep-links.md).
+    /// The `dayjot://` URL (docs/deep-links.md).
     pub url: &'a str,
     /// False under `--print` — the URL was emitted, not handed to the OS.
     pub launched: bool,

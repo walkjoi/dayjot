@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AssetDescriptionRejectedError, describeAsset } from '../ai/describe-asset'
 import type { AiProvidersState } from '../ai/provider-config'
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 import { listDir, readAsset, readNote, writeNote } from '../graph/commands'
 import { assetReferencingNotePaths } from '../indexing/asset-refs'
 import { hashContent } from '../indexing/hash'
@@ -129,14 +129,14 @@ describe('pure helpers', () => {
     expect(assetTypeFor('assets/a.pdf')).toEqual({ kind: 'pdf', mediaType: 'application/pdf' })
     expect(assetTypeFor('assets/a.txt')).toBeNull()
     expect(assetTypeFor('notes/a.png')).toBeNull()
-    expect(assetTypeFor('assets/a.png.reflect.md')).toBeNull() // never describe a description
+    expect(assetTypeFor('assets/a.png.dayjot.md')).toBeNull() // never describe a description
     expect(assetTypeFor('assets/noext')).toBeNull()
   })
 
   it('isEligibleAssetPath and descriptionPathFor', () => {
     expect(isEligibleAssetPath('assets/a.png')).toBe(true)
-    expect(isEligibleAssetPath('assets/a.png.reflect.md')).toBe(false)
-    expect(descriptionPathFor('assets/a.png')).toBe('assets/a.png.reflect.md')
+    expect(isEligibleAssetPath('assets/a.png.dayjot.md')).toBe(false)
+    expect(descriptionPathFor('assets/a.png')).toBe('assets/a.png.dayjot.md')
   })
 
   it('base64ByteLength matches the decoded size', () => {
@@ -196,7 +196,7 @@ describe('classifyAsset (privacy gate)', () => {
   })
 
   it('fails closed when a referer cannot be read', async () => {
-    readNoteMock.mockRejectedValueOnce(new ReflectError('io', 'disk error'))
+    readNoteMock.mockRejectedValueOnce(new DayJotError('io', 'disk error'))
     refs.set('assets/a.png', ['notes/pub.md'])
     expect(await classifyAsset('assets/a.png', GENERATION)).toBe('skip-private')
   })
@@ -219,12 +219,12 @@ describe('reconcileAssetDescriptions', () => {
     expect(outcome.describedAssetPaths).toEqual(['assets/a.png'])
     expect(outcome.stopped).toBeNull()
     const hash = await hashContent('aGVsbG8=')
-    const written = files.get('assets/a.png.reflect.md')!
+    const written = files.get('assets/a.png.dayjot.md')!
     expect(readManagedDescription(written)).toMatchObject({ sourceHash: hash })
     expect(written).toContain('A flow diagram.')
     expect(written).toContain('provider: anthropic')
     expect(written).toContain('generatedAt: 2026-06-16T00:00:00.000Z')
-    expect(writeNoteMock).toHaveBeenCalledWith('assets/a.png.reflect.md', expect.any(String), GENERATION)
+    expect(writeNoteMock).toHaveBeenCalledWith('assets/a.png.dayjot.md', expect.any(String), GENERATION)
   })
 
   it('skips an up-to-date managed description without calling the provider', async () => {
@@ -233,7 +233,7 @@ describe('reconcileAssetDescriptions', () => {
     refs.set('assets/a.png', ['notes/pub.md'])
     const hash = await hashContent('aGVsbG8=')
     files.set(
-      'assets/a.png.reflect.md',
+      'assets/a.png.dayjot.md',
       buildDescriptionSource(
         { source: 'assets/a.png', sourceHash: hash, sourceSize: 5, provider: 'anthropic', model: 'm', generatedAt: 'x' },
         'old',
@@ -254,7 +254,7 @@ describe('reconcileAssetDescriptions', () => {
     files.set('notes/pub.md', publicNote('assets/a.png'))
     refs.set('assets/a.png', ['notes/pub.md'])
     files.set(
-      'assets/a.png.reflect.md',
+      'assets/a.png.dayjot.md',
       buildDescriptionSource(
         {
           source: 'assets/a.png',
@@ -280,7 +280,7 @@ describe('reconcileAssetDescriptions', () => {
     files.set('notes/pub.md', publicNote('assets/a.png'))
     refs.set('assets/a.png', ['notes/pub.md'])
     files.set(
-      'assets/a.png.reflect.md',
+      'assets/a.png.dayjot.md',
       buildDescriptionSource(
         { source: 'assets/a.png', sourceHash: 'oldhash', sourceSize: 5, provider: 'anthropic', model: 'm', generatedAt: 'x' },
         'old',
@@ -290,20 +290,20 @@ describe('reconcileAssetDescriptions', () => {
     const outcome = await reconcileAssetDescriptions(input())
 
     expect(outcome.described).toBe(1)
-    expect(files.get('assets/a.png.reflect.md')).toContain('A flow diagram.')
+    expect(files.get('assets/a.png.dayjot.md')).toContain('A flow diagram.')
   })
 
   it('never overwrites a user-authored description', async () => {
     assets.set('assets/a.png', 'aGVsbG8=')
     files.set('notes/pub.md', publicNote('assets/a.png'))
     refs.set('assets/a.png', ['notes/pub.md'])
-    files.set('assets/a.png.reflect.md', '# My own caption\n')
+    files.set('assets/a.png.dayjot.md', '# My own caption\n')
 
     const outcome = await reconcileAssetDescriptions(input())
 
     expect(outcome.skippedUserAuthored).toBe(1)
     expect(outcome.described).toBe(0)
-    expect(files.get('assets/a.png.reflect.md')).toBe('# My own caption\n')
+    expect(files.get('assets/a.png.dayjot.md')).toBe('# My own caption\n')
     expect(describeMock).not.toHaveBeenCalled()
   })
 
@@ -317,7 +317,7 @@ describe('reconcileAssetDescriptions', () => {
     expect(outcome.skippedPrivate).toBe(1)
     expect(outcome.described).toBe(0)
     expect(describeMock).not.toHaveBeenCalled()
-    expect(files.has('assets/a.png.reflect.md')).toBe(false)
+    expect(files.has('assets/a.png.dayjot.md')).toBe(false)
   })
 
   it('skips an unreferenced asset', async () => {
@@ -362,21 +362,21 @@ describe('reconcileAssetDescriptions', () => {
     expect(outcome.refused).toBe(1)
     expect(outcome.described).toBe(1)
     expect(outcome.stopped).toBeNull()
-    expect(files.has('assets/a.png.reflect.md')).toBe(false)
-    expect(files.has('assets/b.pdf.reflect.md')).toBe(true)
+    expect(files.has('assets/a.png.dayjot.md')).toBe(false)
+    expect(files.has('assets/b.pdf.dayjot.md')).toBe(true)
   })
 
   it('stops the pass on a transient (network) provider error for a later retry', async () => {
     assets.set('assets/a.png', 'aGVsbG8=')
     files.set('notes/pub.md', publicNote('assets/a.png'))
     refs.set('assets/a.png', ['notes/pub.md'])
-    describeMock.mockRejectedValueOnce(new ReflectError('network', 'offline'))
+    describeMock.mockRejectedValueOnce(new DayJotError('network', 'offline'))
 
     const outcome = await reconcileAssetDescriptions(input())
 
     expect(outcome.stopped).toEqual({ reason: 'network', message: 'offline' })
     expect(outcome.described).toBe(0)
-    expect(files.has('assets/a.png.reflect.md')).toBe(false)
+    expect(files.has('assets/a.png.dayjot.md')).toBe(false)
   })
 
   it('stops with a config reason when no provider is configured', async () => {

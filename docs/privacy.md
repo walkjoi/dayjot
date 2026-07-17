@@ -1,7 +1,7 @@
 # What leaves the device, and when
 
-Reflect is local-first: your notes are markdown files in a folder you chose, the search
-index is SQLite in `.reflect/` beside them, and **no Reflect-hosted server exists in any
+DayJot is local-first: your notes are markdown files in a folder you chose, the search
+index is SQLite in `.dayjot/` beside them, and **no DayJot-hosted server exists in any
 path** — there is no product analytics and no account. Official release builds send
 scrubbed JavaScript exception diagnostics to Sentry. Every network call the app can make
 is listed here, with what it carries.
@@ -15,7 +15,7 @@ disk at call time), and it is covered by tests.
 ## AI chat (off until you add a key)
 
 - **Where:** directly to the provider whose API key *you* added — OpenAI, Anthropic,
-  Google, or OpenRouter. Keys are bring-your-own; Reflect proxies nothing.
+  Google, or OpenRouter. Keys are bring-your-own; DayJot proxies nothing.
 - **What:** your chat messages and configured system prompt, plus what the model's
   tools read from your graph: search snippets, note content, and note listings. The
   configured prompt is stored in the device's ordinary settings file and is sent with
@@ -42,7 +42,7 @@ disk at call time), and it is covered by tests.
 ## Semantic search (off by default)
 
 - Embeddings are computed **on-device** (a bundled ONNX runtime; `all-MiniLM-L6-v2`)
-  and stored in `.reflect/`. Note content never leaves the machine for embedding.
+  and stored in `.dayjot/`. Note content never leaves the machine for embedding.
 - Enabling it downloads the model (~90 MB) **from Hugging Face, once**. That request
   carries no user data; the model is cached locally afterwards.
 
@@ -59,10 +59,10 @@ disk at call time), and it is covered by tests.
 
 ## Browser capture (the Chrome extension)
 
-- **Where:** nowhere on the network. The **Reflect Capture** extension hands each
-  capture to a local native-messaging host (`reflect-capture-host`) that the desktop
+- **Where:** nowhere on the network. The **DayJot Capture** extension hands each
+  capture to a local native-messaging host (`dayjot-capture-host`) that the desktop
   app registers on your machine; the host spools it to the capture inbox on disk
-  (`<graph>/.reflect/inbox/`) and the app drains it on next launch. **No Reflect-hosted
+  (`<graph>/.dayjot/inbox/`) and the app drains it on next launch. **No DayJot-hosted
   server, no third party, and no other destination is ever contacted** — the extension
   stores no keys and makes no AI or network calls of its own.
 - **What:** only the page you explicitly capture (toolbar button or ⌘⇧K) — its URL,
@@ -81,8 +81,8 @@ disk at call time), and it is covered by tests.
 
 - **Where:** nowhere on the network. Enabling the Contacts integration reads the
   **macOS/iOS contacts store on-device** (the same store System Settings governs),
-  behind the standard OS permission prompt. There is no Reflect copy of your address
-  book: lookups are live queries, nothing is mirrored into `.reflect/`, and Reflect
+  behind the standard OS permission prompt. There is no DayJot copy of your address
+  book: lookups are live queries, nothing is mirrored into `.dayjot/`, and DayJot
   never writes back to Contacts.
 - **What:** a note title or a meeting attendee's email is matched against your
   contacts; a match's name, email, and phone are shown on a suggestion card. Contact
@@ -126,7 +126,7 @@ disk at call time), and it is covered by tests.
 ## Secrets
 
 API keys and tokens live in the **OS keychain only** — never in markdown, never in
-`.reflect/`, never in git. Deleting a provider in Settings deletes its keychain entry.
+`.dayjot/`, never in git. Deleting a provider in Settings deletes its keychain entry.
 
 ## Summary table
 

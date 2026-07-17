@@ -12,7 +12,7 @@ import {
   type CalendarInfo,
   type CalendarAuthorizationStatus,
   type Unlisten,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { isMacosDesktop } from '@/lib/platform'
 import { useSettings } from '@/providers/settings-provider'
 
@@ -36,7 +36,7 @@ export function calendarAvailable(): boolean {
 
 /**
  * The macOS calendar permission state (never prompts). The state changes
- * behind Reflect's back in System Settings, so this query opts out of the
+ * behind DayJot's back in System Settings, so this query opts out of the
  * app-wide defaults (`staleTime: Infinity`, no focus refetch — right for
  * invalidation-driven index reads, wrong here) and re-checks every time the
  * window regains focus: exactly the "flip it in System Settings and come

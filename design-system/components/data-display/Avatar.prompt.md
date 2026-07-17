@@ -1,4 +1,4 @@
-Circular identity chip — photo, initials fallback, or Reflect's graph-color dot.
+Circular identity chip — photo, initials fallback, or DayJot's graph-color dot.
 
 ```jsx
 <Avatar src="/me.jpg" name="Alex MacCaw" />

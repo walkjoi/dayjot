@@ -1,6 +1,6 @@
-# Contributing to Reflect
+# Contributing to DayJot
 
-Thanks for helping build Reflect. This is the short version; the full
+Thanks for helping build DayJot. This is the short version; the full
 contributor/agent guide lives in [AGENTS.md](AGENTS.md), and the architecture
 decisions in
 [docs/plans/architecture-conventions.md](docs/plans/architecture-conventions.md).
@@ -32,7 +32,7 @@ commit message and, for `feat`/`fix`, the user-facing changelog entry.
 - `fix: …` — a fix; bumps the patch version (of the next beta and stable).
 - `docs:` / `chore:` / `ci:` / `test:` / `refactor:` / `build:` — no release,
   no changelog entry.
-- Reflect is an app, not a library: `feat!:` and `BREAKING CHANGE:` footers are
+- DayJot is an app, not a library: `feat!:` and `BREAKING CHANGE:` footers are
   not used (CI rejects `!`). Going 1.0 someday is a product decision: set a
   one-time `release-as` in the release-please configs so the Release PRs offer
   `1.0.0-beta.N` and `1.0.0`, then drop it once both have merged.
@@ -48,12 +48,12 @@ commit message and, for `feat`/`fix`, the user-facing changelog entry.
 
 - **Business logic → `packages/core`.** No file/DB/AI logic in React
   components, hooks, or Tauri command handlers. Components call typed
-  `@reflect/core` bindings; Rust commands are thin wrappers over native
+  `@dayjot/core` bindings; Rust commands are thin wrappers over native
   primitives.
 - **Rust owns capabilities, TypeScript owns policy.** A Rust command never
   encodes a product rule beyond the primitive it exposes (e.g. the watcher
   emits events; *what* to reindex is decided in core).
-- **`@reflect/core` and `@reflect/db` never import Tauri.** Native access goes
+- **`@dayjot/core` and `@dayjot/db` never import Tauri.** Native access goes
   through the injected bridge (`setBridge`); tests install fakes instead of
   module mocks.
 
@@ -73,9 +73,9 @@ commit message and, for `feat`/`fix`, the user-facing changelog entry.
 
 - Notes with `private: true` frontmatter must never reach an external service.
   Enforce at every call site.
-- Markdown files are the source of truth; SQLite under `.reflect/` is a
+- Markdown files are the source of truth; SQLite under `.dayjot/` is a
   rebuildable cache. Never make the index durable.
-- No Reflect-hosted APIs, no Electron, secrets only in the OS keychain.
+- No DayJot-hosted APIs, no Electron, secrets only in the OS keychain.
 
 ## Guides
 

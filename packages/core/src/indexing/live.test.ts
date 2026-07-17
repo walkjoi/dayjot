@@ -409,7 +409,7 @@ describe('applyIndexChanges move healing (Plan 17)', () => {
     expect(commands).toContain('index_apply_batch')
   })
 
-  it("Reflect's own move echo never pairs: the removed side has no row left", async () => {
+  it("DayJot's own move echo never pairs: the removed side has no row left", async () => {
     const calls: Array<[string, Record<string, unknown>]> = []
     fakeBridge(async (command, args) => {
       calls.push([command, args])

@@ -17,7 +17,7 @@ local context, chat/summarize/rewrite, and reviewable multi-note patchsets — w
 > sole constructors (`cloudSafeSearchHits`, `cloudSafeNoteContent` in `ai/checkers.ts`)
 > run the privacy checks — an unchecked payload doesn't typecheck. Tool activity
 > renders inline in the transcript — the transparent-context requirement, in tool form.
-> Engine: Vercel AI SDK v6 in `@reflect/core` (`ai/chat/`), streaming normalized to a
+> Engine: Vercel AI SDK v6 in `@dayjot/core` (`ai/chat/`), streaming normalized to a
 > typed event union; answers cite notes as `[[wiki links]]` that navigate (and never
 > create) notes. Keychain secrets, BYOK settings UI, and provider key validation
 > (steps 1–2) had already landed.
@@ -27,7 +27,7 @@ keychain (introduced here, reused by Plan 12).
 **Unlocks:** AI-assisted conflict resolution (Plan 12), future agentic workflows.
 
 **Architecture:** provider/AI calls, context assembly, and patchset policy live in
-`@reflect/core` (`actions/ai`); the `private: true` block is a `checkers.ts` guard
+`@dayjot/core` (`actions/ai`); the `private: true` block is a `checkers.ts` guard
 (`assertCloudAllowed`); keychain is a Rust primitive. See
 [Architecture & Conventions](architecture-conventions.md).
 
@@ -49,12 +49,12 @@ separately through `actions/audio-memo`).
 
 1. **Secrets via OS keychain.** A Rust keychain module (e.g. `keyring` crate → macOS
    Keychain) with `secret_set/get/delete`. BYOK keys **never** touch markdown, Git, or
-   `.reflect/`. Settings UI (react-hook-form) to enter/validate an OpenAI key; provider
+   `.dayjot/`. Settings UI (react-hook-form) to enter/validate an OpenAI key; provider
    abstraction leaves room for Anthropic/Google later.
 
 2. **Provider layer.** A typed provider interface — `chat(messages, opts)` (streaming)
    and a model picker. **Calls go directly app → provider** using the user's key; no
-   Reflect-hosted proxy. Normalize streaming + errors (rate limit, auth) into typed
+   DayJot-hosted proxy. Normalize streaming + errors (rate limit, auth) into typed
    results. zod-validate responses.
 
    ```ts

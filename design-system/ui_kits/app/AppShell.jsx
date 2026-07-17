@@ -1,4 +1,4 @@
-/* Reflect app — shell. Wires sidebar navigation, the ⌘K modal, and the
+/* DayJot app — shell. Wires sidebar navigation, the ⌘K modal, and the
    active content view together. */
 function AppShell() {
   const { Sidebar, DailyNotes, AllNotes, Tasks, MapView, SearchModal } = window.AppKit

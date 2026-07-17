@@ -14,8 +14,8 @@ const operationFail = vi.hoisted(() => vi.fn())
 const startOperation = vi.hoisted(() =>
   vi.fn(() => ({ progress: vi.fn(), done: vi.fn(), fail: operationFail })),
 )
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   readNote,
   writeNote,
   availableTemplatePath,

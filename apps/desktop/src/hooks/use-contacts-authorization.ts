@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { contactsAuthorizationStatus, hasBridge, type ContactsAuthorization } from '@reflect/core'
+import { contactsAuthorizationStatus, hasBridge, type ContactsAuthorization } from '@dayjot/core'
 
 /**
  * One shared query for the Contacts permission state, consumed by the

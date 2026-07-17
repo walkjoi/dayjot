@@ -1,4 +1,4 @@
-import { foldTag } from '@reflect/core'
+import { foldTag } from '@dayjot/core'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'
 
 /**

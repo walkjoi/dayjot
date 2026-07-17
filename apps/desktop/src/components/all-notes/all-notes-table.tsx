@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, type MouseEvent, type ReactElement } from 'react'
 import { Virtualizer, type VirtualizerHandle } from 'virtua'
-import type { NoteListEntry } from '@reflect/core'
+import type { NoteListEntry } from '@dayjot/core'
 import { type ListSelection } from '@/lib/selection/use-list-selection'
 import { cn } from '@/lib/utils'
 import type { NewWindowClickEvent } from '@/lib/windows/open-in-new-window'

@@ -1,4 +1,4 @@
-//! The shadow base store: `.reflect/sync-base/<note-path>` holds each note's
+//! The shadow base store: `.dayjot/sync-base/<note-path>` holds each note's
 //! content at its **last synced state** — the common-ancestor approximation
 //! that turns two-way conflicts into three-way merges (Plan 21).
 //!
@@ -14,7 +14,7 @@
 //!
 //! A missing base is safe (the ladder degrades to two-way handling); a stale
 //! base is safe (identical early edits on both sides merge clean). The store
-//! is a cache under the local-only `.reflect/`, rebuilt by use, never synced.
+//! is a cache under the local-only `.dayjot/`, rebuilt by use, never synced.
 //!
 //! Alongside each base lives an optional `<note-path>.pair` file recording
 //! the content-hash pair of the last **auto-merged** conflict — the
@@ -50,7 +50,7 @@ impl ShadowStore {
     pub fn new(root: &Path) -> ShadowStore {
         ShadowStore {
             root: root.to_path_buf(),
-            dir: root.join(".reflect").join("sync-base"),
+            dir: root.join(".dayjot").join("sync-base"),
         }
     }
 
@@ -180,7 +180,7 @@ mod tests {
 
     fn store() -> (tempfile::TempDir, ShadowStore) {
         let dir = tempdir().unwrap();
-        fs::create_dir_all(dir.path().join(".reflect")).unwrap();
+        fs::create_dir_all(dir.path().join(".dayjot")).unwrap();
         let store = ShadowStore::new(dir.path());
         (dir, store)
     }

@@ -119,7 +119,7 @@ export async function rewriteLinksForTitleChange(
 /**
  * The renamed note's `aliases` after a rename, or `null` when nothing changes:
  * the previous auto-added alias (an intermediate title from this session's
- * rename chain) is pruned, and the old title joins so links Reflect couldn't
+ * rename chain) is pruned, and the old title joins so links DayJot couldn't
  * rewrite — and external ones — still resolve.
  */
 export function nextAliases(

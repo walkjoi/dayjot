@@ -5,7 +5,7 @@ import type {
   FileChange,
   ReconcileCaptureEnrichmentInput,
   ReconcileCaptureEnrichmentOutcome,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { createCaptureController, type CaptureController } from './capture-controller'
 
 const drainCaptureInbox = vi.hoisted(() =>
@@ -19,8 +19,8 @@ const subscribeFileChanges = vi.hoisted(() =>
 )
 const failOperation = vi.hoisted(() => vi.fn<(message: string) => void>())
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   drainCaptureInbox,
   reconcileCaptureEnrichment,
   subscribeFileChanges,

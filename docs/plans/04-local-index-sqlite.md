@@ -26,7 +26,7 @@ loaded as native SQLite extensions — only practical in the Rust process, not t
 Resolution:
 
 - **SQLite lives in Rust** (`rusqlite` with bundled SQLite; load FTS5 + later
-  `sqlite-vec`). The DB file is `<graph>/.reflect/index.sqlite`.
+  `sqlite-vec`). The DB file is `<graph>/.dayjot/index.sqlite`.
 - **The frontend uses Kysely purely as a typed query builder** with a tiny custom
   dialect/driver that *compiles* queries to `{ sql, params }` and ships them over a
   Tauri command (`db_query` / `db_execute`) to Rust for execution. Rows return as JSON,
@@ -34,7 +34,7 @@ Resolution:
 - This keeps end-to-end types + the Kysely requirement, while extensions, migrations,
   and write transactions stay in Rust where they belong.
 - **Homes** (per [Architecture & Conventions](architecture-conventions.md)): the schema +
-  IPC dialect live in `@reflect/db`; **getters** live in `@reflect/core` actions
+  IPC dialect live in `@dayjot/db`; **getters** live in `@dayjot/core` actions
   (`actions/<domain>/getters.ts`). Adopt full **Kysely discipline** —
   `Selectable/Insertable/Updateable` in every signature (never raw table types), the
   `json()` helper for JSON columns, camelCase normalized at the zod/IPC boundary.
@@ -65,17 +65,17 @@ export interface Database {
 ### Alternatives considered: `wa-sqlite` (client-side WASM)
 
 V1 used [`wa-sqlite`](https://github.com/rhashimoto/wa-sqlite) (a WASM SQLite that
-Reflect sponsored) and stored data in IndexedDB/OPFS. That was correct **for V1's
+DayJot sponsored) and stored data in IndexedDB/OPFS. That was correct **for V1's
 constraint: a browser web app with no native process**, where WASM was the only way to
 get local SQLite. **V2 removes that constraint** (Tauri ships a native Rust process), so
 the rationale no longer holds. Running `wa-sqlite` in the WebView is rejected here,
 chiefly on **file permissions**:
 
-- **The index must live on the real filesystem, beside the notes** (`<graph>/.reflect/
+- **The index must live on the real filesystem, beside the notes** (`<graph>/.dayjot/
   index.sqlite`, gitignored) so it is inside the graph, deleted with it, and readable by
   the Node CLI (Plan 14). A WebView's `wa-sqlite` persists to **OPFS/IndexedDB inside the
   WebView's sandbox** — not a real file at a known path. That breaks the in-graph
-  `.reflect/` model, portability/inspectability, and kills the CLI (a Node process can't
+  `.dayjot/` model, portability/inspectability, and kills the CLI (a Node process can't
   open an OPFS-stored DB).
 - **macOS file access is a native-layer concern.** Persistent access to a user-chosen
   folder under the sandbox/hardened runtime uses **security-scoped bookmarks** + FS
@@ -97,11 +97,11 @@ outweighed by the above. Revisit only for a hypothetical pure-web build, which V
 not target.
 
 > **Sub-decision — where the index file lives: DECIDED — inside the graph.** The index is
-> `<graph>/.reflect/index.sqlite`, alongside the notes and gitignored, so the graph stays
+> `<graph>/.dayjot/index.sqlite`, alongside the notes and gitignored, so the graph stays
 > self-contained, the index is deleted with the graph, and the CLI (Plan 14) can find it.
 > This requires write access to the graph folder, which the native (Rust) process holds
 > via macOS security-scoped bookmarks + FS entitlements. (The app-data-dir alternative —
-> keying an index under `~/Library/Application Support/Reflect/` — was considered and
+> keying an index under `~/Library/Application Support/DayJot/` — was considered and
 > rejected to keep the graph self-contained.)
 
 ## Schema (first wave)
@@ -138,14 +138,14 @@ Mirror the indexing-strategy projection table list:
    query commands in Rust — the getters' public API doesn't change.
 
 3. **Indexing pipeline (TS core, Rust applies the write).** Given a changed file, the
-   `@reflect/core` indexer (TS): read (Plan 02 primitive) → **parse + extract in TS**
+   `@dayjot/core` indexer (TS): read (Plan 02 primitive) → **parse + extract in TS**
    (Plan 03, Lezer) → compute `fileHash` → if unchanged, skip → else hand a single
    `db_batch` upsert (`notes`/`note_text`/`links`/`tags`/`aliases` + recomputed
    `backlinks` for affected targets) to Rust, which applies it in **one transaction**.
    Backlinks resolve via the alias/title rules from Plan 03.
 
 4. **File watching + echo suppression.** Rust `notify`-based watcher over the graph
-   (excluding `.reflect/`). Debounce + enqueue; do not parse inline. **Only index `.md`
+   (excluding `.dayjot/`). Debounce + enqueue; do not parse inline. **Only index `.md`
    under `daily/`+`notes/` (and track `assets/`); ignore everything else** (other apps'
    files, `.DS_Store`, dotfiles). Handle create/modify/delete/rename, editor temp files,
    sync duplicate-conflict files (`note 2.md`), and not-yet-downloaded placeholder files
@@ -175,7 +175,7 @@ Mirror the indexing-strategy projection table list:
 
 ## Key decisions / contracts
 
-- **The DB is a cache.** Deleting `.reflect/index.sqlite` must lose nothing durable.
+- **The DB is a cache.** Deleting `.dayjot/index.sqlite` must lose nothing durable.
   Enforced by the rebuild-equivalence test.
 - **All writes go through Rust transactions**; the frontend only reads (via Kysely) and
   requests index operations. This avoids write races with the watcher.

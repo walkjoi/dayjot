@@ -8,7 +8,7 @@ import {
   listDir,
   openAsset as openAssetCommand,
   type FileMeta,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { formatBytes } from '@/lib/format-bytes'
 import { startOperation } from '@/lib/operations'
 
@@ -95,7 +95,7 @@ export interface AssetPersistence {
 
 /**
  * Asset handling for one open graph: resolve `![…](…)` sources to displayable
- * URLs (remote URLs pass through; `assets/` paths map to `reflect-asset://`
+ * URLs (remote URLs pass through; `assets/` paths map to `dayjot-asset://`
  * URLs served off the UI thread by the Rust shell), open asset links in the
  * OS viewer, and persist pasted/dropped files by streaming them into the
  * graph's `assets/` folder — Rust resolves `-2`-style name collisions at
@@ -144,7 +144,7 @@ export function useAssetPersistence(
         return src
       }
       if (generation !== null && isSafeAssetSource(src)) {
-        return convertFileSrc(`${generation}/${src}`, 'reflect-asset')
+        return convertFileSrc(`${generation}/${src}`, 'dayjot-asset')
       }
       return null
     },

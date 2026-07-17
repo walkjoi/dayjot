@@ -31,11 +31,11 @@ import {
 } from './release-macos.mjs'
 
 const baseInput = {
-  assets: ['Reflect.dmg', 'Reflect.app.tar.gz', 'Reflect.app.tar.gz.sig', 'latest.json'],
+  assets: ['DayJot.dmg', 'DayJot.app.tar.gz', 'DayJot.app.tar.gz.sig', 'latest.json'],
   commit: 'abc123',
   draft: false,
   notesPath: 'release-notes.md',
-  productName: 'Reflect',
+  productName: 'DayJot',
 }
 
 test('pre-release publish uses prepared notes and opts out of GitHub latest heuristics', () => {
@@ -50,12 +50,12 @@ test('pre-release publish uses prepared notes and opts out of GitHub latest heur
     'release',
     'create',
     'v0.2.0-beta.14',
-    'Reflect.dmg',
-    'Reflect.app.tar.gz',
-    'Reflect.app.tar.gz.sig',
+    'DayJot.dmg',
+    'DayJot.app.tar.gz',
+    'DayJot.app.tar.gz.sig',
     'latest.json',
     '--title',
-    'Reflect 0.2.0-beta.14',
+    'DayJot 0.2.0-beta.14',
     '--target',
     'abc123',
     '--notes-file',
@@ -94,10 +94,10 @@ test('draft publish keeps the draft flag last', () => {
 test('draft release uploads clobber so a crashed publish can retry', () => {
   expect(
     createExistingReleaseUploadArgs({
-      assets: ['Reflect.dmg', 'Reflect.app.tar.gz', 'latest.json'],
+      assets: ['DayJot.dmg', 'DayJot.app.tar.gz', 'latest.json'],
       tag: 'v0.5.0-beta.1',
     }),
-  ).toEqual(['release', 'upload', 'v0.5.0-beta.1', 'Reflect.dmg', 'Reflect.app.tar.gz', 'latest.json', '--clobber'])
+  ).toEqual(['release', 'upload', 'v0.5.0-beta.1', 'DayJot.dmg', 'DayJot.app.tar.gz', 'latest.json', '--clobber'])
 })
 
 test('finalizing a beta draft keeps the pre-release flag and undrafts last', () => {
@@ -105,7 +105,7 @@ test('finalizing a beta draft keeps the pre-release flag and undrafts last', () 
     keepDraft: false,
     notesPath: 'release-notes.md',
     prerelease: true,
-    productName: 'Reflect Beta',
+    productName: 'DayJot Beta',
     tag: 'v0.5.0-beta.1',
     version: '0.5.0-beta.1',
   })
@@ -115,7 +115,7 @@ test('finalizing a beta draft keeps the pre-release flag and undrafts last', () 
     'edit',
     'v0.5.0-beta.1',
     '--title',
-    'Reflect Beta 0.5.0-beta.1',
+    'DayJot Beta 0.5.0-beta.1',
     '--notes-file',
     'release-notes.md',
     '--prerelease',
@@ -129,7 +129,7 @@ test('finalizing a stable draft promotes it to the latest release', () => {
     keepDraft: false,
     notesPath: 'release-notes.md',
     prerelease: false,
-    productName: 'Reflect',
+    productName: 'DayJot',
     tag: 'v0.5.0',
     version: '0.5.0',
   })
@@ -144,7 +144,7 @@ test('finalizing with --draft leaves the release a draft for review', () => {
     keepDraft: true,
     notesPath: 'release-notes.md',
     prerelease: true,
-    productName: 'Reflect Beta',
+    productName: 'DayJot Beta',
     tag: 'v0.5.0-beta.1',
     version: '0.5.0-beta.1',
   })
@@ -166,10 +166,10 @@ test('generated release notes API targets the release tag and commit', () => {
 })
 
 test('Mac download notice points each processor at the matching DMG', () => {
-  const notice = createMacDownloadNotice({ productName: 'Reflect Beta' })
+  const notice = createMacDownloadNotice({ productName: 'DayJot Beta' })
 
-  expect(notice).toContain('`Reflect.Beta_aarch64.dmg`')
-  expect(notice).toContain('`Reflect.Beta_x86_64.dmg`')
+  expect(notice).toContain('`DayJot.Beta_aarch64.dmg`')
+  expect(notice).toContain('`DayJot.Beta_x86_64.dmg`')
   expect(notice).toContain('Apple Silicon (M-series Macs)')
   expect(notice).toContain('Apple menu -> About This Mac')
 })
@@ -177,7 +177,7 @@ test('Mac download notice points each processor at the matching DMG', () => {
 test('Mac download notice is appended after generated release notes', () => {
   const notes = appendMacDownloadNotice({
     body: "## What's Changed\n\n- Fixed sync\n\n**Full Changelog**: v0.3.6...v0.3.7\n",
-    productName: 'Reflect',
+    productName: 'DayJot',
   })
 
   expect(notes).toBe(
@@ -185,16 +185,16 @@ test('Mac download notice is appended after generated release notes', () => {
       '- Fixed sync\n\n' +
       '**Full Changelog**: v0.3.6...v0.3.7\n\n' +
       '## Which Mac download should I choose?\n\n' +
-      '- **Apple Silicon (M-series Macs):** download `Reflect_aarch64.dmg`.\n' +
-      '- **Intel Macs:** download `Reflect_x86_64.dmg`.\n\n' +
+      '- **Apple Silicon (M-series Macs):** download `DayJot_aarch64.dmg`.\n' +
+      '- **Intel Macs:** download `DayJot_x86_64.dmg`.\n\n' +
       'To check your Mac, open **Apple menu -> About This Mac**. If it shows **Chip** with M1, M2, M3, M4, or newer, choose Apple Silicon. If it shows **Processor** with Intel, choose Intel.\n',
   )
 })
 
 test('Mac download notice is not duplicated when release notes are regenerated', () => {
   const notes = appendMacDownloadNotice({
-    body: createMacDownloadNotice({ productName: 'Reflect' }),
-    productName: 'Reflect',
+    body: createMacDownloadNotice({ productName: 'DayJot' }),
+    productName: 'DayJot',
   })
 
   expect(notes.match(/Which Mac download should I choose/g)).toHaveLength(1)
@@ -203,31 +203,31 @@ test('Mac download notice is not duplicated when release notes are regenerated',
 test('beta feed release carries the latest downloads without becoming the latest stable release', () => {
   expect(
     createBetaFeedReleaseArgs({
-      assets: ['Reflect.Beta_aarch64.dmg', 'Reflect.Beta_x86_64.dmg', 'latest.json'],
+      assets: ['DayJot.Beta_aarch64.dmg', 'DayJot.Beta_x86_64.dmg', 'latest.json'],
       commit: 'abc123',
     }),
   ).toEqual([
     'release',
     'create',
     'updater-beta',
-    'Reflect.Beta_aarch64.dmg',
-    'Reflect.Beta_x86_64.dmg',
+    'DayJot.Beta_aarch64.dmg',
+    'DayJot.Beta_x86_64.dmg',
     'latest.json',
     '--title',
-    'Latest Reflect Beta downloads',
+    'Latest DayJot Beta downloads',
     '--target',
     'abc123',
     '--prerelease',
     '--latest=false',
     '--notes',
-    'Moving downloads and updater feed for the latest Reflect Beta release. Choose a DMG for a fresh install; installed beta apps use latest.json.',
+    'Moving downloads and updater feed for the latest DayJot Beta release. Choose a DMG for a fresh install; installed beta apps use latest.json.',
   ])
 })
 
 test('beta feed replaces downloads before the updater manifest', () => {
   expect(
     createBetaFeedUploadSteps({
-      dmgPaths: ['Reflect.Beta_aarch64.dmg', 'Reflect.Beta_x86_64.dmg'],
+      dmgPaths: ['DayJot.Beta_aarch64.dmg', 'DayJot.Beta_x86_64.dmg'],
       manifestPath: 'latest.json',
     }),
   ).toEqual([
@@ -237,8 +237,8 @@ test('beta feed replaces downloads before the updater manifest', () => {
         'release',
         'upload',
         'updater-beta',
-        'Reflect.Beta_aarch64.dmg',
-        'Reflect.Beta_x86_64.dmg',
+        'DayJot.Beta_aarch64.dmg',
+        'DayJot.Beta_x86_64.dmg',
         '--clobber',
       ],
     },
@@ -252,7 +252,7 @@ test('beta feed replaces downloads before the updater manifest', () => {
 test('beta feed recovery downloads exact assets from the tagged release', () => {
   expect(
     createReleaseDownloadArgs({
-      assetNames: ['Reflect.Beta_aarch64.dmg', 'Reflect.Beta_x86_64.dmg', 'latest.json'],
+      assetNames: ['DayJot.Beta_aarch64.dmg', 'DayJot.Beta_x86_64.dmg', 'latest.json'],
       outputDir: '/tmp/release-assets',
       tag: 'v0.6.0-beta.14',
     }),
@@ -263,9 +263,9 @@ test('beta feed recovery downloads exact assets from the tagged release', () => 
     '--dir',
     '/tmp/release-assets',
     '--pattern',
-    'Reflect.Beta_aarch64.dmg',
+    'DayJot.Beta_aarch64.dmg',
     '--pattern',
-    'Reflect.Beta_x86_64.dmg',
+    'DayJot.Beta_x86_64.dmg',
     '--pattern',
     'latest.json',
   ])
@@ -311,7 +311,7 @@ test('release builds ask Tauri for the app bundle only', () => {
     JSON.stringify({
       plugins: {
         updater: {
-          endpoints: ['https://github.com/team-reflect/reflect-open/releases/latest/download/latest.json'],
+          endpoints: ['https://github.com/walkjoi/dayjot/releases/latest/download/latest.json'],
         },
       },
     }),
@@ -354,11 +354,9 @@ test('macOS entitlements resolve through platform and flavor overlays', () => {
   expect(macosEntitlementsPath('dev')).toBe(join(srcTauri, 'Entitlements.dev.plist'))
 })
 
-test('macOS provisioning profiles resolve per flavor and dev remains unprovisioned', () => {
-  const srcTauri = join(process.cwd(), 'src-tauri')
-
-  expect(macosProvisioningProfilePath('stable')).toBe(join(srcTauri, 'Reflect.provisionprofile'))
-  expect(macosProvisioningProfilePath('beta')).toBe(join(srcTauri, 'Reflect-beta.provisionprofile'))
+test('macOS provisioning profiles stay unconfigured until you embed your own', () => {
+  expect(macosProvisioningProfilePath('stable')).toBeNull()
+  expect(macosProvisioningProfilePath('beta')).toBeNull()
   expect(macosProvisioningProfilePath('dev')).toBeNull()
 })
 
@@ -368,7 +366,7 @@ test('macOS signing keeps app entitlements and adds only profile identity entitl
     'com.apple.security.device.audio-input': true,
   }
   const profileEntitlements = {
-    'com.apple.application-identifier': '789ULN5MZB.app.reflect.desktop.beta',
+    'com.apple.application-identifier': '789ULN5MZB.app.dayjot.desktop.beta',
     'com.apple.developer.team-identifier': '789ULN5MZB',
     'keychain-access-groups': ['789ULN5MZB.*'],
   }
@@ -376,12 +374,12 @@ test('macOS signing keeps app entitlements and adds only profile identity entitl
   expect(
     mergeMacosProfileIdentityEntitlements({
       appEntitlements,
-      bundleIdentifier: 'app.reflect.desktop.beta',
+      bundleIdentifier: 'app.dayjot.desktop.beta',
       profileEntitlements,
     }),
   ).toEqual({
     ...appEntitlements,
-    'com.apple.application-identifier': '789ULN5MZB.app.reflect.desktop.beta',
+    'com.apple.application-identifier': '789ULN5MZB.app.dayjot.desktop.beta',
     'com.apple.developer.team-identifier': '789ULN5MZB',
   })
 })
@@ -390,33 +388,33 @@ test('macOS signing rejects a provisioning profile for another flavor', () => {
   expect(() =>
     mergeMacosProfileIdentityEntitlements({
       appEntitlements: { 'com.apple.security.device.audio-input': true },
-      bundleIdentifier: 'app.reflect.desktop.beta',
+      bundleIdentifier: 'app.dayjot.desktop.beta',
       profileEntitlements: {
-        'com.apple.application-identifier': '789ULN5MZB.app.reflect.desktop',
+        'com.apple.application-identifier': '789ULN5MZB.app.dayjot.desktop',
         'com.apple.developer.team-identifier': '789ULN5MZB',
       },
     }),
-  ).toThrow('does not match bundle identifier "app.reflect.desktop.beta"')
+  ).toThrow('does not match bundle identifier "app.dayjot.desktop.beta"')
 })
 
 test('macOS signing compares the full profile bundle identifier, not only its suffix', () => {
   expect(() =>
     mergeMacosProfileIdentityEntitlements({
       appEntitlements: {},
-      bundleIdentifier: 'app.reflect.desktop.beta',
+      bundleIdentifier: 'app.dayjot.desktop.beta',
       profileEntitlements: {
-        'com.apple.application-identifier': '789ULN5MZB.other.app.reflect.desktop.beta',
+        'com.apple.application-identifier': '789ULN5MZB.other.app.dayjot.desktop.beta',
         'com.apple.developer.team-identifier': '789ULN5MZB',
       },
     }),
-  ).toThrow('does not match bundle identifier "app.reflect.desktop.beta"')
+  ).toThrow('does not match bundle identifier "app.dayjot.desktop.beta"')
 })
 
 test.each(['com.apple.application-identifier', 'com.apple.developer.team-identifier'])(
   'macOS signing rejects a profile missing %s',
   (missingEntitlement) => {
     const profileEntitlements = {
-      'com.apple.application-identifier': '789ULN5MZB.app.reflect.desktop.beta',
+      'com.apple.application-identifier': '789ULN5MZB.app.dayjot.desktop.beta',
       'com.apple.developer.team-identifier': '789ULN5MZB',
     }
     delete profileEntitlements[missingEntitlement]
@@ -424,7 +422,7 @@ test.each(['com.apple.application-identifier', 'com.apple.developer.team-identif
     expect(() =>
       mergeMacosProfileIdentityEntitlements({
         appEntitlements: {},
-        bundleIdentifier: 'app.reflect.desktop.beta',
+        bundleIdentifier: 'app.dayjot.desktop.beta',
         profileEntitlements,
       }),
     ).toThrow(`missing string entitlement "${missingEntitlement}"`)
@@ -435,9 +433,9 @@ test('macOS signing rejects a conflicting identity in the app entitlement file',
   expect(() =>
     mergeMacosProfileIdentityEntitlements({
       appEntitlements: { 'com.apple.developer.team-identifier': 'WRONGTEAM' },
-      bundleIdentifier: 'app.reflect.desktop',
+      bundleIdentifier: 'app.dayjot.desktop',
       profileEntitlements: {
-        'com.apple.application-identifier': '789ULN5MZB.app.reflect.desktop',
+        'com.apple.application-identifier': '789ULN5MZB.app.dayjot.desktop',
         'com.apple.developer.team-identifier': '789ULN5MZB',
       },
     }),
@@ -447,13 +445,13 @@ test('macOS signing rejects a conflicting identity in the app entitlement file',
 test('macOS verification rejects a signed app that lost a profile identity entitlement', () => {
   expect(() =>
     assertMacosProfileIdentityEntitlements({
-      bundleIdentifier: 'app.reflect.desktop.beta',
+      bundleIdentifier: 'app.dayjot.desktop.beta',
       profileEntitlements: {
-        'com.apple.application-identifier': '789ULN5MZB.app.reflect.desktop.beta',
+        'com.apple.application-identifier': '789ULN5MZB.app.dayjot.desktop.beta',
         'com.apple.developer.team-identifier': '789ULN5MZB',
       },
       signedEntitlements: {
-        'com.apple.application-identifier': '789ULN5MZB.app.reflect.desktop.beta',
+        'com.apple.application-identifier': '789ULN5MZB.app.dayjot.desktop.beta',
       },
     }),
   ).toThrow('signed app entitlement "com.apple.developer.team-identifier" is undefined')
@@ -467,20 +465,20 @@ test('sidecar launch checks cover native targets and Intel under Rosetta', () =>
 })
 
 test('updater archive is created from the finalized app bundle', () => {
-  expect(createUpdaterArchiveArgs({ app: '/tmp/build/Reflect.app', archive: '/tmp/build/Reflect.app.tar.gz' })).toEqual([
+  expect(createUpdaterArchiveArgs({ app: '/tmp/build/DayJot.app', archive: '/tmp/build/DayJot.app.tar.gz' })).toEqual([
     '-czf',
-    '/tmp/build/Reflect.app.tar.gz',
+    '/tmp/build/DayJot.app.tar.gz',
     '-C',
     '/tmp/build',
-    'Reflect.app',
+    'DayJot.app',
   ])
 })
 
 test('updater manifest includes both macOS release targets', () => {
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-release-test-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-release-test-'))
   try {
-    const appleSignature = join(tempDir, 'Reflect Beta_0.3.4_aarch64.app.tar.gz.sig')
-    const intelSignature = join(tempDir, 'Reflect Beta_0.3.4_x86_64.app.tar.gz.sig')
+    const appleSignature = join(tempDir, 'DayJot Beta_0.3.4_aarch64.app.tar.gz.sig')
+    const intelSignature = join(tempDir, 'DayJot Beta_0.3.4_x86_64.app.tar.gz.sig')
     writeFileSync(appleSignature, 'apple-signature\n')
     writeFileSync(intelSignature, 'intel-signature\n')
 
@@ -489,17 +487,17 @@ test('updater manifest includes both macOS release targets', () => {
         artifacts: [
           {
             platform: 'darwin-aarch64',
-            updaterArchive: join(tempDir, 'Reflect Beta_0.3.4_aarch64.app.tar.gz'),
+            updaterArchive: join(tempDir, 'DayJot Beta_0.3.4_aarch64.app.tar.gz'),
             updaterSignature: appleSignature,
           },
           {
             platform: 'darwin-x86_64',
-            updaterArchive: join(tempDir, 'Reflect Beta_0.3.4_x86_64.app.tar.gz'),
+            updaterArchive: join(tempDir, 'DayJot Beta_0.3.4_x86_64.app.tar.gz'),
             updaterSignature: intelSignature,
           },
         ],
         pubDate: '2026-06-26T00:00:00.000Z',
-        slug: 'team-reflect/reflect-open',
+        slug: 'walkjoi/dayjot',
         tag: 'v0.3.4',
         version: '0.3.4',
       }),
@@ -509,11 +507,11 @@ test('updater manifest includes both macOS release targets', () => {
       platforms: {
         'darwin-aarch64': {
           signature: 'apple-signature',
-          url: 'https://github.com/team-reflect/reflect-open/releases/download/v0.3.4/Reflect.Beta_0.3.4_aarch64.app.tar.gz',
+          url: 'https://github.com/walkjoi/dayjot/releases/download/v0.3.4/DayJot.Beta_0.3.4_aarch64.app.tar.gz',
         },
         'darwin-x86_64': {
           signature: 'intel-signature',
-          url: 'https://github.com/team-reflect/reflect-open/releases/download/v0.3.4/Reflect.Beta_0.3.4_x86_64.app.tar.gz',
+          url: 'https://github.com/walkjoi/dayjot/releases/download/v0.3.4/DayJot.Beta_0.3.4_x86_64.app.tar.gz',
         },
       },
     })
@@ -523,40 +521,40 @@ test('updater manifest includes both macOS release targets', () => {
 })
 
 test('DMG creation uses direct hdiutil packaging', () => {
-  expect(createDmgArgs({ dmg: 'Reflect.dmg', sourceFolder: '/tmp/stage', volumeName: 'Reflect' })).toEqual([
+  expect(createDmgArgs({ dmg: 'DayJot.dmg', sourceFolder: '/tmp/stage', volumeName: 'DayJot' })).toEqual([
     'create',
     '-volname',
-    'Reflect',
+    'DayJot',
     '-srcfolder',
     '/tmp/stage',
     '-ov',
     '-format',
     'UDZO',
-    'Reflect.dmg',
+    'DayJot.dmg',
   ])
 })
 
 test('DMG signing timestamps the container', () => {
-  expect(signDmgArgs({ dmg: 'Reflect.dmg', identity: 'Developer ID Application: Reflect App, LLC (789ULN5MZB)' })).toEqual(
-    ['--force', '--sign', 'Developer ID Application: Reflect App, LLC (789ULN5MZB)', '--timestamp', 'Reflect.dmg'],
+  expect(signDmgArgs({ dmg: 'DayJot.dmg', identity: 'Developer ID Application: DayJot App, LLC (789ULN5MZB)' })).toEqual(
+    ['--force', '--sign', 'Developer ID Application: DayJot App, LLC (789ULN5MZB)', '--timestamp', 'DayJot.dmg'],
   )
 })
 
 test('DMG signing can target a temporary CI keychain', () => {
   expect(
     signDmgArgs({
-      dmg: 'Reflect.dmg',
-      identity: 'Developer ID Application: Reflect App, LLC (789ULN5MZB)',
-      keychain: '/tmp/reflect-signing.keychain-db',
+      dmg: 'DayJot.dmg',
+      identity: 'Developer ID Application: DayJot App, LLC (789ULN5MZB)',
+      keychain: '/tmp/dayjot-signing.keychain-db',
     }),
   ).toEqual([
     '--force',
     '--sign',
-    'Developer ID Application: Reflect App, LLC (789ULN5MZB)',
+    'Developer ID Application: DayJot App, LLC (789ULN5MZB)',
     '--timestamp',
     '--keychain',
-    '/tmp/reflect-signing.keychain-db',
-    'Reflect.dmg',
+    '/tmp/dayjot-signing.keychain-db',
+    'DayJot.dmg',
   ])
 })
 

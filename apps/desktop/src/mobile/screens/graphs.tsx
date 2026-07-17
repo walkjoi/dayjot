@@ -6,7 +6,7 @@ import {
   hasBridge,
   mobileStorage,
   type MobileStorageKind,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { InlineAlert } from '@/components/inline-alert'
 import { Spinner } from '@/components/ui/spinner'
 import { graphNameFromRoot } from '@/lib/graph-names'
@@ -99,7 +99,7 @@ export function MobileGraphs(): ReactElement {
                 ? null
                 : icloudDocumentsRoot === null
                   ? 'iCloud Drive isn’t available on this device.'
-                  : 'Syncs with Reflect on your other devices.'
+                  : 'Syncs with DayJot on your other devices.'
             }
           >
             {resolving ? (

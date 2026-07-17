@@ -10,8 +10,8 @@ const mocks = vi.hoisted(() => ({
   markdownPreview: vi.fn(),
 }))
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   resolveExistingWikiTarget: mocks.resolveExistingWikiTarget,
 }))
 
@@ -44,7 +44,7 @@ function setupRenderer(
       generation: 7,
       graphKey: '/graph',
       dateFormat: 'mdy',
-      resolveImageUrl: (source) => `reflect-asset://${source}`,
+      resolveImageUrl: (source) => `dayjot-asset://${source}`,
       resolveAssetOpenPath: (source) =>
         source.startsWith('assets/') && !source.includes('..') ? source : null,
       ...overrides,
@@ -128,7 +128,7 @@ describe('useWikiLinkHoverPreview', () => {
     expect(props.resolveImageUrl('assets/../secret.png')).toBeNull()
     expect(props.resolveImageUrl('assets/vector.svg')).toBeNull()
     expect(props.resolveImageUrl('assets/cat.png')).toBe(
-      'reflect-asset://assets/cat.png?reflect-preview=raster',
+      'dayjot-asset://assets/cat.png?dayjot-preview=raster',
     )
   })
 
