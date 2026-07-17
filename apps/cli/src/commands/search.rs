@@ -6,7 +6,7 @@
 use std::fs;
 use std::path::Path;
 
-use dayjot_index_schema::{INDEX_FILE, DAYJOT_DIR};
+use dayjot_index_schema::{DAYJOT_DIR, INDEX_FILE};
 
 use crate::commands::output::{print_json, HitJson, SearchJson};
 use crate::commands::warn;
@@ -33,8 +33,8 @@ pub fn run(graph: &Graph, json: bool, query: &str, limit: usize) -> Result<(), C
         IndexOpen::Opened(opened) => opened,
         IndexOpen::Missing => {
             return Err(CliError::NoIndex(format!(
-                "no search index at {DAYJOT_DIR}/{INDEX_FILE} — open this graph in DayJot to build it"
-            )))
+            "no search index at {DAYJOT_DIR}/{INDEX_FILE} — open this graph in DayJot to build it"
+        )))
         }
         IndexOpen::Unusable(message) => return Err(CliError::NoIndex(message)),
     };

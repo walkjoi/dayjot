@@ -15,7 +15,7 @@ use std::time::Duration;
 
 use rusqlite::{Connection, OpenFlags};
 
-use dayjot_index_schema::{INDEX_FILE, LATEST_SCHEMA_VERSION, DAYJOT_DIR};
+use dayjot_index_schema::{DAYJOT_DIR, INDEX_FILE, LATEST_SCHEMA_VERSION};
 
 use crate::error::CliError;
 use crate::hash::hash_content;

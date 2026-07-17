@@ -544,10 +544,7 @@ fn path_resolves_notes_and_would_be_dailies() {
     assert_eq!(value["path"], "daily/2099-01-01.md");
     assert_eq!(value["exists"], false);
 
-    let existing = json(&dayjot(
-        &fixture,
-        &["path", "notes/project-x.md", "--json"],
-    ));
+    let existing = json(&dayjot(&fixture, &["path", "notes/project-x.md", "--json"]));
     assert_eq!(existing["exists"], true);
     assert!(existing.get("date").is_none());
 }
@@ -579,10 +576,7 @@ fn open_print_falls_back_to_the_encoded_path_without_an_id() {
 
     let output = dayjot(&fixture, &["open", "No Id Here", "--print"]);
     assert!(output.status.success(), "stderr: {}", stderr(&output));
-    assert_eq!(
-        stdout(&output),
-        "dayjot://note/notes%2Fno%20id%20here.md\n"
-    );
+    assert_eq!(stdout(&output), "dayjot://note/notes%2Fno%20id%20here.md\n");
 }
 
 #[test]
