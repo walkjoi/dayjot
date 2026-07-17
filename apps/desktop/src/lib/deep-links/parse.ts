@@ -1,4 +1,4 @@
-import type { TextCaptureKind } from '@reflect/core'
+import type { TextCaptureKind } from '@dayjot/core'
 import { isIsoDate } from '@/lib/dates'
 import {
   DEEP_LINK_SCHEME,
@@ -7,7 +7,7 @@ import {
 } from '@/lib/deep-links/deep-link'
 
 /**
- * Parse a `reflect://` URL into a {@link DeepLink}, or null for anything the
+ * Parse a `dayjot://` URL into a {@link DeepLink}, or null for anything the
  * grammar doesn't name. Null — not a best-effort guess: a URL is untrusted
  * input from outside the app, so an unknown verb, a malformed date, an
  * over-long payload, or stray path segments all reject rather than "open
@@ -18,7 +18,7 @@ export function parseDeepLink(raw: string): DeepLink | null {
   if (url === null || url.protocol !== `${DEEP_LINK_SCHEME}:`) {
     return null
   }
-  // The verb rides in the URL's host position (`reflect://today`) — an opaque
+  // The verb rides in the URL's host position (`dayjot://today`) — an opaque
   // host on a non-special scheme, which the WHATWG parser does *not* fold, so
   // lower-case it here. The argument is the path remainder.
   const argument = decodedPathRemainder(url)
@@ -52,7 +52,7 @@ export function parseDeepLink(raw: string): DeepLink | null {
 }
 
 /**
- * Whether an href uses the app's `reflect:` scheme — the routing predicate
+ * Whether an href uses the app's `dayjot:` scheme — the routing predicate
  * for links clicked *inside* the app, which must dispatch through the in-app
  * deep-link pipeline instead of the OS opener (the opener capability denies
  * the scheme, dev builds don't register it, and another installed flavor
@@ -75,7 +75,7 @@ function tryParseUrl(raw: string): URL | null {
 /**
  * The path after the verb, percent-decoded — `''` when absent (a bare or
  * trailing-slash URL), null when the encoding itself is malformed. Raw
- * slashes are kept so a hand-written `reflect://note/notes/foo.md` addresses
+ * slashes are kept so a hand-written `dayjot://note/notes/foo.md` addresses
  * the same note as the encoded form.
  */
 function decodedPathRemainder(url: URL): string | null {

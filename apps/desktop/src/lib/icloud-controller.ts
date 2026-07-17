@@ -11,7 +11,7 @@ import {
   subscribeOwnWrites,
   type FileChange,
   type GraphInfo,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { dirtyOpenPaths } from '@/editor/open-documents'
 import { throttledInvalidateIndexQueries } from '@/lib/query-client'
 

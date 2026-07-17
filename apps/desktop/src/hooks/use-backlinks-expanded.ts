@@ -1,7 +1,7 @@
 import { useSessionFlag } from '@/lib/use-session-flag'
 
-/** Session-wide (all notes) expanded state, old Reflect's `backlinks-expanded`. */
-const EXPANDED_STORAGE_KEY = 'reflect.backlinks-expanded'
+/** Session-wide (all notes) expanded state, old DayJot's `backlinks-expanded`. */
+const EXPANDED_STORAGE_KEY = 'dayjot.backlinks-expanded'
 
 /**
  * The incoming-backlinks section's expanded state: one flag for the whole

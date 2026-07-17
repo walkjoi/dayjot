@@ -1,4 +1,4 @@
-// Build a signed, notarized, distribution-ready macOS bundle of Reflect.
+// Build a signed, notarized, distribution-ready macOS bundle of DayJot.
 //
 // Usage:
 //   pnpm release:macos                Signed + notarized build, then verify
@@ -10,7 +10,7 @@
 //   pnpm release:macos --flavor=beta  Build a specific flavor: stable | beta | dev (default: from the version)
 //
 // Signing configuration is intentionally not committed — contributors must be
-// able to build without Reflect's certificate. The Developer ID identity is
+// able to build without DayJot's certificate. The Developer ID identity is
 // auto-detected from the login keychain and notarization credentials come from
 // the keychain item created by `setup`. Environment variables override
 // auto-detection (what CI should use): APPLE_SIGNING_IDENTITY, plus either
@@ -37,11 +37,11 @@ import { basename, dirname, join } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
-const KEYCHAIN_SERVICE = 'reflect-notary'
-const UPDATER_KEYCHAIN_SERVICE = 'reflect-updater'
+const KEYCHAIN_SERVICE = 'dayjot-notary'
+const UPDATER_KEYCHAIN_SERVICE = 'dayjot-updater'
 const APP_SPECIFIC_PASSWORD_URL = 'https://account.apple.com'
 const BETA_UPDATER_FEED_TAG = 'updater-beta'
-const STABLE_UPDATER_ENDPOINT = 'https://github.com/team-reflect/reflect-open/releases/latest/download/latest.json'
+const STABLE_UPDATER_ENDPOINT = 'https://github.com/walkjoi/dayjot/releases/latest/download/latest.json'
 const APPLE_SILICON_MAC_TARGET = 'aarch64-apple-darwin'
 const INTEL_MAC_TARGET = 'x86_64-apple-darwin'
 const INTEL_ONNX_RUNTIME_VERSION = '1.23.2'
@@ -53,7 +53,7 @@ const ONNX_RUNTIME_DYLIB_RESOURCE = 'libonnxruntime.dylib'
 const INTEL_ONNX_RUNTIME_RESOURCE_SOURCE = `resources/onnxruntime/${ONNX_RUNTIME_DYLIB_RESOURCE}`
 const RELEASE_NOTES_FILENAME = 'release-notes.md'
 const MAC_DOWNLOAD_NOTICE_HEADING = '## Which Mac download should I choose?'
-const MACOS_SIDECARS = ['reflect', 'reflect-capture-host']
+const MACOS_SIDECARS = ['dayjot', 'dayjot-capture-host']
 const MACOS_PROFILE_IDENTITY_ENTITLEMENTS = [
   'com.apple.application-identifier',
   'com.apple.developer.team-identifier',
@@ -180,7 +180,7 @@ function stageIntelOnnxRuntime() {
     return
   }
 
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-onnxruntime-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-onnxruntime-'))
   try {
     const archive = join(tempDir, `${INTEL_ONNX_RUNTIME_ARCHIVE_ROOT}.tgz`)
     log(`downloading ONNX Runtime ${INTEL_ONNX_RUNTIME_VERSION} for Intel macOS…`)
@@ -428,7 +428,7 @@ export function createUpdaterManifest({ artifacts, pubDate, slug, tag, version }
   const platforms = {}
   for (const artifact of artifacts) {
     // GitHub rewrites spaces in uploaded asset names to dots, so a flavor whose
-    // productName has a space ("Reflect Beta") is served under a dotted name.
+    // productName has a space ("DayJot Beta") is served under a dotted name.
     // The manifest URL must match the uploaded name or auto-update gets a 404.
     const assetName = githubAssetName(basename(artifact.updaterArchive))
     platforms[artifact.platform] = {
@@ -649,7 +649,7 @@ function prepareMacosSigningEntitlements({ app, flavor }) {
     bundleIdentifier,
     profileEntitlements,
   })
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-signing-entitlements-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-signing-entitlements-'))
   const path = join(tempDir, 'Entitlements.plist')
   try {
     // The plist round-trips through JSON, which only preserves strings,
@@ -707,9 +707,9 @@ function importSigningCertificate() {
   if (!APPLE_CERTIFICATE) return null
   if (!APPLE_CERTIFICATE_PASSWORD) fail('APPLE_CERTIFICATE is set but APPLE_CERTIFICATE_PASSWORD is not')
 
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-signing-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-signing-'))
   const certificatePath = join(tempDir, 'certificate.p12')
-  const keychainPath = join(tempDir, 'reflect-signing.keychain-db')
+  const keychainPath = join(tempDir, 'dayjot-signing.keychain-db')
   const keychainPassword = randomBytes(24).toString('hex')
   const previousKeychains = listUserKeychains()
 
@@ -757,7 +757,7 @@ function createDmg({ flavor, identity, keychain, target }) {
   const { app, dmg } = bundlePaths(flavor, target)
   if (!existsSync(app)) fail(`${app} does not exist — tauri did not produce the app bundle`)
 
-  const stagingRoot = mkdtempSync(join(tmpdir(), 'reflect-dmg-'))
+  const stagingRoot = mkdtempSync(join(tmpdir(), 'dayjot-dmg-'))
   const stagingDir = join(stagingRoot, `${conf.productName}-dmg`)
   const stagedApp = join(stagingDir, basename(app))
   try {
@@ -805,7 +805,7 @@ function submitNotarization({ credentials, label, path }) {
 }
 
 function notarizeApp(app, credentials) {
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-app-notary-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-app-notary-'))
   try {
     const zip = join(tempDir, `${basename(app)}.zip`)
     log(`creating ${basename(zip)} for app notarization…`)
@@ -852,14 +852,14 @@ function verifySidecarsLaunch({ flavor, target }) {
   const checks = [
     {
       args: ['--version'],
-      binary: join(app, 'Contents', 'MacOS', 'reflect'),
-      description: 'reflect CLI launch',
-      outputPattern: /^reflect \d/,
+      binary: join(app, 'Contents', 'MacOS', 'dayjot'),
+      description: 'dayjot CLI launch',
+      outputPattern: /^dayjot \d/,
     },
     {
       args: [],
-      binary: join(app, 'Contents', 'MacOS', 'reflect-capture-host'),
-      description: 'reflect capture host launch',
+      binary: join(app, 'Contents', 'MacOS', 'dayjot-capture-host'),
+      description: 'dayjot capture host launch',
       outputPattern: null,
     },
   ]
@@ -1256,7 +1256,7 @@ export function createMacDownloadNotice({ productName }) {
   ].join('\n')
 }
 
-/** Append Reflect's Mac download guidance after GitHub's generated notes. */
+/** Append DayJot's Mac download guidance after GitHub's generated notes. */
 export function appendMacDownloadNotice({ body, productName }) {
   const trimmedBody = body.trimEnd()
   if (trimmedBody.includes(MAC_DOWNLOAD_NOTICE_HEADING)) return `${trimmedBody}\n`
@@ -1286,7 +1286,7 @@ function generateReleaseNotesBody({ commit, tag }) {
   return generated.body
 }
 
-/** Write generated release notes plus Reflect's Mac download footer to disk. */
+/** Write generated release notes plus DayJot's Mac download footer to disk. */
 function writeReleaseNotes({ commit, outputDir, productName, tag }) {
   log('generating GitHub release notes…')
   const body = generateReleaseNotesBody({ commit, tag })
@@ -1348,13 +1348,13 @@ export function createBetaFeedReleaseArgs({ assets, commit }) {
     BETA_UPDATER_FEED_TAG,
     ...assets,
     '--title',
-    'Latest Reflect Beta downloads',
+    'Latest DayJot Beta downloads',
     '--target',
     commit,
     '--prerelease',
     '--latest=false',
     '--notes',
-    'Moving downloads and updater feed for the latest Reflect Beta release. Choose a DMG for a fresh install; installed beta apps use latest.json.',
+    'Moving downloads and updater feed for the latest DayJot Beta release. Choose a DMG for a fresh install; installed beta apps use latest.json.',
   ]
 }
 
@@ -1395,7 +1395,7 @@ function parseReleaseVersion(version) {
   }
 }
 
-/** Compare Reflect stable/beta versions, returning negative, zero, or positive. */
+/** Compare DayJot stable/beta versions, returning negative, zero, or positive. */
 export function compareReleaseVersions(left, right) {
   const leftVersion = parseReleaseVersion(left)
   const rightVersion = parseReleaseVersion(right)
@@ -1411,7 +1411,7 @@ export function compareReleaseVersions(left, right) {
   return Math.sign(leftVersion.prerelease - rightVersion.prerelease)
 }
 
-/** Select the highest Reflect beta version from GitHub release tag names. */
+/** Select the highest DayJot beta version from GitHub release tag names. */
 export function newestBetaVersionFromTags(tags) {
   const versions = tags
     .map((tag) => tag.trim())
@@ -1526,7 +1526,7 @@ function syncBetaFeed() {
   }
   log(`syncing ${BETA_UPDATER_FEED_TAG} to the newest published beta, ${version}`)
 
-  const tempDir = mkdtempSync(join(tmpdir(), 'reflect-beta-feed-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'dayjot-beta-feed-'))
   try {
     const sourceDir = join(tempDir, 'source')
     downloadReleaseAssets({ assetNames, outputDir: sourceDir, tag })
@@ -1603,7 +1603,7 @@ function publishIntoExistingRelease({ assets, draft, prerelease, productName, re
  */
 function publish({ deferBetaFeed, draft, flavorFlag, fromArtifacts }) {
   const { commit, flavor, productName, release, tag, version } = ensurePublishableRelease({ flavorFlag })
-  const artifactDir = fromArtifacts ?? mkdtempSync(join(tmpdir(), 'reflect-release-assets-'))
+  const artifactDir = fromArtifacts ?? mkdtempSync(join(tmpdir(), 'dayjot-release-assets-'))
 
   if (!fromArtifacts) {
     for (const target of DEFAULT_PUBLISH_TARGETS) {
@@ -1688,7 +1688,7 @@ async function setup() {
 
 /**
  * Generate the Tauri updater keypair and store the private key in the
- * keychain (item "reflect-updater", base64-wrapped). The public key must be
+ * keychain (item "dayjot-updater", base64-wrapped). The public key must be
  * committed as `plugins.updater.pubkey` in tauri.conf.json — installed apps
  * verify every update payload against it, so rotating the key only reaches
  * users through a release signed with the OLD key that ships the NEW pubkey.
@@ -1702,7 +1702,7 @@ function setupUpdater() {
         `  \`security delete-generic-password -s ${UPDATER_KEYCHAIN_SERVICE}\` and rerun.`,
     )
   }
-  const keyDir = mkdtempSync(join(tmpdir(), 'reflect-updater-'))
+  const keyDir = mkdtempSync(join(tmpdir(), 'dayjot-updater-'))
   try {
     const keyPath = join(keyDir, 'updater.key')
     const generate = spawnSync(

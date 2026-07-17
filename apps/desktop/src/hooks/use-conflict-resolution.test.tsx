@@ -7,12 +7,12 @@ import {
   resolveConflictMarkers,
   writeNote,
   type GraphInfo,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { invalidateIndexQueries } from '@/lib/query-client'
 import { useConflictResolution } from './use-conflict-resolution'
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   readNote: vi.fn(),
   writeNote: vi.fn(async () => {}),
   indexNote: vi.fn(async () => {}),

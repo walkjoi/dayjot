@@ -177,7 +177,7 @@ export const indexedNoteSchema = z.object({
   /** Emails the note owns via `- Email:` contact-field bullets. */
   emails: z.array(indexedEmailSchema),
   assets: z.array(z.string()),
-  /** Reflect task rows for the Tasks projection (Plan 18). */
+  /** DayJot task rows for the Tasks projection (Plan 18). */
   tasks: z.array(indexedTaskSchema),
 })
 export type IndexedNote = z.infer<typeof indexedNoteSchema>

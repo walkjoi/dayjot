@@ -39,7 +39,7 @@ struct RecordingStatus: Encodable {
 }
 
 /// The payload of the `nativeAction` event — an OS entry point (Siri, the
-/// home-screen quick action, the lock-screen widget's `reflect://` URL)
+/// home-screen quick action, the lock-screen widget's `dayjot://` URL)
 /// asked for something only the webview can present.
 struct NativeAction: Encodable {
   /// Currently only `recordAudio`.
@@ -85,7 +85,7 @@ struct StagedPathArgs: Decodable {
   let path: String
 }
 
-/// Reflect's native audio-memo recorder (the mobile leg of the raw-first
+/// DayJot's native audio-memo recorder (the mobile leg of the raw-first
 /// pipeline in `packages/core/src/actions/audio-memo.ts`).
 ///
 /// The V1 lesson this preserves: **capture must not depend on the webview.**
@@ -118,18 +118,18 @@ class RecordingPlugin: Plugin {
   /// The Siri/App-Intent bridge: intents compiled into the app target run in
   /// this process but in a different module, so they talk to the plugin
   /// through NotificationCenter. Names are duplicated in
-  /// `gen/apple/Sources/reflect-open/` — keep them in sync.
+  /// `gen/apple/Sources/dayjot-desktop/` — keep them in sync.
   static let startRequestedNotification = Notification.Name(
-    "app.reflect.recording.start-requested")
+    "app.dayjot.recording.start-requested")
   static let stopRequestedNotification = Notification.Name(
-    "app.reflect.recording.stop-requested")
+    "app.dayjot.recording.stop-requested")
   /// The home-screen quick action's `UIApplicationShortcutItemType`.
-  static let recordShortcutType = "app.reflect.record-audio"
+  static let recordShortcutType = "app.dayjot.record-audio"
   /// The persisted native-action queue (the V1 handshake): an action fired
   /// from an OS entry point survives webview crashes and cold starts here
   /// until the webview confirms it ran.
-  private static let pendingActionKey = "reflect.recording.pendingAction"
-  private static let pendingActionQueuedAtKey = "reflect.recording.pendingActionQueuedAt"
+  private static let pendingActionKey = "dayjot.recording.pendingAction"
+  private static let pendingActionQueuedAtKey = "dayjot.recording.pendingActionQueuedAt"
   /// A queued action older than this is dropped, not delivered: re-firing a
   /// crash-orphaned request seconds later is the contract, but turning the
   /// microphone on days after the tap that asked for it is a surprise no
@@ -385,7 +385,7 @@ class RecordingPlugin: Plugin {
     guard recorder.record(forDuration: maxDurationMs / 1000) else {
       deactivateAudioSession()
       throw NSError(
-        domain: "app.reflect.recording", code: 1,
+        domain: "app.dayjot.recording", code: 1,
         userInfo: [NSLocalizedDescriptionKey: "the audio recorder refused to start"])
     }
 
@@ -556,7 +556,7 @@ class RecordingPlugin: Plugin {
   }
 
   /// Queue a native action from the Rust side (the lock-screen widget's
-  /// `reflect://record-audio` URL arrives as a tao `Opened` event).
+  /// `dayjot://record-audio` URL arrives as a tao `Opened` event).
   @objc public func queueAction(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(QueueActionArgs.self)
     DispatchQueue.main.async {
@@ -711,7 +711,7 @@ class RecordingPlugin: Plugin {
     let url = URL(fileURLWithPath: path).standardizedFileURL
     guard url.path.hasPrefix(directory.path + "/") else {
       throw NSError(
-        domain: "app.reflect.recording", code: 2,
+        domain: "app.dayjot.recording", code: 2,
         userInfo: [NSLocalizedDescriptionKey: "path is outside the recording staging directory"])
     }
     return url

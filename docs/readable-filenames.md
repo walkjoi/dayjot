@@ -11,9 +11,9 @@ Three rules make the whole system hang together:
    (the first H1, or frontmatter `title:`); the slug is derived from it, never
    edited directly. There is no "rename file" UI — retitle the note and the
    filename follows.
-2. **The frontmatter `id` is the durable identity.** Every note Reflect
+2. **The frontmatter `id` is the durable identity.** Every note DayJot
    creates carries `id: <lowercase ulid>`. Filenames change; the id never
-   does. It's what lets the index recognize a file that moved while Reflect
+   does. It's what lets the index recognize a file that moved while DayJot
    wasn't looking, and what exposes sync forks.
 3. **Wiki links carry titles, not paths.** `[[Meeting Notes]]` resolves at
    query time against the index's title/alias keys, so a file rename breaks
@@ -36,7 +36,7 @@ Two properties are load-bearing:
 
 - **Lowercase-only output** makes APFS/NTFS case-insensitivity and git
   case-sensitivity agree by construction — `Meeting.md` vs `meeting.md` can
-  never fight across platforms because Reflect only ever writes the latter.
+  never fight across platforms because DayJot only ever writes the latter.
 - **The 60-point cap** serves readability and the filesystem at once: 60
   worst-case 4-byte letters stays inside the 255-byte basename limit with
   room for `notes/`, `.md`, and a collision suffix.
@@ -120,7 +120,7 @@ and the upsert re-applies an identical projection.
 
 ## External renames heal by id
 
-Rename a file in Finder, Obsidian, or via a sync pull, and Reflect's index
+Rename a file in Finder, Obsidian, or via a sync pull, and DayJot's index
 recognizes it: an indexed row whose file vanished plus an unindexed file
 carrying the same frontmatter `id` is a *move*, not a delete+create
 (`packages/core/src/indexing/move-detection.ts`, `move-healing.ts`). The rows
@@ -134,7 +134,7 @@ Limits, all deliberate:
 - **Ambiguous ids never pair.** Two files claiming one id (or one id claimed
   by two vanished rows) could wire one note's history to another's file —
   those surface as sync forks instead.
-- **Files without ids can't heal** — anything created outside Reflect falls
+- **Files without ids can't heal** — anything created outside DayJot falls
   back to delete+create, which always converges.
 - **Split watcher batches degrade** to delete+create: the orphan row is gone
   before the arrival shows. In practice the debouncer groups rename halves.
@@ -164,7 +164,7 @@ tests in `src-tauri/src/git/tests.rs`):
 - **No id-based routes** — routes and the index stay path-keyed; the id is
   for reconciliation and fork detection.
 - **No md-style link rewriting** — `[text](notes/foo.md)` links (an
-  external-tool shape; Reflect writes wiki links) dangle after a rename. The
+  external-tool shape; DayJot writes wiki links) dangle after a rename. The
   `links` table records `kind = 'md'`, so a later pass can find them.
 - A note with explicit frontmatter `title:` can't be retitled from the editor
   (the H1 isn't its title), so its filename only changes via external renames

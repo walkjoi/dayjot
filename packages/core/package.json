@@ -1,5 +1,5 @@
 {
-  "name": "@reflect/core",
+  "name": "@dayjot/core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,8 +17,8 @@
     "@ai-sdk/google": "^3.0.84",
     "@ai-sdk/openai": "^3.0.84",
     "@meowdown/markdown": "^0.55.0",
-    "@reflect/db": "workspace:*",
-    "@reflect/utils": "workspace:*",
+    "@dayjot/db": "workspace:*",
+    "@dayjot/utils": "workspace:*",
     "ai": "^6.0.211",
     "kysely": "^0.28.17",
     "ulidx": "^2.4.1",

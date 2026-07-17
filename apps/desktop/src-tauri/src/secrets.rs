@@ -1,16 +1,16 @@
 //! Secrets in the OS keychain (Plan 10): the only place BYOK API keys live.
 //!
 //! Per the product principles, credentials never touch markdown, Git, or
-//! `.reflect/`. Rust exposes the keychain as an opaque name → value store (a
-//! capability); which names exist and what they hold is `@reflect/core`
+//! `.dayjot/`. Rust exposes the keychain as an opaque name → value store (a
+//! capability); which names exist and what they hold is `@dayjot/core`
 //! policy (see `ai/secrets.ts`).
 
 use keyring::Entry;
 
 use crate::error::{AppError, AppResult};
 
-/// The keychain service every Reflect secret is filed under.
-const SERVICE: &str = "reflect-open";
+/// The keychain service every DayJot secret is filed under.
+const SERVICE: &str = "dayjot-desktop";
 
 fn entry(name: &str) -> AppResult<Entry> {
     Entry::new(SERVICE, name).map_err(|err| AppError::io(err.to_string()))

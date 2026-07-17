@@ -53,7 +53,7 @@ function Harness({ showHost = true }: { readonly showHost?: boolean }): ReactEle
   )
 }
 
-function modifierClick(href = 'reflect://note/older'): void {
+function modifierClick(href = 'dayjot://note/older'): void {
   followDeepLink?.(href, new MouseEvent('click', { metaKey: true }))
 }
 
@@ -74,7 +74,7 @@ describe('useFollowDeepLink', () => {
     modifierClick()
 
     await vi.waitFor(() =>
-      expect(dispatchDeepLink).toHaveBeenCalledWith('reflect://note/older'),
+      expect(dispatchDeepLink).toHaveBeenCalledWith('dayjot://note/older'),
     )
   })
 
@@ -85,7 +85,7 @@ describe('useFollowDeepLink', () => {
     modifierClick()
 
     await vi.waitFor(() =>
-      expect(dispatchDeepLink).toHaveBeenCalledWith('reflect://note/older'),
+      expect(dispatchDeepLink).toHaveBeenCalledWith('dayjot://note/older'),
     )
   })
 
@@ -99,7 +99,7 @@ describe('useFollowDeepLink', () => {
     const view = render(<Harness />)
 
     modifierClick()
-    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('reflect://note/older')
+    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('dayjot://note/older')
     fireEvent.click(view.getByRole('button', { name: 'Navigate away' }))
     await act(async () => {
       finishOpen(false)
@@ -118,7 +118,7 @@ describe('useFollowDeepLink', () => {
     const view = render(<Harness />)
 
     modifierClick()
-    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('reflect://note/older')
+    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('dayjot://note/older')
     fireEvent.click(view.getByRole('button', { name: 'Open newer note link' }), {
       metaKey: true,
     })
@@ -140,7 +140,7 @@ describe('useFollowDeepLink', () => {
     const view = render(<Harness />)
 
     modifierClick()
-    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('reflect://note/older')
+    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('dayjot://note/older')
     fireEvent.click(view.getByRole('button', { name: 'Open newer note link' }), {
       metaKey: true,
     })
@@ -153,9 +153,9 @@ describe('useFollowDeepLink', () => {
   })
 
   it.each([
-    'reflect://append?text=captured',
-    'reflect://task?text=captured',
-    'reflect://edit-notes?content=invalid',
+    'dayjot://append?text=captured',
+    'dayjot://task?text=captured',
+    'dayjot://edit-notes?content=invalid',
   ])('does not cancel a pending failed fallback for non-address URL %s', async (url) => {
     let finishOpen: (opened: boolean) => void = () => {}
     openDeepLinkInNewWindow.mockReturnValue(
@@ -166,7 +166,7 @@ describe('useFollowDeepLink', () => {
     render(<Harness />)
 
     modifierClick()
-    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('reflect://note/older')
+    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('dayjot://note/older')
     followDeepLink?.(url, new MouseEvent('click', { metaKey: true }))
     await act(async () => {
       finishOpen(false)
@@ -175,11 +175,11 @@ describe('useFollowDeepLink', () => {
     expect(openDeepLinkInNewWindow).toHaveBeenCalledTimes(1)
     expect(dispatchDeepLink.mock.calls).toEqual([
       [url],
-      ['reflect://note/older'],
+      ['dayjot://note/older'],
     ])
   })
 
-  it.each(['reflect://today', 'reflect://note/newer'])(
+  it.each(['dayjot://today', 'dayjot://note/newer'])(
     'cancels a pending failed fallback for newer address URL %s',
     async (url) => {
       let finishOpen: (opened: boolean) => void = () => {}
@@ -191,7 +191,7 @@ describe('useFollowDeepLink', () => {
       render(<Harness />)
 
       modifierClick()
-      expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('reflect://note/older')
+      expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('dayjot://note/older')
       followDeepLink?.(url)
       await act(async () => {
         finishOpen(false)
@@ -212,7 +212,7 @@ describe('useFollowDeepLink', () => {
     const view = render(<Harness />)
 
     modifierClick()
-    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('reflect://note/older')
+    expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('dayjot://note/older')
     view.rerender(<Harness showHost={false} />)
     await act(async () => {
       finishOpen(false)

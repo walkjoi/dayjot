@@ -50,9 +50,9 @@ describe('UpdateToast', () => {
       expect(toast.message).toHaveBeenCalledWith(
         'Update available',
         expect.objectContaining({
-          id: 'reflect-update',
+          id: 'dayjot-update',
           closeButton: false,
-          description: 'Reflect 1.2.3 is ready to install.',
+          description: 'DayJot 1.2.3 is ready to install.',
           dismissible: false,
           action: expect.objectContaining({ label: 'Install' }),
         }),
@@ -66,14 +66,14 @@ describe('UpdateToast', () => {
 
   it('updates the same toast while downloading and when ready', async () => {
     const { rerender } = render(<UpdateToast />)
-    await waitFor(() => expect(toast.dismiss).toHaveBeenCalledWith('reflect-update'))
+    await waitFor(() => expect(toast.dismiss).toHaveBeenCalledWith('dayjot-update'))
 
     update.state = { phase: 'downloading', version: '1.2.3', percent: 42 }
     rerender(<UpdateToast />)
     await waitFor(() =>
       expect(toast.loading).toHaveBeenCalledWith(
         'Downloading update',
-        expect.objectContaining({ id: 'reflect-update', description: '42%' }),
+        expect.objectContaining({ id: 'dayjot-update', description: '42%' }),
       ),
     )
 
@@ -90,7 +90,7 @@ describe('UpdateToast', () => {
       expect(toast.success).toHaveBeenCalledWith(
         'Update ready',
         expect.objectContaining({
-          id: 'reflect-update',
+          id: 'dayjot-update',
           action: expect.objectContaining({ label: 'Restart' }),
         }),
       ),
@@ -102,7 +102,7 @@ describe('UpdateToast', () => {
 
     update.state = { phase: 'error', during: 'check', message: 'offline' }
     rerender(<UpdateToast />)
-    await waitFor(() => expect(toast.dismiss).toHaveBeenCalledWith('reflect-update'))
+    await waitFor(() => expect(toast.dismiss).toHaveBeenCalledWith('dayjot-update'))
     expect(toast.error).not.toHaveBeenCalled()
 
     update.state = { phase: 'error', during: 'install', message: 'signature failed' }
@@ -111,7 +111,7 @@ describe('UpdateToast', () => {
       expect(toast.error).toHaveBeenCalledWith(
         'Update failed',
         expect.objectContaining({
-          id: 'reflect-update',
+          id: 'dayjot-update',
           description: 'signature failed',
           action: expect.objectContaining({ label: 'Retry install' }),
         }),

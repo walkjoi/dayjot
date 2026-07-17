@@ -2,7 +2,7 @@ import React from 'react'
 import { ShortcutKey } from '../buttons/ShortcutKey.jsx'
 
 /**
- * SearchField — Reflect's signature "Search anything…" trigger that lives at
+ * SearchField — DayJot's signature "Search anything…" trigger that lives at
  * the top of the sidebar. It's a button styled as an input: magnifier, muted
  * placeholder, and a ghost ⌘K keycap pinned to the right.
  */

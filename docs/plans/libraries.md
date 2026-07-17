@@ -76,6 +76,6 @@ and MIT-licensed, so there is no copyleft constraint.
   notarization (Plan 15). `candle` (pure Rust, no dylib) was the alternative, not chosen.
 - **Auto-update (Plan 15):** first-class via the official Tauri updater plugin
   (`tauri-plugin-updater` + `@tauri-apps/plugin-updater`), updater-signed payloads,
-  `latest.json` + artifacts hosted on **GitHub Releases** (static — not a Reflect-hosted
+  `latest.json` + artifacts hosted on **GitHub Releases** (static — not a DayJot-hosted
   API). License/dependency scanning stays **manual** for now.
 - **Routing (Plan 06)** stays dependency-free: a small typed `Route` union + history stack.

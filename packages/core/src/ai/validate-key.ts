@@ -55,7 +55,7 @@ const PROBES: Record<AiProviderId, KeyProbe> = {
 /**
  * Probe `provider` with `apiKey`. `fetchFn` lets hosts substitute a
  * CORS-free transport (the desktop app passes the Tauri HTTP plugin's fetch;
- * `@reflect/core` itself stays platform-agnostic).
+ * `@dayjot/core` itself stays platform-agnostic).
  */
 export async function validateApiKey(
   provider: AiProviderId,

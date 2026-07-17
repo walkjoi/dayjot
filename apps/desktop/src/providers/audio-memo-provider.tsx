@@ -9,7 +9,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import { errorMessage, type GraphInfo } from '@reflect/core'
+import { errorMessage, type GraphInfo } from '@dayjot/core'
 import { isRecordingSupported, useAudioRecorder } from '@/hooks/use-audio-recorder'
 import { useAudioMemoPipeline } from '@/hooks/use-audio-memo-pipeline'
 import { useSettings } from '@/providers/settings-provider'
@@ -71,7 +71,7 @@ function micDeniedMessage(): string {
   const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Macintosh')
   return isMac
     ? 'Microphone access was denied. Allow it in System Settings → Privacy & Security → Microphone.'
-    : 'Microphone access was denied. Allow microphone access for Reflect in your system settings.'
+    : 'Microphone access was denied. Allow microphone access for DayJot in your system settings.'
 }
 
 interface AudioMemoProviderProps {

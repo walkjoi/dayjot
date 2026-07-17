@@ -182,7 +182,7 @@ function readLink(body: string, from: number, to: number, offset: number): Markd
 }
 
 /**
- * A Reflect task is the round Meowdown checkbox syntax: optional indentation,
+ * A DayJot task is the round Meowdown checkbox syntax: optional indentation,
  * then `+`, then whitespace, then the GFM marker. Square checklist items
  * (`- [ ]`/`* [ ]`) are intentionally not projected into Tasks.
  */
@@ -198,7 +198,7 @@ function lineEndAfter(body: string, from: number): number {
 
 /**
  * Resolve a `Task` Lezer node (the marker starts at `from`) into a
- * {@link ParsedTask}, or `null` when the marker shape isn't Reflect's task
+ * {@link ParsedTask}, or `null` when the marker shape isn't DayJot's task
  * syntax. `text` is the marker line minus its syntax; `raw` is that physical
  * line verbatim from the marker onward for the write-back guard.
  */

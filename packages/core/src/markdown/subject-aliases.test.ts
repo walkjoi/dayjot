@@ -28,8 +28,8 @@ describe('subjectAliases', () => {
 
   it('never splits a URL scheme', () => {
     expect(subjectAliases('https://reflect.app')).toEqual([])
-    expect(subjectAliases('Reflect // https://reflect.app')).toEqual([
-      'Reflect',
+    expect(subjectAliases('DayJot // https://reflect.app')).toEqual([
+      'DayJot',
       'https://reflect.app',
     ])
   })

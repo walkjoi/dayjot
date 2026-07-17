@@ -2,7 +2,7 @@
 
 **Goal:** Back up and sync a graph to **any git remote** — GitLab, Gitea, Codeberg,
 GitHub Enterprise, a self-hosted server, or a bare repo on a NAS — with **zero new UI**.
-The contract: a user runs `git init` (or Reflect already did) and
+The contract: a user runs `git init` (or DayJot already did) and
 `git remote add origin <url>` in their graph, and the existing sync loop (Plan 12)
 adopts it — debounced commit → push, pull/merge on launch/focus, conflicts-as-data.
 Everything else just works.

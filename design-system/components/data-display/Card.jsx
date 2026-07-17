@@ -1,7 +1,7 @@
 import React from 'react'
 
 /**
- * Card — a quiet surface container. Reflect cards are flat: a hairline border
+ * Card — a quiet surface container. DayJot cards are flat: a hairline border
  * and the house 8px radius do the work; pass `elevated` for a floating panel
  * (popovers, dialogs) which adds a soft shadow and a larger radius.
  */

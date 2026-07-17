@@ -14,7 +14,7 @@ import {
   type GraphInfo,
   type Settings,
   type StreamChatOptions,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ChatProvider, useChatSession } from '@/providers/chat-provider'
 import { RouterProvider, useRouter } from '@/routing/router'
@@ -40,8 +40,8 @@ const loadChatGraphContext = vi.hoisted(() =>
   >(),
 )
 const openRouteInNewWindow = vi.hoisted(() => vi.fn<() => Promise<boolean>>())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   streamChat,
   getSecret,
   resolveWikiTarget,

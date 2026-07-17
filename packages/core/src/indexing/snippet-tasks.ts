@@ -37,7 +37,7 @@ export interface SnippetTask {
   /** `[x]`/`[X]` → true, `[ ]` → false. */
   checked: boolean
   /**
-   * True for Reflect's round task syntax (a `+` bullet) — the only kind the
+   * True for DayJot's round task syntax (a `+` bullet) — the only kind the
    * Tasks projection covers and the only kind the snippet toggle writes.
    */
   round: boolean

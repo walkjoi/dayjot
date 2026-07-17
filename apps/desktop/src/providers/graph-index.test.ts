@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@reflect/core', () => ({
+vi.mock('@dayjot/core', () => ({
   openIndex: vi.fn(),
   syncIndex: vi.fn(),
   subscribeIndexChanges: vi.fn(),
@@ -14,7 +14,7 @@ import {
   subscribeIndexChanges,
   watchStart,
   watchStop,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { createGraphIndex } from './graph-index'
 
 const mockOpen = vi.mocked(openIndex)

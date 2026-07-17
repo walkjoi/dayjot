@@ -22,7 +22,7 @@ const packageRoot = join(here, '..')
 const migrationsDir = join(here, '..', '..', '..', 'crates', 'index-schema', 'migrations')
 const outFile = join(packageRoot, 'src', 'schema.gen.ts')
 
-const tmp = mkdtempSync(join(tmpdir(), 'reflect-codegen-'))
+const tmp = mkdtempSync(join(tmpdir(), 'dayjot-codegen-'))
 const dbPath = join(tmp, 'index.sqlite')
 
 try {

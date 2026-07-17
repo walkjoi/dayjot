@@ -1,6 +1,6 @@
 import { useState, type ReactElement, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { type WeekStartDay } from '@reflect/core'
+import { type WeekStartDay } from '@dayjot/core'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { formatDayLabel } from '@/lib/dates'
 import { addMonths, buildMonthGrid, monthLabel, monthOf, weekdayLabels } from '@/lib/month-grid'

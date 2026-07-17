@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import type { GraphColor } from '@reflect/core'
+import type { GraphColor } from '@dayjot/core'
 import { useSettings } from '@/providers/settings-provider'
 
 interface GraphColorsValue {

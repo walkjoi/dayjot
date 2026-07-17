@@ -6,7 +6,7 @@ import {
   type BacklinkContext,
   type BacklinkContextPage,
   type BacklinkSourceCursor,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { groupBacklinksBySource, type BacklinkSource } from '@/lib/group-backlinks'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'
 import { useGraph } from '@/providers/graph-provider'

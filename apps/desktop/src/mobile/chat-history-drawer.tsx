@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
-import { hasBridge, listChatConversations } from '@reflect/core'
+import { hasBridge, listChatConversations } from '@dayjot/core'
 import { Check, Trash2 } from 'lucide-react'
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer'
 import { CHAT_QUERY_SCOPE } from '@/lib/query-client'

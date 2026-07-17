@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react'
 import { Plus } from 'lucide-react'
-import type { AiPrompt } from '@reflect/core'
+import type { AiPrompt } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { useAiPrompts, type AiPromptDraft } from '@/hooks/use-ai-prompts'
 import { AiPromptDialog } from './ai-prompt-dialog'

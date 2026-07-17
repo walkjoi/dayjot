@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
-import type { ApiKeyValidation } from '@reflect/core'
+import type { ApiKeyValidation } from '@dayjot/core'
 
 /**
  * The mobile add-provider sheet over the shared submit flow: a verified key
@@ -13,8 +13,8 @@ import type { ApiKeyValidation } from '@reflect/core'
 const validateApiKey = vi.hoisted(() =>
   vi.fn<(provider: string, key: string, fetchFn?: typeof fetch) => Promise<ApiKeyValidation>>(),
 )
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   validateApiKey,
 }))
 vi.mock('@/lib/provider-fetch', () => ({ providerFetch: vi.fn() }))

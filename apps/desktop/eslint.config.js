@@ -10,7 +10,7 @@ import tseslint from 'typescript-eslint'
  * Rules of React violations that cause the React Compiler to silently skip
  * ("bail out" on) a component, so they keep the codebase compiler-friendly.
  *
- * Run via `pnpm --filter @reflect/desktop lint:react`, and wired into the
+ * Run via `pnpm --filter @dayjot/desktop lint:react`, and wired into the
  * repo-wide `pnpm lint` so it gates CI alongside oxlint.
  *
  * @see https://react.dev/learn/react-compiler

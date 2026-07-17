@@ -1,5 +1,5 @@
 /**
- * Old Reflect started every note on a single `-` bullet. The
+ * Old DayJot started every note on a single `-` bullet. The
  * `editorDefaultBullet` setting (on by default) restores that: a note that
  * opens with an empty body shows one empty bullet, caret inside, ready to type.
  *

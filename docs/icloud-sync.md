@@ -1,13 +1,13 @@
 # iCloud Drive Sync
 
-How Reflect syncs a graph through iCloud Drive (Plan 21 —
+How DayJot syncs a graph through iCloud Drive (Plan 21 —
 [design](plans/21-icloud-drive-sync.md)), and what happens when two devices
 edit the same note while apart.
 
 ## The user contract
 
 - **Where the graph lives.** In the app's iCloud Drive container — visible as
-  **iCloud Drive → Reflect** in Files (iOS) and Finder (macOS). Notes stay
+  **iCloud Drive → DayJot** in Files (iOS) and Finder (macOS). Notes stay
   plain markdown files; iCloud moves them between devices.
 - **Turning it on.** Both platforms offer iCloud first during onboarding and
   list every graph already in the container (it can hold several): macOS's
@@ -23,12 +23,12 @@ edit the same note while apart.
   Git remote. Two sync engines merging the same files fight each other, and a
   `.git` directory must never ride a file-sync provider (object-store
   corruption). Moving a graph to iCloud disconnects its GitHub backup first,
-  and `.git`/`.reflect` are always marked local-only as a belt-and-braces
+  and `.git`/`.dayjot` are always marked local-only as a belt-and-braces
   guard.
 
 ## What happens on a conflict
 
-When both devices change the same note while apart, Reflect resolves it
+When both devices change the same note while apart, DayJot resolves it
 itself where that is safe, in this order (deterministic — both devices
 resolving the same conflict produce identical bytes and converge):
 
@@ -47,7 +47,7 @@ resolving the same conflict produce identical bytes and converge):
    Nothing is ever discarded silently.
 
 Before any resolution is written, every involved version is archived under
-`.reflect/conflict-archive/<note-path>/` (kept ~90 days / 20 versions per
+`.dayjot/conflict-archive/<note-path>/` (kept ~90 days / 20 versions per
 note), so even a bad merge is recoverable. Binary assets never text-merge:
 the other device's copy lands alongside as `name (conflict).ext`.
 
@@ -58,21 +58,21 @@ provisioned:
 
 - **iOS**: the entitlements + `NSUbiquitousContainers` declaration are in
   `ios.project.yml` / `gen/apple`; Xcode automatic signing registers the
-  container (`iCloud.app.reflect`) on the first entitled build.
+  container (`iCloud.app.dayjot`) on the first entitled build.
 - **macOS**: the entitlements live in
   `apps/desktop/src-tauri/Entitlements.plist`, granted by the committed
-  Developer ID provisioning profiles (`Reflect.provisionprofile` /
-  `Reflect-beta.provisionprofile`, embedded pre-signing via
+  Developer ID provisioning profiles (`DayJot.provisionprofile` /
+  `DayJot-beta.provisionprofile`, embedded pre-signing via
   `bundle.macOS.files`). They're bound to one specific Developer ID
   certificate — rotating it, or editing the App IDs' capabilities in the
   portal, means regenerating and re-committing both profiles. The dev flavor
   signs with `Entitlements.dev.plist` (no iCloud — its App ID has no
-  profile), and plain contributor builds without Reflect's certificate
+  profile), and plain contributor builds without DayJot's certificate
   simply report iCloud as unavailable.
 
 Everything below the platform calls — the resolution ladder, the shadow
 merge-base store, the conflict sweep — is plain Rust with unit tests
-(`cargo test -p reflect-open --lib -- conflict icloud`) and runs identically
+(`cargo test -p dayjot-desktop --lib -- conflict icloud`) and runs identically
 in CI. What *needs a real container* (and the two-device manual matrix in
 the plan doc) is the `NSMetadataQuery` watch, `NSFileVersion` conflict
 delivery, and download/eviction behavior.

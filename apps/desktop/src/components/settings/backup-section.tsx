@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactElement } from 'react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useQuery } from '@tanstack/react-query'
-import { getConflictedNotes, getDuplicateNoteIds, hasBridge } from '@reflect/core'
+import { getConflictedNotes, getDuplicateNoteIds, hasBridge } from '@dayjot/core'
 import { ExternalLink } from 'lucide-react'
 import { ConnectGithubDialog } from '@/components/settings/connect-github-dialog'
 import { ConflictedNoteLinks } from '@/components/settings/conflicted-note-links'

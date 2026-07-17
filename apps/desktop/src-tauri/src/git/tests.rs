@@ -15,7 +15,7 @@ use super::{setup, status, MAX_FILE_BYTES};
 
 /// Scaffold a minimal graph layout (what `fs::bootstrap` produces).
 fn scaffold_graph(root: &Path) {
-    for dir in ["daily", "notes", "assets", ".reflect"] {
+    for dir in ["daily", "notes", "assets", ".dayjot"] {
         fs::create_dir_all(root.join(dir)).unwrap();
     }
     fs::write(
@@ -23,7 +23,7 @@ fn scaffold_graph(root: &Path) {
         crate::graph_gitignore::default_contents(),
     )
     .unwrap();
-    fs::write(root.join(".reflect/index.sqlite"), "not a real db").unwrap();
+    fs::write(root.join(".dayjot/index.sqlite"), "not a real db").unwrap();
 }
 
 fn write(root: &Path, rel: &str, contents: &str) {
@@ -112,14 +112,14 @@ fn setup_creates_graph_gitignore_defaults_when_missing() {
     setup(&root, None, None).unwrap();
 
     let gitignore = read(&root, ".gitignore");
-    assert!(gitignore.contains("/.reflect/"));
+    assert!(gitignore.contains("/.dayjot/"));
     assert!(gitignore.contains(".DS_Store"));
     assert!(gitignore.contains("Thumbs.db"));
     assert!(gitignore.contains("*.swp"));
 }
 
 #[test]
-fn commit_excludes_reflect_and_skips_when_clean() {
+fn commit_excludes_dayjot_and_skips_when_clean() {
     let fixture = fixture();
     let root = &fixture.graph_a;
     write(root, "notes/a.md", "# A\n");
@@ -132,8 +132,8 @@ fn commit_excludes_reflect_and_skips_when_clean() {
     assert!(paths.contains(&"notes/a.md".to_string()));
     assert!(paths.contains(&".gitignore".to_string()));
     assert!(
-        !paths.iter().any(|path| path.starts_with(".reflect")),
-        ".reflect/ leaked into backup: {paths:?}"
+        !paths.iter().any(|path| path.starts_with(".dayjot")),
+        ".dayjot/ leaked into backup: {paths:?}"
     );
 
     let second = commit_all(root, "Update notes", MAX_FILE_BYTES).unwrap();
@@ -801,7 +801,7 @@ fn adopting_an_existing_repo_appends_graph_gitignore_defaults() {
     setup(&root, None, None).unwrap();
     let gitignore = read(&root, ".gitignore");
     assert!(gitignore.contains("node_modules/"));
-    assert!(gitignore.contains("/.reflect/"));
+    assert!(gitignore.contains("/.dayjot/"));
     assert!(gitignore.contains(".DS_Store"));
     assert!(gitignore.contains("Thumbs.db"));
     assert!(gitignore.contains("*.swp"));
@@ -809,7 +809,7 @@ fn adopting_an_existing_repo_appends_graph_gitignore_defaults() {
     // Idempotent: a second setup must not duplicate the entry.
     setup(&root, None, None).unwrap();
     let again = read(&root, ".gitignore");
-    assert_eq!(again.matches(".reflect").count(), 1, "{again}");
+    assert_eq!(again.matches(".dayjot").count(), 1, "{again}");
     assert_eq!(again.matches(".DS_Store").count(), 1, "{again}");
     assert_eq!(again.matches("Thumbs.db").count(), 1, "{again}");
     assert_eq!(again.matches("*.swp").count(), 1, "{again}");

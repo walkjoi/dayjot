@@ -2,7 +2,7 @@
 //! together against a migrated in-memory database, the same shape the commands
 //! compose at runtime.
 
-use reflect_index_schema::LATEST_SCHEMA_VERSION;
+use dayjot_index_schema::LATEST_SCHEMA_VERSION;
 use rusqlite::Connection;
 use serde_json::Value;
 
@@ -1011,7 +1011,7 @@ fn open_index_at_creates_migrates_and_reopens() {
     let root = dir.path();
 
     let conn = open_index_at(root).expect("first open");
-    assert!(root.join(".reflect/index.sqlite").exists());
+    assert!(root.join(".dayjot/index.sqlite").exists());
     let version: i64 = conn
         .query_row("PRAGMA user_version", [], |row| row.get(0))
         .unwrap();

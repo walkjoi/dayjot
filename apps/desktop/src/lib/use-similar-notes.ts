@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { hasBridge, isDaily, relatedNotes, type RetrievalHit } from '@reflect/core'
+import { hasBridge, isDaily, relatedNotes, type RetrievalHit } from '@dayjot/core'
 import { readNoteSource } from '@/lib/note-frontmatter'
 import { isOstensiblyEmptyNoteSource } from '@/lib/note-emptiness'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'

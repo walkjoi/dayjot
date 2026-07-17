@@ -1,6 +1,6 @@
 import { useId, useState, type ReactElement, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { hasBridge, icloudStatus } from '@reflect/core'
+import { hasBridge, icloudStatus } from '@dayjot/core'
 import { Cloud, Folder, FolderPlus } from 'lucide-react'
 import { InlineAlert } from '@/components/inline-alert'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +38,7 @@ export function GraphChooser(): ReactElement {
   return (
     <ChooserShell>
       <div className="space-y-1.5 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-text">Welcome to Reflect</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-text">Welcome to DayJot</h1>
         <p className="text-sm text-text-secondary">
           Your notes are plain markdown files. Choose where to keep them.
         </p>

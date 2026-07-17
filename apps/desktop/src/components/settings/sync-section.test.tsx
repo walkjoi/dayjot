@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GraphInfo } from '@reflect/core'
+import type { GraphInfo } from '@dayjot/core'
 import type { BackupState } from '@/lib/backup-controller'
 import { RouterProvider, useRouter } from '@/routing/router'
 import { SyncSection } from './sync-section'
@@ -34,8 +34,8 @@ const sync = vi.hoisted(() => ({
 
 const openRouteInNewWindow = vi.hoisted(() => vi.fn<() => Promise<boolean>>())
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   icloudStatus: vi.fn(async () => core.status),
   icloudPendingCount: vi.fn(async () => core.pendingNotes),

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
  * physics). The mobile-native answer to a centered dialog or a popover: content
  * slides up from the bottom edge and can be flicked back down to dismiss.
  * Tokens mirror {@link Dialog} so the two read as one system. Bottom-anchored
- * only — the other directions vaul supports aren't needed on Reflect's mobile
+ * only — the other directions vaul supports aren't needed on DayJot's mobile
  * surfaces — and the home-indicator safe area is padded for by default.
  */
 function Drawer(props: React.ComponentProps<typeof DrawerPrimitive.Root>) {

@@ -139,11 +139,11 @@ describe('createSyncEngine', () => {
     engine.stop()
   })
 
-  it('maps a thrown ReflectError from token refresh to offline / auth states', async () => {
-    // getGithubToken throws ReflectError (an Error subclass) for transient
+  it('maps a thrown DayJotError from token refresh to offline / auth states', async () => {
+    // getGithubToken throws DayJotError (an Error subclass) for transient
     // refresh failures — the engine must read it like any AppError, or the
     // offline/auth UX silently degrades to a generic error.
-    const { ReflectError } = await import('../errors')
+    const { DayJotError } = await import('../errors')
     for (const [kind, expected] of [
       ['network', { state: 'offline' }],
       ['auth', { state: 'error', errorKind: 'auth' }],
@@ -153,7 +153,7 @@ describe('createSyncEngine', () => {
       const engine = createSyncEngine({
         generation: 1,
         getToken: async () => {
-          throw new ReflectError(kind, 'refresh failed')
+          throw new DayJotError(kind, 'refresh failed')
         },
         onStatus: (status) => statuses.push(status),
         idleMs: 10,

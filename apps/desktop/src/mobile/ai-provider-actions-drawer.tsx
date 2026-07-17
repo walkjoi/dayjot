@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react'
-import { aiModelLabel, aiProvider, errorMessage, type AiProviderConfig } from '@reflect/core'
+import { aiModelLabel, aiProvider, errorMessage, type AiProviderConfig } from '@dayjot/core'
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer'
 import { SettingsActionRow, SettingsGroup, SettingsSelectRow } from '@/mobile/settings-list'
 

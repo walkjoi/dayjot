@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 import { apiHeaders, readJson, type FetchFn } from './github-api'
 
 export interface GithubRepoRef {
@@ -8,7 +8,7 @@ export interface GithubRepoRef {
 }
 
 /** The description stamped on backup repos we create or prefill. */
-export const BACKUP_REPO_DESCRIPTION = 'Reflect notes backup'
+export const BACKUP_REPO_DESCRIPTION = 'DayJot notes backup'
 
 /**
  * The prefilled github.com/new URL — the universal "create the repo on the
@@ -87,14 +87,14 @@ export async function createGithubRepo(
     if (body.includes('not accessible')) {
       return null
     }
-    throw new ReflectError('auth', 'GitHub rejected the token (403)')
+    throw new DayJotError('auth', 'GitHub rejected the token (403)')
   }
   if (response.status === 401) {
-    throw new ReflectError('auth', 'GitHub rejected the token (401)')
+    throw new DayJotError('auth', 'GitHub rejected the token (401)')
   }
   if (!response.ok) {
     const body = await response.text()
-    throw new ReflectError('io', `creating the repo failed (${response.status}): ${body}`)
+    throw new DayJotError('io', `creating the repo failed (${response.status}): ${body}`)
   }
   return toRepo(await readJson(response, repoResponseSchema, 'repo creation'))
 }
@@ -112,10 +112,10 @@ export async function getGithubRepo(
     return null
   }
   if (response.status === 401 || response.status === 403) {
-    throw new ReflectError('auth', `GitHub rejected the token (${response.status})`)
+    throw new DayJotError('auth', `GitHub rejected the token (${response.status})`)
   }
   if (!response.ok) {
-    throw new ReflectError('io', `looking up the repo failed (${response.status})`)
+    throw new DayJotError('io', `looking up the repo failed (${response.status})`)
   }
   return toRepo(await readJson(response, repoResponseSchema, 'repo lookup'))
 }

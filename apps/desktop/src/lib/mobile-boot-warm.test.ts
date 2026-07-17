@@ -3,14 +3,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 /**
  * The warm slot holds module state (the in-flight promise), so each test
  * imports a fresh copy of the module — and installs the fake bridge on the
- * same fresh registry, since `vi.resetModules()` resets `@reflect/core`'s
+ * same fresh registry, since `vi.resetModules()` resets `@dayjot/core`'s
  * bridge slot too.
  */
 async function freshModule(
   invoke: (command: string) => Promise<unknown>,
 ): Promise<typeof import('./mobile-boot-warm')> {
   vi.resetModules()
-  const core = await import('@reflect/core')
+  const core = await import('@dayjot/core')
   core.setBridge({ invoke: async (command) => invoke(command), listen: async () => () => {} })
   return import('./mobile-boot-warm')
 }

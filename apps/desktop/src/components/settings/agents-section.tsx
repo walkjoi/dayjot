@@ -8,7 +8,7 @@ import {
   errorMessage,
   hasBridge,
   type AgentSkillStatus,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { SettingsField } from '@/components/settings/field'
 import { SettingsSection } from '@/components/settings/section'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,7 @@ import { useGraph } from '@/providers/graph-provider'
  * Settings → Agents: one-click install of a per-graph agent skill under
  * `~/.agents/skills/`. The skill is named after the graph and teaches coding
  * agents (Claude Code and friends) to read this graph through the bundled
- * `reflect` CLI. macOS desktop only, like the iCloud section — the navigator
+ * `dayjot` CLI. macOS desktop only, like the iCloud section — the navigator
  * hides the entry through the same gate (see use-visible-settings-sections).
  */
 export function AgentsSection(): ReactElement | null {
@@ -58,7 +58,7 @@ export function AgentsSection(): ReactElement | null {
     <SettingsSection id="agents">
       <SettingsField
         legend="Agent skill"
-        description={`Teach Claude Code and other agents to read “${graph.name}” with the reflect CLI.`}
+        description={`Teach Claude Code and other agents to read “${graph.name}” with the dayjot CLI.`}
       >
         {status !== undefined ? (
           <div className="mt-2 flex flex-col gap-2">
@@ -67,7 +67,7 @@ export function AgentsSection(): ReactElement | null {
             </p>
             {status.installState === 'conflict' ? (
               <p className="text-xs text-destructive">
-                A file Reflect doesn’t manage already exists there. Move it aside to install.
+                A file DayJot doesn’t manage already exists there. Move it aside to install.
               </p>
             ) : (
               <div className="flex items-center gap-2">

@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react'
-import { foldTag, isTagName, type NoteTagFacet } from '@reflect/core'
+import { foldTag, isTagName, type NoteTagFacet } from '@dayjot/core'
 import { ChevronDown } from 'lucide-react'
 import {
   Command,

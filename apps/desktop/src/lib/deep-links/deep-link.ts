@@ -1,15 +1,15 @@
-import { TEXT_CAPTURE_MAX_LENGTH, type TextCaptureKind } from '@reflect/core'
+import { TEXT_CAPTURE_MAX_LENGTH, type TextCaptureKind } from '@dayjot/core'
 import type { Route } from '@/routing/route'
 
 /**
- * The `reflect://` deep-link vocabulary (docs/deep-links.md). URLs are a codec
+ * The `dayjot://` deep-link vocabulary (docs/deep-links.md). URLs are a codec
  * over the existing {@link Route} union plus two capture verbs — never a
  * second navigation grammar. `parse.ts` and `format.ts` are the only modules
  * that read or write this syntax.
  */
 
 /** The URL scheme the app registers (`plugins.deep-link` in tauri.conf.json). */
-export const DEEP_LINK_SCHEME = 'reflect'
+export const DEEP_LINK_SCHEME = 'dayjot'
 
 /**
  * Cap on capture-link text (`append`/`task`) — the envelope schema's own cap,
@@ -25,7 +25,7 @@ export const DEEP_LINK_TEXT_MAX_LENGTH = TEXT_CAPTURE_MAX_LENGTH
  *   `tasks`) that map straight onto {@link Route}.
  * - `openNote` — `note/<target>`, where `<target>` still needs resolution
  *   (frontmatter id → date → title → alias) against the open graph's index.
- * - `capture` — `append`/`task` write links, spooled into `.reflect/inbox/`.
+ * - `capture` — `append`/`task` write links, spooled into `.dayjot/inbox/`.
  *   The capture kind is core's {@link TextCaptureKind} — the URL verb, the
  *   envelope kind, and the drain behavior share the one vocabulary.
  */

@@ -12,8 +12,8 @@ import { openSession, registerOpenDocument } from './open-documents'
  */
 
 const core = vi.hoisted(() => ({ moveNoteIndexed: vi.fn() }))
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   moveNoteIndexed: core.moveNoteIndexed,
 }))
 

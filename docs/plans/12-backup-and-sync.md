@@ -12,7 +12,7 @@ reconciliation for open notes — load-bearing for conflicts), Plan 10 (keychain
 **Unlocks:** multi-device durability; AI-assisted conflict resolution (deferred).
 
 **Architecture:** Git is a Rust primitive (`git2`/libgit2); sync orchestration, cadence,
-GitHub specifics, and conflict policy live in `@reflect/core` (`actions/sync`). See
+GitHub specifics, and conflict policy live in `@dayjot/core` (`actions/sync`). See
 [Architecture & Conventions](architecture-conventions.md).
 
 **Libraries:** `git2` (libgit2), `keyring` — Rust. (`diff`/jsdiff returns for the
@@ -34,9 +34,9 @@ Re-derived with research; **supersedes this plan's earlier backup-only scoping.*
    callback` — nothing GitHub-specific. GitHub specifics (device flow, repo creation,
    error taxonomy) are isolated in `actions/sync/github.ts`. "Custom Git remote
    (advanced)" stays a future UX toggle, not an engineering project.
-3. **Auth: GitHub App device flow.** Fine-grained, per-repo permission ("Reflect can
+3. **Auth: GitHub App device flow.** Fine-grained, per-repo permission ("DayJot can
    touch one repo, nothing else"); 8-hour user tokens + 6-month refresh tokens; device
-   flow needs **no client secret**, even for refresh — consistent with no Reflect-hosted
+   flow needs **no client secret**, even for refresh — consistent with no DayJot-hosted
    APIs. Fallback: a manually created fine-grained PAT (also the GitHub Enterprise
    story). Tokens live in the OS keychain (Plan 10), supplied via libgit2's credential
    callback — **never embedded in the remote URL**, so never on disk.
@@ -91,7 +91,7 @@ present) · `Backup failed` (action needed). Git mechanics never surface.
    files with labeled sides, commits conflicts, reports changed files for reindexing),
    `git_push` (rejections returned as data). Health checks: refuse foreign states —
    detached HEAD, in-progress rebase — with a typed error, never guess. Remote-agnostic;
-   credentials via callback from the keychain. `.reflect/` stays gitignored (Plan 02);
+   credentials via callback from the keychain. `.dayjot/` stays gitignored (Plan 02);
    the watcher only tracks `daily/` + `notes/`, so `.git/` is never watched.
 
 2. **GitHub module** (`sync/github.ts` in core): device flow + silent token refresh,
@@ -171,7 +171,7 @@ present) · `Backup failed` (action needed). Git mechanics never surface.
    committed marker merge both sides converge on; non-fast-forward push retries;
    edit/delete + binary policies; marker removal clears `Needs review`; size guardrail;
    public-repo confirmation; echo suppression (a pull doesn't storm the indexer; commits
-   don't re-dirty); `.reflect/` excluded; token never appears in the remote URL or
+   don't re-dirty); `.dayjot/` excluded; token never appears in the remote URL or
    `.git/config` (asserted). (Stale-`index.lock` recovery is deferred, below.)
 
 ## Key decisions / contracts

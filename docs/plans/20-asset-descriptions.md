@@ -29,7 +29,7 @@ almost verbatim.
 *produces* the descriptions; indexing them is explicitly out of scope.
 
 **Architecture:** all policy (eligibility, privacy, AI calls, description writes)
-lives in `@reflect/core`; the desktop app owns the watcher trigger, the
+lives in `@dayjot/core`; the desktop app owns the watcher trigger, the
 single-flight controller, and the Settings UI. This mirrors capture
 ([`actions/capture.ts`](../../packages/core/src/actions/capture.ts) +
 [`lib/capture-controller.ts`](../../apps/desktop/src/lib/capture-controller.ts))
@@ -43,8 +43,8 @@ and audio memos
 
 - Description generation for `png`, `jpg`/`jpeg`, `gif`, `webp`, `svg`, and `pdf`
   files under `assets/`.
-- Description path: append `.reflect.md` (`assets/diagram.png` →
-  `assets/diagram.png.reflect.md`).
+- Description path: append `.dayjot.md` (`assets/diagram.png` →
+  `assets/diagram.png.dayjot.md`).
 - Managed-description frontmatter (source path, source hash, source size, provider,
   model, generation timestamp) + a managed marker. Rewrite a managed description only
   when the source hash changes; **never** overwrite a user-authored markdown file
@@ -75,8 +75,8 @@ and audio memos
 
 ## Why this shape
 
-V1 of Reflect called a Reflect-hosted image-description API. V2 must not (no
-Reflect-hosted APIs). The capture flow already inverted this correctly: the
+V1 of DayJot called a DayJot-hosted image-description API. V2 must not (no
+DayJot-hosted APIs). The capture flow already inverted this correctly: the
 desktop app makes BYOK calls directly, gates `private`, and writes results
 locally. This plan reuses that exact spine. The one genuinely new surface is the
 **description file** — a portable, user-inspectable markdown artifact that sits next
@@ -86,11 +86,11 @@ to the asset and travels with the graph folder (the portability contract).
 
 ### Description file
 
-Path: `<assetRelPath>.reflect.md`. Example: `assets/diagram.png.reflect.md`.
+Path: `<assetRelPath>.dayjot.md`. Example: `assets/diagram.png.dayjot.md`.
 
 ```markdown
 ---
-reflectAsset: true
+dayjotAsset: true
 source: assets/diagram.png
 sourceHash: 9f2c…            # sha256 hex of the source bytes (hashContent)
 sourceSize: 18432            # bytes
@@ -107,9 +107,9 @@ inbox → desktop drain.
 Capture → Inbox → Drain → Enrich
 ```
 
-- **`reflectAsset: true` is the managed marker.** Detection rule:
+- **`dayjotAsset: true` is the managed marker.** Detection rule:
   - File absent → generate.
-  - File present, parses with `reflectAsset === true` → **managed**; regenerate
+  - File present, parses with `dayjotAsset === true` → **managed**; regenerate
     iff `sourceHash` ≠ current source hash, else skip (up to date).
   - File present **without** the marker → **user-authored**; never read for
     decisions, never overwrite, never delete.
@@ -148,8 +148,8 @@ Multimodal parts (AI SDK v6, `ai@^6`):
   endpoints reject `image/svg+xml`; SVG is XML, so describing the source is both
   correct and cheap.
 
-Errors mirror `describe-page.ts` exactly: `ReflectError('auth')` on 401/403,
-`ReflectError('network')` on 429/5xx/timeout (caller retries later), and a new
+Errors mirror `describe-page.ts` exactly: `DayJotError('auth')` on 401/403,
+`DayJotError('network')` on 429/5xx/timeout (caller retries later), and a new
 `AssetDescriptionRejectedError` on other 4xx (permanent — logged, no description).
 `maxRetries: 0`; the reconcile pass is the retry layer. 60s `AbortSignal.timeout`.
 
@@ -240,7 +240,7 @@ with a non-private note (and no private note):
 4. Description decision (managed marker + hash) → skip up-to-date / skip user-authored;
    size cap → skip oversize.
 5. `describeAsset(...)`. On `AssetDescriptionRejectedError`: log, `refused++`,
-   continue. On `ReflectError('auth'|'network')`: stop the pass (`stopped`) for a
+   continue. On `DayJotError('auth'|'network')`: stop the pass (`stopped`) for a
    later retry — nothing written.
 6. Write the description (`writeNote(descriptionPath, body, generation)`), `described++`,
    `onProgress`.
@@ -252,18 +252,18 @@ modes). The hash/marker idempotency makes both modes safe to re-run.
 ### Watcher extension — `apps/desktop/src-tauri/src/watcher.rs`
 
 Today `tracked_relpath` reports `.md` under `daily/`/`notes/`, anything under
-`audio-memos/`, and `.reflect/inbox/*.json`. **Add** eligible asset files:
+`audio-memos/`, and `.dayjot/inbox/*.json`. **Add** eligible asset files:
 
 ```rust
 let asset = rel_str.starts_with("assets/")
     && has_eligible_asset_ext(&rel_str)   // png/jpg/jpeg/gif/webp/svg/pdf
-    && !rel_str.ends_with(".reflect.md"); // never the descriptions themselves
+    && !rel_str.ends_with(".dayjot.md"); // never the descriptions themselves
 (note || recording || capture || asset).then_some(rel_str)
 ```
 
 This follows the existing precedent (audio recordings are tracked but *not*
 indexed; "frontend consumers filter by path"). The indexer keeps ignoring
-non-note paths; only the asset controller acts on these. Excluding `.reflect.md`
+non-note paths; only the asset controller acts on these. Excluding `.dayjot.md`
 prevents a self-trigger loop (descriptions also live under `assets/`). Update the
 module doc comment and the existing `tracked_relpath` unit tests.
 
@@ -310,7 +310,7 @@ a `SettingsField` with (a) the auto-describe toggle and (b) a "Describe existing
 assets" button that runs the backfill with a cost warning and progress.
 
 - Legend: **Describe assets**
-- Description (short, action-first per house copy): *"Reflect can describe images
+- Description (short, action-first per house copy): *"DayJot can describe images
   and PDFs in your assets so their contents are searchable. Descriptions are
   generated by your configured AI provider and may incur charges. Private and
   unreferenced files are skipped."*
@@ -340,12 +340,12 @@ assets" button that runs the backfill with a cost warning and progress.
 ## Acceptance criteria
 
 - Dropping an eligible asset referenced by a public note produces
-  `…​.reflect.md` with the correct frontmatter and a description (+ OCR when text
+  `…​.dayjot.md` with the correct frontmatter and a description (+ OCR when text
   is present).
 - An asset referenced by **any** private note is never sent and gets no description.
 - An unreferenced asset is never sent.
 - Replacing an asset (new bytes) regenerates the managed description; an unchanged
-  asset is skipped; a user-authored `…​.reflect.md` is never overwritten.
+  asset is skipped; a user-authored `…​.dayjot.md` is never overwritten.
 - Auth/network failure stops the pass and retries later; permanent refusal is
   logged with no description written.
 - No automatic backfill on graph open/provider connect; the Settings button runs
@@ -389,7 +389,7 @@ note(s) that reference that asset, as ordinary hits.
 **Design — fold into the note's FTS `body`, search-index-only.**
 - `IndexedNote` gains `assetText`. When a note is indexed, `gatherAssetDescriptionText`
   (`indexing/asset-description-text.ts`) reads each referenced asset's
-  `…​.reflect.md` body (managed or user-authored — D1), strips frontmatter,
+  `…​.dayjot.md` body (managed or user-authored — D1), strips frontmatter,
   concatenates, and caps at 8 KB (D2). All three `buildIndexedNote` call sites
   (`indexNote`, `rebuildIndex`, `reconcileIndex`) gather it.
 - Rust `apply_note` writes `search_fts.body = note.text + "\n" + asset_text`.

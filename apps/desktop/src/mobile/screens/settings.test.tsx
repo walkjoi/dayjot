@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_SETTINGS, getConflictedNotes, type GraphInfo, type Settings } from '@reflect/core'
+import { DEFAULT_SETTINGS, getConflictedNotes, type GraphInfo, type Settings } from '@dayjot/core'
 import type { BackupState } from '@/lib/backup-controller'
 import { MobileSettings } from './settings'
 
@@ -14,8 +14,8 @@ import { MobileSettings } from './settings'
  * graceful degradation where no SyncProvider is mounted.
  */
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   listNotes: vi.fn(async () => [{ path: 'notes/a.md' }, { path: 'notes/b.md' }]),
   getConflictedNotes: vi.fn(async () => []),
@@ -244,7 +244,7 @@ describe('MobileSettings', () => {
     }
     mount()
 
-    expect(screen.getByText('Sync notes with Reflect on your other devices.')).toBeTruthy()
+    expect(screen.getByText('Sync notes with DayJot on your other devices.')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: 'Connect GitHub' }))
 
     expect(await screen.findByText('connect-github-sheet')).toBeTruthy()

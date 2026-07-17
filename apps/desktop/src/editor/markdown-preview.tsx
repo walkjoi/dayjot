@@ -77,7 +77,7 @@ export function MarkdownPreview({
       resolveImageUrl={resolveImageUrlStable}
       {...(interactive ? { onLinkClick: openExternalLink } : {})}
       {...(navigates ? { onWikilinkClick: onWikilinkClickStable } : {})}
-      className={cn('reflect-editor', className)}
+      className={cn('dayjot-editor', className)}
     />
   )
 }

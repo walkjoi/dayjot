@@ -1,4 +1,4 @@
-import type { Database } from '@reflect/db'
+import type { Database } from '@dayjot/db'
 import { sql, type Selectable } from 'kysely'
 import { readNote } from '../graph/commands'
 import { blockContextLinesAt, prepareBlockContext, type BlockContextSource } from './block-context'
@@ -25,7 +25,7 @@ export interface BacklinkContext {
   sourcePath: string
   sourceTitle: string
   /**
-   * The Markdown block context around the link (old Reflect's rules — see
+   * The Markdown block context around the link (old DayJot's rules — see
    * {@link blockContextAt}): the whole paragraph, the containing list item with
    * its children, or the heading's section. Empty when the file is unreadable.
    * Never windowed: a half-cut Markdown token would garble the rendered snippet.
@@ -99,7 +99,7 @@ function throughSource(cursor: BacklinkSourceCursor) {
  * row with an empty snippet (the index lags deletes only briefly). Mentions of
  * one source that produce an identical context collapse into one row — two
  * links to `path` in the same paragraph read as a single reference, exactly as
- * old Reflect deduplicated on `[target, contextHtml]`. Pages are bounded by
+ * old DayJot deduplicated on `[target, contextHtml]`. Pages are bounded by
  * complete source notes rather than raw links: `limit` sources are selected by
  * recency/path keyset, then every matching position in those sources is
  * processed. Consequently `contexts.length` may be greater than `limit`.
@@ -192,7 +192,7 @@ export async function getBacklinksWithContext(
   }
 
   // Every spelling that resolves to the target (title, aliases, daily date),
-  // so sibling branches co-group under any of them — old Reflect compared
+  // so sibling branches co-group under any of them — old DayJot compared
   // resolved note ids, not link text.
   const targetKeys = new Set(
     (await db.selectFrom('noteKeys').where('notePath', '=', path).select('key').execute())

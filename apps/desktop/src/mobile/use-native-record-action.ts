@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { addPluginListener, invoke } from '@tauri-apps/api/core'
-import { hasBridge } from '@reflect/core'
+import { hasBridge } from '@dayjot/core'
 import { z } from 'zod'
 import {
   nativeRecordingStatus,

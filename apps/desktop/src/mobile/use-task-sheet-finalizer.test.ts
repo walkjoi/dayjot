@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { OpenTask } from '@reflect/core'
+import type { OpenTask } from '@dayjot/core'
 import { makeOpenTask } from '@/lib/tasks/open-task-fixture'
 import {
   useTaskSheetFinalizer,

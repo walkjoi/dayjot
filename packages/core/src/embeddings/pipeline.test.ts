@@ -17,7 +17,7 @@ interface AppliedChunk {
 /**
  * Bridge fake for the pipeline: a note on "disk", stored hash+model rows for
  * the db_query the diff makes, and capture of embed_texts / embed_apply.
- * `descriptions` answers reads of `<asset>.reflect.md` sidecars; any other
+ * `descriptions` answers reads of `<asset>.dayjot.md` sidecars; any other
  * sidecar read gets the Rust layer's notFound.
  */
 function fakePipelineBridge(options: {
@@ -31,7 +31,7 @@ function fakePipelineBridge(options: {
     invoke: async (command, args) => {
       if (command === 'note_read') {
         const path = (args as { path: string }).path
-        if (path.endsWith('.reflect.md')) {
+        if (path.endsWith('.dayjot.md')) {
           const description = options.descriptions?.[path]
           if (description === undefined) {
             throw { kind: 'notFound', message: `no description at ${path}` }
@@ -153,13 +153,13 @@ describe('embedNote', () => {
 
   const IMAGE_NOTE = '# Trip\n\nSome notes about the day.\n\n![photo](assets/pic.png)\n'
   const PIC_DESCRIPTION =
-    '---\nreflectAsset: true\nsource: assets/pic.png\n---\n\nA red bridge over a misty river at dawn.\n'
+    '---\ndayjotAsset: true\nsource: assets/pic.png\n---\n\nA red bridge over a misty river at dawn.\n'
 
   it('embeds asset description chunks after the note’s own chunks', async () => {
     const { applied } = fakePipelineBridge({
       content: IMAGE_NOTE,
       storedRows: [],
-      descriptions: { 'assets/pic.png.reflect.md': PIC_DESCRIPTION },
+      descriptions: { 'assets/pic.png.dayjot.md': PIC_DESCRIPTION },
     })
     const count = await embedNote({ path: 'notes/a.md', generation: 1, modelId: MODEL })
     expect(count).toBeGreaterThanOrEqual(2) // note chunk(s) + the asset chunk
@@ -168,7 +168,7 @@ describe('embedNote', () => {
     const assetChunk = chunks[chunks.length - 1]!
     expect(assetChunk.heading).toBe('pic.png')
     expect(assetChunk.text).toContain('red bridge over a misty river')
-    expect(assetChunk.text).not.toContain('reflectAsset') // frontmatter stripped
+    expect(assetChunk.text).not.toContain('dayjotAsset') // frontmatter stripped
     // Synthetic positions live past the note source, so asset chunks order last.
     expect(assetChunk.posFrom).toBeGreaterThan(IMAGE_NOTE.length)
     expect(chunks.slice(0, -1).every((chunk) => chunk.posFrom < IMAGE_NOTE.length)).toBe(true)
@@ -181,7 +181,7 @@ describe('embedNote', () => {
   })
 
   it('the hash-skip covers unchanged asset description chunks', async () => {
-    const descriptions = { 'assets/pic.png.reflect.md': PIC_DESCRIPTION }
+    const descriptions = { 'assets/pic.png.dayjot.md': PIC_DESCRIPTION }
     const first = fakePipelineBridge({ content: IMAGE_NOTE, storedRows: [], descriptions })
     await embedNote({ path: 'notes/a.md', generation: 1, modelId: MODEL })
     const storedRows = first.applied[0]!.chunks.map((chunk) => ({
@@ -199,7 +199,7 @@ describe('embedNote', () => {
     const first = fakePipelineBridge({
       content: IMAGE_NOTE,
       storedRows: [],
-      descriptions: { 'assets/pic.png.reflect.md': PIC_DESCRIPTION },
+      descriptions: { 'assets/pic.png.dayjot.md': PIC_DESCRIPTION },
     })
     await embedNote({ path: 'notes/a.md', generation: 1, modelId: MODEL })
     const storedRows = first.applied[0]!.chunks.map((chunk) => ({
@@ -211,7 +211,7 @@ describe('embedNote', () => {
       content: IMAGE_NOTE,
       storedRows,
       descriptions: {
-        'assets/pic.png.reflect.md': '---\nreflectAsset: true\n---\n\nNow a snowy mountain pass.\n',
+        'assets/pic.png.dayjot.md': '---\ndayjotAsset: true\n---\n\nNow a snowy mountain pass.\n',
       },
     })
     const count = await embedNote({ path: 'notes/a.md', generation: 1, modelId: MODEL })

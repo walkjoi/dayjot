@@ -12,11 +12,11 @@ const agentSkillInstallStateSchema = z.enum(['missing', 'current', 'stale', 'con
 export type AgentSkillInstallState = z.infer<typeof agentSkillInstallStateSchema>
 
 const agentSkillStatusSchema = z.object({
-  /** The skill's directory name, derived from the graph (`reflect-<slug>`). */
+  /** The skill's directory name, derived from the graph (`dayjot-<slug>`). */
   skillName: z.string(),
   /** Absolute path of the target `SKILL.md` under `~/.agents/skills/`. */
   skillPath: z.string(),
-  /** Absolute path of the bundled `reflect` CLI the skill references. */
+  /** Absolute path of the bundled `dayjot` CLI the skill references. */
   cliPath: z.string(),
   installState: agentSkillInstallStateSchema,
 })

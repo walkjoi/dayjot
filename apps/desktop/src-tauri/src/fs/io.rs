@@ -2,7 +2,7 @@
 //!
 //! Pure IO — no Tauri state, no path policy (that's [`super::resolve`]). Writes
 //! are atomic (temp file + rename) so a crash mid-write can never truncate a
-//! note. Temp files are staged under `.reflect/tmp/` — the same volume, so the
+//! note. Temp files are staged under `.dayjot/tmp/` — the same volume, so the
 //! rename stays atomic, but excluded from cloud sync so a crash-stranded temp
 //! can never replicate to another device (Plan 21).
 
@@ -16,9 +16,9 @@ use crate::graph_gitignore;
 
 use super::FileMeta;
 
-pub(super) const REFLECT_DIR: &str = ".reflect";
+pub(super) const DAYJOT_DIR: &str = ".dayjot";
 const META_SCHEMA_VERSION: u32 = 1;
-pub(super) const TOP_LEVEL_DIRS: [&str; 4] = ["daily", "notes", "assets", REFLECT_DIR];
+pub(super) const TOP_LEVEL_DIRS: [&str; 4] = ["daily", "notes", "assets", DAYJOT_DIR];
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 const APPLE_EXCLUSION_KEYS: [&str; 2] = [
     "NSURLUbiquitousItemIsExcludedFromSyncKey",
@@ -39,7 +39,7 @@ pub(super) fn bootstrap(root: &Path) -> AppResult<()> {
         fs::create_dir_all(root.join(dir))?;
     }
     sweep_upload_staging(root);
-    mark_dir_local_only(&root.join(REFLECT_DIR));
+    mark_dir_local_only(&root.join(DAYJOT_DIR));
     // A backup repo must never ride a file-sync provider: two devices' object
     // stores merging file-by-file is repository corruption (Plan 21). New
     // repos are marked at init (`git::repo`); this covers pre-existing ones.
@@ -51,7 +51,7 @@ pub(super) fn bootstrap(root: &Path) -> AppResult<()> {
     if !gitignore.exists() {
         fs::write(&gitignore, graph_gitignore::default_contents())?;
     }
-    let meta = root.join(REFLECT_DIR).join("meta.json");
+    let meta = root.join(DAYJOT_DIR).join("meta.json");
     if !meta.exists() {
         fs::write(
             &meta,
@@ -61,13 +61,13 @@ pub(super) fn bootstrap(root: &Path) -> AppResult<()> {
     Ok(())
 }
 
-/// Drop leftover staging files (`.reflect/tmp/`: asset uploads, `fs::assets`,
+/// Drop leftover staging files (`.dayjot/tmp/`: asset uploads, `fs::assets`,
 /// and atomic-write temps) — a crash mid-write strands its temp file, and
 /// nothing else ever reclaims it. Opening the graph is the natural sweep
 /// point: a generation bump rejects any commit that was still in flight, so
 /// nothing live is removed. Best-effort — a locked file must not fail the open.
 fn sweep_upload_staging(root: &Path) {
-    let staging = root.join(REFLECT_DIR).join("tmp");
+    let staging = root.join(DAYJOT_DIR).join("tmp");
     if !staging.exists() {
         return;
     }
@@ -80,7 +80,7 @@ fn sweep_upload_staging(root: &Path) {
 ///
 /// On Apple targets the `NSURL` resource keys exclude the directory from
 /// iCloud Drive sync and device backups — load-bearing once the graph lives in
-/// the iCloud container (Plan 21), where `.reflect/` (live SQLite + WAL) and
+/// the iCloud container (Plan 21), where `.dayjot/` (live SQLite + WAL) and
 /// `.git/` syncing would mean corruption. macOS additionally sets the
 /// provider-ignore xattrs that third-party sync clients (Dropbox, File
 /// Provider extensions) honor for graphs kept in such folders.
@@ -197,10 +197,10 @@ pub(super) fn atomic_create(
 /// stamps its rows with this so a later listing compares equal and skips the
 /// re-read.
 ///
-/// The temp file is staged under `.reflect/tmp/`, not next to `target`: the
+/// The temp file is staged under `.dayjot/tmp/`, not next to `target`: the
 /// note directories may live inside a file-sync folder (iCloud Drive —
 /// Plan 21), and a temp created there is synced and, after a crash, stranded
-/// on every device. `.reflect/` is excluded from sync and swept on graph open,
+/// on every device. `.dayjot/` is excluded from sync and swept on graph open,
 /// and it shares `target`'s volume, so the final rename stays atomic.
 pub(crate) fn atomic_write_bytes(
     root: &Path,
@@ -220,7 +220,7 @@ fn stage_bytes(root: &Path, target: &Path, contents: &[u8]) -> AppResult<tempfil
         .parent()
         .ok_or_else(|| AppError::io(format!("no parent directory for {}", target.display())))?;
     fs::create_dir_all(dir)?;
-    let staging = root.join(REFLECT_DIR).join("tmp");
+    let staging = root.join(DAYJOT_DIR).join("tmp");
     fs::create_dir_all(&staging)?;
     let mut tmp = tempfile::NamedTempFile::new_in(&staging)?;
     tmp.write_all(contents)?;
@@ -352,25 +352,25 @@ mod tests {
             assert!(dir.path().join(sub).is_dir(), "missing dir {sub}");
         }
         let gitignore = fs::read_to_string(dir.path().join(".gitignore")).unwrap();
-        assert!(gitignore.contains("/.reflect/"));
+        assert!(gitignore.contains("/.dayjot/"));
         assert!(gitignore.contains(".DS_Store"));
         assert!(gitignore.contains("Thumbs.db"));
         assert!(gitignore.contains("*.swp"));
-        assert!(dir.path().join(".reflect/meta.json").exists());
+        assert!(dir.path().join(".dayjot/meta.json").exists());
     }
 
     #[cfg(target_os = "macos")]
     #[test]
-    fn bootstrap_marks_reflect_dir_with_provider_ignore_xattrs() {
+    fn bootstrap_marks_dayjot_dir_with_provider_ignore_xattrs() {
         let dir = tempdir().unwrap();
         bootstrap(dir.path()).unwrap();
-        let reflect_dir = dir.path().join(REFLECT_DIR);
+        let dayjot_dir = dir.path().join(DAYJOT_DIR);
         assert_eq!(
-            xattr::get(&reflect_dir, "com.apple.fileprovider.ignore#P").unwrap(),
+            xattr::get(&dayjot_dir, "com.apple.fileprovider.ignore#P").unwrap(),
             Some(b"1".to_vec())
         );
         assert_eq!(
-            xattr::get(&reflect_dir, "com.dropbox.ignored").unwrap(),
+            xattr::get(&dayjot_dir, "com.dropbox.ignored").unwrap(),
             Some(b"1".to_vec())
         );
     }
@@ -389,18 +389,18 @@ mod tests {
 
     #[cfg(target_os = "macos")]
     #[test]
-    fn apple_sync_exclusion_accepts_reflect_dir() {
+    fn apple_sync_exclusion_accepts_dayjot_dir() {
         let dir = tempdir().unwrap();
-        let reflect_dir = dir.path().join(REFLECT_DIR);
-        fs::create_dir_all(&reflect_dir).unwrap();
-        assert!(set_apple_sync_exclusions(&reflect_dir).is_empty());
+        let dayjot_dir = dir.path().join(DAYJOT_DIR);
+        fs::create_dir_all(&dayjot_dir).unwrap();
+        assert!(set_apple_sync_exclusions(&dayjot_dir).is_empty());
     }
 
     #[test]
     fn bootstrap_sweeps_stale_upload_staging() {
         let dir = tempdir().unwrap();
         bootstrap(dir.path()).unwrap();
-        let staging = dir.path().join(".reflect/tmp");
+        let staging = dir.path().join(".dayjot/tmp");
         fs::create_dir_all(&staging).unwrap();
         fs::write(staging.join(".tmpAbC123"), b"stranded upload").unwrap();
         // Re-opening the graph re-bootstraps; the stranded file goes away.
@@ -419,7 +419,7 @@ mod tests {
 
     #[test]
     fn atomic_write_leaves_no_temp_litter_in_the_target_dir() {
-        // Temps stage under `.reflect/tmp/` — a note directory inside a synced
+        // Temps stage under `.dayjot/tmp/` — a note directory inside a synced
         // folder must only ever contain the notes themselves.
         let dir = tempdir().unwrap();
         bootstrap(dir.path()).unwrap();
@@ -429,7 +429,7 @@ mod tests {
             .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
             .collect();
         assert_eq!(entries, vec!["a.md".to_string()]);
-        assert!(dir.path().join(".reflect/tmp").is_dir());
+        assert!(dir.path().join(".dayjot/tmp").is_dir());
     }
 
     #[test]

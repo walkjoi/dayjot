@@ -18,8 +18,8 @@ const { getBacklinksWithContext, getBacklinksPage } = vi.hoisted(() => {
 })
 const resolveOrCreateNoteWithTitle = vi.hoisted(() => vi.fn())
 const openRouteInNewWindow = vi.hoisted(() => vi.fn<() => Promise<boolean>>())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getBacklinksWithContext: getBacklinksPage,
   resolveOrCreateNoteWithTitle,
@@ -280,7 +280,7 @@ describe('BacklinksPanel', () => {
     view.unmount()
   })
 
-  it('lets one group be peeked at after the header collapse (old Reflect behavior)', async () => {
+  it('lets one group be peeked at after the header collapse (old DayJot behavior)', async () => {
     getBacklinksWithContext.mockResolvedValue([
       {
         sourcePath: 'notes/meeting.md',

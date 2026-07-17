@@ -64,19 +64,19 @@ function separator(): AppMenuEntry {
 export function appMenuLayout(): AppSubmenuLayout[] {
   return [
     {
-      text: 'Reflect',
+      text: 'DayJot',
       entries: [
-        predefined({ About: null }, 'About Reflect'),
+        predefined({ About: null }, 'About DayJot'),
         separator(),
         command('settings.open', 'Settings…'),
         separator(),
         predefined('Services'),
         separator(),
-        predefined('Hide', 'Hide Reflect'),
+        predefined('Hide', 'Hide DayJot'),
         predefined('HideOthers'),
         predefined('ShowAll'),
         separator(),
-        predefined('Quit', 'Quit Reflect'),
+        predefined('Quit', 'Quit DayJot'),
       ],
     },
     {

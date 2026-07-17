@@ -17,7 +17,7 @@ import {
   saveSettings,
   errorMessage,
   type Settings,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { startOperation } from '@/lib/operations'
 import { setSettingsFlusher } from '@/lib/settings-flush'
 

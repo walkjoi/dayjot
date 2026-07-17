@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState, type ReactElement } from 'react'
-import { getAppPlatform, hasBridge, isMobilePlatform, type AppPlatform } from '@reflect/core'
+import { getAppPlatform, hasBridge, isMobilePlatform, type AppPlatform } from '@dayjot/core'
 import { warmMobileStorage } from '@/lib/mobile-boot-warm'
 
 const DesktopRoot = lazy(() =>

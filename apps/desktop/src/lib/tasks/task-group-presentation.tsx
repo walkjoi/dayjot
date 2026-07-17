@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { AlarmClock, Calendar, FileText, Pin, Star } from 'lucide-react'
-import type { TaskGroup } from '@reflect/core'
+import type { TaskGroup } from '@dayjot/core'
 import type { InsertTaskTarget } from '@/lib/tasks/task-insert-target'
 import { insertTargetForTask, todaysDailyTarget } from '@/lib/tasks/task-navigation'
 

@@ -26,12 +26,12 @@ export interface TaskFiltersControl {
  * round-trips through the same storage every other view uses.
  */
 export function useTaskFilters(): TaskFiltersControl {
-  const [pinned, setPinned] = useSessionFlag('reflect.tasks.filter.pinned', true)
-  const [current, setCurrent] = useSessionFlag('reflect.tasks.filter.current', true)
-  const [overdue, setOverdue] = useSessionFlag('reflect.tasks.filter.overdue', true)
-  const [upcoming, setUpcoming] = useSessionFlag('reflect.tasks.filter.upcoming', true)
-  const [other, setOther] = useSessionFlag('reflect.tasks.filter.other', true)
-  const [archived, setArchived] = useSessionFlag('reflect.tasks.filter.archived', false)
+  const [pinned, setPinned] = useSessionFlag('dayjot.tasks.filter.pinned', true)
+  const [current, setCurrent] = useSessionFlag('dayjot.tasks.filter.current', true)
+  const [overdue, setOverdue] = useSessionFlag('dayjot.tasks.filter.overdue', true)
+  const [upcoming, setUpcoming] = useSessionFlag('dayjot.tasks.filter.upcoming', true)
+  const [other, setOther] = useSessionFlag('dayjot.tasks.filter.other', true)
+  const [archived, setArchived] = useSessionFlag('dayjot.tasks.filter.archived', false)
 
   const filters: TaskFilters = { pinned, current, overdue, upcoming, other, archived }
   const setters: Record<keyof TaskFilters, (next: boolean) => void> = {

@@ -1,4 +1,4 @@
-import { parseNote, TaskStaleError, type TaskMarker } from '@reflect/core'
+import { parseNote, TaskStaleError, type TaskMarker } from '@dayjot/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createNoteSession, type NoteSessionSnapshot } from './note-session'
 import type { RoundTripFidelity } from './roundtrip'

@@ -157,6 +157,6 @@ describe('languageModel', () => {
     expect(calls[0]!.url).toBe('https://openrouter.ai/api/v1/chat/completions')
     expect(calls[0]!.headers.get('Authorization')).toBe('Bearer sk-or-v1-test')
     expect(calls[0]!.headers.get('HTTP-Referer')).toBe('https://reflect.app')
-    expect(calls[0]!.headers.get('X-OpenRouter-Title')).toBe('Reflect')
+    expect(calls[0]!.headers.get('X-OpenRouter-Title')).toBe('DayJot')
   })
 })

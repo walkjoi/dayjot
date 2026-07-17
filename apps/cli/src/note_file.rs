@@ -440,8 +440,8 @@ mod tests {
         assert_eq!(subject_aliases("a///b"), Vec::<String>::new());
         assert_eq!(subject_aliases("file:///etc/hosts"), Vec::<String>::new());
         assert_eq!(
-            subject_aliases("Reflect // https://reflect.app"),
-            vec!["Reflect", "https://reflect.app"]
+            subject_aliases("DayJot // https://reflect.app"),
+            vec!["DayJot", "https://reflect.app"]
         );
     }
 

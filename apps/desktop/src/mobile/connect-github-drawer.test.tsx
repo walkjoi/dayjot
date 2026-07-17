@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import type { ConnectExistingResult } from '@/lib/backup-controller'
 import { ConnectGithubDrawer } from './connect-github-drawer'
@@ -57,23 +57,23 @@ afterEach(() => {
 })
 
 describe('ConnectGithubDrawer', () => {
-  it('suggests reflect-backup — never the local graph name — and connects', async () => {
+  it('suggests dayjot-backup — never the local graph name — and connects', async () => {
     sync.connectExistingRepo.mockResolvedValueOnce('notFound')
     const onOpenChange = vi.fn()
     render(<ConnectGithubDrawer open onOpenChange={onOpenChange} pollIntervalMs={15} />)
 
     // The local graph's display name is the sandbox folder ("Documents") —
     // the prefill must be the fixed fallback, not a graph-derived slug.
-    expect(screen.getByLabelText('Repository name')).toHaveProperty('value', 'reflect-backup')
+    expect(screen.getByLabelText('Repository name')).toHaveProperty('value', 'dayjot-backup')
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
     await waitFor(() =>
       expect(sync.connectExistingRepo).toHaveBeenCalledWith(
-        { owner: 'alex', name: 'reflect-backup' },
+        { owner: 'alex', name: 'dayjot-backup' },
         { allowPublic: false },
       ),
     )
-    await waitFor(() => expect(sync.connectNewRepo).toHaveBeenCalledWith('reflect-backup'))
+    await waitFor(() => expect(sync.connectNewRepo).toHaveBeenCalledWith('dayjot-backup'))
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
   })
 
@@ -120,7 +120,7 @@ describe('ConnectGithubDrawer', () => {
       'checked',
       true,
     )
-    expect(screen.getByLabelText('Repository name')).toHaveProperty('value', 'reflect-backup')
+    expect(screen.getByLabelText('Repository name')).toHaveProperty('value', 'dayjot-backup')
     expect(screen.queryByText('Enter the repository as owner/name or a GitHub URL.')).toBeNull()
   })
 })

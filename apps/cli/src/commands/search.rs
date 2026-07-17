@@ -1,4 +1,4 @@
-//! `reflect search <query>` — ranked lexical search over the FTS index. The
+//! `dayjot search <query>` — ranked lexical search over the FTS index. The
 //! one command that requires the index: missing/unusable is exit 4 (the CLI
 //! never builds or repairs the index — that's the desktop app's job). A stale
 //! index warns and still returns rows.
@@ -6,7 +6,7 @@
 use std::fs;
 use std::path::Path;
 
-use reflect_index_schema::{INDEX_FILE, REFLECT_DIR};
+use dayjot_index_schema::{INDEX_FILE, DAYJOT_DIR};
 
 use crate::commands::output::{print_json, HitJson, SearchJson};
 use crate::commands::warn;
@@ -33,19 +33,19 @@ pub fn run(graph: &Graph, json: bool, query: &str, limit: usize) -> Result<(), C
         IndexOpen::Opened(opened) => opened,
         IndexOpen::Missing => {
             return Err(CliError::NoIndex(format!(
-                "no search index at {REFLECT_DIR}/{INDEX_FILE} — open this graph in Reflect to build it"
+                "no search index at {DAYJOT_DIR}/{INDEX_FILE} — open this graph in DayJot to build it"
             )))
         }
         IndexOpen::Unusable(message) => return Err(CliError::NoIndex(message)),
     };
     if opened.newer_schema {
-        warn("the index schema is newer than this CLI — update Reflect");
+        warn("the index schema is newer than this CLI — update DayJot");
     }
 
     let staleness = detect_staleness(&opened.conn, &graph.root)?;
     if staleness.is_stale() {
         warn(format!(
-            "the index may be stale ({} file(s) differ from it) — open the graph in Reflect to refresh",
+            "the index may be stale ({} file(s) differ from it) — open the graph in DayJot to refresh",
             staleness.total()
         ));
     }

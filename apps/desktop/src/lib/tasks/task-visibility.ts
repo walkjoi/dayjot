@@ -1,4 +1,4 @@
-import { groupTasks, type OpenTask, type TaskGroup } from '@reflect/core'
+import { groupTasks, type OpenTask, type TaskGroup } from '@dayjot/core'
 import { sameTask, taskKey } from '@/lib/tasks/task-identity'
 import { type TaskFilters } from '@/lib/tasks/task-filters'
 

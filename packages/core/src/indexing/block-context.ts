@@ -7,7 +7,7 @@ import { isWikiNodeName, wikiBracketStart } from '../markdown/wiki-nodes'
 
 /**
  * Block-level context extraction for the backlinks panel, ported from old
- * Reflect's `getBacklinkContextHtml`. Where {@link lineAt} returns only the
+ * DayJot's `getBacklinkContextHtml`. Where {@link lineAt} returns only the
  * physical line around a link, this walks the parsed block structure and
  * returns the whole unit of meaning the mention sits in:
  *
@@ -15,7 +15,7 @@ import { isWikiNodeName, wikiBracketStart } from '../markdown/wiki-nodes'
  * - **Heading** — the heading plus every following sibling block up to the
  *   next heading (of any level) or the end of the section's parent.
  * - **Title heading** — just the heading line. A deliberate divergence from
- *   old Reflect, where titles lived outside the document: in V2 the note's
+ *   old DayJot, where titles lived outside the document: in V2 the note's
  *   title *is* its first H1, so the section rule would inline the entire note
  *   into the panel for a mention that just says "this note is about you".
  *   Follows {@link parseNote}'s derivation exactly: a frontmatter `title:`
@@ -25,11 +25,11 @@ import { isWikiNodeName, wikiBracketStart } from '../markdown/wiki-nodes'
  * - **Nested list item** — the parent item's own text line for context, plus
  *   each sibling branch under that parent that also mentions the same target;
  *   branches that don't mention it are dropped. Only one ancestor level is
- *   climbed, exactly like old Reflect.
+ *   climbed, exactly like old DayJot.
  *
  * The result is Markdown sliced from the source (full lines, dedented to the
  * context's own indentation) so nested structure survives rendering, and is
- * never truncated — old Reflect showed the full context and clamped the panel,
+ * never truncated — old DayJot showed the full context and clamped the panel,
  * not the snippet.
  */
 
@@ -87,7 +87,7 @@ function textblockMentions(body: string, block: SyntaxNode, keys: ReadonlySet<st
 /**
  * Does a candidate branch (a sibling list item or block under the parent item)
  * mention the target in its *direct* text blocks? Deeper descendants don't
- * qualify the branch — old Reflect's `nodeHasDirectBacklink` looked exactly one
+ * qualify the branch — old DayJot's `nodeHasDirectBacklink` looked exactly one
  * block deep, and each mention deeper down produces its own context anyway.
  */
 function branchMentions(body: string, branch: SyntaxNode, keys: ReadonlySet<string>): boolean {
@@ -232,7 +232,7 @@ function containsPos(node: SyntaxNode, pos: number): boolean {
 }
 
 /**
- * Context for a mention inside a list item, per old Reflect's rules: a
+ * Context for a mention inside a list item, per old DayJot's rules: a
  * top-level item yields its whole subtree; a nested item yields the parent
  * item's own line plus the branches under it that mention the same target
  * (always including the branch the mention itself sits in).
@@ -278,7 +278,7 @@ export interface BlockContextSource {
   readonly body: string
   /** Character offset of `body` within the original file. */
   readonly bodyOffset: number
-  /** `body` parsed with the canonical Reflect grammar. */
+  /** `body` parsed with the canonical DayJot grammar. */
   readonly tree: Tree
   /** Frontmatter authors a `title:`, so no H1 is the note's title. */
   readonly frontmatterTitled: boolean
@@ -371,7 +371,7 @@ function contextLinesAt(
  *
  * `targetKeys` is every match key that resolves to the target note (title,
  * aliases, daily date — the `note_keys` view). Sibling branches co-group when
- * they mention the target under *any* spelling, the way old Reflect compared
+ * they mention the target under *any* spelling, the way old DayJot compared
  * resolved note ids; without it, matching falls back to the exact spelling of
  * the link at `pos`.
  */

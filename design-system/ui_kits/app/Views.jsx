@@ -1,6 +1,6 @@
-/* Reflect app — main content views. The daily-notes editor is the home
+/* DayJot app — main content views. The daily-notes editor is the home
    surface: date-titled blocks of bulleted prose with backlinks & tags. */
-const NS_V = 'ReflectDesignSystem_06b075'
+const NS_V = 'DayJotDesignSystem_06b075'
 
 /* --- inline editor primitives ------------------------------------ */
 const Backlink = ({ children, onClick }) => (
@@ -54,7 +54,7 @@ function DailyNotes({ onOpenNote }) {
     <div style={{ flex: 1, overflowY: 'auto' }}>
       <DayBlock date="Today · Tuesday, June 8" tense="today" onOpenNote={onOpenNote}>
         <Bullet>Morning pages — felt clear after a walk. Linking back to <Backlink onClick={() => onOpenNote('Morning routine')}>Morning routine</Backlink>.</Bullet>
-        <EditorTask text="Finish the Reflect design system" done0={false} />
+        <EditorTask text="Finish the DayJot design system" done0={false} />
         <EditorTask text="Review PR on the editor" done0={true} />
         <Bullet>Idea: a weekly review template. <Tag>ideas</Tag> <Tag>productivity</Tag></Bullet>
         <Bullet>Meeting notes from <Backlink onClick={() => onOpenNote('Design sync')}>Design sync</Backlink> — ship the new onboarding.</Bullet>
@@ -108,7 +108,7 @@ function AllNotes({ onOpenNote }) {
 
 function Tasks() {
   const groups = [
-    ['Today', [['Finish the Reflect design system', false], ['Review PR on the editor', true]]],
+    ['Today', [['Finish the DayJot design system', false], ['Review PR on the editor', true]]],
     ['Upcoming', [['Book dentist', false], ['Plan weekly review', false]]],
   ]
   const { Checkbox } = window[NS_V]
@@ -137,7 +137,7 @@ function TaskRow({ text, done0 }) {
 function MapView() {
   return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-      <img src="../../assets/reflect-graph-hero.png" alt="Knowledge graph" style={{ maxWidth: '70%', height: 'auto', opacity: 0.96 }} />
+      <img src="../../assets/dayjot-graph-hero.png" alt="Knowledge graph" style={{ maxWidth: '70%', height: 'auto', opacity: 0.96 }} />
       <div style={{ position: 'absolute', bottom: 28, fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
         Your notes, connected — 142 nodes
       </div>

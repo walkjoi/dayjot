@@ -52,7 +52,7 @@ filenames — the title-rename machinery rides along with editing).
 - One graph per device, rooted in the app's sandboxed `Documents/` directory,
   visible in the iOS Files app (portability holds on mobile).
 - Onboarding: **Start fresh** (create an empty graph) or **Connect GitHub**
-  (device flow + clone), reusing `@reflect/core`'s sync/github module.
+  (device flow + clone), reusing `@dayjot/core`'s sync/github module.
 - Mobile UI surfaces, **per the 2026-06-12 product call: re-implement V1
   mobile's feature-set and design** (see the
   [V1 mobile overview](../reflect-v1-mobile-overview.md)): a **Daily / All**
@@ -120,7 +120,7 @@ Conditional surface, by layer:
 |---|---|---|
 | `watcher` (notify) | watches external edits | **off** — nothing else writes the sandbox; local writes notify in-process (decision 5) |
 | `embed` (fastembed/ORT, hf-hub) | semantic search | **off** — target-gated out; lexical only |
-| `trash` crate (note delete) | OS trash | move to graph-local `.reflect/trash/` (recoverable, sync-ignored) |
+| `trash` crate (note delete) | OS trash | move to graph-local `.dayjot/trash/` (recoverable, sync-ignored) |
 | `tauri-plugin-window-state` | window restore | off (not mobile-supported) |
 | updater + process plugins | auto-update | already gated; app stores update |
 | CLI sidecar | bundled via overlays | already excluded |
@@ -129,7 +129,7 @@ Conditional surface, by layer:
 | rusqlite + FTS5, fs primitives, settings | as-is | as-is |
 
 The index, document model, and fs modules need no mobile fork: same SQLite
-file under `<graph>/.reflect/`, same markdown contract.
+file under `<graph>/.dayjot/`, same markdown contract.
 
 ### 3. Graph bootstrap: fixed root, no chooser, no persisted paths
 
@@ -142,7 +142,7 @@ pattern (absolute paths on disk) must not be ported. `Documents/` is exposed
 in the Files app via `UIFileSharingEnabled` +
 `LSSupportsOpeningDocumentsInPlace` in the `ios.project.yml` Info.plist
 properties — the user can see, copy, and back up their markdown on device.
-`.reflect/` stays a dot-directory (hidden by Files by default).
+`.dayjot/` stays a dot-directory (hidden by Files by default).
 
 Onboarding routes through two paths and lands on Today:
 
@@ -164,7 +164,7 @@ root.render(platform() === 'ios' || platform() === 'android' ? <MobileApp /> : <
 - New subtree `apps/desktop/src/mobile/` (kebab-case, one component per file):
   `mobile-app.tsx`, `screens/` (onboarding, today, note, notes-list, search,
   capture, settings), `components/` (tab bar, sync status pill, day pager).
-- **Reuses:** providers (graph, theme, query client), `@reflect/core` getters/
+- **Reuses:** providers (graph, theme, query client), `@dayjot/core` getters/
   setters, the design system tokens, the typed `Route` union (subset: `today`,
   `daily`, `note`, `search`) over a mobile stack/tab navigation — no URL
   router dependency, same as desktop — **and the entire editor/document stack**
@@ -273,8 +273,8 @@ later on the height events.
 
 ### 9. App identity & store
 
-The iOS template now carries the product identity (`app.reflect.ios`, product
-name "Reflect", team `789ULN5MZB`) and `tauri.ios.conf.json` keeps the mobile
+The iOS template now carries the product identity (`app.dayjot.ios`, product
+name "DayJot", team `789ULN5MZB`) and `tauri.ios.conf.json` keeps the mobile
 bundle identifier separate from the desktop app. Versioning tracks the desktop
 `version` in `tauri.conf.json`; TestFlight builds use `pnpm release:ios` to add
 the per-upload build number and pass App Store Connect API key authentication
@@ -313,7 +313,7 @@ Steps 1 and 2 are the existential gates; nothing else starts until both pass.
    the CM6 rung and size the port; both fail → escalate per Risks. *The
    editor choice is locked here, before any screen is built.*
 3. **Land the mobile crate surface.** The cfg-gating from spike A done
-   properly: mobile delete-to-`.reflect/trash/`, `mobile_graph_root()`,
+   properly: mobile delete-to-`.dayjot/trash/`, `mobile_graph_root()`,
    `capabilities/mobile.json`, Info.plist file-sharing keys, identity cleanup
    (decision 9). Desktop builds and tests stay green throughout.
 4. **Frontend platform gate + mobile shell skeleton.** The lazy root gate,
@@ -325,7 +325,7 @@ Steps 1 and 2 are the existential gates; nothing else starts until both pass.
    > `mobile_graph_root` + `app_platform` commands with core wrappers,
    > Files-app exposure (`UIFileSharingEnabled` +
    > `LSSupportsOpeningDocumentsInPlace`), identity normalized to
-   > `app.reflect.ios` / product name Reflect, the lazy `PlatformRoot` gate
+   > `app.dayjot.ios` / product name DayJot, the lazy `PlatformRoot` gate
    > (desktop chrome split into `desktop-root.tsx`), the fixed-root mobile
    > bootstrap in `GraphProvider`, and the `MobileShell` route tree. The mobile
    > surfaces now include Daily, All/search, editable note pages, note actions,
@@ -389,7 +389,7 @@ Steps 1 and 2 are the existential gates; nothing else starts until both pass.
 
 - `pnpm tauri ios dev` runs the mobile app in the simulator from a clean
   checkout (see [the simulator runbook](../contributing/mobile-simulator.md));
-  `pnpm tauri dev` (desktop) is unaffected; `cargo test -p reflect-open` and
+  `pnpm tauri dev` (desktop) is unaffected; `cargo test -p dayjot-desktop` and
   the TS suites stay green.
 - Fresh install → Start fresh → today's note exists on disk under
   `Documents/`, visible in the Files app; capture appends markdown that

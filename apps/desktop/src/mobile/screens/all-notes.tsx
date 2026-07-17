@@ -9,7 +9,7 @@ import {
   searchWithFilters,
   type FilteredSearchHit,
   type NoteTagFacet,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'

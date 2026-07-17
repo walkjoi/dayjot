@@ -1,6 +1,6 @@
 # Running the iOS simulator
 
-Reflect mobile is the iOS target of `apps/desktop`, so the simulator dev loop
+DayJot mobile is the iOS target of `apps/desktop`, so the simulator dev loop
 uses Tauri's iOS command rather than a separate app package.
 
 From the repo root:
@@ -15,11 +15,11 @@ runs the usual sidecar step and starts Vite through Tauri's
 instead.
 
 The script applies `src-tauri/tauri.ios.dev.conf.json`, and debug builds are
-the dev flavor: they install as `Reflect Dev` (`app.reflect.ios.dev`, own
-icon, own `group.app.reflect.dev` App Group, no iCloud), so they coexist with
+the dev flavor: they install as `DayJot Dev` (`app.dayjot.ios.dev`, own
+icon, own `group.app.dayjot.dev` App Group, no iCloud), so they coexist with
 the TestFlight/App Store app instead of colliding with its install record.
 Plain `tauri ios dev` no longer works on its own: it would build the dev
-bundle id but try to launch `app.reflect.ios`.
+bundle id but try to launch `app.dayjot.ios`.
 
 To see simulator names:
 

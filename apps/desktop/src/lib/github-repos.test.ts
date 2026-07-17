@@ -31,7 +31,7 @@ describe('suggestRepoName', () => {
   })
 
   it('falls back when the name slugs away to nothing', () => {
-    expect(suggestRepoName(undefined)).toBe('reflect-backup')
-    expect(suggestRepoName('***')).toBe('reflect-backup')
+    expect(suggestRepoName(undefined)).toBe('dayjot-backup')
+    expect(suggestRepoName('***')).toBe('dayjot-backup')
   })
 })

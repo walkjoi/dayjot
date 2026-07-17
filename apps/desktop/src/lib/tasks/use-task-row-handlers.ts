@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { type OpenTask } from '@reflect/core'
+import { type OpenTask } from '@dayjot/core'
 import { type TaskNavigate } from '@/components/tasks/task-editor'
 import {
   insertTargetForBucket,

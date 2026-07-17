@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { hasBridge, subscribeFileChanges, type FileChange } from '@reflect/core'
+import { hasBridge, subscribeFileChanges, type FileChange } from '@dayjot/core'
 
 /**
  * Subscribe to the watcher's file-change events (Plan 04b) for the lifetime of

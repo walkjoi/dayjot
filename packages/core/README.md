@@ -1,6 +1,6 @@
-# @reflect/core
+# @dayjot/core
 
-All of Reflect's TypeScript business logic. Platform-agnostic by design:
+All of DayJot's TypeScript business logic. Platform-agnostic by design:
 nothing in this package imports `@tauri-apps/*` — the native shell is reached
 through an injected bridge, so the same code runs in the desktop app, in plain
 vitest, and (later) in the CLI.

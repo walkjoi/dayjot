@@ -28,7 +28,7 @@ export async function openGraph(path: string): Promise<GraphInfo> {
 }
 
 /**
- * Open (or focus) a secondary note window on a `reflect://` route link
+ * Open (or focus) a secondary note window on a `dayjot://` route link
  * (⌘-click a note link). Desktop-only; requires an open graph, which the new
  * window adopts — see {@link windowBootstrap}.
  */
@@ -63,10 +63,10 @@ export async function createGraph(path: string): Promise<GraphInfo> {
 
 /**
  * Import a Reflect V1 export `.zip` into the open graph. V1 exports already use
- * Reflect Open's graph-folder layout; Rust extracts safe entries under the
+ * DayJot Open's graph-folder layout; Rust extracts safe entries under the
  * active graph root without ever replacing an existing file (identical files
  * skip, conflicting notes rename, conflicting daily notes merge). Attachments
- * the notes link to on Firebase Storage or Reflect's asset CDN are downloaded
+ * the notes link to on Firebase Storage or DayJot's asset CDN are downloaded
  * into `assets/` and the links rewritten, so the call can take a while on
  * attachment-heavy graphs — observe {@link subscribeImportProgress} and offer
  * {@link cancelReflectV1Import} while it runs.
@@ -237,7 +237,7 @@ export async function captureHostRegister(): Promise<void> {
 }
 
 /**
- * List the capture inbox (`.reflect/inbox/`): spooled `.json` envelopes and
+ * List the capture inbox (`.dayjot/inbox/`): spooled `.json` envelopes and
  * their screenshot siblings. A missing inbox lists as empty. Pinned to
  * `generation` like every background-pass read.
  */
@@ -280,7 +280,7 @@ export async function captureSharedInboxRelay(generation: number): Promise<numbe
 }
 
 /**
- * Quarantine an unparseable spool file into `.reflect/inbox-rejected/` —
+ * Quarantine an unparseable spool file into `.dayjot/inbox-rejected/` —
  * moved, never deleted: "the raw link is never lost" holds even for an
  * envelope a newer extension wrote that this app version can't read yet.
  */

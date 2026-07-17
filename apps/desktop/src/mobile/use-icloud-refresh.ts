@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { errorMessage, hasBridge, icloudDownloadPending, icloudPendingCount } from '@reflect/core'
+import { errorMessage, hasBridge, icloudDownloadPending, icloudPendingCount } from '@dayjot/core'
 import { useGraph } from '@/providers/graph-provider'
 
 /**

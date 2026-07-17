@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 
 export type FetchFn = typeof fetch
 
@@ -21,14 +21,14 @@ export async function readJson<Schema extends z.ZodType>(
   try {
     body = await response.json()
   } catch {
-    throw new ReflectError(
+    throw new DayJotError(
       'network',
       `${what}: GitHub returned an unreadable response (${response.status})`,
     )
   }
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
-    throw new ReflectError(
+    throw new DayJotError(
       'parse',
       `${what}: GitHub returned an unexpected response shape (${response.status})`,
     )

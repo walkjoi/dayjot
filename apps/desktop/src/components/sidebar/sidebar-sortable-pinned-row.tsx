@@ -2,8 +2,8 @@ import { memo, useCallback, type CSSProperties, type MouseEvent, type ReactEleme
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useQueryClient } from '@tanstack/react-query'
-import { displayNoteTitle, errorMessage } from '@reflect/core'
-import type { PinnedNote } from '@reflect/core'
+import { displayNoteTitle, errorMessage } from '@dayjot/core'
+import type { PinnedNote } from '@dayjot/core'
 import {
   invalidatePinnedNotesCache,
   updatePinnedNotesCache,

@@ -1,17 +1,17 @@
-# Reflect Design System
+# DayJot Design System
 
-> **Reflect** — *"A beautifully minimalist note-taking app designed to mirror the way you think."*
-> Think better with Reflect. Never miss a note, idea or connection.
+> **DayJot** — *"A beautifully minimalist note-taking app designed to mirror the way you think."*
+> Think better with DayJot. Never miss a note, idea or connection.
 
-This is a design system distilled from Reflect's real production source. Use it to
-build well-branded Reflect interfaces and assets — product screens, marketing pages,
+This is a design system distilled from DayJot's real production source. Use it to
+build well-branded DayJot interfaces and assets — product screens, marketing pages,
 slides, prototypes — that look and feel like the real thing.
 
 ---
 
-## What Reflect is
+## What DayJot is
 
-Reflect is a fast, minimalist, **networked** note-taking app. It is a writing tool
+DayJot is a fast, minimalist, **networked** note-taking app. It is a writing tool
 first: the interface gets out of the way so your prose is the hero. Its defining
 ideas are:
 
@@ -28,11 +28,11 @@ ideas are:
 Pricing is famously simple: **one plan, one price — $10/month** (billed annually),
 with a 14-day free trial.
 
-It is an **indie product** (Reflect App, LLC; founder Alex MacCaw / @maccaw), with a
+It is an **indie product** (DayJot App, LLC; founder Alex MacCaw / @maccaw), with a
 warm, slightly playful voice — *"making a jolly good note-taking app."*
 
 ### Two surfaces, one purple soul
-Reflect presents two distinct visual worlds that share a brand color:
+DayJot presents two distinct visual worlds that share a brand color:
 
 1. **The App** — a calm, near-white (or deep-navy dark-mode) productivity canvas.
    Dense, quiet chrome; **indigo `#4F46E5`** as the only saturated accent; everything
@@ -67,7 +67,7 @@ not have access, but they are recorded here for provenance and deeper study:
 
 ## CONTENT FUNDAMENTALS
 
-**Voice — confident, calm, quietly clever.** Reflect speaks like a thoughtful maker,
+**Voice — confident, calm, quietly clever.** DayJot speaks like a thoughtful maker,
 not a marketing department. Sentences are short and declarative. There's dry wit
 ("making a jolly good note-taking app"; encryption "not even us") but never goofiness.
 
@@ -76,9 +76,9 @@ not a marketing department. Sentences are short and declarative. There's dry wit
   "Our mission is to improve the way people think").
 - **Casing:** **Sentence case everywhere** — headings, buttons, menu items, labels.
   Never Title Case UI, never ALL CAPS (except tiny tracked section eyebrows like
-  "Reflect AI", "Encryption", "Meetings" that label a marketing section).
+  "DayJot AI", "Encryption", "Meetings" that label a marketing section).
 - **Headlines** are aspirational and benefit-led, often imperative:
-  *"Think better with Reflect."* · *"Give your brain superpowers."* ·
+  *"Think better with DayJot."* · *"Give your brain superpowers."* ·
   *"Never lose information."* · *"Get more out of your meetings."*
 - **Feature blurbs** are one tight line, lowercase-feeling, no period sometimes:
   *"Instantly sync your notes across devices"* · *"Form a graph of ideas with backlinked
@@ -90,8 +90,8 @@ not a marketing department. Sentences are short and declarative. There's dry wit
   trial`, `Take the course`, `See our values`, `Subscribe`. The recurring primary CTA
   is **"Start free trial" / "Start your 14-day trial."**
 - **Emoji:** essentially **none** in product UI and almost none in marketing (a rare 🙏
-  shows up only inside quoted user testimonials — never in Reflect's own voice).
-- **Numbers/jargon:** minimal. Reflect avoids stat-slop; it names benefits ("Built for
+  shows up only inside quoted user testimonials — never in DayJot's own voice).
+- **Numbers/jargon:** minimal. DayJot avoids stat-slop; it names benefits ("Built for
   speed", "Frictionless search") rather than dumping metrics.
 - **Vibe:** *minimalist, fast, trustworthy, a little magical.* Users describe it as
   "magic" and praise "the simplicity… is beautiful" — lean into calm restraint.
@@ -155,7 +155,7 @@ glow** (`inset 0 0 12px rgba(191,151,255,.24)`) rather than a drop shadow.
 
 **Motion.** Short and calm — **no bounces, no spring.** Most UI transitions are
 `100–150ms`. The site's signature easing is **`cubic-bezier(.6,.6,0,1)`** (a fast-out
-curve) for color/opacity over `~300ms`. Reflect favors fades and subtle washes over
+curve) for color/opacity over `~300ms`. DayJot favors fades and subtle washes over
 movement.
 
 **Transparency & blur.** Used intentionally: glassmorphic chrome on the marketing site
@@ -231,7 +231,7 @@ headers, ghost hints, and meta**.
 
 ## ICONOGRAPHY
 
-Reflect ships a small set of **hand-built single-path SVG icons** living in
+DayJot ships a small set of **hand-built single-path SVG icons** living in
 `components/icons/*` (e.g. `search-icon`, `pencil-icon` → Daily notes, `list-icon`
 → All notes, `check-icon` → Tasks, `map-icon` → Map, `calendar`, `mic`, `pin`,
 `link`/`un-link`, `history`, `trash`, `chevron-left/right`, `help`, light/dark-mode).
@@ -241,12 +241,12 @@ inheriting `currentColor`.
 - **No icon font, no emoji, no unicode glyphs as icons.** Icons are inline SVG.
 - They are functional and minimal — a search magnifier, a pencil, a checkmark — never
   decorative or multicolor.
-- The **brand mark** is the networked-graph sphere (`assets/reflect-app-icon.png` /
-  `reflect-graph-hero.png`): glowing white nodes connected by purple arcs.
+- The **brand mark** is the networked-graph sphere (`assets/dayjot-app-icon.png` /
+  `dayjot-graph-hero.png`): glowing white nodes connected by purple arcs.
 
-**Substitution for this system:** rather than re-tracing Reflect's private SVGs, this
+**Substitution for this system:** rather than re-tracing DayJot's private SVGs, this
 kit uses **[Lucide](https://lucide.dev)** (loaded from CDN) — a thin-stroke line set
-that matches Reflect's weight and style almost exactly (`search`, `pencil`, `list`,
+that matches DayJot's weight and style almost exactly (`search`, `pencil`, `list`,
 `check`, `map`, `calendar`, `mic`, `pin`, `link`, `trash`, `history`, chevrons all map
 1:1). **⚠️ Flagged substitution** — swap in the real `components/icons` SVGs if you
 need pixel-exact brand icons. Set `stroke-width: 1.75` to match.
@@ -271,20 +271,20 @@ need pixel-exact brand icons. Set `stroke-width: 1.75` to match.
 **`tokens/`** — CSS custom properties (all reachable from `styles.css`)
 - `fonts.css` — Inter Variable `@font-face`.
 - `colors.css` — indigo & cool-grey ramps, marketing purples, semantic aliases;
-  `.dark` and `.reflect-space` theme scopes.
+  `.dark` and `.dayjot-space` theme scopes.
 - `typography.css` — families, type scale, weights, line-heights, tracking.
 - `spacing.css` — 4px spacing scale, radii, shadows, layout widths, motion.
 
 **`assets/`**
 - `fonts/InterVariable.woff2`, `fonts/InterVariable-Italic.woff2`
-- `reflect-app-icon.png` (rounded graph sphere), `reflect-app-icon-square.png`,
-  `reflect-graph-hero.png` (graph-on-grid hero), `reflect-logo-mark.png`.
+- `dayjot-app-icon.png` (rounded graph sphere), `dayjot-app-icon-square.png`,
+  `dayjot-graph-hero.png` (graph-on-grid hero), `dayjot-logo-mark.png`.
 
 **`components/core/`** — reusable React primitives (see each `.prompt.md`):
 Button, IconButton, Input, SearchField, Checkbox, Badge, Card, Avatar, MenuItem,
 ShortcutKey, Toggle. *(populated below)*
 
-> **Consuming this package:** `@reflect/design-system` exports **only**
+> **Consuming this package:** `@dayjot/design-system` exports **only**
 > `styles.css`, `tokens/*`, and `assets/*` (see `package.json`). The `.jsx`
 > components here are *spec artifacts* — reference implementations for fidelity,
 > not importable modules. Product apps (e.g. `apps/desktop`) build their own
@@ -296,7 +296,7 @@ ShortcutKey, Toggle. *(populated below)*
 **`guidelines/`** — foundation specimen cards (Design System tab).
 
 **`ui_kits/`**
-- `app/` — the Reflect notes app (sidebar + daily notes + editor + ⌘K search).
+- `app/` — the DayJot notes app (sidebar + daily notes + editor + ⌘K search).
 - `marketing/` — the deep-space marketing homepage.
 
 See `SKILL.md` for how to use this as a downloadable Agent Skill.

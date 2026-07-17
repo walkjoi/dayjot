@@ -1,7 +1,7 @@
 import React from 'react'
 
 /**
- * Input — Reflect's text field. Quiet white surface, a hairline outline that
+ * Input — DayJot's text field. Quiet white surface, a hairline outline that
  * warms to indigo on focus, the house 7px radius, and a soft inset shadow.
  */
 export function Input({

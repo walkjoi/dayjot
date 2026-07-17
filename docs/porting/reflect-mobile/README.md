@@ -16,13 +16,13 @@ decisions live here and win over anything in these docs:
 - [Plan 19 (mobile companion)](../../plans/19-mobile.md) — scope, steps,
   acceptance criteria; the 2026-06-12 product call is **re-implement V1
   mobile's feature-set and design**.
-- [V2 Mobile Grounding Brief](../../reflect-v2-mobile-grounding-brief.md) —
+- [V2 Mobile Grounding Brief](../../dayjot-v2-mobile-grounding-brief.md) —
   product brief and the V1→V2 surface mapping.
 - [TDR 0003 (mobile shell)](../../decisions/0003-mobile-shell.md) — Tauri 2
   mobile chosen; Capacitor is the documented fallback with triggers.
-- [Product Vision](../../reflect-v2-product-vision.md) ·
-  [Sync Strategy](../../reflect-v2-sync-strategy.md) ·
-  [Indexing Strategy](../../reflect-v2-indexing-strategy.md).
+- [Product Vision](../../dayjot-v2-product-vision.md) ·
+  [Sync Strategy](../../dayjot-v2-sync-strategy.md) ·
+  [Indexing Strategy](../../dayjot-v2-indexing-strategy.md).
 
 ## Why features can't be ported directly
 

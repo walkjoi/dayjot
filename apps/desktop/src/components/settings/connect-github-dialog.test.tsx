@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import type { ConnectExistingResult } from '@/lib/backup-controller'
@@ -287,7 +287,7 @@ describe('ConnectGithubDialog', () => {
 
     // A plain "give access" step that names the repo and steers to a per-repo
     // grant (never "All repositories").
-    expect(await screen.findByText(/give reflect access to/i)).toBeTruthy()
+    expect(await screen.findByText(/give dayjot access to/i)).toBeTruthy()
     expect(screen.getByText(/only select repositories/i)).toBeTruthy()
     expect(screen.queryByText(/all repositories/i)).toBeNull()
     expect(screen.queryByText(/token/i)).toBeNull()
@@ -322,7 +322,7 @@ describe('ConnectGithubDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
     await waitFor(() => expect(onClose).toHaveBeenCalled())
-    expect(screen.queryByText(/give reflect access/i)).toBeNull()
+    expect(screen.queryByText(/give dayjot access/i)).toBeNull()
   })
 
   it('points the app create guide at granting access, not token scope', async () => {
@@ -333,7 +333,7 @@ describe('ConnectGithubDialog', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
-    fireEvent.click(await screen.findByRole('button', { name: /grant the Reflect app access/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /grant the DayJot app access/i }))
     expect(openedUrls).toHaveBeenCalledWith(
       'https://github.com/apps/reflect-github-app/installations/new',
     )

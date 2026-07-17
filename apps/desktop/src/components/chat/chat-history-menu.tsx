@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
-import { hasBridge, listChatConversations } from '@reflect/core'
+import { hasBridge, listChatConversations } from '@dayjot/core'
 import { Check, History, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {

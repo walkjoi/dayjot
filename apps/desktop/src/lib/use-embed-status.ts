@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { embedStatus, hasBridge, subscribeEmbedStatus, type EmbedStatus } from '@reflect/core'
+import { embedStatus, hasBridge, subscribeEmbedStatus, type EmbedStatus } from '@dayjot/core'
 
 /**
  * The embedding runtime's live status (Plan 09). Polls once on mount, then

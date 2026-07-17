@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react'
 import { X } from 'lucide-react'
-import { foldTag, type NoteTagFacet } from '@reflect/core'
+import { foldTag, type NoteTagFacet } from '@dayjot/core'
 import { FilterChip } from './filter-chip'
 import {
   EMPTY_ALL_NOTES_FILTERS,

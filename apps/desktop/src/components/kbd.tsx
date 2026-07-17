@@ -15,7 +15,7 @@ interface KbdProps {
 }
 
 /**
- * One literal key in the original Reflect idiom — a small bordered pill that
+ * One literal key in the original DayJot idiom — a small bordered pill that
  * annotates without shouting. Used for standalone hints (↑↓, esc); whole
  * bindings render through `ShortcutKeys`, which groups keys in one pill.
  */

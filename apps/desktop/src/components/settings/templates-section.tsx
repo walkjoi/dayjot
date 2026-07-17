@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { errorMessage, listTemplates, type TemplateEntry } from '@reflect/core'
+import { errorMessage, listTemplates, type TemplateEntry } from '@dayjot/core'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {

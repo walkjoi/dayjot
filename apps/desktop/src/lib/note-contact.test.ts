@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ContactMatch } from '@reflect/core'
+import type { ContactMatch } from '@dayjot/core'
 import type { NoteSession } from '@/editor/note-session'
 
 const readNote = vi.hoisted(() => vi.fn<(path: string) => Promise<string>>())
@@ -8,8 +8,8 @@ const noteExists = vi.hoisted(() => vi.fn(async () => false))
 const openSession = vi.hoisted(() => vi.fn<(path: string) => NoteSession | null>(() => null))
 const createNoteWithTitle = vi.hoisted(() => vi.fn(async () => 'notes/created.md'))
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   readNote,
   writeNote,
   noteExists,

@@ -1,5 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react'
-import { type OpenTask } from '@reflect/core'
+import { type OpenTask } from '@dayjot/core'
 import { taskKey } from '@/lib/tasks/task-identity'
 import {
   insertTargetForBucket,

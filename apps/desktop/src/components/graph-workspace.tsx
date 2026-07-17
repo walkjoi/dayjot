@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { GraphInfo } from '@reflect/core'
+import type { GraphInfo } from '@dayjot/core'
 import { PaletteProvider } from '@/components/command-palette/palette-provider'
 import { NoteWindowContent } from '@/components/note-window-content'
 import { WorkspaceContent } from '@/components/workspace-content'

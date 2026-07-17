@@ -5,7 +5,7 @@ import {
   hasBridge,
   type AiProvidersState,
   type GraphInfo,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { useMainWindowEffect } from '@/hooks/use-main-window-effect'
 import { createCaptureController } from '@/lib/capture-controller'
 import { isMobileSurface } from '@/lib/platform-surface'

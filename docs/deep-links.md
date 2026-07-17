@@ -1,6 +1,6 @@
 # Deep links
 
-The desktop app registers the `reflect://` URL scheme, so other apps,
+The desktop app registers the `dayjot://` URL scheme, so other apps,
 scripts, and launchers can navigate the running app (or launch it) and hand
 it quick captures. The grammar mirrors the in-app route model
 (`apps/desktop/src/routing/route.ts`) one-to-one — a URL is an address for an
@@ -9,11 +9,11 @@ app state, never a remote control.
 ## Navigation links
 
 ```text
-reflect://today                     the daily stream, on today
-reflect://daily/2026-07-01          a specific day (ISO YYYY-MM-DD)
-reflect://note/<target>             a note — see resolution below
-reflect://search?q=meeting          the search screen, query prefilled
-reflect://tasks                     the tasks view
+dayjot://today                     the daily stream, on today
+dayjot://daily/2026-07-01          a specific day (ISO YYYY-MM-DD)
+dayjot://note/<target>             a note — see resolution below
+dayjot://search?q=meeting          the search screen, query prefilled
+dayjot://tasks                     the tasks view
 ```
 
 `<target>` resolves like the CLI's `<note>` argument, with the frontmatter
@@ -33,20 +33,20 @@ resolve **in the open graph**; there is no cross-graph addressing.
 clipboard, minting an `id:` into the note's frontmatter on first copy for
 notes that predate ids — so a copied link outlives any rename. Daily notes
 are addressed by date instead. A human-written
-`reflect://note/Project%20X` works too, via title resolution.
+`dayjot://note/Project%20X` works too, via title resolution.
 
 ## Write links
 
 ```text
-reflect://append?text=call%20the%20bank    a bullet on today's daily note
-reflect://task?text=buy%20milk             an open task on today's daily note
+dayjot://append?text=call%20the%20bank    a bullet on today's daily note
+dayjot://task?text=buy%20milk             an open task on today's daily note
 ```
 
 A URL scheme is a world-invokable surface — any web page can attempt
-`reflect://` — so writes are deliberately narrow: **one line of plain text,
+`dayjot://` — so writes are deliberately narrow: **one line of plain text,
 onto today's daily note, nothing else**. The payload is whitespace-folded to
 a single line (no markdown-block smuggling), capped at 10k characters, and
-lands through the capture inbox (`.reflect/inbox/`) — the same audited drain
+lands through the capture inbox (`.dayjot/inbox/`) — the same audited drain
 browser captures use — never spliced directly into a note by the URL
 handler. There is no URL that writes into an arbitrary note, creates a note
 with content, or runs a command.
@@ -60,18 +60,18 @@ drain re-runs cleanly.
 - macOS registers the scheme at **bundle** time (`CFBundleURLTypes` via the
   Tauri deep-link plugin) — plain `pnpm tauri dev` does not register it; use
   a built bundle to exercise real OS-delivered links.
-- All flavors (Reflect, Reflect Beta, Reflect Dev) register `reflect://`;
+- All flavors (DayJot, DayJot Beta, DayJot Dev) register `dayjot://`;
   when several are installed, macOS picks one handler.
 - On Windows/Linux the single-instance plugin forwards a second launch's URL
   to the running instance and focuses it; macOS does this natively.
 - A link that arrives while no graph is open (cold launch, graph chooser)
   buffers and fires once the graph opens.
-- A `reflect://` link clicked *inside* the app (a note body, chat, a backlink
+- A `dayjot://` link clicked *inside* the app (a note body, chat, a backlink
   snippet) dispatches straight into the same in-app handler — no OS
   round-trip, so it works in dev builds and can never land on a different
   installed flavor.
 - iOS registers the scheme too (`CFBundleURLTypes` in `ios.project.yml`), but
-  only for one **mobile-native verb**: `reflect://record-audio`, the
+  only for one **mobile-native verb**: `dayjot://record-audio`, the
   lock-screen widget's start-recording entry point. It is handled in the Rust
   shell (queued into the recording plugin's native action handshake — see
   `docs/porting/reflect-mobile/audio-memos.md`) and deliberately absent from
@@ -81,9 +81,9 @@ drain re-runs cleanly.
 ## Relationship to the CLI
 
 The scheme and the [CLI](cli.md) stay complementary: the CLI reads and
-resolves for scripts (`reflect show`, `reflect path`); the scheme navigates
-and captures. `reflect open <note>` bridges the two — it resolves like
-`reflect show` and shells out to the scheme URL, preferring the frontmatter
+resolves for scripts (`dayjot show`, `dayjot path`); the scheme navigates
+and captures. `dayjot open <note>` bridges the two — it resolves like
+`dayjot show` and shells out to the scheme URL, preferring the frontmatter
 `id` form (never minting one; the CLI doesn't write), the date form for
 dailies, and the path form otherwise. `--print` emits the URL without
 launching. The scheme's own resolution is the CLI's order with the

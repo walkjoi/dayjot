@@ -29,7 +29,7 @@ link UX (create-from-unresolved largely subsumes the failure case).
 
 - **07a — linking while writing** *(delivered 2026-06-09, PR #13)* (steps 1–3 + the TanStack Query adoption):
   `[[` autocomplete (ProseKit autocomplete popover; suggestions ranked in
-  `@reflect/core` over titles + aliases + dailies, exact < prefix < substring,
+  `@dayjot/core` over titles + aliases + dailies, exact < prefix < substring,
   recency tie-break; a full `YYYY-MM-DD` query always offers that daily — files
   are created lazily); insertion is **literal text** (wiki links are literal
   syntax + decorations in the meowdown model — no node, no serializer surface);
@@ -85,7 +85,7 @@ link UX (create-from-unresolved largely subsumes the failure case).
 5. **Rename with rewrite.** Renaming a note (title and/or file):
    - rewrites known incoming `[[links]]` across the graph to the new title (minimal-diff
      edits via Plan 03), in a single batched, undoable operation;
-   - preserves the previous title as an alias so any links Reflect couldn't rewrite (or
+   - preserves the previous title as an alias so any links DayJot couldn't rewrite (or
      external ones) still resolve;
    - updates the file path (Plan 02 `note_move` → OS-aware) and reindexes affected notes.
    Show progress for large rewrites; never partially-apply without recording a checkpoint
@@ -107,7 +107,7 @@ link UX (create-from-unresolved largely subsumes the failure case).
 - **Adopt TanStack Query here.** This plan is where projection reads multiply
   (backlinks panel, `[[` autocomplete), so it's the agreed point to introduce
   `@tanstack/react-query` per [architecture-conventions §5](architecture-conventions.md):
-  `queryFn`s are `@reflect/core` getters (`getBacklinks`, `searchNotes`), the
+  `queryFn`s are `@dayjot/core` getters (`getBacklinks`, `searchNotes`), the
   watcher's `index:changed` events drive targeted `queryClient.invalidateQueries`,
   and markdown setters invalidate after writing. Decided during the post-Plan-05
   refactor (June 2026) rather than retrofitting earlier file-only screens.

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { AssistantPart, ChatTurn } from '@reflect/core'
+import type { AssistantPart, ChatTurn } from '@dayjot/core'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Marker, MarkerContent } from '@/components/ui/marker'
 import { MarkdownPreview } from '@/editor/markdown-preview'
@@ -29,7 +29,7 @@ export function ChatAssistantPart({
     case 'text':
       return status === 'streaming' && index === lastIndex ? (
         <Bubble variant="ghost" className="max-w-full">
-          <BubbleContent className="reflect-chat-message max-w-full text-text">
+          <BubbleContent className="dayjot-chat-message max-w-full text-text">
             <div className="whitespace-pre-wrap">{part.text}</div>
           </BubbleContent>
         </Bubble>
@@ -39,7 +39,7 @@ export function ChatAssistantPart({
             <MarkdownPreview
               content={part.text}
               onWikiLinkClick={onWikiLinkClick}
-              className="reflect-chat-message text-sm"
+              className="dayjot-chat-message text-sm"
             />
           </BubbleContent>
         </Bubble>
@@ -50,7 +50,7 @@ export function ChatAssistantPart({
       return (
         <Marker
           className={cn(
-            'reflect-chat-message text-sm',
+            'dayjot-chat-message text-sm',
             part.tone === 'error' ? 'text-destructive' : 'text-text-muted italic',
           )}
         >

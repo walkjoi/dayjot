@@ -44,28 +44,28 @@ describe('openExternalLink', () => {
     expect(event.defaultPrevented).toBe(true)
   })
 
-  it('routes a reflect:// link through the in-app deep-link intake, not the URL opener', () => {
-    click('reflect://note/abc123')
+  it('routes a dayjot:// link through the in-app deep-link intake, not the URL opener', () => {
+    click('dayjot://note/abc123')
 
-    expect(dispatchDeepLink).toHaveBeenCalledWith('reflect://note/abc123')
+    expect(dispatchDeepLink).toHaveBeenCalledWith('dayjot://note/abc123')
     expect(openUrl).not.toHaveBeenCalled()
   })
 
-  it('⌘-clicks a rendered reflect:// link into a secondary window', async () => {
-    click('reflect://note/abc123', true)
+  it('⌘-clicks a rendered dayjot:// link into a secondary window', async () => {
+    click('dayjot://note/abc123', true)
 
     await vi.waitFor(() =>
-      expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('reflect://note/abc123'),
+      expect(openDeepLinkInNewWindow).toHaveBeenCalledWith('dayjot://note/abc123'),
     )
     expect(dispatchDeepLink).not.toHaveBeenCalled()
   })
 
   it('falls back to in-window dispatch when a rendered deep link cannot open a window', async () => {
     openDeepLinkInNewWindow.mockResolvedValue(false)
-    click('reflect://note/abc123', true)
+    click('dayjot://note/abc123', true)
 
     await vi.waitFor(() =>
-      expect(dispatchDeepLink).toHaveBeenCalledWith('reflect://note/abc123'),
+      expect(dispatchDeepLink).toHaveBeenCalledWith('dayjot://note/abc123'),
     )
   })
 

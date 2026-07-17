@@ -1,5 +1,5 @@
 [package]
-name = "reflect-open"
+name = "dayjot-desktop"
 # Intentionally frozen: the app version lives in apps/desktop/package.json and
 # tauri.conf.json points at it. The crate is never published, so its version
 # has no consumer — freezing it keeps Cargo.lock out of every release diff.
@@ -14,7 +14,7 @@ edition = "2021"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "reflect_open_lib"
+name = "dayjot_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -25,7 +25,7 @@ tauri-build = { version = "2.6.3", features = [] }
 # debug-only), so a shipped app stays debuggable — see `src/devtools.rs`.
 tauri = { version = "2.11.3", features = ["devtools"] }
 tauri-plugin-opener = "2.5.4"
-# Decodes `reflect-asset://` request paths (`fs/asset_protocol.rs`); the same
+# Decodes `dayjot-asset://` request paths (`fs/asset_protocol.rs`); the same
 # crate tauri itself uses for its protocol URLs.
 percent-encoding = "2.3.2"
 # `time` backs the bounded wait in `windows::close_note_windows` (tauri
@@ -36,7 +36,7 @@ serde_json = { workspace = true }
 # `hooks` adds the authorizer API used to lock the read-only `db_query` bridge
 # down to pure reads (deny ATTACH/DETACH/PRAGMA); see `db/query.rs`.
 rusqlite = { workspace = true, features = ["hooks"] }
-reflect-index-schema = { path = "../../../crates/index-schema" }
+dayjot-index-schema = { path = "../../../crates/index-schema" }
 tempfile = { workspace = true }
 sha2 = { workspace = true }
 dirs = "6.0.0"
@@ -111,7 +111,7 @@ objc2-app-kit = { version = "0.3.2", default-features = false, features = [
 # macOS and iOS — never a mirrored copy of the address book. block2 bridges the
 # requestAccessForEntityType completion handler back into blocking Rust.
 # core-foundation backs the iCloud/backup sync-exclusion resource keys on
-# `.reflect/` and `.git/` (`fs/io.rs`), which matter on both Apple targets.
+# `.dayjot/` and `.git/` (`fs/io.rs`), which matter on both Apple targets.
 # dispatch2 supplies MainThreadBound, keeping the iCloud metadata query's
 # non-Send Objective-C handles pinned to the main thread (`icloud/watch.rs`).
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
@@ -136,7 +136,7 @@ objc2-ui-kit = { version = "0.3.2", default-features = false, features = [
 # watcher (nothing else writes the mobile sandbox; local writes notify
 # in-process), the embedding runtime (fastembed/ORT is not built for mobile —
 # semantic search is desktop-only in the first mobile wave), and OS-trash
-# deletes (mobile moves into the graph-local `.reflect/trash/` instead).
+# deletes (mobile moves into the graph-local `.dayjot/trash/` instead).
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2.10.1"
 tauri-plugin-process = "2.3.1"

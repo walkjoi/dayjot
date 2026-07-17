@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { OpenTask } from '@reflect/core'
+import type { OpenTask } from '@dayjot/core'
 import { useEffect, useState, type MutableRefObject, type ReactNode } from 'react'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'
 import { makeOpenTask as task } from '@/lib/tasks/open-task-fixture'
@@ -17,8 +17,8 @@ Element.prototype.scrollIntoView = scrollIntoView
 const getOpenTasks = vi.hoisted(() => vi.fn())
 const getCompletedTasks = vi.hoisted(() => vi.fn())
 const openRouteInNewWindow = vi.hoisted(() => vi.fn<() => Promise<boolean>>())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getOpenTasks,
   getCompletedTasks,
@@ -241,7 +241,7 @@ describe('TasksScreen', () => {
   })
 
   it('does not flash an empty state while archived tasks are still loading', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     getOpenTasks.mockResolvedValue([])
     let resolveCompleted: (rows: OpenTask[]) => void = () => {}
     getCompletedTasks.mockReturnValue(
@@ -273,7 +273,7 @@ describe('TasksScreen', () => {
   })
 
   it('surfaces a failed archived query as an alert, not a blank list', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     getOpenTasks.mockResolvedValue([])
     getCompletedTasks.mockRejectedValue(new Error('index unavailable'))
     const view = renderScreen()
@@ -283,7 +283,7 @@ describe('TasksScreen', () => {
   })
 
   it('clears the archived error when "show archived" is turned off', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     getOpenTasks.mockResolvedValue([
       task({ notePath: 'notes/p.md', text: 'open task', noteTitle: 'P' }),
     ])
@@ -609,7 +609,7 @@ describe('TasksScreen', () => {
   })
 
   it('editing an already-completed task with ⌘↵ saves the text, never reopens it', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     editTask.mockResolvedValue(undefined)
     toggleTask.mockResolvedValue(undefined)
     getOpenTasks.mockResolvedValue([])
@@ -1004,7 +1004,7 @@ describe('TasksScreen', () => {
   })
 
   it('does not reopen an already-completed task when ⌘↵ hits the selection', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     toggleTask.mockResolvedValue(undefined)
     getOpenTasks.mockResolvedValue([
       task({ notePath: 'notes/a.md', markerOffset: 2, raw: '[ ] open', text: 'open', noteTitle: 'A' }),
@@ -1334,7 +1334,7 @@ describe('TasksScreen', () => {
   })
 
   it('reopens selected checked tasks when a checked selected checkbox is clicked', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     toggleTask.mockResolvedValue(undefined)
     getOpenTasks.mockResolvedValue([
       task({
@@ -1470,7 +1470,7 @@ describe('TasksScreen', () => {
   })
 
   it('reopens an archived completed task when its checkbox is clicked', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     toggleTask.mockResolvedValue(undefined)
     getOpenTasks.mockResolvedValue([])
     getCompletedTasks.mockResolvedValue([
@@ -1498,7 +1498,7 @@ describe('TasksScreen', () => {
   })
 
   it('shows an open checkbox while a reopen write is pending', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     let resolveToggle = (): void => {
       throw new Error('toggle promise was not created')
     }
@@ -1560,7 +1560,7 @@ describe('TasksScreen', () => {
   })
 
   it('reopens a selected completed task when its checkbox is clicked', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     toggleTask.mockResolvedValue(undefined)
     getOpenTasks.mockResolvedValue([])
     getCompletedTasks.mockResolvedValue([
@@ -1589,7 +1589,7 @@ describe('TasksScreen', () => {
   })
 
   it('saves an edited selected completed task before reopening it from the checkbox', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     editTask.mockResolvedValue(undefined)
     toggleTask.mockResolvedValue(undefined)
     getOpenTasks.mockResolvedValue([])
@@ -1657,7 +1657,7 @@ describe('TasksScreen', () => {
   it('keeps a completed task visible (struck) when archived tasks are shown', async () => {
     // With "show archived" on, completing must move the row into the completed
     // list (struck), not drop it until the refetch (Bugbot regression).
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     toggleTask.mockResolvedValue(undefined)
     getCompletedTasks.mockResolvedValue([])
     getOpenTasks.mockResolvedValue([

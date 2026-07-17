@@ -1,4 +1,4 @@
-import { errorMessage, hasBridge, openNoteWindow } from '@reflect/core'
+import { errorMessage, hasBridge, openNoteWindow } from '@dayjot/core'
 import { deepLinkForRoute } from '@/lib/deep-links/format'
 import { parseDeepLink } from '@/lib/deep-links/parse'
 import { isMobileSurface } from '@/lib/platform-surface'
@@ -6,7 +6,7 @@ import type { Route } from '@/routing/route'
 
 /**
  * Open a target in a secondary note window (Plan 06). Modifier-click callers
- * and the selected-note command resolve a route or an in-note `reflect://`
+ * and the selected-note command resolve a route or an in-note `dayjot://`
  * link to the shell's `open_note_window` command. Modifier-click callers fall
  * back to in-window navigation whenever a helper answers false, so the
  * modifier can never make a link do nothing.
@@ -53,7 +53,7 @@ export async function openRouteInNewWindow(route: Route): Promise<boolean> {
 }
 
 /**
- * Open an in-note `reflect://` link in a secondary window — only links that
+ * Open an in-note `dayjot://` link in a secondary window — only links that
  * *address* something (navigate / openNote). Capture links (append, task)
  * are writes, not places: a modifier click still dispatches them normally.
  * Same false-not-throw contract as {@link openRouteInNewWindow}.

@@ -1,8 +1,8 @@
 # Plan 21 — iCloud Drive Sync (macOS + iOS)
 
-**Goal:** iCloud Drive becomes Reflect's primary multi-device sync: the graph lives in
-the app's iCloud container, files flow between macOS and iOS with no Reflect
-infrastructure, and **conflicts never surface as mystery duplicates**. Reflect resolves
+**Goal:** iCloud Drive becomes DayJot's primary multi-device sync: the graph lives in
+the app's iCloud container, files flow between macOS and iOS with no DayJot
+infrastructure, and **conflicts never surface as mystery duplicates**. DayJot resolves
 what it can safely resolve itself (identical content, non-overlapping edits via
 three-way merge, append-union for daily notes, key-wise frontmatter); anything it
 can't, it materializes **inside the note as the same labeled conflict markers Git sync
@@ -17,7 +17,7 @@ consumer sync path; Git remotes remain fully supported as the power-user/backup 
 **Status:** implemented through Phase 3 (PR #501, which also carries PR #505's
 iOS Phase 1 leg); on-device verification is the release gate. What exists:
 
-- **Phase 0**: cross-platform `.reflect/`/`.git/` exclusions, `.reflect/tmp/`
+- **Phase 0**: cross-platform `.dayjot/`/`.git/` exclusions, `.dayjot/tmp/`
   write staging, placeholder-eviction handling (items 1–3); spike 5 partially
   (the objc2 surface is built and compiles for both targets — runtime proof
   needs a container) and spike 6 resolved — the merge engine is the vendored
@@ -68,9 +68,9 @@ collaboration/shared graphs.
   `sync-conflict-notice.tsx` resolves via `resolveConflictMarkers`
   (ours/theirs/both). iCloud plugs into the *front* of this; nothing downstream
   changes shape.
-- **`.reflect/` is already local-only on macOS.** `fs/io.rs::bootstrap` sets
+- **`.dayjot/` is already local-only on macOS.** `fs/io.rs::bootstrap` sets
   `NSURLUbiquitousItemIsExcludedFromSyncKey` + `NSURLIsExcludedFromBackupKey` and
-  provider-ignore xattrs on `.reflect/`. The SQLite-in-a-synced-folder hazard is
+  provider-ignore xattrs on `.dayjot/`. The SQLite-in-a-synced-folder hazard is
   solved — on macOS. The function is a `cfg(target_os = "macos")` no-op on iOS.
 - **Editor-side safety.** `note-session` already parks external changes against a
   dirty buffer as a conflict, pauses saves, and suppresses write echoes. iCloud
@@ -92,7 +92,7 @@ collaboration/shared graphs.
   must not ship.
 - **Creation collisions do produce duplicates** (`2026-07-04 2.md`). Because daily
   notes have deterministic names, *two devices creating today's note offline is the
-  single most common conflict Reflect will see* — it needs a first-class rule, not
+  single most common conflict DayJot will see* — it needs a first-class rule, not
   an edge case.
 - **Eviction produces placeholders.** Optimize Storage replaces `notes/foo.md` with
   a `.foo.md.icloud` stub. To today's watcher and scanner that is indistinguishable
@@ -135,7 +135,7 @@ resolution reuse verbatim. Two iCloud-specific refinements:
 
 Runs in Rust, per conflicted note, first match wins. Steps 1–4 auto-resolve
 silently; step 5 flags for review. **Before any resolution write, every losing
-version's full content is archived** to `.reflect/conflict-archive/<path>/<timestamp>-<device>.md`
+version's full content is archived** to `.dayjot/conflict-archive/<path>/<timestamp>-<device>.md`
 (local-only, pruned by age/count) — resolution must never be the only copy-holder.
 
 1. **Identical / whitespace-only** → keep current, mark versions resolved.
@@ -167,8 +167,8 @@ session's conflict-park handles it, and the ladder retries after flush.
 
 ### 4. The shadow base
 
-Three-way merge needs a common ancestor iCloud doesn't provide. Reflect keeps one:
-`.reflect/sync-base/<note-path>` — a copy of the note at its last known *synced*
+Three-way merge needs a common ancestor iCloud doesn't provide. DayJot keeps one:
+`.dayjot/sync-base/<note-path>` — a copy of the note at its last known *synced*
 state. The update rule is what makes it a true ancestor approximation — the base
 advances **only** when:
 
@@ -180,14 +180,14 @@ advances **only** when:
 seen would make diff3 treat our own additions as already-merged and drop them.
 A stale base is safe (both sides carry the same early edits → diff3 sees identical
 changes → clean); a *missing* base degrades that note to two-way (step 5 markers) —
-so the store is self-healing and losing `.reflect/` costs merge quality, not data.
+so the store is self-healing and losing `.dayjot/` costs merge quality, not data.
 Renames (Plan 17 moves files on settled titles) move the base file through the same
 rename seam; a miss is again just a degraded merge.
 
-### 5. Coexistence with Git sync, `.reflect/`, and eviction
+### 5. Coexistence with Git sync, `.dayjot/`, and eviction
 
 - **`.git/` never syncs through iCloud.** Bootstrap applies the same exclusion
-  treatment as `.reflect/` to `.git/` whenever it exists. Two devices' object
+  treatment as `.dayjot/` to `.git/` whenever it exists. Two devices' object
   stores merging file-by-file is repo corruption; this also protects users who
   *today* put a Git-backed graph inside iCloud Drive. Consequence: Git history
   becomes per-device under iCloud.
@@ -196,7 +196,7 @@ rename seam; a miss is again just a degraded merge.
   histories pushing one remote would non-FF forever). Enabling iCloud sync
   disconnects a configured Git remote (with an explanatory prompt); local
   checkpoint commits remain allowed and useful for recovery.
-- **`.reflect/` exclusion goes cross-platform.** `mark_reflect_dir_local_only`
+- **`.dayjot/` exclusion goes cross-platform.** `mark_dayjot_dir_local_only`
   widens from `cfg(target_os = "macos")` to Apple targets; the
   `ubiquitousItemIsExcludedFromSync` resource key exists on iOS. Verified inside
   the container by a Phase 0 spike on both platforms.
@@ -210,7 +210,7 @@ rename seam; a miss is again just a degraded merge.
 - **Temp files move out of synced dirs.** `atomic_write_bytes` currently creates
   its temp file next to the target — inside a synced folder, so crashes strand
   `.tmpXXXXXX` litter that replicates to every device. Temps move to
-  `.reflect/tmp/` (same volume — rename stays atomic; the bootstrap sweep already
+  `.dayjot/tmp/` (same volume — rename stays atomic; the bootstrap sweep already
   reclaims strands), and writes into an iCloud graph go through an
   `NSFileCoordinator` coordinated-write wrapper.
 
@@ -238,9 +238,9 @@ metadata query needs a run-loop thread like the EventKit change observer):
 **Phase 0 — Foundations & spikes** (each lands alone; several fix live hazards
 before any iCloud feature ships):
 
-1. `.reflect/` exclusion on iOS + `.git/` exclusion everywhere (immediate
+1. `.dayjot/` exclusion on iOS + `.git/` exclusion everywhere (immediate
    protection for users with graphs already in iCloud Drive).
-2. Temp files → `.reflect/tmp/`.
+2. Temp files → `.dayjot/tmp/`.
 3. Placeholder/eviction handling in watcher + scan + mass-remove guard (unit-tested
    against synthetic `.icloud` names; also improves Dropbox-folder behavior today).
 4. **Spike — entitlements & signing:** iCloud Documents container for a Developer

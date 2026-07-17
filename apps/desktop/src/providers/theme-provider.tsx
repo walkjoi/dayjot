@@ -8,7 +8,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import type { ThemePreference } from '@reflect/core'
+import type { ThemePreference } from '@dayjot/core'
 import { useSettings } from '@/providers/settings-provider'
 
 /** User-selectable theme; `system` follows the OS preference. */

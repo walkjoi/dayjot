@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import { SettingsProvider } from '@/providers/settings-provider'
 import { DailyEventsSection } from './daily-events-section'
 
@@ -24,19 +24,19 @@ vi.mock('@/providers/graph-provider', () => ({
 // jsdom can't scroll; cmdk scrolls the highlighted suggestion into view.
 window.HTMLElement.prototype.scrollIntoView = () => {}
 
-// The action itself is covered in @reflect/core; here it is the seam the
+// The action itself is covered in @dayjot/core; here it is the seam the
 // dialog submits through. The attendee combobox's suggestion sources are
 // stubbed empty — the combobox itself is covered by its own test file.
 const addMeetingToDaily = vi.hoisted(() => vi.fn(async () => ({ appended: true, createdNotes: [] })))
 const suggestWikiTargets = vi.hoisted(() => vi.fn(async () => []))
 const contactLinkSuggestions = vi.hoisted(() => vi.fn(async () => []))
 // Identity by default: the email → note-title canonicalization is covered in
-// @reflect/core; here it is the seam the chip-upgrade effect renders through.
+// @dayjot/core; here it is the seam the chip-upgrade effect renders through.
 const resolveMeetingAttendees = vi.hoisted(() =>
   vi.fn(async (attendees: readonly unknown[]) => [...attendees]),
 )
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   addMeetingToDaily,
   suggestWikiTargets,
   contactLinkSuggestions,

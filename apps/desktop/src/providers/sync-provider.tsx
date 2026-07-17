@@ -7,7 +7,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import { hasBridge, ReflectError, type GithubRepoRef, type GraphInfo } from '@reflect/core'
+import { hasBridge, DayJotError, type GithubRepoRef, type GraphInfo } from '@dayjot/core'
 import {
   createBackupController,
   type BackupController,
@@ -98,7 +98,7 @@ export function SyncProvider({ graph, children }: SyncProviderProps): ReactEleme
   const value = useMemo<SyncContextValue>(() => {
     const require = (): BackupController => {
       if (controller === null) {
-        throw new ReflectError('io', 'backup is still initializing')
+        throw new DayJotError('io', 'backup is still initializing')
       }
       return controller
     }

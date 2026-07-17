@@ -87,7 +87,7 @@ export const captureWireMessageSchema = z.object({
 export type CaptureWireMessage = z.infer<typeof captureWireMessageSchema>
 
 /**
- * Cap on a text capture's payload. A `reflect://` URL is a world-invokable
+ * Cap on a text capture's payload. A `dayjot://` URL is a world-invokable
  * surface, so its writes stay short and plain; the desktop's deep-link parser
  * enforces the same number before an envelope is ever spooled.
  */
@@ -95,7 +95,7 @@ export const TEXT_CAPTURE_MAX_LENGTH = 10_000
 
 /**
  * What a text capture materializes as on the capture-day daily note. One
- * vocabulary end-to-end: the `reflect://append`/`reflect://task` URL verb IS
+ * vocabulary end-to-end: the `dayjot://append`/`dayjot://task` URL verb IS
  * the envelope kind IS the drain behavior (`- ` bullet / `- [ ]` task).
  */
 export const textCaptureKindSchema = z.enum(['append', 'task'])
@@ -110,7 +110,7 @@ export const textCaptureKindSchema = z.enum(['append', 'task'])
 export const textCaptureSourceSchema = z.enum(['deep-link', 'ios-share'])
 
 /**
- * A text write (`reflect://append?text=…` / `reflect://task?text=…`),
+ * A text write (`dayjot://append?text=…` / `dayjot://task?text=…`),
  * spooled into the same capture inbox the native-messaging host writes. One
  * single line of plain text — the drain appends it to the capture-day daily
  * note as a bullet (`append`) or an open task (`task`), so an envelope can

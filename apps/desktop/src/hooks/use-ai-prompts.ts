@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import type { AiPrompt, AiPromptMode } from '@reflect/core'
+import type { AiPrompt, AiPromptMode } from '@dayjot/core'
 import { useSettings } from '@/providers/settings-provider'
 
 /**

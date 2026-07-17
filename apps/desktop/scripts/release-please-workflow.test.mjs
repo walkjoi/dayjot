@@ -35,8 +35,8 @@ test('the channels keep distinct release-please head branches', () => {
   // matches merged Release PRs by that component; identical components would
   // make the two passes overwrite each other's PR.
   expect(stableConfig.packages['.'].component).toBeUndefined()
-  expect(stableConfig.packages['.']['package-name']).toBe('reflect-open')
-  expect(betaConfig.packages['.'].component).toBe('reflect-open-beta')
+  expect(stableConfig.packages['.']['package-name']).toBe('dayjot-desktop')
+  expect(betaConfig.packages['.'].component).toBe('dayjot-desktop-beta')
 })
 
 test('both channels tag plain versions and draft their releases', () => {

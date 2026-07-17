@@ -24,7 +24,7 @@ const markReflectV1ImportOwnWrites = vi.hoisted(() => vi.fn())
 const progressHandlers = vi.hoisted(() => new Set<(progress: ProgressFixture) => void>())
 const refreshIndex = vi.hoisted(() => vi.fn())
 
-vi.mock('@reflect/core', () => ({
+vi.mock('@dayjot/core', () => ({
   importReflectV1Zip,
   cancelReflectV1Import,
   markReflectV1ImportOwnWrites,

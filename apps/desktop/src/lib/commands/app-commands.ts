@@ -6,7 +6,7 @@ import {
   randomNotePath,
   toggleDevtools,
   untitledNotePath,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { attachFilesToNote } from '@/lib/attach-files'
 import { runCopyDeepLink } from '@/lib/note-deep-link'
 import { runGistPublish } from '@/lib/note-gist'
@@ -233,8 +233,8 @@ const APP_COMMANDS: AppCommand[] = [
   {
     id: 'note.copyDeepLink',
     title: 'Copy deep link',
-    keywords: ['url', 'share', 'clipboard', 'reflect://', 'address'],
-    // The original app's copy-link shortcut. Copies a `reflect://` address for
+    keywords: ['url', 'share', 'clipboard', 'dayjot://', 'address'],
+    // The original app's copy-link shortcut. Copies a `dayjot://` address for
     // the note the current route edits — id-shaped so it survives renames,
     // minting the frontmatter id on first copy. `runCopyDeepLink` owns all
     // feedback (the "Deep link copied" status line and failure surfaces).

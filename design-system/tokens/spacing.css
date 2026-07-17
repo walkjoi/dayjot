@@ -1,7 +1,7 @@
 /* ============================================================
-   Reflect — Spacing, radii, shadow & motion tokens
+   DayJot — Spacing, radii, shadow & motion tokens
    ------------------------------------------------------------
-   Reflect's layout is built on a 4px grid (Tailwind's default).
+   DayJot's layout is built on a 4px grid (Tailwind's default).
    Chrome is dense: sidebar padding ~16px, menu items ~6–10px
    vertical. Radii are gentle — 6–8px for controls, fully round
    for pills & avatars.
@@ -50,7 +50,7 @@
   --site-container:   1296px;
 
   /* ---- Motion -------------------------------------------- */
-  /* Reflect favours short, calm transitions. No bounces.
+  /* DayJot favours short, calm transitions. No bounces.
      The signature site easing is a fast-out cubic-bezier.      */
   --ease-standard: cubic-bezier(.6, .6, 0, 1); /* @kind other */
   --ease-in-out:   ease-in-out; /* @kind other */

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { ThemePreference } from '@reflect/core'
+import type { ThemePreference } from '@dayjot/core'
 import { Monitor, Moon, Sun, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSettings } from '@/providers/settings-provider'

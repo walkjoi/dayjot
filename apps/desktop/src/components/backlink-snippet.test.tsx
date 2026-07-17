@@ -2,7 +2,7 @@ import { render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SnippetTask } from '@reflect/core'
+import type { SnippetTask } from '@dayjot/core'
 import { BacklinkSnippet } from './backlink-snippet'
 
 const toggleTask = vi.hoisted(() => vi.fn())
@@ -20,7 +20,7 @@ vi.mock('@/providers/graph-provider', () => ({
 /**
  * A context with one round task, one square box, and a nested round task —
  * the anchors mirror what `extractSnippetTasks` produces for this markdown
- * (exercised for real in `@reflect/core`'s tests; here they are fixtures so
+ * (exercised for real in `@dayjot/core`'s tests; here they are fixtures so
  * the click wiring is what's under test).
  */
 const SNIPPET = [

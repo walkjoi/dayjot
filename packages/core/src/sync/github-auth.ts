@@ -1,13 +1,17 @@
 import { z } from 'zod'
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 import { deleteSecret, getSecret, setSecret } from '../secrets/keychain'
 import { apiHeaders, JSON_HEADERS, readJson, type FetchFn } from './github-api'
 
 /**
- * The Reflect GitHub App's client id, used by the device flow. Public by
- * design — the device flow needs no client secret, even for refresh, so
- * there is no Reflect-hosted anything and nothing here is sensitive.
- * Registered 2026-06-11 (app id 4032425, owned by team-reflect).
+ * The GitHub App client id used by the device flow. Public by design — the
+ * device flow needs no client secret, even for refresh, so there is no
+ * DayJot-hosted anything and nothing here is sensitive.
+ *
+ * NOTE: this is still the upstream Reflect GitHub App (registered
+ * 2026-06-11, app id 4032425, owned by team-reflect), so the GitHub consent
+ * screen shows Reflect's branding. Register your own GitHub App and replace
+ * the client id and slug before distributing DayJot builds.
  */
 export const GITHUB_APP_CLIENT_ID = 'Iv23liURhf4d0EazsLl4'
 
@@ -108,7 +112,7 @@ export async function deviceFlowStart(
   clientId: string = GITHUB_APP_CLIENT_ID,
 ): Promise<DeviceFlowStart> {
   if (clientId.length === 0) {
-    throw new ReflectError('auth', 'GitHub device flow is not configured (no app client id)')
+    throw new DayJotError('auth', 'GitHub device flow is not configured (no app client id)')
   }
   const response = await fetchFn('https://github.com/login/device/code', {
     method: 'POST',
@@ -116,7 +120,7 @@ export async function deviceFlowStart(
     body: JSON.stringify({ client_id: clientId }),
   })
   if (!response.ok) {
-    throw new ReflectError('network', `GitHub device flow start failed (${response.status})`)
+    throw new DayJotError('network', `GitHub device flow start failed (${response.status})`)
   }
   const parsed = await readJson(response, deviceStartResponseSchema, 'device flow start')
   return {
@@ -152,7 +156,7 @@ export async function deviceFlowPoll(
     }),
   })
   if (!response.ok) {
-    throw new ReflectError('network', `GitHub device flow poll failed (${response.status})`)
+    throw new DayJotError('network', `GitHub device flow poll failed (${response.status})`)
   }
   const parsed = await readJson(response, tokenResponseSchema, 'device flow poll')
   switch (parsed.error) {
@@ -167,10 +171,10 @@ export async function deviceFlowPoll(
     case undefined:
       break
     default:
-      throw new ReflectError('auth', `GitHub device flow failed (${parsed.error})`)
+      throw new DayJotError('auth', `GitHub device flow failed (${parsed.error})`)
   }
   if (parsed.access_token === undefined) {
-    throw new ReflectError('parse', 'GitHub device flow returned neither a token nor an error')
+    throw new DayJotError('parse', 'GitHub device flow returned neither a token nor an error')
   }
   return { status: 'authorized', auth: toAuth(parsed.access_token, parsed, now(), clientId) }
 }
@@ -196,7 +200,7 @@ function defaultSleep(ms: number): Promise<void> {
  * Drive the whole device flow: start it, surface the user code, poll at
  * GitHub's pace (honoring `slow_down`) until it authorizes — the credential
  * is persisted to the keychain and returned — or fails. Denial and expiry
- * throw a ReflectError('auth'); an abort resolves `null`.
+ * throw a DayJotError('auth'); an abort resolves `null`.
  */
 export async function runDeviceFlow(options: RunDeviceFlowOptions): Promise<GithubAuth | null> {
   const fetchFn = options.fetchFn ?? fetch
@@ -225,12 +229,12 @@ export async function runDeviceFlow(options: RunDeviceFlowOptions): Promise<Gith
         await saveGithubAuth(result.auth)
         return result.auth
       case 'denied':
-        throw new ReflectError('auth', 'GitHub sign-in was denied.')
+        throw new DayJotError('auth', 'GitHub sign-in was denied.')
       case 'expired':
-        throw new ReflectError('auth', 'The sign-in code expired — try again.')
+        throw new DayJotError('auth', 'The sign-in code expired — try again.')
     }
   }
-  throw new ReflectError('auth', 'The sign-in code expired — try again.')
+  throw new DayJotError('auth', 'The sign-in code expired — try again.')
 }
 
 function toAuth(
@@ -272,7 +276,7 @@ export async function refreshGithubAuth(
     }),
   })
   if (!response.ok) {
-    throw new ReflectError('network', `GitHub token refresh failed (${response.status}); will retry`)
+    throw new DayJotError('network', `GitHub token refresh failed (${response.status}); will retry`)
   }
   const parsed = await readJson(response, tokenResponseSchema, 'token refresh')
   if (parsed.access_token !== undefined) {
@@ -281,7 +285,7 @@ export async function refreshGithubAuth(
   if (parsed.error === 'bad_refresh_token') {
     return null
   }
-  throw new ReflectError(
+  throw new DayJotError(
     'auth',
     `GitHub token refresh failed${parsed.error === undefined ? '' : ` (${parsed.error})`}`,
   )
@@ -339,20 +343,20 @@ export async function getAuthenticatedUser(
     headers: apiHeaders(token),
   })
   if (response.status === 401) {
-    throw new ReflectError('auth', 'GitHub rejected the token (401)')
+    throw new DayJotError('auth', 'GitHub rejected the token (401)')
   }
   if (response.status === 403) {
     const body = (await response.text()).toLowerCase()
     if (body.includes('bad credentials')) {
-      throw new ReflectError('auth', 'GitHub rejected the token (403)')
+      throw new DayJotError('auth', 'GitHub rejected the token (403)')
     }
-    throw new ReflectError(
+    throw new DayJotError(
       'network',
       'GitHub temporarily refused the signed-in user lookup (403, likely rate limiting)',
     )
   }
   if (!response.ok) {
-    throw new ReflectError('network', `looking up the signed-in user failed (${response.status})`)
+    throw new DayJotError('network', `looking up the signed-in user failed (${response.status})`)
   }
   const parsed = await readJson(response, userResponseSchema, 'signed-in user lookup')
   return { login: parsed.login, avatarUrl: parsed.avatar_url ?? null }

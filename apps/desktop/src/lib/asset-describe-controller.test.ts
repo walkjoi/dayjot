@@ -4,7 +4,7 @@ import type {
   FileChange,
   ReconcileAssetDescriptionsInput,
   ReconcileAssetDescriptionsOutcome,
-} from '@reflect/core'
+} from '@dayjot/core'
 import {
   createAssetDescribeController,
   type AssetDescribeController,
@@ -23,8 +23,8 @@ const reindexNotesReferencing = vi.hoisted(() =>
 const failOperation = vi.hoisted(() => vi.fn<(message: string) => void>())
 const invalidateIndexQueries = vi.hoisted(() => vi.fn<() => void>())
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   reconcileAssetDescriptions,
   subscribeIndexApplied,
   readNote,
@@ -163,7 +163,7 @@ describe('createAssetDescribeController', () => {
     create().start()
     await flush()
     emitApplied([
-      upsert('assets/a.png.reflect.md'),
+      upsert('assets/a.png.dayjot.md'),
       upsert('assets/notes.txt'),
       { path: 'assets/a.png', kind: 'remove' },
       upsert('notes/x.md'), // readNote default returns a note with no asset refs

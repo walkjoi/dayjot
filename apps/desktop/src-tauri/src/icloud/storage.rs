@@ -2,7 +2,7 @@
 //!
 //! iCloud document sync is the primary way phone + desktop share a graph:
 //! per Plan 21 contract 1 the graph lives at `<container>/Documents/<name>/`
-//! in the app's iCloud Drive container (visible as "Reflect" in the Files
+//! in the app's iCloud Drive container (visible as "DayJot" in the Files
 //! app and in Finder's iCloud Drive), and the OS moves the markdown between
 //! devices. Rust owns only the storage primitives — resolving the
 //! container, finding an existing graph inside it, and nudging undownloaded
@@ -23,7 +23,7 @@ use tauri::Manager;
 use crate::error::{AppError, AppResult};
 
 /// The graph directory name used when a nameless root is adopted into the
-/// container. A plain, human name — it reads as `iCloud Drive → Reflect →
+/// container. A plain, human name — it reads as `iCloud Drive → DayJot →
 /// Notes` in Files/Finder, and becomes the graph's display name. (The
 /// onboarding default lives frontend-side as `DEFAULT_ICLOUD_GRAPH_NAME`.)
 const DEFAULT_ICLOUD_GRAPH_DIR: &str = "Notes";
@@ -196,7 +196,7 @@ fn find_graph_dirs(documents: &Path) -> Vec<PathBuf> {
 /// that grammar).
 ///
 /// Looks one level into the standard note directories rather than requiring
-/// `.reflect/meta.json`: the index directory is excluded from sync on
+/// `.dayjot/meta.json`: the index directory is excluded from sync on
 /// purpose, so a synced-down graph arrives as bare `daily/`/`notes/` content.
 fn dir_has_notes(root: &Path) -> bool {
     NOTE_DIRS.iter().any(|dir| {
@@ -367,10 +367,10 @@ pub async fn icloud_status() -> AppResult<IcloudStatus> {
 /// the desktop move-in) and return the new root. The copy is verified by
 /// file count + byte totals before anything is reported; the original graph
 /// is left untouched at its old path as the recovery copy — the caller
-/// re-opens at the returned root, which re-bootstraps `.reflect/` and
+/// re-opens at the returned root, which re-bootstraps `.dayjot/` and
 /// rebuilds the index there.
 ///
-/// `.reflect/` and `.git/` are deliberately not copied: the index is a
+/// `.dayjot/` and `.git/` are deliberately not copied: the index is a
 /// rebuildable projection, and a backup repo must never ride a file-sync
 /// provider. The Git remote, if any, is disconnected by the caller first —
 /// iCloud sync and a Git remote are mutually exclusive per graph (Plan 21).
@@ -438,7 +438,7 @@ fn copy_and_verify(root: &Path, target: &Path) -> AppResult<()> {
 /// What stays behind on a move-in: the rebuildable local state, the backup
 /// repo, and OS litter.
 fn adopt_skips(name: &str) -> bool {
-    matches!(name, ".reflect" | ".git" | ".DS_Store")
+    matches!(name, ".dayjot" | ".git" | ".DS_Store")
 }
 
 /// Recursively copy the graph tree, returning `(files, bytes)` copied.
@@ -539,10 +539,10 @@ mod tests {
     fn adopt_copy_skips_local_state_and_verifies() {
         let source = tempfile::tempdir().expect("tempdir");
         std::fs::create_dir_all(source.path().join("notes")).expect("mkdir");
-        std::fs::create_dir_all(source.path().join(".reflect")).expect("mkdir");
+        std::fs::create_dir_all(source.path().join(".dayjot")).expect("mkdir");
         std::fs::create_dir_all(source.path().join(".git")).expect("mkdir");
         std::fs::write(source.path().join("notes/a.md"), b"# A").expect("write");
-        std::fs::write(source.path().join(".reflect/index.sqlite"), b"db").expect("write");
+        std::fs::write(source.path().join(".dayjot/index.sqlite"), b"db").expect("write");
         std::fs::write(source.path().join(".git/HEAD"), b"ref").expect("write");
         std::fs::write(source.path().join(".DS_Store"), b"junk").expect("write");
 
@@ -555,7 +555,7 @@ mod tests {
             std::fs::read_to_string(target.join("notes/a.md")).expect("read"),
             "# A"
         );
-        assert!(!target.join(".reflect").exists());
+        assert!(!target.join(".dayjot").exists());
         assert!(!target.join(".git").exists());
         assert!(!target.join(".DS_Store").exists());
     }

@@ -1,4 +1,4 @@
-import type { FileMeta, NoteCreateOutcome } from '@reflect/core'
+import type { FileMeta, NoteCreateOutcome } from '@dayjot/core'
 
 /** One in-memory markdown file: contents plus a last-modified stamp. */
 interface DevFile {

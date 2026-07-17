@@ -12,7 +12,7 @@ const isDailyMock = vi.fn<(path: string) => boolean>()
 const discard = vi.fn()
 const openSessionMock = vi.fn<(path: string) => { discard: () => void } | null>()
 
-vi.mock('@reflect/core', () => ({
+vi.mock('@dayjot/core', () => ({
   deleteNote: (path: string, generation: number) => deleteNoteMock(path, generation),
   isDaily: (path: string) => isDailyMock(path),
 }))

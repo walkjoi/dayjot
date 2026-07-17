@@ -1,8 +1,8 @@
-/* @ds-bundle: {"format":3,"namespace":"ReflectDesignSystem_06b075","components":[{"name":"Button","sourcePath":"components/buttons/Button.jsx"},{"name":"IconButton","sourcePath":"components/buttons/IconButton.jsx"},{"name":"ShortcutKey","sourcePath":"components/buttons/ShortcutKey.jsx"},{"name":"Avatar","sourcePath":"components/data-display/Avatar.jsx"},{"name":"Badge","sourcePath":"components/data-display/Badge.jsx"},{"name":"Card","sourcePath":"components/data-display/Card.jsx"},{"name":"MenuItem","sourcePath":"components/data-display/MenuItem.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"Input","sourcePath":"components/forms/Input.jsx"},{"name":"SearchField","sourcePath":"components/forms/SearchField.jsx"},{"name":"Toggle","sourcePath":"components/forms/Toggle.jsx"}],"sourceHashes":{"components/buttons/Button.jsx":"9e660d45285a","components/buttons/IconButton.jsx":"8dee9707546d","components/buttons/ShortcutKey.jsx":"b4b92561fae0","components/data-display/Avatar.jsx":"5b18b6ff8aa1","components/data-display/Badge.jsx":"ae619128d7d3","components/data-display/Card.jsx":"cb7cd8addb1b","components/data-display/MenuItem.jsx":"5f925d0ab023","components/forms/Checkbox.jsx":"6aef62a9add5","components/forms/Input.jsx":"3c8735f04734","components/forms/SearchField.jsx":"05d230f7dadc","components/forms/Toggle.jsx":"9052133256cd","ui_kits/app/AppShell.jsx":"0a84823d47ce","ui_kits/app/SearchModal.jsx":"279eb1c671cb","ui_kits/app/Sidebar.jsx":"d60be9f8aa9c","ui_kits/app/Views.jsx":"64fd3337df71","ui_kits/app/icons.jsx":"efb478059ebf","ui_kits/marketing/Site.jsx":"7c6fec8fa38f"},"inlinedExternals":[],"unexposedExports":[]} */
+/* @ds-bundle: {"format":3,"namespace":"DayJotDesignSystem_06b075","components":[{"name":"Button","sourcePath":"components/buttons/Button.jsx"},{"name":"IconButton","sourcePath":"components/buttons/IconButton.jsx"},{"name":"ShortcutKey","sourcePath":"components/buttons/ShortcutKey.jsx"},{"name":"Avatar","sourcePath":"components/data-display/Avatar.jsx"},{"name":"Badge","sourcePath":"components/data-display/Badge.jsx"},{"name":"Card","sourcePath":"components/data-display/Card.jsx"},{"name":"MenuItem","sourcePath":"components/data-display/MenuItem.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"Input","sourcePath":"components/forms/Input.jsx"},{"name":"SearchField","sourcePath":"components/forms/SearchField.jsx"},{"name":"Toggle","sourcePath":"components/forms/Toggle.jsx"}],"sourceHashes":{"components/buttons/Button.jsx":"9e660d45285a","components/buttons/IconButton.jsx":"8dee9707546d","components/buttons/ShortcutKey.jsx":"b4b92561fae0","components/data-display/Avatar.jsx":"5b18b6ff8aa1","components/data-display/Badge.jsx":"ae619128d7d3","components/data-display/Card.jsx":"cb7cd8addb1b","components/data-display/MenuItem.jsx":"5f925d0ab023","components/forms/Checkbox.jsx":"6aef62a9add5","components/forms/Input.jsx":"3c8735f04734","components/forms/SearchField.jsx":"05d230f7dadc","components/forms/Toggle.jsx":"9052133256cd","ui_kits/app/AppShell.jsx":"0a84823d47ce","ui_kits/app/SearchModal.jsx":"279eb1c671cb","ui_kits/app/Sidebar.jsx":"d60be9f8aa9c","ui_kits/app/Views.jsx":"64fd3337df71","ui_kits/app/icons.jsx":"efb478059ebf","ui_kits/marketing/Site.jsx":"7c6fec8fa38f"},"inlinedExternals":[],"unexposedExports":[]} */
 
 (() => {
 
-const __ds_ns = (window.ReflectDesignSystem_06b075 = window.ReflectDesignSystem_06b075 || {});
+const __ds_ns = (window.DayJotDesignSystem_06b075 = window.DayJotDesignSystem_06b075 || {});
 
 const __ds_scope = {};
 
@@ -11,7 +11,7 @@ const __ds_scope = {};
 // components/buttons/Button.jsx
 try { (() => {
 /**
- * Reflect Button — the real variants from the product.
+ * DayJot Button — the real variants from the product.
  * Primary = solid indigo-600 (every confirming action). Secondary = soft
  * indigo. White = bordered neutral. Text/ghost = chromeless. Space = the
  * glassmorphic marketing button for the dark "deep space" surface.
@@ -126,7 +126,7 @@ try { (() => {
 /**
  * IconButton — a square, chromeless icon target (sidebar nav arrows,
  * toolbar actions, audio record). Hover paints the translucent grey wash
- * Reflect uses across menus and list rows.
+ * DayJot uses across menus and list rows.
  */
 function IconButton({
   size = 28,
@@ -171,7 +171,7 @@ Object.assign(__ds_scope, { IconButton });
 // components/buttons/ShortcutKey.jsx
 try { (() => {
 /**
- * ShortcutKey — Reflect renders keyboard shortcuts as small, low-contrast
+ * ShortcutKey — DayJot renders keyboard shortcuts as small, low-contrast
  * keycaps (⌘K, mod+shift+d). Pass a shortcut string; `mod` becomes ⌘ on
  * Apple, Ctrl elsewhere. `ghost` is the faint inline style used inside the
  * search field.
@@ -226,7 +226,7 @@ try { (() => {
 /**
  * Avatar — circular identity chip. Pass `src` for a photo (testimonials) or
  * let it render initials on a deterministic indigo-tinted background. The
- * `graphColor` variant renders Reflect's small round graph-color dot.
+ * `graphColor` variant renders DayJot's small round graph-color dot.
  */
 function Avatar({
   src,
@@ -340,7 +340,7 @@ Object.assign(__ds_scope, { Badge });
 // components/data-display/Card.jsx
 try { (() => {
 /**
- * Card — a quiet surface container. Reflect cards are flat: a hairline border
+ * Card — a quiet surface container. DayJot cards are flat: a hairline border
  * and the house 8px radius do the work; pass `elevated` for a floating panel
  * (popovers, dialogs) which adds a soft shadow and a larger radius.
  */
@@ -371,7 +371,7 @@ Object.assign(__ds_scope, { Card });
 // components/data-display/MenuItem.jsx
 try { (() => {
 /**
- * MenuItem — Reflect's sidebar / dropdown row. Leading icon + label, with the
+ * MenuItem — DayJot's sidebar / dropdown row. Leading icon + label, with the
  * translucent grey hover wash and selected state from the real app. An
  * optional shortcut keycap appears on the right on hover.
  */
@@ -493,7 +493,7 @@ Object.assign(__ds_scope, { Checkbox });
 // components/forms/Input.jsx
 try { (() => {
 /**
- * Input — Reflect's text field. Quiet white surface, a hairline outline that
+ * Input — DayJot's text field. Quiet white surface, a hairline outline that
  * warms to indigo on focus, the house 7px radius, and a soft inset shadow.
  */
 function Input({
@@ -557,7 +557,7 @@ Object.assign(__ds_scope, { Input });
 // components/forms/SearchField.jsx
 try { (() => {
 /**
- * SearchField — Reflect's signature "Search anything…" trigger that lives at
+ * SearchField — DayJot's signature "Search anything…" trigger that lives at
  * the top of the sidebar. It's a button styled as an input: magnifier, muted
  * placeholder, and a ghost ⌘K keycap pinned to the right.
  */
@@ -677,7 +677,7 @@ Object.assign(__ds_scope, { Toggle });
 
 // ui_kits/app/AppShell.jsx
 try { (() => {
-/* Reflect app — shell. Wires sidebar navigation, the ⌘K modal, and the
+/* DayJot app — shell. Wires sidebar navigation, the ⌘K modal, and the
    active content view together. */
 function AppShell() {
   const {
@@ -759,8 +759,8 @@ window.AppKit = Object.assign(window.AppKit || {}, {
 
 // ui_kits/app/SearchModal.jsx
 try { (() => {
-/* Reflect app — ⌘K command / search modal. Elevated card over a dim scrim. */
-const NS_S = 'ReflectDesignSystem_06b075';
+/* DayJot app — ⌘K command / search modal. Elevated card over a dim scrim. */
+const NS_S = 'DayJotDesignSystem_06b075';
 function SearchModal({
   open,
   onClose,
@@ -790,7 +790,7 @@ function SearchModal({
     icon: /*#__PURE__*/React.createElement(I.Sparkles, {
       size: 15
     }),
-    label: 'Ask Reflect AI…',
+    label: 'Ask DayJot AI…',
     meta: 'AI'
   }, {
     icon: /*#__PURE__*/React.createElement(I.List, {
@@ -923,9 +923,9 @@ window.AppKit = Object.assign(window.AppKit || {}, {
 
 // ui_kits/app/Sidebar.jsx
 try { (() => {
-/* Reflect app — left sidebar. Composes SearchField, IconButton, MenuItem,
+/* DayJot app — left sidebar. Composes SearchField, IconButton, MenuItem,
    ShortcutKey, Avatar from the design system bundle. */
-const NS = 'ReflectDesignSystem_06b075';
+const NS = 'DayJotDesignSystem_06b075';
 function Sidebar({
   screen,
   onNavigate,
@@ -1112,9 +1112,9 @@ window.AppKit = Object.assign(window.AppKit || {}, {
 
 // ui_kits/app/Views.jsx
 try { (() => {
-/* Reflect app — main content views. The daily-notes editor is the home
+/* DayJot app — main content views. The daily-notes editor is the home
    surface: date-titled blocks of bulleted prose with backlinks & tags. */
-const NS_V = 'ReflectDesignSystem_06b075';
+const NS_V = 'DayJotDesignSystem_06b075';
 
 /* --- inline editor primitives ------------------------------------ */
 const Backlink = ({
@@ -1235,7 +1235,7 @@ function DailyNotes({
   }, /*#__PURE__*/React.createElement(Bullet, null, "Morning pages \u2014 felt clear after a walk. Linking back to ", /*#__PURE__*/React.createElement(Backlink, {
     onClick: () => onOpenNote('Morning routine')
   }, "Morning routine"), "."), /*#__PURE__*/React.createElement(EditorTask, {
-    text: "Finish the Reflect design system",
+    text: "Finish the DayJot design system",
     done0: false
   }), /*#__PURE__*/React.createElement(EditorTask, {
     text: "Review PR on the editor",
@@ -1327,7 +1327,7 @@ function AllNotes({
   }, d))))));
 }
 function Tasks() {
-  const groups = [['Today', [['Finish the Reflect design system', false], ['Review PR on the editor', true]]], ['Upcoming', [['Book dentist', false], ['Plan weekly review', false]]]];
+  const groups = [['Today', [['Finish the DayJot design system', false], ['Review PR on the editor', true]]], ['Upcoming', [['Book dentist', false], ['Plan weekly review', false]]]];
   const {
     Checkbox
   } = window[NS_V];
@@ -1399,7 +1399,7 @@ function MapView() {
       overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("img", {
-    src: "../../assets/reflect-graph-hero.png",
+    src: "../../assets/dayjot-graph-hero.png",
     alt: "Knowledge graph",
     style: {
       maxWidth: '70%',
@@ -1426,8 +1426,8 @@ window.AppKit = Object.assign(window.AppKit || {}, {
 // ui_kits/app/icons.jsx
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/* Reflect app icons — thin-stroke line set (Lucide-style, 1.75 stroke) to
-   match Reflect's hand-built SVG icons. Exported to window for the kit. */
+/* DayJot app icons — thin-stroke line set (Lucide-style, 1.75 stroke) to
+   match DayJot's hand-built SVG icons. Exported to window for the kit. */
 const RIcon = (paths, vb = 24) => ({
   size = 16,
   ...p
@@ -1591,13 +1591,13 @@ window.RIcons = {
 
 // ui_kits/marketing/Site.jsx
 try { (() => {
-/* Reflect marketing site — the "deep space" homepage. Composes the glass
+/* DayJot marketing site — the "deep space" homepage. Composes the glass
    `space` Button + Avatar from the design system; everything sits on the
-   .reflect-space themed wrapper. */
-const NS_M = 'ReflectDesignSystem_06b075';
+   .dayjot-space themed wrapper. */
+const NS_M = 'DayJotDesignSystem_06b075';
 const NAV = ['Product', 'Pricing', 'Company', 'Blog', 'Changelog'];
 const FEATURES = [['Built for speed', 'Instantly sync your notes across devices'], ['Networked notes', 'Form a graph of ideas with backlinked notes'], ['iOS app', 'Capture ideas on the go, online or offline'], ['End-to-end encryption', 'Only you can access your notes'], ['Calendar integration', 'Keep track of meetings and agendas'], ['Publishing', 'Share anything you write with one click'], ['Instant capture', 'Save snippets from your browser and Kindle'], ['Frictionless search', 'Easily recall and index past notes and ideas']];
-const LOVE = [['Sean Rose', '@seanrose', "Really, really liking Reflect so far. It's just the right amount of simple/fast for a personal note taking app."], ['Ryan Delk', '@delk', "Don't take it from me: Reflect is magic."], ['Fabrizio Rinaldi', '@linuz90', "I'm keeping Reflect open all the time — for journaling and long-form writing. Rare to see one app work so well for both."], ['Jonathan Simcoe', '@jdsimcoe', 'The speed, focus, and attention to detail is superb. It has already become a daily driver for me.']];
+const LOVE = [['Sean Rose', '@seanrose', "Really, really liking DayJot so far. It's just the right amount of simple/fast for a personal note taking app."], ['Ryan Delk', '@delk', "Don't take it from me: DayJot is magic."], ['Fabrizio Rinaldi', '@linuz90', "I'm keeping DayJot open all the time — for journaling and long-form writing. Rare to see one app work so well for both."], ['Jonathan Simcoe', '@jdsimcoe', 'The speed, focus, and attention to detail is superb. It has already become a daily driver for me.']];
 function Header() {
   const {
     Button
@@ -1627,17 +1627,17 @@ function Header() {
       gap: 12
     }
   }, /*#__PURE__*/React.createElement("img", {
-    src: "../../assets/reflect-app-icon.png",
+    src: "../../assets/dayjot-app-icon.png",
     width: "34",
     height: "34",
-    alt: "Reflect"
+    alt: "DayJot"
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 16,
       fontWeight: 500,
       color: '#fff'
     }
-  }, "Reflect")), /*#__PURE__*/React.createElement("ul", {
+  }, "DayJot")), /*#__PURE__*/React.createElement("ul", {
     style: {
       position: 'absolute',
       left: '50%',
@@ -1715,7 +1715,7 @@ function Hero() {
       letterSpacing: 'var(--tracking-tight)',
       color: '#fff'
     }
-  }, "Think better with Reflect"), /*#__PURE__*/React.createElement("p", {
+  }, "Think better with DayJot"), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '20px auto 0',
       fontSize: 'var(--text-xl)',
@@ -1739,7 +1739,7 @@ function Hero() {
       marginTop: 50
     }
   }, /*#__PURE__*/React.createElement("img", {
-    src: "../../assets/reflect-graph-hero.png",
+    src: "../../assets/dayjot-graph-hero.png",
     alt: "A graph of connected notes",
     style: {
       maxWidth: 720,
@@ -1802,7 +1802,7 @@ function AIBanner() {
       letterSpacing: '.04em',
       color: 'var(--purple-light)'
     }
-  }, "Reflect AI"), /*#__PURE__*/React.createElement("h2", {
+  }, "DayJot AI"), /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: '0 auto',
       maxWidth: 620,
@@ -1819,7 +1819,7 @@ function AIBanner() {
       fontSize: 17,
       color: 'rgba(255,255,255,.6)'
     }
-  }, "Reflect uses GPT-4 and Whisper from OpenAI to improve your writing, organize your thoughts, and act as your intellectual thought partner."));
+  }, "DayJot uses GPT-4 and Whisper from OpenAI to improve your writing, organize your thoughts, and act as your intellectual thought partner."));
 }
 function Pricing() {
   const {
@@ -2007,7 +2007,7 @@ function CTA() {
       lineHeight: 1.1,
       color: '#fff'
     }
-  }, "Think better with Reflect"), /*#__PURE__*/React.createElement(Button, {
+  }, "Think better with DayJot"), /*#__PURE__*/React.createElement(Button, {
     variant: "space",
     style: {
       padding: '13px 24px',
@@ -2017,7 +2017,7 @@ function CTA() {
 }
 function Site() {
   return /*#__PURE__*/React.createElement("div", {
-    className: "reflect-space",
+    className: "dayjot-space",
     style: {
       position: 'relative',
       minHeight: '100%',

@@ -1,6 +1,6 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GraphInfo } from '@reflect/core'
+import type { GraphInfo } from '@dayjot/core'
 import type { ContextSidebarTarget } from '@/components/context-sidebar/sidebar-route'
 
 interface WorkspaceState {

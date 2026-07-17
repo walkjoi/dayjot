@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { dailyPath } from '@reflect/core'
+import { dailyPath } from '@dayjot/core'
 import { RouteContent } from '@/components/route-content'
 import { SingleNoteView } from '@/components/single-note-view'
 import { useNoteRow } from '@/hooks/use-note-row'
@@ -45,7 +45,7 @@ export function NoteWindowContent(): ReactElement {
           heading={
             // The stream's day label, standing in for the title a daily
             // note doesn't carry.
-            <h2 className="reflect-daily-subject reflect-content-gutter mb-3">
+            <h2 className="dayjot-daily-subject dayjot-content-gutter mb-3">
               {formatDayLabel(dailyDate, settings.dateFormat)}
             </h2>
           }

@@ -1,16 +1,16 @@
-# Reflect Marketing Site — UI kit
+# DayJot Marketing Site — UI kit
 
 A recreation of Reflect's "deep space" marketing homepage (`reflect.app`), composed
 from the design system — the glassmorphic `space` Button variant and `Avatar`, on the
-`.reflect-space` themed wrapper.
+`.dayjot-space` themed wrapper.
 
 ## Run
 Open `index.html`. Loads `_ds_bundle.js` + `Site.jsx`, mounts `Site`.
 
 ## Sections
 Sticky glass header (logo · centered nav capsule · Login · Start free trial) → hero
-("Think better with Reflect" + the graph illustration under a purple radial glow) →
-8-up feature grid → Reflect AI banner → "One plan, one price" pricing card → "Wall of
+("Think better with DayJot" + the graph illustration under a purple radial glow) →
+8-up feature grid → DayJot AI banner → "One plan, one price" pricing card → "Wall of
 love" testimonials → closing CTA.
 
 ## Fidelity notes

@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react'
-import { AI_PROVIDERS, aiProvider, aiProviderIdSchema, type AiProviderId } from '@reflect/core'
+import { AI_PROVIDERS, aiProvider, aiProviderIdSchema, type AiProviderId } from '@dayjot/core'
 import { InlineAlert } from '@/components/inline-alert'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer'

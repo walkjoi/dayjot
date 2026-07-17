@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react'
-import { setLocalWriteEcho, type AppPlatform } from '@reflect/core'
+import { setLocalWriteEcho, type AppPlatform } from '@dayjot/core'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { setPlatformSurface } from '@/lib/platform-surface'
 import { MobileApp } from '@/mobile/mobile-app'

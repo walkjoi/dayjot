@@ -11,7 +11,7 @@ import {
   CONTEXT_SIDEBAR_WIDTH_RANGE,
   SIDEBAR_WIDTH_RANGE,
   type SidebarWidthRange,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { useSettings } from '@/providers/settings-provider'
 
 /** How far one arrow-key press moves the divider, in CSS pixels. */

@@ -1,6 +1,6 @@
 import { Fragment, type ReactElement } from 'react'
 import { Plus } from 'lucide-react'
-import { groupTaskContexts, type OpenTask, type TaskGroup } from '@reflect/core'
+import { groupTaskContexts, type OpenTask, type TaskGroup } from '@dayjot/core'
 import { TaskBreadcrumbs } from '@/components/tasks/task-breadcrumbs'
 import { addTargetForGroup, taskGroupHeaderStyle } from '@/lib/tasks/task-group-presentation'
 import { taskKey } from '@/lib/tasks/task-identity'

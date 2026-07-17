@@ -92,7 +92,7 @@ describe('captureAckSchema', () => {
     const parsed = captureAckSchema.safeParse({
       ok: false,
       code: 'no-graph',
-      message: 'open Reflect and pick a graph first',
+      message: 'open DayJot and pick a graph first',
     })
     expect(parsed.success).toBe(true)
   })

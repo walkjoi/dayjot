@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { GraphImportProgress, GraphImportSummary } from '@reflect/core'
+import type { GraphImportProgress, GraphImportSummary } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,

@@ -1,11 +1,11 @@
 import { z } from 'zod'
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 import { apiHeaders, readJson } from './github'
 
 /**
  * The GitHub Gists REST surface behind "Publish to gist": create a secret
  * gist, update it in place on republish. Same conventions as the repo module
- * — injected `fetchFn`, zod-validated responses, `ReflectError` kinds.
+ * — injected `fetchFn`, zod-validated responses, `DayJotError` kinds.
  *
  * Gists need the GitHub App's **Gists** user permission (or a PAT with gist
  * access); GitHub deliberately answers **404** — not 403 — when a token lacks
@@ -58,17 +58,17 @@ export async function createGist(
     }),
   })
   if (response.status === 404) {
-    throw new ReflectError(
+    throw new DayJotError(
       'auth',
       'GitHub refused gist access (404) — reconnect GitHub to grant it',
     )
   }
   if (response.status === 401 || response.status === 403) {
-    throw new ReflectError('auth', `GitHub rejected the token (${response.status})`)
+    throw new DayJotError('auth', `GitHub rejected the token (${response.status})`)
   }
   if (!response.ok) {
     const body = await response.text()
-    throw new ReflectError('io', `creating the gist failed (${response.status}): ${body}`)
+    throw new DayJotError('io', `creating the gist failed (${response.status}): ${body}`)
   }
   return toPublished(await readJson(response, gistResponseSchema, 'gist creation'))
 }
@@ -100,11 +100,11 @@ export async function updateGist(
     return null
   }
   if (response.status === 401 || response.status === 403) {
-    throw new ReflectError('auth', `GitHub rejected the token (${response.status})`)
+    throw new DayJotError('auth', `GitHub rejected the token (${response.status})`)
   }
   if (!response.ok) {
     const body = await response.text()
-    throw new ReflectError('io', `updating the gist failed (${response.status}): ${body}`)
+    throw new DayJotError('io', `updating the gist failed (${response.status}): ${body}`)
   }
   return toPublished(await readJson(response, gistResponseSchema, 'gist update'))
 }
@@ -128,7 +128,7 @@ export async function deleteGist(
     return
   }
   if (response.status === 401 || response.status === 403) {
-    throw new ReflectError('auth', `GitHub rejected the token (${response.status})`)
+    throw new DayJotError('auth', `GitHub rejected the token (${response.status})`)
   }
-  throw new ReflectError('io', `deleting the gist failed (${response.status})`)
+  throw new DayJotError('io', `deleting the gist failed (${response.status})`)
 }

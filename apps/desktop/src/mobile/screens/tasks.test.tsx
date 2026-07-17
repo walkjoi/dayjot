@@ -3,7 +3,7 @@ import { cleanup, render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { OpenTask } from '@reflect/core'
+import type { OpenTask } from '@dayjot/core'
 import { makeOpenTask as task } from '@/lib/tasks/open-task-fixture'
 import { resetRecentlyCompleted } from '@/lib/tasks/recently-completed'
 import { RouterProvider, useRouter } from '@/routing/router'
@@ -23,8 +23,8 @@ const getOpenTasks = vi.hoisted(() => vi.fn())
 const getCompletedTasks = vi.hoisted(() => vi.fn())
 const resolveOrCreateNoteWithTitle = vi.hoisted(() => vi.fn())
 const hapticImpactLight = vi.hoisted(() => vi.fn())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getOpenTasks,
   getCompletedTasks,
@@ -499,7 +499,7 @@ describe('MobileTasks', () => {
   })
 
   it('keeps open tasks visible while the archived history is still loading', async () => {
-    window.sessionStorage.setItem('reflect.tasks.filter.archived', 'true')
+    window.sessionStorage.setItem('dayjot.tasks.filter.archived', 'true')
     getOpenTasks.mockResolvedValue([task({ text: 'still open' })])
     getCompletedTasks.mockReturnValue(new Promise<OpenTask[]>(() => {}))
     const view = renderScreen()

@@ -9,7 +9,7 @@ the durable source of truth. Everything else reads and writes through this contr
 
 **Architecture:** atomic file IO, OS-trash delete, and the path-traversal guard are Rust
 primitives; the `notes`/`graph` **setters** that orchestrate writes + reindex live in
-`@reflect/core`. See [Architecture & Conventions](architecture-conventions.md).
+`@dayjot/core`. See [Architecture & Conventions](architecture-conventions.md).
 
 **Libraries:** `tempfile` (atomic write), `trash` (delete-to-OS-trash), `dirs`
 (OS app-config) — Rust; `ulid` (Rust) / `ulidx` (TS) for note IDs. See
@@ -18,14 +18,14 @@ primitives; the `notes`/`graph` **setters** that orchestrate writes + reindex li
 ## Scope
 
 **In:** graph directory contract, graph open/create/recent, atomic file read/write/
-move/delete in Rust, note identity + minimal frontmatter, path conventions, `.reflect/`
+move/delete in Rust, note identity + minimal frontmatter, path conventions, `.dayjot/`
 graph dir, ignore defaults.
 **Out:** parsing markdown content (Plan 03), indexing (Plan 04). This layer moves bytes
 and paths, not meaning.
 
 ## The graph contract
 
-A **graph** is a user-chosen folder — Reflect's name for the note workspace. Default
+A **graph** is a user-chosen folder — DayJot's name for the note workspace. Default
 layout:
 
 ```text
@@ -36,7 +36,7 @@ layout:
 ├── audio-memos/             # raw memo recordings (created on demand, not
 │                            #   bootstrapped); each pairs with a same-named
 │                            #   transcription note under notes/
-└── .reflect/                # ignored: SQLite index, caches, local app state
+└── .dayjot/                # ignored: SQLite index, caches, local app state
     ├── index.sqlite
     └── ...
 ```
@@ -46,7 +46,7 @@ Rules (from the product vision storage model):
 - One note per markdown file.
 - Daily-note date comes from the path; no `title` frontmatter required for dailies.
 - Filenames are stable and human-readable; renames are handled in Plan 07.
-- `.reflect/` holds only rebuildable indexes + non-content local state, and is added to
+- `.dayjot/` holds only rebuildable indexes + non-content local state, and is added to
   `.gitignore` inside the graph.
 - Large binaries get backup guardrails later (Plan 12); this layer just stores files.
 
@@ -82,13 +82,13 @@ private: true      # optional; hard-blocks cloud AI/capture for this note
    on rewrite where practical (reduces sync churn in Plan 12).
 
 3. **Graph selection UX.** First-run picker (Tauri dialog) to choose/create a graph;
-   persist recent graphs in local app state (not in `.reflect/` of any one graph — use
+   persist recent graphs in local app state (not in `.dayjot/` of any one graph — use
    the OS app-config dir). A `GraphProvider` + `useGraph` hook exposes the
    active graph root and ready-state to the UI.
 
-4. **`.reflect/` bootstrap.** On open, ensure `daily/`, `notes/`, `assets/`,
-   `.reflect/` exist; write a graph `.gitignore` (ignoring `.reflect/`) and a tiny
-   `.reflect/meta.json` (schema version) so upgrades can detect format changes.
+4. **`.dayjot/` bootstrap.** On open, ensure `daily/`, `notes/`, `assets/`,
+   `.dayjot/` exist; write a graph `.gitignore` (ignoring `.dayjot/`) and a tiny
+   `.dayjot/meta.json` (schema version) so upgrades can detect format changes.
 
 5. **Capability grants.** Tauri 2 requires explicit FS/dialog permissions in
    `src-tauri/capabilities/`. Grant scoped FS access to the chosen graph dir and the
@@ -106,8 +106,8 @@ private: true      # optional; hard-blocks cloud AI/capture for this note
      **security-scoped bookmarks** (create on pick, resolve + `startAccessing…` on launch)
      — an Apple API **Tauri does not wrap**, so it needs custom Rust (objc2/core-foundation).
      Treat sandboxing as a later decision; first release is notarized non-sandboxed.
-   - **Keep `.reflect/` local-only where providers support it.** Remote sync is
-     GitHub-only (Plan 12), so the in-graph `.reflect/` bootstrap marks its rebuildable
+   - **Keep `.dayjot/` local-only where providers support it.** Remote sync is
+     GitHub-only (Plan 12), so the in-graph `.dayjot/` bootstrap marks its rebuildable
      state as local-only instead of exposing graph-level cloud-provider metadata.
 
 7. **Path helpers (TS).** `packages/core` `graph/paths.ts`: `dailyPath(date)`,
@@ -122,11 +122,11 @@ private: true      # optional; hard-blocks cloud AI/capture for this note
 - **Graph root lives in Rust state.** The frontend addresses files by relative path
   only; Rust resolves + guards against traversal. This is the security boundary.
 - **Delete = OS trash.** Honors the V1 "restore" trust value without building history yet.
-- **Recents live in OS app-config**, graph-scoped state lives in that graph's `.reflect/`.
+- **Recents live in OS app-config**, graph-scoped state lives in that graph's `.dayjot/`.
 
 ## Acceptance criteria
 
-- User picks a folder; app scaffolds `daily/ notes/ assets/ .reflect/` + `.gitignore`.
+- User picks a folder; app scaffolds `daily/ notes/ assets/ .dayjot/` + `.gitignore`.
 - A note can be written and read back byte-identical through the IPC layer.
 - Deleting a note moves it to OS trash; reopening the graph still works.
 - Path helpers have unit tests covering daily/regular/asset and traversal rejection.

@@ -2,9 +2,9 @@ import type { AiPrompt } from '../settings/schema'
 
 /**
  * The editor AI menu's prompt library: the user's saved prompts followed by a
- * curated built-in set (the most-used transformations from old Reflect, with
+ * curated built-in set (the most-used transformations from old DayJot, with
  * their battle-tested prompt bodies). A prompt body references the selection
- * with the `{{selectedText}}` placeholder — old Reflect's syntax, so saved v1
+ * with the `{{selectedText}}` placeholder — old DayJot's syntax, so saved v1
  * prompts port over verbatim.
  */
 
@@ -12,7 +12,7 @@ import type { AiPrompt } from '../settings/schema'
 const SELECTED_TEXT_PLACEHOLDER = /\{\{\s*selectedText\s*\}\}/g
 
 /**
- * Shared guardrails appended to the built-in bodies (old Reflect's "filler"):
+ * Shared guardrails appended to the built-in bodies (old DayJot's "filler"):
  * the result is inserted into the note verbatim, so anything beyond the
  * requested text corrupts it.
  */
@@ -21,7 +21,7 @@ const FILLER =
 
 /**
  * The curated built-in prompts, shown after the user's saved prompts (old
- * Reflect listed custom templates first). Transformations of the selection
+ * DayJot listed custom templates first). Transformations of the selection
  * use `replace`; prompts that produce new text (a summary, action items, a
  * continuation) use `append` so accepting never destroys the source — and
  * either way the preview offers the alternate placement at accept time.
@@ -169,7 +169,7 @@ Do not return anything other than the decorated text. ${FILLER}`,
 /**
  * Render a prompt body against the selection: every `{{selectedText}}`
  * occurrence is substituted, and a body without the placeholder gets the
- * selection appended as fenced context (old Reflect's compile rule), so a
+ * selection appended as fenced context (old DayJot's compile rule), so a
  * bare instruction like "Translate to French" still works.
  */
 export function renderSelectionPrompt(body: string, selectedText: string): string {
@@ -189,7 +189,7 @@ ${selectedText}
 
 /**
  * The prompts the AI menu lists for a filter query: the user's saved prompts
- * first (old Reflect's order — the user's own workflow beats the stock set),
+ * first (old DayJot's order — the user's own workflow beats the stock set),
  * then the built-ins, case-insensitively filtered on the label. An empty
  * query returns everything. The menu does not re-rank — order here is display
  * order.

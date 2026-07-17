@@ -8,7 +8,7 @@ use git2::{Repository, RepositoryInitOptions, Signature};
 use crate::error::{AppError, AppResult};
 use crate::graph_gitignore;
 
-/// The branch Reflect creates for new backup repos. Adopted repos keep
+/// The branch DayJot creates for new backup repos. Adopted repos keep
 /// whatever branch their HEAD already points at — nothing below hardcodes it.
 const DEFAULT_BRANCH: &str = "main";
 
@@ -82,16 +82,16 @@ pub(super) fn align_branch(repo: &Repository, name: &str) -> AppResult<()> {
     Ok(())
 }
 
-/// Commit signature: the user's git identity when configured, else a Reflect
+/// Commit signature: the user's git identity when configured, else a DayJot
 /// fallback so backup works on machines with no global gitconfig.
 pub(super) fn signature(repo: &Repository) -> AppResult<Signature<'static>> {
     if let Ok(sig) = repo.signature() {
         return Ok(sig);
     }
-    Ok(Signature::now("Reflect", "backup@reflect.app")?)
+    Ok(Signature::now("DayJot", "backup@dayjot.app")?)
 }
 
-/// Make sure graph repositories carry Reflect's safe ignore defaults. The graph
+/// Make sure graph repositories carry DayJot's safe ignore defaults. The graph
 /// bootstrap already writes these, but setup may adopt an existing repository.
 pub(super) fn ensure_gitignore_defaults(root: &Path) -> AppResult<()> {
     graph_gitignore::ensure_defaults(root)

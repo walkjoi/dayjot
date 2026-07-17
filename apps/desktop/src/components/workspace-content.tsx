@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { GraphInfo } from '@reflect/core'
+import type { GraphInfo } from '@dayjot/core'
 import { AppShell } from '@/components/app-shell'
 import { CommandPalette } from '@/components/command-palette/command-palette'
 import { DailyContextSidebar } from '@/components/context-sidebar/daily-context-sidebar'

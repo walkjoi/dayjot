@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { dailyDatesInRange, hasBridge, type WeekStartDay } from '@reflect/core'
+import { dailyDatesInRange, hasBridge, type WeekStartDay } from '@dayjot/core'
 import { CalendarIcon } from '@/components/icons/calendar-icon'
 import { ChevronLeftIcon } from '@/components/icons/chevron-left-icon'
 import { ChevronRightIcon } from '@/components/icons/chevron-right-icon'

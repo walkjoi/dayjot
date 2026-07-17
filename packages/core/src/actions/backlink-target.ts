@@ -1,4 +1,4 @@
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 import { readNote } from '../graph/commands'
 import { resolveOrCreateNoteWithTitle } from '../graph/create-note'
 import { wikiLinkSafe } from '../markdown/edit'
@@ -22,7 +22,7 @@ export async function ensureBacklinkTarget(title: string, generation: number): P
   const path =
     outcome.kind === 'ambiguous' ? [...outcome.paths].sort().at(0) : outcome.path
   if (path === undefined) {
-    throw new ReflectError(
+    throw new DayJotError(
       'unknown',
       `The [[${title}]] backlink target could not be resolved.`,
     )

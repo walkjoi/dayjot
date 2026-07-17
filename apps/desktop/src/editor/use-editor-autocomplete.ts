@@ -14,7 +14,7 @@ import {
   resolveOrCreateNoteWithTitle,
   suggestTags,
   suggestWikiLinkTargets,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { reportAmbiguousNoteTitle } from '@/editor/ambiguous-note-feedback'
 import { buildAutocompleteEntries } from '@/editor/wiki-autocomplete-entries'
 import { useContactsAuthorization } from '@/hooks/use-contacts-authorization'

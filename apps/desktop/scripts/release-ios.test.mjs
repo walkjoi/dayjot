@@ -104,10 +104,10 @@ test('altool upload uses package upload with API key auth and optional processin
     keyPath: '/tmp/AuthKey_ABC123DEFG.p8',
   })
 
-  expect(createAltoolUploadArgs({ authArgs, ipa: '/tmp/Reflect.ipa', wait: true })).toEqual([
+  expect(createAltoolUploadArgs({ authArgs, ipa: '/tmp/DayJot.ipa', wait: true })).toEqual([
     'altool',
     '--upload-package',
-    '/tmp/Reflect.ipa',
+    '/tmp/DayJot.ipa',
     '--api-key',
     'ABC123DEFG',
     '--api-issuer',
@@ -124,10 +124,10 @@ test('altool upload uses package upload with API key auth and optional processin
 test('altool validation uses the same upload credentials', () => {
   const authArgs = ['--username', 'release@example.com', '--password', '@env:APPLE_PASSWORD']
 
-  expect(createAltoolValidateArgs({ authArgs, ipa: '/tmp/Reflect.ipa' })).toEqual([
+  expect(createAltoolValidateArgs({ authArgs, ipa: '/tmp/DayJot.ipa' })).toEqual([
     'altool',
     '--validate-app',
-    '/tmp/Reflect.ipa',
+    '/tmp/DayJot.ipa',
     '--username',
     'release@example.com',
     '--password',
@@ -140,11 +140,11 @@ test('altool validation uses the same upload credentials', () => {
 test('altool app lookup filters by bundle identifier', () => {
   const authArgs = ['--api-key', 'ABC123DEFG', '--api-issuer', 'issuer-uuid']
 
-  expect(createAltoolListAppsArgs({ authArgs, bundleIdentifier: 'app.reflect.ios' })).toEqual([
+  expect(createAltoolListAppsArgs({ authArgs, bundleIdentifier: 'app.dayjot.ios' })).toEqual([
     'altool',
     '--list-apps',
     '--filter-bundle-id',
-    'app.reflect.ios',
+    'app.dayjot.ios',
     '--api-key',
     'ABC123DEFG',
     '--api-issuer',
@@ -180,19 +180,19 @@ test('IPA Info.plist lookup targets the app payload plist', () => {
     findIpaInfoPlistPath(
       [
         'Payload/',
-        'Payload/Reflect.app/',
-        'Payload/Reflect.app/Info.plist',
-        'Payload/Reflect.app/LaunchScreen.storyboardc/Info.plist',
-        'Symbols/Reflect.symbols',
+        'Payload/DayJot.app/',
+        'Payload/DayJot.app/Info.plist',
+        'Payload/DayJot.app/LaunchScreen.storyboardc/Info.plist',
+        'Symbols/DayJot.symbols',
       ].join('\n'),
     ),
-  ).toBe('Payload/Reflect.app/Info.plist')
+  ).toBe('Payload/DayJot.app/Info.plist')
 })
 
 test('IPA Info.plist lookup rejects ambiguous payloads', () => {
   expect(() =>
     findIpaInfoPlistPath(
-      ['Payload/Reflect.app/Info.plist', 'Payload/Other.app/Info.plist'].join('\n'),
+      ['Payload/DayJot.app/Info.plist', 'Payload/Other.app/Info.plist'].join('\n'),
     ),
   ).toThrow('expected exactly one app Info.plist')
 })
@@ -202,19 +202,19 @@ test('IPA appex lookup finds each embedded extension bundle once', () => {
     findIpaAppexPaths(
       [
         'Payload/',
-        'Payload/Reflect.app/',
-        'Payload/Reflect.app/Info.plist',
-        'Payload/Reflect.app/PlugIns/ShareExtension.appex/',
-        'Payload/Reflect.app/PlugIns/ShareExtension.appex/Info.plist',
-        'Payload/Reflect.app/PlugIns/ShareExtension.appex/ShareExtension',
-        'Symbols/Reflect.symbols',
+        'Payload/DayJot.app/',
+        'Payload/DayJot.app/Info.plist',
+        'Payload/DayJot.app/PlugIns/ShareExtension.appex/',
+        'Payload/DayJot.app/PlugIns/ShareExtension.appex/Info.plist',
+        'Payload/DayJot.app/PlugIns/ShareExtension.appex/ShareExtension',
+        'Symbols/DayJot.symbols',
       ].join('\n'),
     ),
-  ).toEqual(['Payload/Reflect.app/PlugIns/ShareExtension.appex'])
+  ).toEqual(['Payload/DayJot.app/PlugIns/ShareExtension.appex'])
 })
 
 test('IPA appex lookup returns empty for an IPA without extensions', () => {
-  expect(findIpaAppexPaths(['Payload/Reflect.app/', 'Payload/Reflect.app/Info.plist'].join('\n'))).toEqual([])
+  expect(findIpaAppexPaths(['Payload/DayJot.app/', 'Payload/DayJot.app/Info.plist'].join('\n'))).toEqual([])
 })
 
 test('Info.plist export-compliance false values are normalized', () => {

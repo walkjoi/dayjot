@@ -1,10 +1,10 @@
-import { isIsoDate } from '@reflect/utils'
+import { isIsoDate } from '@dayjot/utils'
 import { dailyPath } from '../graph/paths'
 import { foldKey } from '../markdown'
 import { db } from './db'
 
 /**
- * Resolve a free-form note target — a deep link's `reflect://note/<target>`
+ * Resolve a free-form note target — a deep link's `dayjot://note/<target>`
  * argument — to a graph-relative path, or null when nothing matches.
  *
  * The order mirrors the CLI's `<note>` argument, with the frontmatter `id`

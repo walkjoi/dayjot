@@ -9,8 +9,8 @@ import { TemplatesSection } from './templates-section'
 const listTemplates = vi.hoisted(() => vi.fn())
 const openRouteInNewWindow = vi.hoisted(() => vi.fn<() => Promise<boolean>>())
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   listTemplates,
 }))
 vi.mock('@/lib/windows/open-in-new-window', async (importOriginal) => ({

@@ -3,12 +3,12 @@
 //! A debounced `notify` watcher over the graph root. It's the **sole** trigger
 //! for incremental re-indexing: an edit (ours or external) writes the markdown
 //! file, the watcher fires, and the frontend re-indexes that file. The index
-//! lives under `.reflect/`, which is filtered out here, so index writes can't
+//! lives under `.dayjot/`, which is filtered out here, so index writes can't
 //! loop back. The watcher reports `.md` under `daily/` and `notes/`, plus
 //! anything under `audio-memos/` (recordings feed the sync debounce and the
 //! transcription reconciler, not the index) and eligible image/PDF files under
 //! `assets/` (which feed the asset-description controller — Plan 20 — not the
-//! index; the `.reflect.md` description files are excluded so a write can't loop
+//! index; the `.dayjot.md` description files are excluded so a write can't loop
 //! back). Non-note consumers filter by path. The frontend resolves
 //! create-vs-delete and re-indexes (content-hash gated).
 
@@ -48,14 +48,14 @@ pub struct FileChange {
 }
 
 /// Image and PDF extensions that earn an AI description file (Plan 20). Must
-/// stay in sync with `assetTypeFor` in `@reflect/core` (`actions/asset-description`).
+/// stay in sync with `assetTypeFor` in `@dayjot/core` (`actions/asset-description`).
 const ELIGIBLE_ASSET_EXTS: [&str; 7] = ["png", "jpg", "jpeg", "gif", "webp", "svg", "pdf"];
 
 /// Whether a graph-relative path is an asset the description controller handles:
-/// an eligible image/PDF under `assets/`, never a `.reflect.md` description file
+/// an eligible image/PDF under `assets/`, never a `.dayjot.md` description file
 /// (which also lives there — tracking it would loop a write back into work).
 fn is_eligible_asset(rel_str: &str) -> bool {
-    if !rel_str.starts_with("assets/") || rel_str.ends_with(".reflect.md") {
+    if !rel_str.starts_with("assets/") || rel_str.ends_with(".dayjot.md") {
         return false;
     }
     rel_str
@@ -66,8 +66,8 @@ fn is_eligible_asset(rel_str: &str) -> bool {
 
 /// Graph-relative path if `path` is tracked: a markdown note (`.md` under
 /// `daily/`, `notes/`, or `templates/`), an audio-memo recording (anything under
-/// `audio-memos/`), a spooled capture envelope (`.json` under `.reflect/inbox/`
-/// — the one carve-out from the `.reflect/` blackout; the envelope is the
+/// `audio-memos/`), a spooled capture envelope (`.json` under `.dayjot/inbox/`
+/// — the one carve-out from the `.dayjot/` blackout; the envelope is the
 /// spool's commit point and triggers the capture drain), or an eligible asset
 /// under `assets/` ({@link is_eligible_asset} — feeds the description controller),
 /// else `None`. Pure — the filtering rule, unit-tested.
@@ -83,7 +83,7 @@ fn tracked_relpath(path: &Path, root: &Path) -> Option<String> {
         || rel_str.starts_with("templates/"))
         && rel_str.ends_with(".md");
     let recording = rel_str.starts_with("audio-memos/");
-    let capture = rel_str.starts_with(".reflect/inbox/") && rel_str.ends_with(".json");
+    let capture = rel_str.starts_with(".dayjot/inbox/") && rel_str.ends_with(".json");
     let asset = is_eligible_asset(&rel_str);
     (note || recording || capture || asset).then_some(rel_str)
 }
@@ -243,31 +243,31 @@ mod tests {
             .as_deref(),
             Some("audio-memos/audio-memo-2026-06-09-090000-000.m4a")
         );
-        // Capture envelopes are tracked: `.json` under `.reflect/inbox/` is
+        // Capture envelopes are tracked: `.json` under `.dayjot/inbox/` is
         // the spool's commit point and triggers the drain. Sibling screenshots
         // and host tmp files are not.
         assert_eq!(
-            tracked_relpath(Path::new("/g/.reflect/inbox/7c9e6679.json"), root).as_deref(),
-            Some(".reflect/inbox/7c9e6679.json")
+            tracked_relpath(Path::new("/g/.dayjot/inbox/7c9e6679.json"), root).as_deref(),
+            Some(".dayjot/inbox/7c9e6679.json")
         );
         assert_eq!(
-            tracked_relpath(Path::new("/g/.reflect/inbox/7c9e6679.jpg"), root),
+            tracked_relpath(Path::new("/g/.dayjot/inbox/7c9e6679.jpg"), root),
             None
         );
         assert_eq!(
-            tracked_relpath(Path::new("/g/.reflect/inbox/.tmp-x8f2"), root),
+            tracked_relpath(Path::new("/g/.dayjot/inbox/.tmp-x8f2"), root),
             None
         );
         // Quarantined spools must not re-trigger the drain.
         assert_eq!(
-            tracked_relpath(Path::new("/g/.reflect/inbox-rejected/bad.json"), root),
+            tracked_relpath(Path::new("/g/.dayjot/inbox-rejected/bad.json"), root),
             None
         );
         // Not tracked: the index, non-markdown, dotfiles, outside root, or the
         // audio-memos directory entry itself. (Eligible assets ARE tracked — see
         // the dedicated test below.)
         assert_eq!(
-            tracked_relpath(Path::new("/g/.reflect/index.sqlite"), root),
+            tracked_relpath(Path::new("/g/.dayjot/index.sqlite"), root),
             None
         );
         assert_eq!(tracked_relpath(Path::new("/g/notes/x.txt"), root), None);
@@ -295,7 +295,7 @@ mod tests {
         // The description file lives under assets/ too — tracking it would loop a
         // write back into the controller, so it must never be tracked.
         assert_eq!(
-            tracked_relpath(Path::new("/g/assets/diagram.png.reflect.md"), root),
+            tracked_relpath(Path::new("/g/assets/diagram.png.dayjot.md"), root),
             None
         );
         // Ineligible types and stray markdown under assets/ are not tracked.
@@ -312,7 +312,7 @@ mod tests {
             &[
                 PathBuf::from("/g/notes/a.md"),
                 PathBuf::from("/g/notes/a.md"),
-                PathBuf::from("/g/.reflect/index.sqlite"),
+                PathBuf::from("/g/.dayjot/index.sqlite"),
             ],
             root,
         );

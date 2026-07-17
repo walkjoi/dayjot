@@ -27,7 +27,7 @@ function makeImage(): LightboxImage {
     alt: 'Cat',
     openPath: 'assets/cat.png',
     openImage: vi.fn(async () => {}),
-    transitionName: 'reflect-image-lightbox-1',
+    transitionName: 'dayjot-image-lightbox-1',
   }
 }
 

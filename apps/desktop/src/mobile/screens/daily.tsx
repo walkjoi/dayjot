@@ -1,5 +1,5 @@
 import { useCallback, type ReactElement } from 'react'
-import { untitledNotePath } from '@reflect/core'
+import { untitledNotePath } from '@dayjot/core'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToday } from '@/lib/use-today'

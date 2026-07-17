@@ -1,4 +1,4 @@
-import { setBridge, type AppPlatform } from '@reflect/core'
+import { setBridge, type AppPlatform } from '@dayjot/core'
 import { createDevBridge } from '@/dev/dev-bridge'
 import { createDevFileStore } from '@/dev/dev-file-store'
 import { createDevIndexDb } from '@/dev/dev-index-db'
@@ -27,7 +27,7 @@ async function install(platform: AppPlatform): Promise<void> {
   const files = createDevFileStore(seedGraphFiles())
   setBridge(createDevBridge({ platform, files, index }))
   // A console handle for poking the shim while debugging mobile surfaces:
-  // `__reflectDev.query('select path, title from notes')`, `.files.read(...)`.
-  Object.assign(window, { __reflectDev: { query: index.query, files } })
+  // `__dayjotDev.query('select path, title from notes')`, `.files.read(...)`.
+  Object.assign(window, { __dayjotDev: { query: index.query, files } })
   console.info(`[dev-bridge] installed: platform=${platform}, in-memory graph + wasm SQLite index`)
 }

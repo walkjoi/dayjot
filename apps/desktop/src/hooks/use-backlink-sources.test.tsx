@@ -2,12 +2,12 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
-import type { BacklinkContext, BacklinkContextPage } from '@reflect/core'
+import type { BacklinkContext, BacklinkContextPage } from '@dayjot/core'
 import { useBacklinkSources } from './use-backlink-sources'
 
 const getBacklinksWithContext = vi.hoisted(() => vi.fn())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getBacklinksWithContext,
 }))

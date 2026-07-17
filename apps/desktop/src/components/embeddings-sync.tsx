@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { embedNote, embedRemove, isNotePath, subscribeIndexApplied } from '@reflect/core'
+import { embedNote, embedRemove, isNotePath, subscribeIndexApplied } from '@dayjot/core'
 import {
   backfillEmbeddingsVisibly,
   consumeLegacySemanticOptIn,

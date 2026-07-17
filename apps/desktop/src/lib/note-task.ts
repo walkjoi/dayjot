@@ -10,7 +10,7 @@ import {
   toggleTaskMarker,
   writeNote,
   type TaskMarker,
-} from '@reflect/core'
+} from '@dayjot/core'
 import type { NoteSession } from '@/editor/note-session'
 import { openSession } from '@/editor/open-documents'
 

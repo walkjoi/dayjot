@@ -5,7 +5,7 @@ import {
   resolveExistingWikiTarget,
   resolveOrCreateNoteWithTitle,
   resolveWikiTarget,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { reportAmbiguousNoteTitle } from '@/editor/ambiguous-note-feedback'
 import { useNoteLinkNavigation } from '@/hooks/use-note-link-navigation'
 import { startOperation } from '@/lib/operations'

@@ -11,7 +11,7 @@
   "pull-request-title-pattern": "chore: release ${version}",
   "packages": {
     ".": {
-      "package-name": "reflect-open",
+      "package-name": "dayjot-desktop",
       "changelog-path": "apps/desktop/CHANGELOG.md",
       "exclude-paths": ["docs", "fixtures", ".github", "apps/extension"],
       "extra-files": [

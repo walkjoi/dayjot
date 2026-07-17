@@ -6,7 +6,7 @@ import {
   type DateFormat,
   type TimeFormat,
   type WeekStartDay,
-} from '@reflect/core'
+} from '@dayjot/core'
 import {
   Select,
   SelectContent,
@@ -57,7 +57,7 @@ export function DateTimeSection(): ReactElement {
     <SettingsSection id="date-time">
       <SettingsField
         legend="Date format"
-        description="The style for dates shown throughout Reflect, including daily note titles."
+        description="The style for dates shown throughout DayJot, including daily note titles."
       >
         <div className="mt-3">
           <Select
@@ -103,7 +103,7 @@ export function DateTimeSection(): ReactElement {
       </SettingsField>
       <SettingsField
         legend="Time format"
-        description="How times are shown throughout Reflect — 8:22pm or 20:22."
+        description="How times are shown throughout DayJot — 8:22pm or 20:22."
       >
         <div className="mt-3">
           <Select

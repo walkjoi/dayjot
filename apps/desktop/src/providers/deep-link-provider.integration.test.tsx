@@ -1,6 +1,6 @@
 import { cleanup, render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GraphInfo } from '@reflect/core'
+import type { GraphInfo } from '@dayjot/core'
 import {
   dispatchDeepLink,
   resetDeepLinkIntakeForTests,
@@ -18,8 +18,8 @@ const operationHandle = vi.hoisted(() => ({
   dismiss: vi.fn(),
 }))
 
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   resolveNoteTarget,
   captureInboxSpool,
 }))
@@ -55,10 +55,10 @@ describe('DeepLinkProvider navigation intent integration', () => {
     )
     render(<DeepLinkProvider graph={GRAPH}>{null}</DeepLinkProvider>)
 
-    dispatchDeepLink('reflect://note/Project%20X')
+    dispatchDeepLink('dayjot://note/Project%20X')
     expect(resolveNoteTarget).toHaveBeenCalledWith('Project X')
 
-    dispatchDeepLink('reflect://append?text=captured%20while%20resolving')
+    dispatchDeepLink('dayjot://append?text=captured%20while%20resolving')
     await waitFor(() => expect(captureInboxSpool).toHaveBeenCalledTimes(1))
 
     finishResolution('notes/project-x.md')

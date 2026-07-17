@@ -1,14 +1,14 @@
 //! The Chrome native-messaging host (Plan 11). Chrome spawns this binary per
 //! capture (`runtime.sendNativeMessage`); it validates the wire message and
 //! **spools** it into the active graph's capture inbox
-//! (`<graph>/.reflect/inbox/`), then acks `queued` and exits. It is a spooler,
+//! (`<graph>/.dayjot/inbox/`), then acks `queued` and exits. It is a spooler,
 //! not a relay: it never talks to the running app — the inbox *is* the IPC,
 //! drained by the desktop app's watcher (or on next launch when the app is
 //! closed).
 //!
 //! Protocol discipline: stdout carries nothing but length-prefixed JSON acks;
 //! all logging goes to stderr. The wire shapes mirror the zod schemas in
-//! `@reflect/core` (`actions/capture-envelope.ts`) — that TS file is the
+//! `@dayjot/core` (`actions/capture-envelope.ts`) — that TS file is the
 //! source of truth.
 
 pub mod envelope;
@@ -44,7 +44,7 @@ impl HostError {
 
     fn message(&self) -> String {
         match self {
-            HostError::NoGraph => "Open Reflect and pick a graph first.".to_string(),
+            HostError::NoGraph => "Open DayJot and pick a graph first.".to_string(),
             HostError::InvalidPayload(message) | HostError::Io(message) => message.clone(),
         }
     }
@@ -83,7 +83,7 @@ pub fn run(
     while let Some(payload) = read_message(input)? {
         let outcome = handle_message(&payload, pointer_path);
         if let Err(error) = &outcome {
-            eprintln!("reflect-capture-host: {error:?}");
+            eprintln!("dayjot-capture-host: {error:?}");
         }
         write_message(output, &ack_json(&outcome))?;
     }
@@ -147,7 +147,7 @@ mod tests {
             read_ack(&output),
             serde_json::json!({ "ok": true, "status": "queued" })
         );
-        let inbox = graph.join(".reflect/inbox");
+        let inbox = graph.join(".dayjot/inbox");
         let id = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
         assert_eq!(
             std::fs::read(inbox.join(format!("{id}.jpg"))).unwrap(),

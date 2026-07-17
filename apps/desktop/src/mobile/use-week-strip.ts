@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
-import type { WeekStartDay } from '@reflect/core'
+import type { WeekStartDay } from '@dayjot/core'
 import {
   createWeekWindow,
   weekAtIndex,

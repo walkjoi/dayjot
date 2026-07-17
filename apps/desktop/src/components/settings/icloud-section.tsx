@@ -8,7 +8,7 @@ import {
   icloudAdoptGraph,
   icloudPendingCount,
   icloudStatus,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { ConflictedNoteLinks } from '@/components/settings/conflicted-note-links'
 import { SettingsField } from '@/components/settings/field'
 import { Button } from '@/components/ui/button'

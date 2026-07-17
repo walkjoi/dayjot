@@ -2,7 +2,7 @@ import { render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PinnedNote } from '@reflect/core'
+import type { PinnedNote } from '@dayjot/core'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { pinnedNotesQueryKey } from '@/hooks/use-pinned-notes'
 import { RouterProvider } from '@/routing/router'
@@ -17,8 +17,8 @@ const operationFail = vi.hoisted(() => vi.fn())
 const startOperation = vi.hoisted(() =>
   vi.fn(() => ({ progress: vi.fn(), done: vi.fn(), fail: operationFail })),
 )
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getPinnedNotes,
   getNote,

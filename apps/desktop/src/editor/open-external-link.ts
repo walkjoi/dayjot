@@ -34,7 +34,7 @@ export function isOpenableExternalUrl(href: string): boolean {
  * Open a rendered Markdown link in its OS default app instead of letting the
  * click navigate the app's WebView frame. The static `MarkdownView` surfaces
  * aren't contenteditable, so an `<a href>` click would otherwise unload the
- * whole app. A `reflect://` link routes through the in-app deep-link pipeline
+ * whole app. A `dayjot://` link routes through the in-app deep-link pipeline
  * instead — the OS opener denies the scheme.
  */
 export function useOpenExternalLink(): LinkClickHandler {

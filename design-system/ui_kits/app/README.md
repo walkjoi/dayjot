@@ -1,6 +1,6 @@
-# Reflect App — UI kit
+# DayJot App — UI kit
 
-An interactive recreation of Reflect's desktop notes app, composed from the design
+An interactive recreation of DayJot's desktop notes app, composed from the design
 system primitives (`Button`, `SearchField`, `IconButton`, `MenuItem`, `ShortcutKey`,
 `Checkbox`, `Avatar`, `Card`).
 

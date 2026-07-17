@@ -1,13 +1,13 @@
 # Uncomment the next line to define a global platform for your project
 
-target 'reflect-open_iOS' do
+target 'dayjot-desktop_iOS' do
 platform :ios, '14.0'
-  # Pods for reflect-open_iOS
+  # Pods for dayjot-desktop_iOS
 end
 
-target 'reflect-open_macOS' do
+target 'dayjot-desktop_macOS' do
 platform :osx, '11.0'
-  # Pods for reflect-open_macOS
+  # Pods for dayjot-desktop_macOS
 end
 
 # Delete the deployment target for iOS and macOS, causing it to be inherited from the Podfile

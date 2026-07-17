@@ -9,8 +9,8 @@ import { SimilarNotesSection } from './similar-notes-section'
 const relatedNotes = vi.hoisted(() => vi.fn())
 const readNote = vi.hoisted(() => vi.fn())
 const openRouteInNewWindow = vi.hoisted(() => vi.fn<() => Promise<boolean>>())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   readNote,
   relatedNotes,

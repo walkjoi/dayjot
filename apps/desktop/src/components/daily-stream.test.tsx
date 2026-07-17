@@ -2,7 +2,7 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react'
-import { setBridge } from '@reflect/core'
+import { setBridge } from '@dayjot/core'
 import {
   FocusedDailyProvider,
   useFocusedDailyDate,
@@ -228,7 +228,7 @@ describe('DailyStream', () => {
     const placeholders = await view.findAllByText('Loading note…')
     expect(placeholders.length).toBeGreaterThan(0)
     for (const placeholder of placeholders) {
-      expect(placeholder.className).toContain('reflect-note-loading')
+      expect(placeholder.className).toContain('dayjot-note-loading')
       expect(placeholder.className).toMatch(/min-h-/)
     }
     view.unmount()

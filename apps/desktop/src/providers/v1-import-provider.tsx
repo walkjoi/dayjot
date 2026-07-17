@@ -18,7 +18,7 @@ import {
   type GraphImportProgress,
   type GraphImportSummary,
   type GraphInfo,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { V1ImportDialog } from '@/components/v1-import-dialog'
 import { useGraph } from '@/providers/graph-provider'
 

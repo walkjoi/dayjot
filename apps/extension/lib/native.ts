@@ -1,17 +1,17 @@
 import { browser } from 'wxt/browser'
-import { captureAckSchema, type CaptureWireMessage } from '@reflect/core/capture-envelope'
+import { captureAckSchema, type CaptureWireMessage } from '@dayjot/core/capture-envelope'
 import type { HoldReason } from './messages'
 
 /**
  * The native-messaging hop: one `sendNativeMessage` per capture to the
- * `reflect-capture-host` sidecar the desktop app registered. Chrome spawns
+ * `dayjot-capture-host` sidecar the desktop app registered. Chrome spawns
  * the host per message — no port, no daemon — and the host's only honest
  * success is `queued` (it spools into the capture inbox and exits; it never
  * observes the desktop app draining).
  */
 
 /** Must match the host manifest name written by `src-tauri/src/capture.rs`. */
-export const HOST_NAME = 'app.reflect.capture'
+export const HOST_NAME = 'app.dayjot.capture'
 
 export type SendOutcome =
   /** The host spooled the capture — remove it from the queue. */
@@ -23,7 +23,7 @@ export type SendOutcome =
 
 /**
  * Chrome rejects with these strings when the host manifest is missing or
- * doesn't allowlist this extension — the "install / launch Reflect" state.
+ * doesn't allowlist this extension — the "install / launch DayJot" state.
  */
 const NO_HOST_PATTERN = /not found|forbidden|not installed/i
 

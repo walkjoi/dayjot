@@ -10,7 +10,7 @@ import {
   type AiProviderConfig,
   type AiProviderId,
   type AppError,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { useSettings } from '@/providers/settings-provider'
 
 /**

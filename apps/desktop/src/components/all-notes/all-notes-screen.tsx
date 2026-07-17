@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { hasBridge, listNotes, listNoteTags } from '@reflect/core'
+import { hasBridge, listNotes, listNoteTags } from '@dayjot/core'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useNoteLinkNavigation } from '@/hooks/use-note-link-navigation'

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ContactMatch, MeetingAttendee, WikiSuggestion } from '@reflect/core'
+import type { ContactMatch, MeetingAttendee, WikiSuggestion } from '@dayjot/core'
 import { AttendeeCombobox } from './attendee-combobox'
 
 // jsdom can't scroll or observe resizes; cmdk scrolls the highlighted row
@@ -18,8 +18,8 @@ const suggestWikiTargets = vi.hoisted(() => vi.fn<() => Promise<WikiSuggestion[]
 const contactLinkSuggestions = vi.hoisted(() =>
   vi.fn<() => Promise<ContactMatch[]>>(async () => []),
 )
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   suggestWikiTargets,
   contactLinkSuggestions,

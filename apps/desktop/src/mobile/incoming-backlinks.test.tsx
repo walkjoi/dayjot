@@ -16,8 +16,8 @@ const { getBacklinksWithContext, getBacklinksPage } = vi.hoisted(() => {
   })
   return { getBacklinksWithContext, getBacklinksPage }
 })
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getBacklinksWithContext: getBacklinksPage,
 }))

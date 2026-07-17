@@ -1,5 +1,5 @@
 import { useState, type ReactElement, type ReactNode } from 'react'
-import { errorMessage } from '@reflect/core'
+import { errorMessage } from '@dayjot/core'
 import { ShortcutKeys } from '@/components/shortcut-keys'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { startOperation } from '@/lib/operations'

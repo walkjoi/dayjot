@@ -1,7 +1,7 @@
-# Reflect V2 — First-Version Implementation Roadmap
+# DayJot V2 — First-Version Implementation Roadmap
 
 This directory holds the numbered, dependency-ordered plans for building the **first
-version (first wave)** of Reflect V2: the open-source, local-first, markdown-native,
+version (first wave)** of DayJot V2: the open-source, local-first, markdown-native,
 AI-native rewrite described in the product docs.
 
 ## Current source status (2026-06-14)
@@ -11,7 +11,7 @@ The source tree now implements Plans 01–12 and 14–17, with Plan 16 at its V1
 longer deferred: the repo contains the WXT extension (`apps/extension`), the native
 messaging sidecar (`apps/native-host`), desktop capture commands
 (`apps/desktop/src-tauri/src/capture.rs`), and the TS drain/enrichment path in
-`@reflect/core`.
+`@dayjot/core`.
 
 Plan 13 is **closed by product decision**: the graph folder itself is the portability
 surface, so no dedicated import/export suite is planned. Reflect V1 exports now use a
@@ -30,10 +30,10 @@ wave, per the plan's revision note.
 
 Read these alongside the source docs they implement:
 
-- [V2 Product Vision](../reflect-v2-product-vision.md)
-- [V2 Indexing Strategy](../reflect-v2-indexing-strategy.md)
-- [V2 Sync Strategy](../reflect-v2-sync-strategy.md)
-- [V2 Grounding Brief](../reflect-v2-grounding-brief.md)
+- [V2 Product Vision](../dayjot-v2-product-vision.md)
+- [V2 Indexing Strategy](../dayjot-v2-indexing-strategy.md)
+- [V2 Sync Strategy](../dayjot-v2-sync-strategy.md)
+- [V2 Grounding Brief](../dayjot-v2-grounding-brief.md)
 - [V1 Overview](../reflect-v1-overview.md)
 - Repo conventions: [AGENTS.md](../../AGENTS.md)
 
@@ -59,7 +59,7 @@ before the editor, and the editor lands before search/AI.
 | # | Plan | Delivers |
 |---|------|----------|
 | 01 | [Foundation & toolchain](01-foundation-and-toolchain.md) | Tauri/React/TS app shell, Tailwind + shadcn + Lucide, zod, Kysely wiring, test/lint, design-system, IPC conventions |
-| 02 | [Graph & file storage](02-graph-and-file-storage.md) | Graph folder (`daily/`, `notes/`, `assets/`, `.reflect/`), Rust file IO, frontmatter + note identity, graph open/create |
+| 02 | [Graph & file storage](02-graph-and-file-storage.md) | Graph folder (`daily/`, `notes/`, `assets/`, `.dayjot/`), Rust file IO, frontmatter + note identity, graph open/create |
 | 03 | [Markdown document model](03-markdown-document-model.md) | Canonical AST, frontmatter + wiki-link parsing, lossless serialization, zod schemas, external-edit tolerance |
 | 04 | [Local index (SQLite)](04-local-index-sqlite.md) | SQLite-in-Rust + Kysely query builder, projections, FTS, file watching, incremental indexing, rebuild/repair |
 | 05 | [Markdown editor](05-markdown-editor.md) | Integrate **meowdown** (ProseKit/ProseMirror over `@lezer/markdown`), keyboard-native; add wiki-link/image/checkbox extensions |
@@ -71,14 +71,14 @@ before the editor, and the editor lands before search/AI.
 | 11 | [Link capture](11-link-capture.md) | Chrome extension → native-messaging sidecar → desktop capture inbox, screenshots, meta/BYOK enrichment, dedicated capture notes + daily-note `[[Links]]` |
 | 12 | [Backup & sync (GitHub-only)](12-backup-and-sync.md) | GitHub/Git backup + restore, Git-native conflict surface, manual review, checkpoints. Written when file-sync providers were unsupported — Plan 21 later shipped iCloud Drive as the primary sync path; Git remains the self-managed alternative (never both on one graph) |
 | 13 | [Import / export / portability](13-import-export-portability.md) | **Closed by decision.** Markdown files are the portability surface; no JSON/HTML/ZIP export or Obsidian/folder import suite is planned |
-| 14 | [CLI (read/discovery)](14-cli-read-discovery.md) | `reflect today`, `reflect search`, `reflect show`, path lookup |
+| 14 | [CLI (read/discovery)](14-cli-read-discovery.md) | `dayjot today`, `dayjot search`, `dayjot show`, path lookup |
 | 15 | [Hardening, packaging & OSS release](15-hardening-packaging-release.md) | a11y, perf budgets, signing/notarization, MIT + docs, onboarding, release pipeline |
 | 16 | [Generic git remotes](16-generic-git-remotes.md) | Any git host (GitLab/Gitea/GHES/NAS) via hand-wired `origin`, zero new UI — V1 SSH (agent) + path remotes, V2 HTTPS (credential helpers) |
 | 17 | [Readable filenames](17-readable-filenames.md) | Title-derived note filenames (slug + collision suffix), frontmatter `id` adoption, rename-on-settled-title file moves, id-healed external renames |
 | 18 | [Tasks](18-tasks.md) | **Post-release add-on.** Round-checkbox (`+ [ ]`) tasks as a rebuildable projection: interactive editor checkboxes, Tasks view (Overdue/Today/Upcoming), `[[date]]`/daily scheduling, guarded toggle write-back, square checklists excluded |
 | 19 | [Mobile companion](19-mobile.md) | **In progress.** iOS target of the existing Tauri app: mobile root gate, fixed graph root, onboarding, Daily/All shell, editable notes, keyboard plugin; device validation + store hardening remain |
-| 20 | [Asset descriptions](20-asset-descriptions.md) | **Post-release add-on.** AI-generated `.reflect.md` description files for referenced, non-private images/PDFs under `assets/`; BYOK, privacy-gated, manual backfill |
-| 21 | [iCloud Drive sync](21-icloud-drive-sync.md) | **Shipped (2026-07-04).** iCloud Drive as the primary consumer sync path: graphs in the app's iCloud container, deterministic resolution ladder over per-device shadow bases (markers as the fallback), `.reflect/`/`.git/` sync-exclusion, iCloud-first onboarding on both platforms with multi-graph lists + the mobile switcher; git remotes stay the self-managed path. AI-assisted resolution deferred |
+| 20 | [Asset descriptions](20-asset-descriptions.md) | **Post-release add-on.** AI-generated `.dayjot.md` description files for referenced, non-private images/PDFs under `assets/`; BYOK, privacy-gated, manual backfill |
+| 21 | [iCloud Drive sync](21-icloud-drive-sync.md) | **Shipped (2026-07-04).** iCloud Drive as the primary consumer sync path: graphs in the app's iCloud container, deterministic resolution ladder over per-device shadow bases (markers as the fallback), `.dayjot/`/`.git/` sync-exclusion, iCloud-first onboarding on both platforms with multi-graph lists + the mobile switcher; git remotes stay the self-managed path. AI-assisted resolution deferred |
 | 22 | [Mobile GitHub connect](22-mobile-github-connect.md) | **Implemented; device pass pending.** The connect front door for local (non-iCloud) graphs on iOS: shared wizard hook, `ConnectGithubDrawer`, Settings entry point — no new sync mechanism |
 | 23 | [Mobile AI chat](23-mobile-ai-chat.md) | The Plan 10 chat on iOS as a fourth tab: same engine/store/privacy gate, mobile composer + history/model sheets, per-device BYOK provider settings, lexical-only `search_notes`; streaming-on-iOS spike gates the build |
 
@@ -130,8 +130,8 @@ The highest-severity risks surfaced reviewing this plan, with where they're hand
 2. **A cloud-sync folder can corrupt the index or fight a Git remote.** Originally
    mitigated by refusing file-sync providers outright; since Plan 21 shipped, iCloud
    Drive is the *supported primary* path and the risk is managed instead of avoided:
-   `.reflect/` (and `.git/`) are sync-excluded so the SQLite `-wal`/`-shm` never ride
-   the provider, atomic-write temps stage inside `.reflect/tmp/`, and **iCloud and a
+   `.dayjot/` (and `.git/`) are sync-excluded so the SQLite `-wal`/`-shm` never ride
+   the provider, atomic-write temps stage inside `.dayjot/tmp/`, and **iCloud and a
    Git remote are mutually exclusive per graph**. Third-party folder sync (Dropbox et
    al.) remains unsupported: same hazards, none of Plan 21's machinery.
 3. **Durable macOS folder access** (TCC prompts; security-scoped bookmarks if sandboxed) —
@@ -146,13 +146,13 @@ The highest-severity risks surfaced reviewing this plan, with where they're hand
 These are the product's hard principles. Every plan must hold them. Restated here so
 they are not re-litigated per phase:
 
-- **Markdown is the source of truth.** SQLite under `.reflect/` is a rebuildable
+- **Markdown is the source of truth.** SQLite under `.dayjot/` is a rebuildable
   projection, never durable storage. Any non-rebuildable local state must be justified.
-- **No Reflect-hosted APIs.** LLM/transcription/sync calls go directly from the app to
-  user-approved providers (BYOK AI providers, GitHub). No proxy through Reflect infra.
+- **No DayJot-hosted APIs.** LLM/transcription/sync calls go directly from the app to
+  user-approved providers (BYOK AI providers, GitHub). No proxy through DayJot infra.
 - **`private: true` is a hard block.** Such notes' content must never be sent to any
   external service — AI, capture enrichment, conflict resolution, or otherwise.
-- **Secrets live in the OS keychain.** Never in markdown, Git, or `.reflect/`.
+- **Secrets live in the OS keychain.** Never in markdown, Git, or `.dayjot/`.
 - **Keyboard-native.** Every core workflow reachable from the keyboard.
 - **Portable data from day one.** The graph folder itself is the export; backup must be
   free. Sync is iCloud Drive (the primary path since Plan 21) or a Git remote — one per

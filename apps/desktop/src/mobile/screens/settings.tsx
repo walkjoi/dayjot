@@ -9,7 +9,7 @@ import {
   type AiProviderConfig,
   type EditorTextSize,
   type ThemePreference,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { useAiProviders } from '@/hooks/use-ai-providers'
 import { useAppVersion } from '@/hooks/use-app-version'
 import { marketingVersion } from '@/lib/marketing-version'
@@ -225,7 +225,7 @@ export function MobileSettings(): ReactElement {
               header="Backup"
               footer={
                 canConnect
-                  ? 'Sync notes with Reflect on your other devices.'
+                  ? 'Sync notes with DayJot on your other devices.'
                   : (status?.detail ?? null)
               }
             >

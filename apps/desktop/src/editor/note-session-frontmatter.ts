@@ -1,9 +1,9 @@
-import type { GistFrontmatter } from '@reflect/core'
+import type { GistFrontmatter } from '@dayjot/core'
 
 export interface FrontmatterPatch {
   /**
    * The durable note identity (Plan 17's ULID). Only ever *minted* — written
-   * once for a note that predates ids or was created outside Reflect (the
+   * once for a note that predates ids or was created outside DayJot (the
    * deep-link copy path) — never changed or removed: links and the index key
    * on it.
    */

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { GraphInfo } from '@reflect/core'
+import type { GraphInfo } from '@dayjot/core'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import { Check, FolderOpen, LocateFixed, Settings } from 'lucide-react'
 import { GraphSwatch } from '@/components/graph-swatch'

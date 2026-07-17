@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import type { SlashMenuItem, SlashMenuSearchHandler } from '@meowdown/react'
-import { hasBridge, listTemplates } from '@reflect/core'
+import { hasBridge, listTemplates } from '@dayjot/core'
 import { insertTemplate } from '@/lib/note-templates'
 import { useGraph } from '@/providers/graph-provider'
 import type { NoteEditorHandle } from './note-editor'

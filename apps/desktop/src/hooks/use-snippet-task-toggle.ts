@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { errorMessage, type SnippetTask } from '@reflect/core'
+import { errorMessage, type SnippetTask } from '@dayjot/core'
 import type { TaskClickHandler, TaskClickPayload } from '@meowdown/react'
 import { toggleTask } from '@/lib/note-task'
 import { startOperation } from '@/lib/operations'
@@ -32,12 +32,12 @@ function anchorFor(
 
 /**
  * Write a backlink-snippet checkbox click through to the source note — old
- * Reflect's `toggleListChecked` behavior for checkboxes in a backlink's
+ * DayJot's `toggleListChecked` behavior for checkboxes in a backlink's
  * context. Routes through {@link toggleTask}: the same session-aware,
  * per-note-serialized, staleness-guarded path the Tasks view uses, so an open
  * source note keeps its live buffer and a drifted note refuses instead of
- * toggling the wrong line. Only round `+ [ ]` Reflect tasks toggle (V1's
- * contextHtml checkboxes were Reflect tasks); a square GFM box is plain
+ * toggling the wrong line. Only round `+ [ ]` DayJot tasks toggle (V1's
+ * contextHtml checkboxes were DayJot tasks); a square GFM box is plain
  * markdown, outside the tasks projection, and stays read-only. There is no
  * optimistic flip: the write reindexes the source, which refreshes the
  * backlinks query and re-renders the snippet with the new marker.

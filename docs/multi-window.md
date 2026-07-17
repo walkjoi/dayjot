@@ -4,7 +4,7 @@ Modifier-click a note reference anywhere it appears in the app — editor
 `[[wiki links]]`, backlinks, pinned notes, calendar days, search/palette
 results, and other note lists — or run the selected-note command, and the note
 opens in its own chrome-free window: just the editor with its backlinks, no
-sidebar, palette, or context panel. In-note `reflect://` links follow the same
+sidebar, palette, or context panel. In-note `dayjot://` links follow the same
 convention. This document describes how those windows relate to the main
 window and to each other.
 
@@ -88,7 +88,7 @@ below. The command is also exposed in the native Window menu.
    first workspace render is already the clicked note, no flash of today's
    daily note. Only a target that needs the index (an id/title-shaped link)
    rides the normal deep-link intake, buffering until the workspace's
-   `DeepLinkProvider` attaches — the same path an OS-delivered `reflect://`
+   `DeepLinkProvider` attaches — the same path an OS-delivered `dayjot://`
    URL takes, including `openNote` resolution and error surfacing.
 4. The window renders `NoteWindowContent`: the routed view only, with daily
    targets shown as a single lazy `NotePane` (a daily is treated like any
@@ -122,7 +122,7 @@ new sync or indexing paths exist.
 ### Deep-link intake scoping
 
 The intake module (`src/lib/deep-links/intake.ts`) is per-webview state.
-Every window attaches a handler (in-note `reflect://` clicks must work
+Every window attaches a handler (in-note `dayjot://` clicks must work
 everywhere), but only the main window starts the **OS** listener — the
 plugin's event stream reaches every webview, and N windows must not all
 navigate on one OS-delivered URL. Handler staleness is scoped to the *graph
@@ -135,7 +135,7 @@ silently dropped the note window's initial link.
 - **Window close (⌘W / red button):** each webview's `onCloseRequested`
   flushes its own note buffers and settings; the backup commit hook is only
   registered in main. On macOS the main window prevents destruction and hides
-  after flushing, so closing the last window leaves Reflect running like a
+  after flushing, so closing the last window leaves DayJot running like a
   native Mac app. Note windows still close normally. Per-window JS state makes
   both paths correct with no coordination.
 - **Destroying the main window closes every note window.** This is a fallback
@@ -166,7 +166,7 @@ silently dropped the note window's initial link.
 
 All windows in one process share the single Rust index connection — there is
 no per-window database state, so multi-window adds no lock contention. A
-*second process* on the same graph (another app flavor, the `reflect` CLI)
+*second process* on the same graph (another app flavor, the `dayjot` CLI)
 can contend; the writer connection carries a 5s `busy_timeout`
 (`crates/index-schema`) so cross-process locks wait instead of failing with
 `database is locked`.

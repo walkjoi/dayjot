@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { isUntitledNotePath, type GraphInfo } from '@reflect/core'
+import { isUntitledNotePath, type GraphInfo } from '@dayjot/core'
 import { ListChecks, MessageSquare, SquarePen } from 'lucide-react'
 import { AudioMemoButton } from '@/components/audio-memo/audio-memo-button'
 import { ListIcon } from '@/components/icons/list-icon'

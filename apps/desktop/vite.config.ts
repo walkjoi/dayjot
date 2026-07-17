@@ -16,11 +16,11 @@ export default defineConfig(async () => ({
     tailwindcss(),
     sentryVitePlugin({
       authToken: process.env.SENTRY_AUTH_TOKEN,
-      org: 'reflect-64',
-      project: 'reflect-open',
+      org: 'dayjot-64',
+      project: 'dayjot-desktop',
       telemetry: false,
       release: {
-        name: `reflect@${pkg.version}`,
+        name: `dayjot@${pkg.version}`,
       },
       sourcemaps: {
         filesToDeleteAfterUpload: ['./dist/**/*.map'],
@@ -29,7 +29,7 @@ export default defineConfig(async () => ({
   ],
 
   define: {
-    __REFLECT_VERSION__: JSON.stringify(pkg.version),
+    __DAYJOT_VERSION__: JSON.stringify(pkg.version),
   },
 
   // If the target is below Safari 17.5, Lightning CSS downlevels `light-dark()` to a broken polyfill.

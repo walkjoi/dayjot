@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactElement } from 'react'
-import { aiModelLabel } from '@reflect/core'
+import { aiModelLabel } from '@dayjot/core'
 import { ArrowUp, ChevronDown, Plus, Square, X } from 'lucide-react'
 import {
   Attachment,

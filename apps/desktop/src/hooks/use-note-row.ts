@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getNote, hasBridge, type NoteRow } from '@reflect/core'
+import { getNote, hasBridge, type NoteRow } from '@dayjot/core'
 import {
   applyNoteRowOverlay,
   reconcileNoteRowOverlay,

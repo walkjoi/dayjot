@@ -3,7 +3,7 @@ import {
   errorMessage,
   resolveNoteTarget,
   textCaptureEnvelopeSchema,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { startOperation } from '@/lib/operations'
 import { routeForPath, type Route } from '@/routing/route'
 import { parseDeepLink } from '@/lib/deep-links/parse'
@@ -25,9 +25,9 @@ export interface DeepLinkIo {
 }
 
 /**
- * Act on one incoming `reflect://` URL: navigation links navigate (a note
+ * Act on one incoming `dayjot://` URL: navigation links navigate (a note
  * target resolving through the index first), capture links spool an envelope
- * into `.reflect/inbox/` for the watcher-triggered drain to materialize.
+ * into `.dayjot/inbox/` for the watcher-triggered drain to materialize.
  * Every outcome that isn't a navigation surfaces on the operations status
  * line — an outside-world input must never crash or silently vanish.
  */

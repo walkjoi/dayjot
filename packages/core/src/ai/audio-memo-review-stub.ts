@@ -12,7 +12,7 @@ export const APP_REVIEW_STUB_KEY = 'sk-demo'
 
 export function stubTranscriptBody(): string {
   return (
-    "This is a demo transcription produced by Reflect's App Review demo key. " +
+    "This is a demo transcription produced by DayJot's App Review demo key. " +
     'No audio left the device and no AI provider was called.\n\n' +
     `Demo transcript generated at ${new Date().toLocaleString()}.`
   )

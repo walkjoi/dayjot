@@ -1,4 +1,4 @@
-import { parseNote, TaskStaleError } from '@reflect/core'
+import { parseNote, TaskStaleError } from '@dayjot/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   convertTaskToBullet,
@@ -15,8 +15,8 @@ vi.mock('@/editor/open-documents', () => ({ openSession }))
 
 const readNote = vi.hoisted(() => vi.fn())
 const writeNote = vi.hoisted(() => vi.fn())
-vi.mock('@reflect/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@reflect/core')>()),
+vi.mock('@dayjot/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@dayjot/core')>()),
   readNote,
   writeNote,
 }))

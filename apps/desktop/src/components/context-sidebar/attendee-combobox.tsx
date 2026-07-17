@@ -8,7 +8,7 @@ import {
   isContactsReadable,
   suggestWikiTargets,
   type MeetingAttendee,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { CommandItem, CommandList } from '@/components/ui/command'
 import { INPUT_CLASS_NAME } from '@/components/ui/input'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'

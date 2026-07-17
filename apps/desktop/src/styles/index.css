@@ -10,7 +10,7 @@ Cascade layer order, low to high priority.
 @layer theme, base, components, utilities, design, meowdown;
 
 @import 'tailwindcss' ;
-@import '@reflect/design-system/styles.css' layer(design);
+@import '@dayjot/design-system/styles.css' layer(design);
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import "@meowdown/core/style.css";
@@ -31,7 +31,7 @@ Cascade layer order, low to high priority.
    product code writes `text-text-muted` / `bg-surface-hover` instead of
    arbitrary `text-[color:var(--text-muted)]` escapes. `inline` makes the
    utilities reference the live token (`color: var(--text-muted)`), keeping
-   `.dark` / `.reflect-space` runtime theming intact. */
+   `.dark` / `.dayjot-space` runtime theming intact. */
 @theme inline {
   --color-surface: var(--surface);
   --color-surface-sunken: var(--surface-sunken);
@@ -131,7 +131,7 @@ Cascade layer order, low to high priority.
 }
 
 /* shadcn semantic tokens, bridged onto the DS tokens so both vocabularies
-   describe one theme and `.dark` / `.reflect-space` keep working untouched.
+   describe one theme and `.dark` / `.dayjot-space` keep working untouched.
    `--accent`, `--border`, `--destructive`, and `--radius` are NOT redefined
    here: the DS already owns those names (and `--accent` is the brand color,
    not shadcn's hover wash; see the @theme note above). Chart colors have no
@@ -211,12 +211,12 @@ body {
   textarea,
   [contenteditable],
   [contenteditable] *,
-  .reflect-editor,
-  .reflect-editor *,
-  .reflect-chat-message,
-  .reflect-chat-message *,
-  .reflect-protected-note,
-  .reflect-protected-note * {
+  .dayjot-editor,
+  .dayjot-editor *,
+  .dayjot-chat-message,
+  .dayjot-chat-message *,
+  .dayjot-protected-note,
+  .dayjot-protected-note * {
     -webkit-user-select: text;
     user-select: text;
     -webkit-touch-callout: default;
@@ -244,13 +244,13 @@ body {
 
 /* ---- Editor (Plan 05) ------------------------------------------------------
    meowdown reads its theme from `--meowdown-*` variables; we remap them to
-   Reflect tokens. This lives on `html:root`, not `.reflect-editor`: meowdown
+   DayJot tokens. This lives on `html:root`, not `.dayjot-editor`: meowdown
    renders the block handle and slash/tag/wikilink menus as DOM siblings of the
    editable element (menus hoist into the top layer via the Popover API), so
    element-scoped vars never reach them, which is why the popover surface vars
    (`--meowdown-popover-*`) must live here too. `html:root` is unlayered, so it
    beats meowdown's now-layered (`@layer meowdown`) `:root` defaults regardless
-   of load order; the accent stays Reflect purple, so meowdown's orange default
+   of load order; the accent stays DayJot purple, so meowdown's orange default
    never shows here. */
 
 html:root {
@@ -263,11 +263,11 @@ html:root {
   --meowdown-border: var(--border);
   --meowdown-code-bg: var(--surface-sunken, rgb(0 0 0 / 5%));
   --meowdown-font-mono: var(--font-mono, monospace);
-  /* Selection: meowdown defaults warm; Reflect keeps its blue-violet accent. */
+  /* Selection: meowdown defaults warm; DayJot keeps its blue-violet accent. */
   --meowdown-node-outline: var(--accent);
   --meowdown-node-selection: var(--accent-soft, rgb(99 102 241 / 12%));
   --meowdown-selection: var(--accent-soft, rgb(99 102 241 / 12%));
-  /* Floating menus (top layer): background is Reflect's surface; the highlighted
+  /* Floating menus (top layer): background is DayJot's surface; the highlighted
      row uses accent-soft, matching the ⌘K palette's selected item. */
   --meowdown-popover-bg: var(--surface);
   --meowdown-popover-hover-bg: var(--accent-soft);
@@ -275,7 +275,7 @@ html:root {
 }
 
 /* Editor reading size (Settings → Editor → "Text size"). The size lives in a
-   variable on the document root so the `.reflect-editor` rules below resolve
+   variable on the document root so the `.dayjot-editor` rules below resolve
    whatever the user picked; `EditorTextSizeEffect` mirrors the setting onto
    `[data-editor-text-size]`. Medium is the DS prose default (16px); small and
    large step one DS size down/up. The `:root` fallback keeps medium before the
@@ -293,13 +293,13 @@ html:root {
   --editor-font-size: var(--text-lg);
 }
 
-.reflect-editor {
+.dayjot-editor {
   /* The panes own all spacing, so cancel the theme's editor padding (no
      floating UI of ours needs the `--meowdown-gutter`). Font size is left to
      inherit so the compact read-only MarkdownView surfaces that also carry
-     `reflect-editor` (backlink snippets, palette previews, task rows) keep
+     `dayjot-editor` (backlink snippets, palette previews, task rows) keep
      their context's smaller size; the primary note editor opts into the
-     reading size via `.reflect-note-surface` below. meowdown is layered
+     reading size via `.dayjot-note-surface` below. meowdown is layered
      (`@layer meowdown`), so this unlayered rule wins with no `.ProseMirror`
      compound. */
   padding: 0;
@@ -310,9 +310,9 @@ html:root {
 /* The primary note editor (the note pane and every daily-stream row, both via
    NotePane) reads at the user's chosen text size (Settings, Editor, "Text size";
    default 16px) instead of inheriting <body>'s 14px chrome size. Scoped to this
-   class, never bare `.reflect-editor`, so read-only previews keep their own
+   class, never bare `.dayjot-editor`, so read-only previews keep their own
    compact sizes. */
-.reflect-note-surface {
+.dayjot-note-surface {
   font-size: var(--editor-font-size, var(--text-base));
 }
 
@@ -329,20 +329,20 @@ html:root {
      share one column and line up.
    Un-layered, so it beats both the `padding: 0` reset above and meowdown's layered
    `--meowdown-gutter` padding. */
-.reflect-content-gutter {
+.dayjot-content-gutter {
   padding-inline: var(--editor-content-gutter, max(2rem, calc((100% - 42rem) / 2)));
 }
 
-/* Mobile note-body gutter. This mirrors `.reflect-content-gutter`'s cascade
+/* Mobile note-body gutter. This mirrors `.dayjot-content-gutter`'s cascade
    role with a fixed phone-sized inset: the class must be un-layered so it beats
-   `.reflect-editor { padding: 0; }` on the contenteditable itself. */
-.reflect-mobile-content-gutter {
+   `.dayjot-editor { padding: 0; }` on the contenteditable itself. */
+.dayjot-mobile-content-gutter {
   padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
 }
 
 /* Block spacing comes from the element margins below, not the theme's
    uniform sibling gap. */
-.reflect-editor > * + * {
+.dayjot-editor > * + * {
   margin-top: 0;
 }
 
@@ -350,9 +350,9 @@ html:root {
    rules. meowdown is layered (`@layer meowdown`), so these unlayered rules win
    without a `.ProseMirror` compound. (Margin and letter-spacing ride along; only
    the size and weight actually clash with the theme.) */
-.reflect-editor h1,
-.reflect-editor h2,
-.reflect-editor h3 {
+.dayjot-editor h1,
+.dayjot-editor h2,
+.dayjot-editor h3 {
   font-weight: 650;
   letter-spacing: var(--tracking-snug, -0.01em);
   margin: 1.25em 0 0.4em;
@@ -362,16 +362,16 @@ html:root {
    heading reads as subordinate to the title, not a second one: auto-appended
    sections (`## [[Links]]`, `## [[Audio memos]]`) land at H2, one size below the
    subject; H3 sits at body size, carried by weight rather than scale. */
-.reflect-editor h1 { @apply text-note-subject; } /* text-xl, 20px */
-.reflect-editor h2 { font-size: var(--text-lg, 1.125rem); } /* 18px */
-.reflect-editor h3 { font-size: var(--text-base, 1rem); } /* 16px */
-.reflect-editor h1:first-child { margin-top: 0; }
-.reflect-editor .reflect-note-title { @apply text-note-subject; }
+.dayjot-editor h1 { @apply text-note-subject; } /* text-xl, 20px */
+.dayjot-editor h2 { font-size: var(--text-lg, 1.125rem); } /* 18px */
+.dayjot-editor h3 { font-size: var(--text-base, 1rem); } /* 16px */
+.dayjot-editor h1:first-child { margin-top: 0; }
+.dayjot-editor .dayjot-note-title { @apply text-note-subject; }
 
 /* The new-note flow's name field: ghost "Untitled" over the seeded empty H1
    (`editor/title-placeholder.ts`) without occupying layout, so the caret
    blinks at the line start as if the ghost text weren't there. */
-.reflect-editor .reflect-title-placeholder::before {
+.dayjot-editor .dayjot-title-placeholder::before {
   content: attr(data-placeholder);
   float: left;
   height: 0;
@@ -381,7 +381,7 @@ html:root {
 
 /* The daily note's date heading (V1 renders the date as the note's subject)
    without living inside the editor DOM. */
-.reflect-daily-subject {
+.dayjot-daily-subject {
   @apply text-note-subject;
   font-family: var(--font-reading, var(--font-sans));
   font-weight: 650;
@@ -389,12 +389,12 @@ html:root {
 }
 
 /* Chrome for meowdown's wiki-link hover card (its `className`, passed from
-   note-editor.tsx). Reflect popovers outline with `ring-foreground/10` —
+   note-editor.tsx). DayJot popovers outline with `ring-foreground/10` —
    stronger than the `--border` hairline meowdown defaults to, which vanishes
    against the dark canvas — and float on the same DS shadow. Unlayered plain
    CSS on purpose: the card's CSS-module defaults are unlayered too, so
    layered Tailwind utilities could not override them. */
-.reflect-hover-card {
+.dayjot-hover-card {
   border-color: color-mix(in oklab, var(--foreground) 10%, transparent);
   box-shadow: var(--shadow-md);
 }
@@ -405,27 +405,27 @@ html:root {
    re-scales here: the subject one step above body, section headings at body
    size carried by weight — the same hierarchy, compressed. Unlayered, so
    these win over meowdown's `@layer meowdown` theme rules. */
-.reflect-hover-preview .reflect-editor h1,
-.reflect-hover-preview .reflect-daily-subject {
+.dayjot-hover-preview .dayjot-editor h1,
+.dayjot-hover-preview .dayjot-daily-subject {
   font-size: var(--text-sm, 0.875rem);
 }
-.reflect-hover-preview .reflect-editor h2,
-.reflect-hover-preview .reflect-editor h3 {
+.dayjot-hover-preview .dayjot-editor h2,
+.dayjot-hover-preview .dayjot-editor h3 {
   font-size: var(--text-xs, 0.75rem);
 }
-.reflect-hover-preview .reflect-editor h1,
-.reflect-hover-preview .reflect-editor h2,
-.reflect-hover-preview .reflect-editor h3 {
+.dayjot-hover-preview .dayjot-editor h1,
+.dayjot-hover-preview .dayjot-editor h2,
+.dayjot-hover-preview .dayjot-editor h3 {
   margin: 1em 0 0.35em;
 }
-.reflect-hover-preview .reflect-editor h1:first-child {
+.dayjot-hover-preview .dayjot-editor h1:first-child {
   margin-top: 0;
 }
-.reflect-hover-preview .reflect-editor input[type='checkbox'] {
+.dayjot-hover-preview .dayjot-editor input[type='checkbox'] {
   width: 0.75rem;
   height: 0.75rem;
 }
-.reflect-hover-preview .reflect-editor img {
+.dayjot-hover-preview .dayjot-editor img {
   max-height: 7rem;
   width: auto;
   border-radius: var(--radius-sm, 0.25rem);
@@ -433,7 +433,7 @@ html:root {
 /* A body taller than the card fades out at the clipped edge instead of
    slicing a line of text in half. Applied only while actually overflowing,
    so a short note keeps its last line at full strength. */
-.reflect-hover-preview-overflowing {
+.dayjot-hover-preview-overflowing {
   mask-image: linear-gradient(to bottom, black calc(100% - 2.5rem), transparent);
 }
 
@@ -442,57 +442,57 @@ html:root {
    reads resolve in milliseconds, and "Loading note…" flashing on every
    daily-stream row reads as flicker while the stream anchors. Opacity only,
    so the placeholder must keep its layout size either way. */
-.reflect-note-loading {
+.dayjot-note-loading {
   opacity: 0;
-  animation: reflect-note-loading-reveal var(--duration-slow, 300ms)
+  animation: dayjot-note-loading-reveal var(--duration-slow, 300ms)
     var(--ease-standard, ease) 400ms forwards;
 }
 
-@keyframes reflect-note-loading-reveal {
+@keyframes dayjot-note-loading-reveal {
   to {
     opacity: 1;
   }
 }
 
-.reflect-editor p {
+.dayjot-editor p {
   margin: 0.4em 0;
 }
 
 /* The Tasks inline editor (TaskEditor) shares each row's single-line leading-6
    box with the read-only TaskText, which renders the content in a marginless
-   span. The editor wraps it in a paragraph, so the `.reflect-editor p` block
+   span. The editor wraps it in a paragraph, so the `.dayjot-editor p` block
    margin above would grow the row the moment it enters edit mode. Zero it (same
    0-1-1 specificity, later source order wins the tie) so focusing a task never
    shifts its height. */
-.reflect-task-editor p {
+.dayjot-task-editor p {
   margin: 0;
 }
 
 /* Unfocused task rows use the read-only markdown preview, but the row still owns
    selection and checked styling. Keep the preview visually in the same compact
    line box as the inline editor. */
-.reflect-task-preview {
+.dayjot-task-preview {
   color: inherit;
   font-size: var(--text-sm, 0.875rem);
   line-height: 1.5rem;
 }
-.reflect-task-preview p,
-.reflect-task-preview h1,
-.reflect-task-preview h2,
-.reflect-task-preview h3,
-.reflect-task-preview h4,
-.reflect-task-preview h5,
-.reflect-task-preview h6,
-.reflect-task-preview blockquote,
-.reflect-task-preview pre {
+.dayjot-task-preview p,
+.dayjot-task-preview h1,
+.dayjot-task-preview h2,
+.dayjot-task-preview h3,
+.dayjot-task-preview h4,
+.dayjot-task-preview h5,
+.dayjot-task-preview h6,
+.dayjot-task-preview blockquote,
+.dayjot-task-preview pre {
   margin: 0;
 }
-.reflect-task-preview h1,
-.reflect-task-preview h2,
-.reflect-task-preview h3,
-.reflect-task-preview h4,
-.reflect-task-preview h5,
-.reflect-task-preview h6 {
+.dayjot-task-preview h1,
+.dayjot-task-preview h2,
+.dayjot-task-preview h3,
+.dayjot-task-preview h4,
+.dayjot-task-preview h5,
+.dayjot-task-preview h6 {
   color: inherit;
   font-size: inherit;
   line-height: inherit;
@@ -500,39 +500,39 @@ html:root {
 }
 /* meowdown bottoms atom previews; in compact task rows that drops wiki-link text
    below the surrounding task copy. */
-.reflect-task-preview .md-wikilink-view-preview {
+.dayjot-task-preview .md-wikilink-view-preview {
   vertical-align: baseline;
 }
-.line-through .reflect-task-preview .md-link,
-.line-through .reflect-task-preview .md-wikilink-view-label,
-.line-through .reflect-task-preview .md-tag {
+.line-through .dayjot-task-preview .md-link,
+.line-through .dayjot-task-preview .md-wikilink-view-label,
+.line-through .dayjot-task-preview .md-tag {
   text-decoration-line: line-through;
 }
 
 /* Incoming-backlink snippet (BacklinkSnippet): one referencing line rendered as
-   rich text through MarkdownView. The view carries `reflect-editor` so chips and
+   rich text through MarkdownView. The view carries `dayjot-editor` so chips and
    inline marks share the editor's styling; these rules keep it in the panel's
    compact 12px line box (the wrapper clamps it to two lines). meowdown is
    layered, so these unlayered rules win without a `.ProseMirror` compound. */
-.reflect-backlink-snippet .reflect-editor :is(p, ul, ol, blockquote, pre) {
+.dayjot-backlink-snippet .dayjot-editor :is(p, ul, ol, blockquote, pre) {
   margin: 0;
 }
-.reflect-backlink-snippet .reflect-editor :is(h1, h2, h3, h4, h5, h6) {
+.dayjot-backlink-snippet .dayjot-editor :is(h1, h2, h3, h4, h5, h6) {
   margin: 0;
   font-size: inherit;
   font-weight: inherit;
   line-height: inherit;
   letter-spacing: 0;
 }
-/* Only round `+ [ ]` Reflect tasks write back from a snippet (V1's backlink
-   checkboxes were Reflect tasks); a square GFM box is plain markdown, so its
+/* Only round `+ [ ]` DayJot tasks write back from a snippet (V1's backlink
+   checkboxes were DayJot tasks); a square GFM box is plain markdown, so its
    checkbox stays inert — no click, no hover grow. */
-.reflect-backlink-snippet
+.dayjot-backlink-snippet
   .prosemirror-flat-list[data-list-kind='task']:not([data-list-marker='+'])
   > .list-marker {
   pointer-events: none;
 }
-.reflect-backlink-snippet
+.dayjot-backlink-snippet
   .prosemirror-flat-list[data-list-kind='task'][data-list-marker='+']
   > .list-marker {
   cursor: pointer;
@@ -542,7 +542,7 @@ html:root {
    restate the thinner accent border and the block margin (the per-element spacing
    the `> * + *` reset above relies on). meowdown's muted text already matches
    `--text-secondary`, so we no longer set the color. */
-.reflect-editor blockquote {
+.dayjot-editor blockquote {
   border-left: 2px solid var(--accent-soft, var(--border));
   margin: 0.6em 0;
   padding-left: 1em;
@@ -550,20 +550,20 @@ html:root {
 
 /* Inline code now inherits meowdown's neutral default (text color + the
    `--meowdown-code-bg` surface we map below), so it needs no override. The code
-   block keeps Reflect's radius/padding and its block margin. */
-.reflect-editor pre {
+   block keeps DayJot's radius/padding and its block margin. */
+.dayjot-editor pre {
   border-radius: var(--radius-md, 6px);
   margin: 0.6em 0;
   padding: 0.75em 1em;
 }
 
 /* Inline images: meowdown renders `![alt](src)` through a mark view
-   (`.md-image-view-preview`). Round corners to Reflect's scale via meowdown's
+   (`.md-image-view-preview`). Round corners to DayJot's scale via meowdown's
    theming variable. */
-.reflect-editor {
+.dayjot-editor {
   --meowdown-image-radius: var(--radius-md, 6px);
 }
-.reflect-editor .md-image-view-preview img {
+.dayjot-editor .md-image-view-preview img {
   cursor: zoom-in;
 }
 
@@ -574,19 +574,19 @@ html:root {
 ::view-transition-new(root) {
   animation-duration: 0s;
 }
-::view-transition-group(reflect-image-lightbox) {
+::view-transition-group(dayjot-image-lightbox) {
   animation-duration: 180ms;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
-::view-transition-old(reflect-image-lightbox),
-::view-transition-new(reflect-image-lightbox) {
+::view-transition-old(dayjot-image-lightbox),
+::view-transition-new(dayjot-image-lightbox) {
   height: 100%;
   object-fit: contain;
   overflow: clip;
 }
 
 /* Read-only view for notes the editor can't faithfully round-trip yet. */
-.reflect-protected-note {
+.dayjot-protected-note {
   font-family: var(--font-mono, monospace);
   color: var(--text-secondary);
 }
@@ -627,15 +627,15 @@ html:root {
       checklist boxes (`- [ ]`) and round task boxes (`+ [ ]`) against the text
       baseline.
 
-   meowdown does not fold this gap into its default yet, so it stays a Reflect
-   override; meowdown is layered, so the unlayered `.reflect-editor` rules win. */
-.reflect-editor .prosemirror-flat-list[data-list-kind='task'] > .list-content {
+   meowdown does not fold this gap into its default yet, so it stays a DayJot
+   override; meowdown is layered, so the unlayered `.dayjot-editor` rules win. */
+.dayjot-editor .prosemirror-flat-list[data-list-kind='task'] > .list-content {
   margin-inline-start: 1lh;
 }
-.reflect-editor .prosemirror-flat-list[data-list-kind='task'] > .list-marker {
+.dayjot-editor .prosemirror-flat-list[data-list-kind='task'] > .list-marker {
   justify-content: start;
 }
-.reflect-editor .prosemirror-flat-list[data-list-kind='task'] > .list-marker input[type='checkbox'] {
+.dayjot-editor .prosemirror-flat-list[data-list-kind='task'] > .list-marker input[type='checkbox'] {
   transform: translateY(-0.06em);
 }
 
@@ -648,14 +648,14 @@ html:root {
 }
 
 /* ---- ⌘K palette (Plan 08) ---------------------------------------------- */
-.reflect-palette {
+.dayjot-palette {
   overflow: hidden;
   border: 1px solid var(--border, rgb(0 0 0 / 10%));
   border-radius: 0.75rem;
   background: var(--surface, var(--background, #fff));
   box-shadow: 0 16px 48px rgb(0 0 0 / 18%);
 }
-.reflect-palette-input {
+.dayjot-palette-input {
   width: 100%;
   padding: 0.875rem 1rem;
   border: none;
@@ -664,20 +664,20 @@ html:root {
   font-size: 0.9375rem;
   outline: none; /* the modal frame is the focus treatment */
 }
-.reflect-palette-list {
+.dayjot-palette-list {
   max-height: 20rem;
   overflow-y: auto;
   padding: 0.375rem;
 }
 /* Note modes pair the list with a live preview: the flex row owns the height,
    the list becomes a fixed-width column inside it. */
-.reflect-palette-list-split {
+.dayjot-palette-list-split {
   max-height: none;
   height: 100%;
   width: 40%;
   flex-shrink: 0;
 }
-.reflect-palette-group [cmdk-group-heading] {
+.dayjot-palette-group [cmdk-group-heading] {
   padding: 0.375rem 0.625rem 0.125rem;
   font-size: 0.6875rem;
   font-weight: 600;
@@ -685,15 +685,15 @@ html:root {
   text-transform: uppercase;
   color: var(--text-muted);
 }
-.reflect-palette-item {
+.dayjot-palette-item {
   padding: 0.4375rem 0.625rem;
   border-radius: 0.375rem;
   cursor: pointer;
 }
-.reflect-palette-item[data-selected='true'] {
+.dayjot-palette-item[data-selected='true'] {
   background: var(--accent-soft, rgb(99 102 241 / 12%));
 }
-.reflect-palette-empty {
+.dayjot-palette-empty {
   padding: 1.25rem;
   text-align: center;
   font-size: 0.875rem;

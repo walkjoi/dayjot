@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ReflectError } from '../errors'
+import { DayJotError } from '../errors'
 import type { TranscriptionProvider } from './provider-config'
 
 /**
@@ -38,14 +38,14 @@ export interface TranscriptionRequest {
   mimeType: string
   /**
    * Host transport — the desktop app passes the Tauri HTTP plugin's fetch
-   * (CORS-free); `@reflect/core` itself stays platform-agnostic.
+   * (CORS-free); `@dayjot/core` itself stays platform-agnostic.
    */
   fetchFn?: typeof fetch | undefined
 }
 
 /**
  * Transcribe one recording, returning the trimmed transcript (empty when the
- * provider heard nothing). Throws {@link ReflectError}: `auth` when the key is
+ * provider heard nothing). Throws {@link DayJotError}: `auth` when the key is
  * rejected, `network` when the call can't complete, `parse` when the response
  * shape is unrecognizable.
  */
@@ -103,7 +103,7 @@ function safeJson(body: string): unknown {
  * limits, and retired-model 404s stay plain `network` errors; those heal on
  * a later attempt.
  */
-export class TranscriptionRejectedError extends ReflectError {
+export class TranscriptionRejectedError extends DayJotError {
   constructor(message: string) {
     super('parse', message)
     this.name = 'TranscriptionRejectedError'
@@ -124,16 +124,16 @@ function isRecordingRejection(status: number): boolean {
   return status >= 400 && status < 500 && ![401, 403, 404, 408, 429].includes(status)
 }
 
-function httpError(provider: TranscriptionProvider, status: number, body: string): ReflectError {
+function httpError(provider: TranscriptionProvider, status: number, body: string): DayJotError {
   if (status === 401 || status === 403) {
-    return new ReflectError('auth', `${provider} rejected the API key (${status})`)
+    return new DayJotError('auth', `${provider} rejected the API key (${status})`)
   }
   if (isRecordingRejection(status)) {
     return new TranscriptionRejectedError(
       `${provider} rejected the recording (${status}): ${providerErrorMessage(body)}`,
     )
   }
-  return new ReflectError(
+  return new DayJotError(
     'network',
     `${provider} transcription failed (${status}): ${providerErrorMessage(body)}`,
   )
@@ -160,12 +160,12 @@ async function send(
       cause instanceof DOMException &&
       (cause.name === 'TimeoutError' || cause.name === 'AbortError')
     ) {
-      throw new ReflectError(
+      throw new DayJotError(
         'network',
         `transcription request timed out after ${TRANSCRIPTION_TIMEOUT_MS / 1000}s`,
       )
     }
-    throw new ReflectError('network', cause instanceof Error ? cause.message : String(cause))
+    throw new DayJotError('network', cause instanceof Error ? cause.message : String(cause))
   }
 }
 
@@ -203,7 +203,7 @@ async function transcribeWithOpenAi(request: TranscriptionRequest): Promise<stri
 
   const parsed = openAiResponseSchema.safeParse(safeJson(body))
   if (!parsed.success) {
-    throw new ReflectError('parse', `unrecognized openai transcription response: ${body.slice(0, 200)}`)
+    throw new DayJotError('parse', `unrecognized openai transcription response: ${body.slice(0, 200)}`)
   }
   return parsed.data.text.trim()
 }
@@ -280,7 +280,7 @@ async function transcribeWithGemini(request: TranscriptionRequest): Promise<stri
 
   const parsed = geminiResponseSchema.safeParse(safeJson(body))
   if (!parsed.success) {
-    throw new ReflectError('parse', `unrecognized gemini response: ${body.slice(0, 200)}`)
+    throw new DayJotError('parse', `unrecognized gemini response: ${body.slice(0, 200)}`)
   }
   const parts = parsed.data.candidates?.[0]?.content?.parts ?? []
   return parts.map((part) => part.text ?? '').join('').trim()

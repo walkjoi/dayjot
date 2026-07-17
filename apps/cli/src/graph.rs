@@ -1,11 +1,11 @@
-//! Graph resolution: `--graph` flag → `REFLECT_GRAPH` env → git-style walk-up
-//! from the current directory to the nearest ancestor containing `.reflect/`.
+//! Graph resolution: `--graph` flag → `DAYJOT_GRAPH` env → git-style walk-up
+//! from the current directory to the nearest ancestor containing `.dayjot/`.
 //! Deliberately no desktop recents-config fallback (Plan 14) — the CLI must be
 //! deterministic for scripts and agents.
 
 use std::path::{Path, PathBuf};
 
-use reflect_index_schema::REFLECT_DIR;
+use dayjot_index_schema::DAYJOT_DIR;
 
 use crate::error::CliError;
 
@@ -16,11 +16,11 @@ pub struct Graph {
 }
 
 const NO_GRAPH_HELP: &str =
-    "no graph found — run inside a graph (a directory containing .reflect/), \
-     pass --graph <path>, or set REFLECT_GRAPH";
+    "no graph found — run inside a graph (a directory containing .dayjot/), \
+     pass --graph <path>, or set DAYJOT_GRAPH";
 
 fn is_graph(path: &Path) -> bool {
-    path.join(REFLECT_DIR).is_dir()
+    path.join(DAYJOT_DIR).is_dir()
 }
 
 fn canonical_graph(path: &Path) -> Result<Graph, CliError> {
@@ -41,7 +41,7 @@ fn explicit_graph(path: &Path, source: &str) -> Result<Graph, CliError> {
     }
     if !is_graph(path) {
         return Err(CliError::Runtime(format!(
-            "{source}: not a Reflect graph (no {REFLECT_DIR}/ directory): {}",
+            "{source}: not a DayJot graph (no {DAYJOT_DIR}/ directory): {}",
             path.display()
         )));
     }
@@ -53,9 +53,9 @@ pub fn resolve(flag: Option<&Path>) -> Result<Graph, CliError> {
     if let Some(path) = flag {
         return explicit_graph(path, "--graph");
     }
-    if let Some(env) = std::env::var_os("REFLECT_GRAPH") {
+    if let Some(env) = std::env::var_os("DAYJOT_GRAPH") {
         if !env.is_empty() {
-            return explicit_graph(Path::new(&env), "REFLECT_GRAPH");
+            return explicit_graph(Path::new(&env), "DAYJOT_GRAPH");
         }
     }
     let cwd = std::env::current_dir()?;
@@ -80,15 +80,15 @@ mod tests {
     fn explicit_non_graph_is_an_error_not_a_fallthrough() {
         let dir = tempdir().unwrap();
         let err = explicit_graph(dir.path(), "--graph").unwrap_err();
-        assert!(err.to_string().contains("not a Reflect graph"));
+        assert!(err.to_string().contains("not a DayJot graph"));
         assert_eq!(err.exit_code(), 1);
     }
 
     #[test]
-    fn explicit_graph_resolves_when_reflect_dir_exists() {
+    fn explicit_graph_resolves_when_dayjot_dir_exists() {
         let dir = tempdir().unwrap();
-        std::fs::create_dir(dir.path().join(REFLECT_DIR)).unwrap();
+        std::fs::create_dir(dir.path().join(DAYJOT_DIR)).unwrap();
         let graph = explicit_graph(dir.path(), "--graph").unwrap();
-        assert!(graph.root.join(REFLECT_DIR).is_dir());
+        assert!(graph.root.join(DAYJOT_DIR).is_dir());
     }
 }

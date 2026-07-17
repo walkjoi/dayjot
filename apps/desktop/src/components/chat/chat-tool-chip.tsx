@@ -1,6 +1,6 @@
 import { Fragment, type MouseEvent, type ReactElement, type ReactNode } from 'react'
 import { CalendarDays, FileText, History, Paperclip, Search } from 'lucide-react'
-import { isTagName, isToolPending, type AssistantPart, type NoteHitSummary } from '@reflect/core'
+import { isTagName, isToolPending, type AssistantPart, type NoteHitSummary } from '@dayjot/core'
 import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
 import { Spinner } from '@/components/ui/spinner'
 import { useNoteLinkNavigation } from '@/hooks/use-note-link-navigation'

@@ -22,7 +22,7 @@ import {
   type AppPlatform,
   type GraphInfo,
   type RecentGraph,
-} from '@reflect/core'
+} from '@dayjot/core'
 import { followHealedMove } from '@/editor/move-note'
 import { resetNoteRowOverlays } from '@/hooks/note-row-overlay'
 import { setIndexProgress } from '@/lib/index-progress'
@@ -114,7 +114,7 @@ async function pickerDefaultPath(hasRecents: boolean): Promise<{ defaultPath: st
 /**
  * Owns the active graph and the open/choose flow. On mount it auto-opens the
  * most-recent graph (so the app reopens where you left off) and otherwise shows
- * the chooser. All durable file access goes through `@reflect/core` commands.
+ * the chooser. All durable file access goes through `@dayjot/core` commands.
  *
  * On mobile (Plans 19/21) there is no chooser and no recents-driven reopen:
  * the graph lives in one of two fixed roots — the app's iCloud Drive
@@ -264,7 +264,7 @@ export function GraphProvider({
           setStatus('ready')
           opened = true
           // Onboarding, considered exactly once per graph (the `welcomeSeeded`
-          // meta marker): an empty graph gets the pinned "How to use Reflect"
+          // meta marker): an empty graph gets the pinned "How to use DayJot"
           // note. Needs the index for the marker, so a graph whose index failed
           // to open simply tries again next time. On all launches after the
           // first, ensureWelcomeNote returns immediately (marker already set),

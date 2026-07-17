@@ -13,7 +13,7 @@ interface BacklinksPanelProps {
 
 /**
  * Incoming backlinks at the bottom of every note — daily and ordinary — in
- * old Reflect's presentation: an "Incoming backlinks (N)" header with a
+ * old DayJot's presentation: an "Incoming backlinks (N)" header with a
  * leading chevron, indented references grouped by source note, and hairline
  * dividers between groups. The header toggle collapses the linking lines while the
  * source titles stay visible, and the choice persists for the session

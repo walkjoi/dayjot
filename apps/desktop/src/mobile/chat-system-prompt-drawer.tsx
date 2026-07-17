@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react'
-import { CHAT_SYSTEM_PROMPT_MAX_LENGTH, normalizeChatSystemPrompt } from '@reflect/core'
+import { CHAT_SYSTEM_PROMPT_MAX_LENGTH, normalizeChatSystemPrompt } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer'
 import { Textarea } from '@/components/ui/textarea'
@@ -52,7 +52,7 @@ function ChatSystemPromptSheet({
       <div className="flex max-h-[75dvh] flex-col gap-4 overflow-y-auto px-4 pb-8 pt-3">
         <p className="text-sm text-text-muted">
           Additional instructions sent with every AI chat (up to{' '}
-          {CHAT_SYSTEM_PROMPT_MAX_LENGTH.toLocaleString()} characters). Reflect’s note-search,
+          {CHAT_SYSTEM_PROMPT_MAX_LENGTH.toLocaleString()} characters). DayJot’s note-search,
           citation, and privacy rules still apply.
         </p>
         <Textarea

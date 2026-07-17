@@ -2,7 +2,7 @@ import { useEffect, type ReactElement } from 'react'
 import { toast } from 'sonner'
 import { useUpdate } from '@/providers/update-provider'
 
-const UPDATE_TOAST_ID = 'reflect-update'
+const UPDATE_TOAST_ID = 'dayjot-update'
 const PERSISTENT_TOAST_MS = Number.POSITIVE_INFINITY
 const NON_DISMISSIBLE_UPDATE_OPTIONS = {
   closeButton: false,
@@ -24,7 +24,7 @@ export function UpdateToast(): ReactElement | null {
       case 'available':
         toast.message('Update available', {
           id: UPDATE_TOAST_ID,
-          description: `Reflect ${state.version} is ready to install.`,
+          description: `DayJot ${state.version} is ready to install.`,
           duration: PERSISTENT_TOAST_MS,
           ...NON_DISMISSIBLE_UPDATE_OPTIONS,
           action: {
@@ -50,7 +50,7 @@ export function UpdateToast(): ReactElement | null {
       case 'ready':
         toast.success('Update ready', {
           id: UPDATE_TOAST_ID,
-          description: `Reflect ${state.version} will finish updating after restart.`,
+          description: `DayJot ${state.version} will finish updating after restart.`,
           duration: PERSISTENT_TOAST_MS,
           ...NON_DISMISSIBLE_UPDATE_OPTIONS,
           action: {

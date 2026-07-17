@@ -17,7 +17,7 @@
  * A malformed token (impossible date, empty value) stays search text — typing
  * never makes results vanish behind a filter the user didn't form yet.
  */
-import { isCalendarDate } from '@reflect/utils'
+import { isCalendarDate } from '@dayjot/utils'
 import { foldTag } from '../markdown'
 
 export interface SearchFilters {
