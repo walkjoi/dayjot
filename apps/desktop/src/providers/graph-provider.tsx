@@ -50,9 +50,9 @@ interface GraphContextValue extends MobileGraphBoot {
   /**
    * The open **index session** generation (from `index_open`) — distinct from
    * `graph.generation` (the file-write generation): the two counters are
-   * independent in Rust. Index-gated commands (`index_*`, `embed_*`,
-   * `db_query` writes via the pipelines) must echo THIS one; `note_write`
-   * and friends take `graph.generation`. Null when the index failed to open.
+   * independent in Rust. Index-gated commands (`index_*`, `db_query` writes
+   * via the pipelines) must echo THIS one; `note_write` and friends take
+   * `graph.generation`. Null when the index failed to open.
    */
   indexGeneration: number | null
   /** True while the background index reconcile is running (Plan 06b). */

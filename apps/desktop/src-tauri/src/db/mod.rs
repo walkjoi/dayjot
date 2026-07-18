@@ -7,12 +7,9 @@
 //! transaction per batch, generation-gated here in the command layer
 //! ([`write`] holds the row logic) — plus a read-only `db_query` bridge
 //! ([`query`]) that executes the SQL the frontend builds with Kysely. The DB
-//! is *mostly* a cache: the note projection is rebuildable from markdown, but
-//! the `chat_*` tables ([`chat_write`]) hold durable chat history — deleting
-//! the file loses those.
+//! is a pure cache: every table is a rebuildable projection of the markdown,
+//! so deleting `index.sqlite` loses nothing — the next open rebuilds it.
 
-mod chat_write;
-mod embed_write;
 mod migrations;
 mod query;
 mod scan;
@@ -30,7 +27,6 @@ use crate::background_task::{self, BackgroundTaskState};
 use crate::error::{AppError, AppResult};
 use crate::fs::GraphState;
 
-pub use chat_write::{ChatConversation, ChatMessageRow};
 pub use write::IndexedNote;
 
 /// The open index connection plus its monotonic generation, kept **under one
@@ -209,12 +205,8 @@ pub fn index_remove<R: tauri::Runtime>(
             return Ok(());
         }
         let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
-        // One transaction: a half-removed note (row gone, chunks left) would let
-        // a later note at the same path surface stale chunk text in semantic
-        // search until a re-embed.
         let tx = conn.transaction()?;
         write::remove_note(&tx, &path)?;
-        embed_write::remove_chunks(&tx, &path)?;
         tx.commit()?;
     }
     emit_index_written(&app);
@@ -425,48 +417,6 @@ pub fn index_clear<R: tauri::Runtime>(
     }
     emit_index_written(&app);
     Ok(())
-}
-
-/// Upsert one chat message and its conversation row in a single transaction
-/// (no-op if stale). Called at send time with the user half and again at
-/// settle with the full record, so a crash mid-stream keeps the user message.
-/// Stale-generation writes are dropped like every other index write — a turn
-/// detached by a graph switch must not land in the new graph's history.
-#[tauri::command]
-pub fn chat_message_save(
-    conversation: ChatConversation,
-    message: ChatMessageRow,
-    generation: u64,
-    index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
-) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot chat save");
-    let mut state = lock_state(&index)?;
-    if state.generation != generation {
-        return Ok(());
-    }
-    let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
-    let tx = conn.transaction()?;
-    chat_write::save_message(&tx, &conversation, &message)?;
-    tx.commit()?;
-    Ok(())
-}
-
-/// Delete a conversation and (via cascade) its messages (no-op if stale).
-#[tauri::command]
-pub fn chat_conversation_delete(
-    id: String,
-    generation: u64,
-    index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
-) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot chat delete");
-    let state = lock_state(&index)?;
-    if state.generation != generation {
-        return Ok(());
-    }
-    let conn = state.conn.as_ref().ok_or_else(AppError::no_graph)?;
-    chat_write::delete_conversation(conn, &id)
 }
 
 /// Execute a read query (compiled by Kysely on the frontend) and return rows.

@@ -29,7 +29,8 @@ try {
   const db = new Database(dbPath)
   try {
     // The 0002 migration creates a vec0 virtual table; the throwaway DB needs
-    // the sqlite-vec extension loaded just like the Rust runtime registers it.
+    // the sqlite-vec extension loaded just like the Rust runtime registers it
+    // to replay 0002/0003 (0019 later drops the embedding tables again).
     sqliteVec.load(db)
     const files = readdirSync(migrationsDir)
       .filter((file) => file.endsWith('.sql'))
@@ -40,10 +41,6 @@ try {
     for (const file of files) {
       db.exec(readFileSync(join(migrationsDir, file), 'utf8'))
     }
-    // kysely-codegen introspects over its own connection, which has no
-    // sqlite-vec loaded — drop the vec0 table (vector reads go through raw
-    // SQL at runtime; it was never going to appear in the typed schema).
-    db.exec('DROP TABLE IF EXISTS embedding_vectors')
   } finally {
     db.close() // always close, even if a migration exec throws
   }
