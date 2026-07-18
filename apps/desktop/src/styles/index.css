@@ -236,8 +236,13 @@ body {
 
 /* One keyboard-focus treatment everywhere. Zero-specificity (`:where`) so any
    component rule below (the editor's `outline: none`, the palette input)
-   can still opt out. */
-:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+   can still opt out. `tabindex="-1"` is excluded: those are script-focused
+   surfaces (the All Notes / Tasks keyboard scopes, dialog bodies), not
+   keyboard-traversal stops — a Tailwind `outline-none` on them cannot opt
+   out of this unlayered rule (utilities live in a layer and always lose),
+   and the imposed ring surfaces as a stray accent edge wherever the
+   container's outline isn't fully clipped. */
+:where(button, a, input, select, textarea, [tabindex]:not([tabindex='-1'])):focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
 }
