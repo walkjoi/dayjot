@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MobileStorageInfo } from '@dayjot/core'
+import { hasPendingGithubSetup } from '@/lib/pending-github-setup'
 import { MobileOnboardingScreen } from './onboarding-screen'
 
 const completeOnboarding = vi.hoisted(() => vi.fn(async (_kind: string, _root?: string) => {}))
@@ -30,10 +31,34 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  window.sessionStorage.clear()
 })
 
 describe('MobileOnboardingScreen', () => {
-  it('leads with iCloud sync and creates the named iCloud notes', async () => {
+  it('leads with GitHub sync and hands off to the connect sheet', async () => {
+    render(<MobileOnboardingScreen />)
+
+    expect(screen.getByRole('heading', { name: 'Start with GitHub sync' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'GitHub sync' })).toBeTruthy()
+    expect(screen.getByText('Recommended')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with GitHub' }))
+
+    await waitFor(() => expect(completeOnboarding).toHaveBeenCalledWith('local'))
+    // The shell reads this flag and opens the Connect-GitHub sheet.
+    expect(hasPendingGithubSetup()).toBe(true)
+  })
+
+  it('drops the connect handoff when the GitHub path fails to open', async () => {
+    completeOnboarding.mockRejectedValueOnce(new Error('no space'))
+    render(<MobileOnboardingScreen />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with GitHub' }))
+
+    await waitFor(() => expect(screen.getByText('no space')).toBeTruthy())
+    expect(hasPendingGithubSetup()).toBe(false)
+  })
+
+  it('keeps iCloud as the secondary path and creates the named iCloud notes', async () => {
     render(<MobileOnboardingScreen />)
 
     expect(screen.getByRole('heading', { name: 'iCloud sync' })).toBeTruthy()
@@ -44,6 +69,8 @@ describe('MobileOnboardingScreen', () => {
     await waitFor(() =>
       expect(completeOnboarding).toHaveBeenCalledWith('icloud', '/iCloud/Documents/Journal'),
     )
+    // Only the GitHub path arms the connect sheet.
+    expect(hasPendingGithubSetup()).toBe(false)
   })
 
   it('lists every container graph while keeping create available', async () => {
@@ -83,14 +110,15 @@ describe('MobileOnboardingScreen', () => {
     )
   })
 
-  it('keeps the on-device choice as a quiet secondary path', async () => {
+  it('keeps the on-device choice as a quiet tertiary path', async () => {
     render(<MobileOnboardingScreen />)
 
     expect(screen.queryByText(/Your notes are plain markdown files/i)).toBeNull()
-    expect(screen.queryByText('No iCloud sync. You can add GitHub later from Settings.')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Or, use this device only' }))
 
     await waitFor(() => expect(completeOnboarding).toHaveBeenCalledWith('local'))
+    // Device-only means no sync — the connect sheet must not follow.
+    expect(hasPendingGithubSetup()).toBe(false)
   })
 
   it('shows the iCloud section as pending while the container resolves', () => {
@@ -105,12 +133,14 @@ describe('MobileOnboardingScreen', () => {
     expect(screen.getByText('Checking iCloud Drive…')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Setup graph' })).toBeNull()
     expect(screen.queryByText(/Sign in to iCloud/)).toBeNull()
-    // The on-device path stays live — its root is already known.
+    // The GitHub and on-device paths stay live — their root is already known.
+    const github = screen.getByRole('button', { name: 'Continue with GitHub' })
+    expect((github as HTMLButtonElement).disabled).toBe(false)
     const local = screen.getByRole('button', { name: 'Or, use this device only' })
     expect((local as HTMLButtonElement).disabled).toBe(false)
   })
 
-  it('keeps the iCloud recommendation visible when iCloud is unavailable', () => {
+  it('keeps the iCloud option visible when iCloud is unavailable', () => {
     setStorage({ localRoot: '/Documents', icloudDocumentsRoot: null, icloudGraphRoots: [] })
     render(<MobileOnboardingScreen />)
 
@@ -122,14 +152,6 @@ describe('MobileOnboardingScreen', () => {
       screen.getByText('Sign in to iCloud on this device, then reopen DayJot.'),
     ).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Or, use this device only' })).toBeTruthy()
-  })
-
-  it('does not offer repository setup from the first-run picker', () => {
-    render(<MobileOnboardingScreen />)
-
-    expect(screen.queryByRole('button', { name: /github/i })).toBeNull()
-    expect(screen.queryByText(/backup repository/i)).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Download & open' })).toBeNull()
   })
 
   it('does not expose folder language in the primary first-run path', () => {

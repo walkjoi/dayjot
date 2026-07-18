@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import type { GraphInfo } from '@dayjot/core'
 import { PaletteProvider } from '@/components/command-palette/palette-provider'
 import { NoteWindowContent } from '@/components/note-window-content'
+import { PendingGithubSetup } from '@/components/pending-github-setup'
 import { WorkspaceContent } from '@/components/workspace-content'
 import { getInitialWindowRoute } from '@/lib/windows/initial-window-route'
 import { isMainWindow } from '@/lib/windows/window-role'
@@ -62,6 +63,11 @@ export function GraphWorkspace({ graph }: GraphWorkspaceProps): ReactElement {
                             {isMainWindow() ? (
                               <V1ImportProvider graph={graph}>
                                 <WorkspaceContent graph={graph} />
+                                {/* First-run handoff: the chooser's GitHub
+                                    card marks a one-shot flag and this offers
+                                    the Connect-GitHub wizard once the graph
+                                    is on screen. */}
+                                <PendingGithubSetup graph={graph} />
                               </V1ImportProvider>
                             ) : (
                               <NoteWindowContent />

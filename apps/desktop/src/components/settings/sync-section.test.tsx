@@ -97,7 +97,7 @@ afterEach(() => {
 })
 
 describe('SyncSection', () => {
-  it('combines iCloud Drive and GitHub sync under Sync for local graphs', async () => {
+  it('combines GitHub sync and iCloud Drive under Sync, GitHub first', async () => {
     renderSection()
 
     const section = screen.getByRole('region', { name: 'Sync' })
@@ -105,6 +105,11 @@ describe('SyncSection', () => {
     expect(await within(section).findByText('1 graph in iCloud Drive.')).toBeTruthy()
     expect(within(section).getByText('GitHub sync', { selector: 'legend' })).toBeTruthy()
     expect(within(section).getByRole('button', { name: /connect github/i })).toBeTruthy()
+    // GitHub is the default sync path, so its field leads the section.
+    const legends = within(section)
+      .getAllByText(/GitHub sync|iCloud Drive/, { selector: 'legend' })
+      .map((legend) => legend.textContent)
+    expect(legends).toEqual(['GitHub sync', 'iCloud Drive'])
   })
 
   it('keeps GitHub sync visible when the graph syncs through iCloud', async () => {

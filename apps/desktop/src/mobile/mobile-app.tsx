@@ -5,6 +5,7 @@ import { MobileErrorBoundary } from '@/mobile/mobile-error-boundary'
 import { MobileOnboardingScreen } from '@/mobile/onboarding-screen'
 import { MobileShell } from '@/mobile/mobile-shell'
 import { MobileStatusLayer } from '@/mobile/status-layer'
+import { PendingGithubDrawer } from '@/mobile/pending-github-drawer'
 import { RecordingDrawer } from '@/mobile/recording-drawer'
 import { useICloudRefresh } from '@/mobile/use-icloud-refresh'
 import { useKeyboardCaretReveal, useKeyboardHeightVar } from '@/mobile/use-keyboard'
@@ -71,6 +72,10 @@ export function MobileApp(): ReactElement {
                   {/* Mounted beside the shell (not inside the daily screen)
                       so a live recording's sheet survives tab switches. */}
                   <RecordingDrawer />
+                  {/* First-run handoff: onboarding's GitHub path marks a
+                      one-shot flag and this offers the Connect-GitHub sheet
+                      once the graph is on screen. */}
+                  <PendingGithubDrawer />
                 </MobileAudioMemoProvider>
               </ChatProvider>
             </CaptureProvider>

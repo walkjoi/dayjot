@@ -54,10 +54,10 @@ export function OnboardingIcloudSection(props: OnboardingIcloudSectionProps): Re
   const description =
     graphs.length > 0
       ? 'We found notes in iCloud Drive. Continue with one, or start fresh.'
-      : 'Recommended for most people. Your notes sync through iCloud Drive and stay available offline.'
+      : 'Your notes sync through iCloud Drive and stay available offline.'
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-primary/20 bg-surface p-4">
+    <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4">
       <OnboardingIcloudHeader description={description} />
 
       {pending ? (

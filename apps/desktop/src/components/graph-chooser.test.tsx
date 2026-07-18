@@ -1,17 +1,23 @@
 import type { ReactNode } from 'react'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setBridge } from '@dayjot/core'
+import { hasPendingGithubSetup } from '@/lib/pending-github-setup'
 import { GraphProvider } from '@/providers/graph-provider'
 import { SettingsProvider } from '@/providers/settings-provider'
 import { GraphChooser } from './graph-chooser'
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({ open: vi.fn() }))
+vi.mock('@tauri-apps/api/path', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tauri-apps/api/path')>()),
+  documentDir: vi.fn(async () => '/Users/alex/Documents'),
+}))
 
 let invokeLog: Array<[string, Record<string, unknown>]>
+let graphCreateFailure: string | null
 let recents: Array<{ root: string; name: string; openedMs: number }>
 let storedSettings: Record<string, unknown>
 let icloudStatusResponse: {
@@ -33,6 +39,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 beforeEach(() => {
   vi.stubEnv('TAURI_ENV_PLATFORM', 'darwin')
   invokeLog = []
+  graphCreateFailure = null
   recents = [
     { root: '/graphs/work', name: 'work', openedMs: 2 },
     { root: '/graphs/personal', name: 'personal', openedMs: 1 },
@@ -51,8 +58,12 @@ beforeEach(() => {
         case 'forget_recent':
           recents = recents.filter((recent) => recent.root !== args['root'])
           return null
-        case 'graph_open':
         case 'graph_create':
+          if (graphCreateFailure !== null) {
+            throw new Error(graphCreateFailure)
+          }
+          return { root: String(args['path']), name: 'work', generation: 1 }
+        case 'graph_open':
           return { root: String(args['path']), name: 'work', generation: 1 }
         case 'icloud_status':
           return icloudStatusResponse
@@ -76,10 +87,11 @@ afterEach(() => {
   vi.unstubAllEnvs()
   setBridge(null)
   queryClient.clear()
+  window.sessionStorage.clear()
 })
 
 describe('GraphChooser', () => {
-  it('leads with iCloud (recommended) beside the pick-a-folder path', async () => {
+  it('leads with GitHub sync (recommended) beside the iCloud card', async () => {
     icloudStatusResponse = {
       available: true,
       documentsRoot: '/icloud/Documents',
@@ -90,9 +102,49 @@ describe('GraphChooser', () => {
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'iCloud' })).toBeInTheDocument(),
     )
-    expect(screen.getByText('Recommended')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'A folder you choose' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Choose a folder/ })).toBeInTheDocument()
+    const github = screen.getByRole('region', { name: 'GitHub sync' })
+    expect(within(github).getByText('Recommended')).toBeInTheDocument()
+    // Exactly one recommendation on screen — iCloud lost its badge.
+    expect(screen.getAllByText('Recommended')).toHaveLength(1)
+    expect(
+      screen.getByRole('button', { name: /choose a folder on this Mac/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('creates the GitHub-backed graph in Documents and hands off to the wizard', async () => {
+    const user = userEvent.setup()
+    render(<GraphChooser />, { wrapper })
+
+    const github = await screen.findByRole('region', { name: 'GitHub sync' })
+    const nameInput = within(github).getByRole('textbox', { name: 'Name' })
+    expect(nameInput).toHaveValue('Notes')
+    await user.clear(nameInput)
+    await user.type(nameInput, 'My Notes')
+    await user.click(within(github).getByRole('button', { name: 'Create' }))
+
+    await waitFor(() =>
+      expect(invokeLog).toContainEqual([
+        'graph_create',
+        { path: '/Users/alex/Documents/My Notes' },
+      ]),
+    )
+    // The workspace reads this flag and opens the Connect-GitHub wizard.
+    expect(hasPendingGithubSetup()).toBe(true)
+  })
+
+  it('drops the wizard handoff when the create fails', async () => {
+    graphCreateFailure = 'disk full'
+    const user = userEvent.setup()
+    render(<GraphChooser />, { wrapper })
+
+    const github = await screen.findByRole('region', { name: 'GitHub sync' })
+    await user.click(within(github).getByRole('button', { name: 'Create' }))
+
+    await waitFor(() =>
+      expect(invokeLog).toContainEqual(['graph_create', { path: '/Users/alex/Documents/Notes' }]),
+    )
+    await waitFor(() => expect(hasPendingGithubSetup()).toBe(false))
+    expect(screen.getByText('disk full')).toBeInTheDocument()
   })
 
   it('creates an iCloud graph from the typed name', async () => {
@@ -104,10 +156,11 @@ describe('GraphChooser', () => {
     const user = userEvent.setup()
     render(<GraphChooser />, { wrapper })
 
-    const nameInput = await screen.findByRole('textbox', { name: 'Name' })
+    const icloud = await screen.findByRole('region', { name: 'iCloud' })
+    const nameInput = within(icloud).getByRole('textbox', { name: 'Name' })
     await user.clear(nameInput)
     await user.type(nameInput, 'My Notes')
-    await user.click(screen.getByRole('button', { name: 'Create' }))
+    await user.click(within(icloud).getByRole('button', { name: 'Create' }))
 
     await waitFor(() =>
       expect(invokeLog).toContainEqual(['graph_create', { path: '/icloud/Documents/My Notes' }]),
@@ -146,9 +199,10 @@ describe('GraphChooser', () => {
     // compact create row — not the pre-status empty-container form — is the
     // input under test. Next to an existing list the row starts empty.
     await screen.findByRole('button', { name: 'Notes' })
-    const nameInput = screen.getByRole('textbox', { name: 'Name' })
+    const icloud = screen.getByRole('region', { name: 'iCloud' })
+    const nameInput = within(icloud).getByRole('textbox', { name: 'Name' })
     expect(nameInput).toHaveValue('')
-    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
+    expect(within(icloud).getByRole('button', { name: 'Create' })).toBeDisabled()
 
     // "notes" collides (case-insensitively) with the existing graph —
     // creating it would land inside that folder, so Create refuses and the
@@ -156,12 +210,12 @@ describe('GraphChooser', () => {
     await user.type(nameInput, 'notes')
     expect(nameInput).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText('That name already exists in iCloud Drive.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
+    expect(within(icloud).getByRole('button', { name: 'Create' })).toBeDisabled()
 
     await user.clear(nameInput)
     await user.type(nameInput, 'Journal')
     expect(screen.queryByText('That name already exists in iCloud Drive.')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Create' }))
+    await user.click(within(icloud).getByRole('button', { name: 'Create' }))
 
     await waitFor(() =>
       expect(invokeLog).toContainEqual(['graph_create', { path: '/icloud/Documents/Journal' }]),
@@ -174,18 +228,24 @@ describe('GraphChooser', () => {
     await waitFor(() =>
       expect(screen.getByText(/Sign in to iCloud on this Mac/)).toBeInTheDocument(),
     )
-    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
+    const icloud = screen.getByRole('region', { name: 'iCloud' })
+    expect(within(icloud).getByRole('button', { name: 'Create' })).toBeDisabled()
+    // The GitHub path stays live — it doesn't depend on iCloud at all.
+    const github = screen.getByRole('region', { name: 'GitHub sync' })
+    expect(within(github).getByRole('button', { name: 'Create' })).toBeEnabled()
   })
 
-  it('hides the iCloud card outside macOS builds and drops the Mac-specific copy', async () => {
+  it('hides the iCloud card outside macOS builds and keeps the GitHub + folder paths', async () => {
     vi.stubEnv('TAURI_ENV_PLATFORM', 'windows')
     render(<GraphChooser />, { wrapper })
 
     await waitFor(() =>
-      expect(screen.getByRole('heading', { name: 'A folder you choose' })).toBeInTheDocument(),
+      expect(screen.getByRole('region', { name: 'GitHub sync' })).toBeInTheDocument(),
     )
     expect(screen.queryByRole('heading', { name: 'iCloud' })).not.toBeInTheDocument()
-    expect(screen.getByText(/any folder on this computer/)).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /choose a folder on this computer/i }),
+    ).toBeInTheDocument()
   })
 
   // The provider auto-opens the most recent graph on mount, so the chooser's

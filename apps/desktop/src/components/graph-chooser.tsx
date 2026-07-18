@@ -1,14 +1,16 @@
 import { useId, useState, type ReactElement, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { hasBridge, icloudStatus } from '@dayjot/core'
-import { Cloud, Folder, FolderPlus } from 'lucide-react'
+import { documentDir } from '@tauri-apps/api/path'
+import { errorMessage, hasBridge, icloudStatus } from '@dayjot/core'
+import { Cloud, Folder, FolderGit2, FolderPlus } from 'lucide-react'
 import { InlineAlert } from '@/components/inline-alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { useGraphColors } from '@/hooks/use-graph-colors'
-import { cleanGraphName, graphNameFromRoot, isGraphNameTaken } from '@/lib/graph-names'
+import { cleanGraphName, graphNameFromRoot, graphRootForName, isGraphNameTaken } from '@/lib/graph-names'
+import { markPendingGithubSetup, clearPendingGithubSetup } from '@/lib/pending-github-setup'
 import { ICLOUD_STATUS_QUERY_KEY } from '@/lib/query-client'
 import { graphColorCss } from '@/lib/graph-colors'
 import { cn } from '@/lib/utils'
@@ -21,13 +23,15 @@ function isIcloudCapablePlatform(): boolean {
 
 /**
  * First-run / no-graph screen (Plan 21 UX pass). One decision, stated
- * plainly: where do your notes live? iCloud is the recommended default —
- * every graph already in the container is listed to open, and a name field
- * creates a new one right there. Choosing a folder yourself is the
- * self-managed path.
+ * plainly: where do your notes live? GitHub sync is the recommended default —
+ * a name field creates the graph in Documents and the workspace offers the
+ * Connect-GitHub wizard right after it opens (the
+ * {@link markPendingGithubSetup} handoff). iCloud remains the zero-config
+ * Apple path on macOS, and choosing a folder yourself is the self-managed
+ * fallback below the cards.
  *
  * The iCloud card uses "graph" only where the user is deciding between
- * existing containers and creating another one; the folder card talks about
+ * existing containers and creating another one; the folder row talks about
  * folders.
  */
 export function GraphChooser(): ReactElement {
@@ -50,26 +54,23 @@ export function GraphChooser(): ReactElement {
           icloudCapable ? 'sm:grid-cols-2' : 'mx-auto max-w-sm',
         )}
       >
-        {icloudCapable ? <IcloudCard openRecent={openRecent} createAt={createAt} /> : null}
+        <GithubCard createAt={createAt} />
 
-        {/* The self-managed path: any folder, synced however the user likes. */}
-        <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm">
-          <CardHeader
-            icon={<Folder aria-hidden className="size-4" strokeWidth={1.75} />}
-            title="A folder you choose"
-          >
-            Keep notes in any folder on this {icloudCapable ? 'Mac' : 'computer'}.
-          </CardHeader>
-          <Button
-            type="button"
-            variant={icloudCapable ? 'outline' : 'default'}
-            className="mt-auto w-full"
-            onClick={() => void pickAndOpen()}
-          >
-            <FolderPlus aria-hidden strokeWidth={1.75} />
-            Choose a folder…
-          </Button>
-        </section>
+        {icloudCapable ? <IcloudCard openRecent={openRecent} createAt={createAt} /> : null}
+      </div>
+
+      {/* The self-managed path: any folder, synced however the user likes. */}
+      <div className="text-center">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-text-secondary"
+          onClick={() => void pickAndOpen()}
+        >
+          <FolderPlus aria-hidden strokeWidth={1.75} />
+          Or choose a folder on this {icloudCapable ? 'Mac' : 'computer'}…
+        </Button>
       </div>
 
       {error ? (
@@ -177,16 +178,106 @@ function CardHeader({
   )
 }
 
+/**
+ * The recommended path: a local graph in `Documents/<Name>`, synced through a
+ * private GitHub repository. The card only creates the graph —
+ * {@link markPendingGithubSetup} hands off to the workspace, which opens the
+ * Connect-GitHub wizard once the notes are on screen (auth needs the full
+ * app shell, not this pre-graph screen).
+ */
+function GithubCard({
+  createAt,
+}: {
+  createAt: (root: string) => Promise<boolean>
+}): ReactElement {
+  const [typedName, setTypedName] = useState('Notes')
+  const [busy, setBusy] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
+  const nameId = useId()
+  const cleanName = cleanGraphName(typedName)
+
+  async function create(): Promise<void> {
+    if (cleanName === null || busy) {
+      return
+    }
+    setBusy(true)
+    setLocalError(null)
+    try {
+      const documents = (await documentDir()).replace(/\/+$/, '')
+      // Marked before createAt: a successful open unmounts this screen, so
+      // the flag must already be set for the workspace to pick up.
+      markPendingGithubSetup()
+      const opened = await createAt(graphRootForName(documents, cleanName))
+      if (!opened) {
+        clearPendingGithubSetup()
+      }
+    } catch (err) {
+      clearPendingGithubSetup()
+      setLocalError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section
+      aria-label="GitHub sync"
+      className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm"
+    >
+      <CardHeader
+        icon={<FolderGit2 aria-hidden className="size-4" strokeWidth={1.75} />}
+        title="GitHub sync"
+        badge={<Badge variant="secondary">Recommended</Badge>}
+        tinted
+      >
+        Notes live in Documents and sync through a private GitHub repository you control.
+      </CardHeader>
+      <div className="mt-auto space-y-2">
+        <div className="space-y-1.5">
+          <label htmlFor={nameId} className="text-xs font-medium text-text-secondary">
+            Name
+          </label>
+          <Input
+            id={nameId}
+            value={typedName}
+            disabled={busy}
+            onChange={(event) => setTypedName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                void create()
+              }
+            }}
+          />
+        </div>
+        <Button
+          type="button"
+          className="w-full"
+          disabled={busy || cleanName === null}
+          onClick={() => void create()}
+        >
+          {busy ? <Spinner /> : <FolderGit2 aria-hidden strokeWidth={1.75} />}
+          {busy ? 'Setting up…' : 'Create'}
+        </Button>
+        <p className="text-center text-xs text-text-muted">
+          You’ll sign in to GitHub once your notes open.
+        </p>
+        {localError !== null ? <p className="text-xs text-destructive">{localError}</p> : null}
+      </div>
+    </section>
+  )
+}
+
 /** What the iCloud card is busy doing: opening one listed graph (its root) or
  * creating a new one — so only the pressed control shows the spinner. Roots
  * are absolute paths, so `'create'` can never collide with one. */
 type IcloudBusy = string | 'create' | null
 
 /**
- * The recommended path. Lists every graph already in the container (a user
- * can keep several) with one-click Open, plus a name field to create a new
- * one; with no container (signed out / unentitled build) the copy is honest
- * and the action disabled.
+ * The zero-config Apple path. Lists every graph already in the container (a
+ * user can keep several) with one-click Open, plus a name field to create a
+ * new one; with no container (signed out / unentitled build) the copy is
+ * honest and the action disabled. iCloud graphs sync through the container —
+ * a Git remote and iCloud are mutually exclusive per graph.
  */
 function IcloudCard({
   openRecent,
@@ -235,17 +326,18 @@ function IcloudCard({
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm">
+    <section
+      aria-label="iCloud"
+      className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm"
+    >
       <CardHeader
         icon={<Cloud aria-hidden className="size-4" strokeWidth={1.75} />}
         title="iCloud"
-        badge={<Badge variant="secondary">Recommended</Badge>}
-        tinted
       >
         {existing.length > 0
           ? 'Open an existing graph from iCloud Drive.'
           : available
-            ? 'Syncs across your Mac and iPhone. Backed up automatically.'
+            ? 'Syncs across your Mac and iPhone through iCloud Drive.'
             : status === undefined
               ? 'Checking iCloud…'
               : 'Sign in to iCloud on this Mac to sync your notes across devices.'}
@@ -326,6 +418,7 @@ function IcloudCard({
           </div>
           <Button
             type="button"
+            variant="outline"
             className="w-full"
             disabled={!available || pending || cleanName === null}
             onClick={() => void create()}

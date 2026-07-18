@@ -37,8 +37,8 @@ maintained separately. Importing a Reflect V1 export is still supported.
   configured transcription provider.
 - **Browser capture:** save links, selected text, screenshots, and page text
   from Chrome.
-- **Sync choices:** use iCloud Drive for file sync, or git/GitHub for
-  versioned backup.
+- **Sync choices:** connect GitHub (or any git remote) for versioned, synced
+  backup — or use iCloud Drive for zero-config Apple file sync.
 - **CLI:** `dayjot today`, `dayjot search`, and `dayjot show` are available
   for scripts and agents. See [docs/cli.md](docs/cli.md).
 
@@ -84,12 +84,14 @@ and related notes on top, but the files remain usable in any Markdown editor.
 
 ## Sync and Privacy
 
-For simple file sync across Apple devices, create your graph inside an
-iCloud-synced folder such as `iCloud Drive/DayJotGraph`.
+The default sync path is GitHub: connect a private repository in the app (or
+add [any SSH git remote](docs/generic-git-remotes.md)) and your Markdown graph
+is versioned, backed up, and synced to your other devices through a repo you
+control.
 
-For versioned backup or non-iCloud sync, connect GitHub in the app or add
-[any SSH git remote](docs/generic-git-remotes.md). Git sync stores the Markdown
-graph in a repository you control.
+For zero-config file sync across Apple devices, you can instead create your
+graph inside an iCloud-synced folder such as `iCloud Drive/DayJotGraph`.
+(A graph syncs through git or iCloud, not both.)
 
 By default, note content stays on the device. External calls only happen after
 you configure a provider, connect a git remote, or use a platform sync service.

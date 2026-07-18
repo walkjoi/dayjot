@@ -90,13 +90,12 @@ interface GraphContextValue extends MobileGraphBoot {
 const GraphContext = createContext<GraphContextValue | null>(null)
 
 /**
- * On a macOS first run (no recents yet), start the folder picker in iCloud
- * Drive — the recommended home for a graph (Plan 21): notes back up
- * automatically and the iOS app's container lives there too. Suggestion
- * only: the user can navigate anywhere, and once they have a graph the
- * picker reverts to the OS default (their last-used location). Best-effort —
- * a resolution failure (or a signed-out account's missing folder, which the
- * open panel falls back from on its own) must never block picking.
+ * On a macOS first run (no recents yet), start the folder picker in
+ * `~/Documents` — the same home the chooser's default GitHub-backed create
+ * uses, so the self-managed path lands next to it. Suggestion only: the user
+ * can navigate anywhere (including iCloud Drive), and once they have a graph
+ * the picker reverts to the OS default (their last-used location).
+ * Best-effort — a resolution failure must never block picking.
  */
 async function pickerDefaultPath(hasRecents: boolean): Promise<{ defaultPath: string } | null> {
   if (hasRecents || import.meta.env.TAURI_ENV_PLATFORM !== 'darwin') {
@@ -104,9 +103,9 @@ async function pickerDefaultPath(hasRecents: boolean): Promise<{ defaultPath: st
   }
   try {
     const home = await homeDir()
-    return { defaultPath: await join(home, 'Library', 'Mobile Documents', 'com~apple~CloudDocs') }
+    return { defaultPath: await join(home, 'Documents') }
   } catch (err) {
-    console.warn('iCloud Drive picker suggestion failed:', errorMessage(err))
+    console.warn('Documents picker suggestion failed:', errorMessage(err))
     return null
   }
 }
@@ -117,9 +116,9 @@ async function pickerDefaultPath(hasRecents: boolean): Promise<{ defaultPath: st
  * the chooser. All durable file access goes through `@dayjot/core` commands.
  *
  * On mobile (Plans 19/21) there is no chooser and no recents-driven reopen:
- * the graph lives in one of two fixed roots — the app's iCloud Drive
- * container (the recommended default; syncs across devices) or the app
- * sandbox `Documents/` — and only the *kind* is persisted. Absolute paths are
+ * the graph lives in one of two fixed roots — the app sandbox `Documents/`
+ * (the default; GitHub sync connects on top of it) or the app's iCloud Drive
+ * container (syncs through iCloud instead) — and only the *kind* is persisted. Absolute paths are
  * **derived fresh every launch** because iOS container paths change across
  * restore/update, so a persisted recent would point at a dead path.
  * `platform` selects the bootstrap; everything downstream of the open is
