@@ -1,5 +1,4 @@
 import { fileURLToPath } from 'node:url'
-import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import { reactWithCompiler } from './react-compiler-plugin'
@@ -11,29 +10,14 @@ const host = process.env.TAURI_DEV_HOST
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [
-    reactWithCompiler(),
-    tailwindcss(),
-    sentryVitePlugin({
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      org: 'dayjot-64',
-      project: 'dayjot-desktop',
-      telemetry: false,
-      release: {
-        name: `dayjot@${pkg.version}`,
-      },
-      sourcemaps: {
-        filesToDeleteAfterUpload: ['./dist/**/*.map'],
-      },
-    }),
-  ],
+  plugins: [reactWithCompiler(), tailwindcss()],
 
   define: {
     __DAYJOT_VERSION__: JSON.stringify(pkg.version),
   },
 
   // If the target is below Safari 17.5, Lightning CSS downlevels `light-dark()` to a broken polyfill.
-  build: { cssTarget: 'safari17.5', sourcemap: 'hidden' },
+  build: { cssTarget: 'safari17.5' },
 
   resolve: {
     alias: {
