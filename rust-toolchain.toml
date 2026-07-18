@@ -1,0 +1,6 @@
+# The workspace needs rustc >= 1.95 (rusqlite_migration 2.6). This makes
+# rustup pick up-to-date stable inside the repo automatically — note a
+# RUSTUP_TOOLCHAIN environment variable still overrides this file, so unset
+# any stale pin from your shell.
+[toolchain]
+channel = "stable"
