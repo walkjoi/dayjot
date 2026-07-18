@@ -499,15 +499,13 @@ pub(crate) fn move_note_file(root: &Path, from: &str, to: &str) -> AppResult<()>
 pub fn note_delete(path: String, generation: u64, state: State<GraphState>) -> AppResult<()> {
     let root = root_for_generation(&state, generation)?;
     let abs = resolve(&root, &path)?;
-    // An iCloud-evicted note exists only as its `.name.md.icloud` stub —
-    // trashing the logical path would fail and the note would be
-    // undeletable. Removing the stub deletes the iCloud item (Plan 21).
-    let target = if abs.exists() {
-        abs
-    } else {
-        io::eviction_placeholder(&abs)
-            .filter(|stub| stub.exists())
-            .unwrap_or(abs)
+    let Some(target) = delete_target(&abs) else {
+        // Nothing on disk: a never-written note (the lazy-create contract —
+        // an untouched untitled note has no file yet) or one already removed
+        // by sync/another window. Deleting is idempotent, so this is a
+        // successful no-op; the stale sync shadow still gets dropped below.
+        crate::conflict::shadow::ShadowStore::new(&root).forget(&path);
+        return Ok(());
     };
     #[cfg(desktop)]
     os_trash_delete(&target)?;
@@ -516,6 +514,18 @@ pub fn note_delete(path: String, generation: u64, state: State<GraphState>) -> A
     // A deleted note's sync ancestor is meaningless — drop it (Plan 21).
     crate::conflict::shadow::ShadowStore::new(&root).forget(&path);
     Ok(())
+}
+
+/// The filesystem item [`note_delete`] should trash for `abs`: the file
+/// itself or — for an iCloud-evicted note that exists only as its
+/// `.name.md.icloud` stub, which trashing the logical path would miss —
+/// the stub (removing it deletes the iCloud item, Plan 21). `None` when
+/// neither exists, which deletion treats as already done.
+fn delete_target(abs: &Path) -> Option<PathBuf> {
+    if abs.exists() {
+        return Some(abs.to_path_buf());
+    }
+    io::eviction_placeholder(abs).filter(|stub| stub.exists())
 }
 
 /// Move the open graph's **entire directory** to the OS trash (recoverable)
@@ -640,6 +650,39 @@ pub(crate) fn note_files(root: &Path) -> AppResult<Vec<FileMeta>> {
         collect_files(root, dir, Some("md"), &mut out)?;
     }
     Ok(out)
+}
+
+#[cfg(test)]
+mod delete_target_tests {
+    use super::delete_target;
+    use std::fs;
+
+    #[test]
+    fn an_existing_file_is_the_target() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("notes/a.md");
+        fs::create_dir_all(file.parent().unwrap()).unwrap();
+        fs::write(&file, "# A\n").unwrap();
+        assert_eq!(delete_target(&file), Some(file));
+    }
+
+    #[test]
+    fn an_evicted_note_targets_its_icloud_stub() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("notes/a.md");
+        let stub = dir.path().join("notes/.a.md.icloud");
+        fs::create_dir_all(file.parent().unwrap()).unwrap();
+        fs::write(&stub, "").unwrap();
+        assert_eq!(delete_target(&file), Some(stub));
+    }
+
+    #[test]
+    fn a_never_written_note_has_no_target_so_deleting_it_is_a_no_op() {
+        // The lazy-create contract: an untouched untitled note has no file
+        // yet. Trashing it must succeed as "already gone", not error.
+        let dir = tempfile::tempdir().unwrap();
+        assert_eq!(delete_target(&dir.path().join("notes/ghost.md")), None);
+    }
 }
 
 #[cfg(test)]

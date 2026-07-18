@@ -88,6 +88,7 @@ describe('WorkspaceContent', () => {
     expect(view.getByRole('complementary', { name: 'Context' })).toBeTruthy()
     expect(view.getByTestId('daily-context').textContent).toBe('2026-07-11')
     expect(view.queryByRole('button', { name: 'Expand sidebar' })).toBeNull()
+    expect(view.container.querySelector('.pt-7')).toBeNull()
 
     workspaceState.sidebarCollapsed = true
     view.rerender(
@@ -97,8 +98,11 @@ describe('WorkspaceContent', () => {
     )
     expect(view.queryByRole('complementary', { name: 'Workspace' })).toBeNull()
     expect(view.getByRole('complementary', { name: 'Context' })).toBeTruthy()
-    // The reopen affordance floats in the note pane while the sidebar hides.
+    // The reopen affordance floats in the note pane while the sidebar hides,
+    // and the pane reserves the title-bar band so route headers (Tasks'
+    // search row) don't slide under the window chrome next to it.
     expect(view.getByRole('button', { name: 'Expand sidebar' })).toBeTruthy()
+    expect(view.container.querySelector('.pt-7')).not.toBeNull()
 
     workspaceState.sidebarCollapsed = false
     view.rerender(
