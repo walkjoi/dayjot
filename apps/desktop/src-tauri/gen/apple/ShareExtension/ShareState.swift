@@ -20,7 +20,7 @@ enum ShareStatus {
 /// The extension's one flow: extract the shared item, spool an envelope into
 /// the App Group inbox, report. Entirely offline — saving never waits on the
 /// network, which is the point of the envelope model (the main app relays,
-/// drains, and enriches later; see `docs/porting/reflect-mobile/share-extension.md`).
+/// drains, and enriches later; see the pre-fork design notes (git history)).
 final class ShareState: ObservableObject {
     @Published var status = ShareStatus.saving
 

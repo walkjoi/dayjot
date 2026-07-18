@@ -18,7 +18,7 @@ import { useSettings } from '@/providers/settings-provider'
 
 /**
  * TanStack Query hooks over the calendar bindings
- * (docs/porting/calendar-meetings-integration.md). Events are fetched live —
+ *. Events are fetched live —
  * nothing is cached beyond the query layer, and nothing is indexed.
  */
 

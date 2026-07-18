@@ -18,7 +18,7 @@ import { useGraph } from '@/providers/graph-provider'
 import { useNoteTemplates } from '@/providers/note-templates-provider'
 
 /**
- * The "Insert template…" picker (docs/porting/note-templates.md): the graph's
+ * The "Insert template…" picker: the graph's
  * templates A→Z, chosen with the palette's keyboard model, inserted verbatim
  * (frontmatter stripped) at the cursor of the note the command targeted. The
  * ever-present "New template" row is also the feature's front door when the

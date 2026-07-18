@@ -1,5 +1,9 @@
 # 0002 — Index/IPC bridge follow-ups
 
+> **Historical note (2026-07):** this ADR predates the removal of the AI
+> surface (chat, embeddings); code links to those modules now resolve only
+> in git history. The IPC-shape reasoning it records still applies.
+
 - **Status:** Backlog (proposed improvements; not yet decided/scheduled)
 - **Date:** 2026-06-12
 - **Relates to:** [TDR 0001 — Raw SQL writes over the Rust IPC bridge](0001-raw-sql-writes-over-ipc.md)

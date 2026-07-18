@@ -16,7 +16,7 @@ import { createTemplate } from '@/lib/note-templates'
 import { useNoteTemplates } from '@/providers/note-templates-provider'
 
 /**
- * The "New template" dialog (docs/porting/note-templates.md): name it, and the
+ * The "New template" dialog: name it, and the
  * file lands at `templates/<slug>.md` seeded with the name as its H1, opened
  * in the normal editor to fill in. Creating the first template also creates
  * the `templates/` folder — the graph is never seeded with one.

@@ -167,9 +167,9 @@ pnpm release:ios testflight --build-number=123 --wait
 DayJot is in beta and used daily. The current focus is the Mac app, iOS
 companion, browser capture, local-first data model, and sync reliability.
 
-Windows, Android, and a plugin API are out of scope for now. See the
-[V2 product vision](docs/dayjot-v2-product-vision.md) and the implementation
-plans in [docs/plans/](docs/plans/) for the longer-term direction.
+Windows, Android, and a plugin API are out of scope for now. See
+[docs/product.md](docs/product.md) for what DayJot is — and deliberately
+isn't.
 
 ## License
 

@@ -8,8 +8,8 @@ DayJot is a modern note‑taking tool with a TypeScript codebase: offline-first,
 
 ### Product Principles
 
-Drawn from the product docs — read these for deeper context:
-[V1 Overview](docs/reflect-v1-overview.md) · [V2 Product Vision](docs/dayjot-v2-product-vision.md) · [V2 Grounding Brief](docs/dayjot-v2-grounding-brief.md) · [Indexing Strategy](docs/dayjot-v2-indexing-strategy.md) · [Sync Strategy](docs/dayjot-v2-sync-strategy.md)
+Drawn from the product docs — read [docs/product.md](docs/product.md) and
+[docs/privacy.md](docs/privacy.md) for deeper context.
 
 - **Daily notes first.** The app opens to today's note. All capture flows into the daily note by default.
 - **Association over hierarchy.** `[[Wiki Links]]` replace folders. The note graph is the organizing model; there are no folders.
@@ -137,7 +137,7 @@ dayjot/
 │   └── index-schema/       # Shared SQLite migrations for <graph>/.dayjot/index.sqlite
 │                           #   (one schema for the desktop writer + CLI reader)
 ├── design-system/          # Design tokens, components, and UI guidelines (see design-system/readme.md)
-├── docs/                   # Product/architecture docs + docs/plans/ (DayJot V2)
+├── docs/                   # Product, architecture, and contributor docs
 ├── Cargo.toml              # Root Cargo workspace (dayjot-desktop, dayjot-cli, dayjot-capture-host, dayjot-index-schema)
 └── turbo.json, pnpm-workspace.yaml
 ```

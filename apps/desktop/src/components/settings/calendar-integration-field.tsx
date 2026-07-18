@@ -32,7 +32,7 @@ const ACTION_BUTTON_CLASS =
   'rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text-secondary transition-colors duration-100 hover:bg-surface-hover'
 
 /**
- * The calendar integration field (docs/porting/calendar-meetings-integration.md):
+ * The calendar integration field:
  * one switch, then a compact calendar count with the full per-calendar
  * chooser in a dialog. There are no credentials here and none to go stale:
  * macOS Calendar owns the accounts (Google, iCloud, Exchange), so a denied

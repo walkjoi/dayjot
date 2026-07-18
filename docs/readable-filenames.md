@@ -187,4 +187,4 @@ tests in `src-tauri/src/git/tests.rs`):
 | Sync fork surface | `apps/desktop/src/components/settings/sync-fork-notice.tsx`, `getDuplicateNoteIds` in `packages/core/src/indexing/queries.ts` |
 | Merge-shape tests | `apps/desktop/src-tauri/src/git/tests.rs` (rename matrix) |
 
-Plan and decision history: [docs/plans/17-readable-filenames.md](plans/17-readable-filenames.md).
+Plan and decision history: the pre-fork implementation plan lives in git history.

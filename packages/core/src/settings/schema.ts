@@ -243,7 +243,7 @@ export const contactsEnabledSchema = z.boolean().catch(false)
  * Whether the Apple Calendar integration is on. Off by default — turning it
  * on triggers the macOS calendar-permission prompt, and that is the user's
  * call. Access is read-only and entirely local (EventKit); see
- * docs/porting/calendar-meetings-integration.md.
+ * the pre-fork design notes (git history)
  */
 export const calendarEnabledSchema = z.boolean().catch(false)
 

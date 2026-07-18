@@ -16,7 +16,7 @@ Two ideas carry the whole design:
    window therefore never runs `graph_open`/`index_open`; it *adopts* the
    main window's live sessions through a pure read (`window_bootstrap`).
 2. **User actions work in any window; app-wide singletons run only in
-   main.** Editing, recording an audio memo, chatting — all fine anywhere.
+   main.** Editing is fine anywhere.
    Background machinery that must exist exactly once — sync, the capture
    drain, the indexer, AI reconcilers — belongs to the main window, and a
    note-window edit reaches that machinery the same way an external edit
@@ -36,10 +36,10 @@ as main: they are all single-window.
 | Runs where?          | main window | note window |
 | -------------------- | ----------- | ----------- |
 | Editing, note sessions, quit flush of own buffers | ✓ | ✓ |
-| Chat UI, audio recording, palette-free routed views | ✓ | ✓ |
+| Palette-free routed views | ✓ | ✓ |
 | Index writer (reconcile → subscribe → watch)      | ✓ | — |
 | Git backup + iCloud controllers                   | ✓ | — |
-| Capture drain, transcription, embeddings, asset describing | ✓ | — |
+| Capture drain and enrichment | ✓ | — |
 | Update checks, OS deep-link intake                | ✓ | — |
 | Graph management (open / switch / delete)         | ✓ | refused |
 

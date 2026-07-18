@@ -84,8 +84,8 @@ none of these work:
   element, and meowdown's drop indicator is drawn *only* from a `dragover`
   listener on the editor DOM. No `dragover` means no indicator, and the `drop`
   that commits the move never fires either.
-- **Image paste/drop** (`use-image-persistence.ts`) and **chat file drop**
-  (`chat-screen.tsx`), both of which read `event.dataTransfer` off HTML5 drop
+- **Image paste/drop** (`use-image-persistence.ts`), which reads
+  `event.dataTransfer` off HTML5 drop
   events.
 
 Tauri's native drag-drop handler (on by default) registers an OS-level drop

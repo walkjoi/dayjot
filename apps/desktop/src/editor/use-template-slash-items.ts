@@ -6,7 +6,7 @@ import { useGraph } from '@/providers/graph-provider'
 import type { NoteEditorHandle } from './note-editor'
 
 /**
- * The editor's `/` menu rows for note templates (docs/porting/note-templates.md):
+ * The editor's `/` menu rows for note templates:
  * every template, A→Z, alongside meowdown's built-in blocks — the same
  * host-supplies-the-items pattern as the `[[` menu. meowdown filters the rows
  * against the typed query and removes the `/query` text before `onSelect`

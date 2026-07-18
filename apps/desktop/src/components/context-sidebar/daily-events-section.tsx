@@ -14,7 +14,7 @@ interface DailyEventsSectionProps {
 
 /**
  * The day's meetings from Apple Calendar as a context-sidebar section
- * (docs/porting/calendar-meetings-integration.md) — v1's Events sidebar.
+ * — v1's Events sidebar.
  * Each row's one action opens the add-meeting dialog, which writes the
  * meeting into the daily note as plain markdown. Renders nothing when the
  * integration is off, access is missing, or the day has no displayable

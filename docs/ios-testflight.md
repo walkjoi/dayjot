@@ -153,7 +153,7 @@ workflow.
   the old Capacitor app record (`app.reflect.ReflectMobile`).
 - **`Automatic signing cannot register bundle identifier "app.dayjot.ios.<ext>"`**
   (with **`No profiles for 'app.dayjot.ios.<ext>' were found`**): a NEW app
-  extension target (ShareExtension, RecordingWidget, …) is shipping for the
+  extension target (ShareExtension, …) is shipping for the
   first time and its bundle identifier does not exist on the developer portal
   yet. The CI App Store Connect key can create provisioning profiles for
   *existing* identifiers but cannot *register* new ones. Register it once from

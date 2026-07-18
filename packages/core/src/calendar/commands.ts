@@ -6,7 +6,7 @@ import { call } from '../ipc/invoke'
  * Typed bindings for the Rust calendar capability (read-only EventKit —
  * `apps/desktop/src-tauri/src/calendar.rs`). Events are fetched live and
  * never persisted: nothing here touches the index, and no calendar data
- * leaves the machine (docs/porting/calendar-meetings-integration.md).
+ * leaves the machine.
  */
 
 export const calendarAuthorizationStatusSchema = z.enum([

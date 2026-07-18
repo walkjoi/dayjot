@@ -188,7 +188,7 @@ plugin — significant, bounded work; not a rewrite.
 - We own a small Swift (later Kotlin) surface: keyboard insets now; share
   sheet / share-target later.
 - Desktop-only crates get target-gated (`fastembed`, `notify`, `trash`,
-  `tauri-plugin-window-state`) — semantic search and file watching are
+  `tauri-plugin-window-state`) — file watching and friends are
   desktop-only by design in mobile v1.
 - We track Tauri mobile releases closely and pin deliberately; upstream
   keyboard/lifecycle fixes may let us delete our workarounds.

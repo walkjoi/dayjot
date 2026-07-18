@@ -2,7 +2,7 @@ import { lookupContactsByEmail, type ContactMatch } from './commands'
 
 /**
  * Attendee resolution for the calendar flow (see
- * docs/porting/calendar-meetings-integration.md): a meeting attendee's email
+ * the pre-fork design notes (git history)): a meeting attendee's email
  * is looked up in Apple Contacts so the created person note can be pre-filled.
  * Exported ahead of that flow shipping — the suggested-contact card and the
  * meeting flow share this policy.

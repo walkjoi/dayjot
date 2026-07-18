@@ -2,49 +2,15 @@
 
 DayJot is local-first: your notes are markdown files in a folder you chose, the search
 index is SQLite in `.dayjot/` beside them, and **no DayJot-hosted server exists in any
-path** — there is no product analytics and no account. Official release builds send
-scrubbed JavaScript exception diagnostics to Sentry. Every network call the app can make
-is listed here, with what it carries.
+path** — there is no product analytics, no account, and no AI: the app ships no model
+providers and never sends note content to one. Official release builds send scrubbed
+JavaScript exception diagnostics to Sentry. Every network call the app can make is
+listed here, with what it carries.
 
 The one hard rule sits above all of it: **a note with `private: true` frontmatter never
-has its content sent to any external service.** This is enforced in code at every AI
-call site (the `CloudSafe` type brand in `packages/core/src/ai/` — content for a
-provider cannot even be constructed from a private note, and the flag is re-read from
-disk at call time), and it is covered by tests.
-
-## AI chat (off until you add a key)
-
-- **Where:** directly to the provider whose API key *you* added — OpenAI, Anthropic,
-  Google, or OpenRouter. Keys are bring-your-own; DayJot proxies nothing.
-- **What:** your chat messages and configured system prompt, plus what the model's
-  tools read from your graph: search snippets, note content, and note listings. The
-  configured prompt is stored in the device's ordinary settings file and is sent with
-  every chat turn. Private notes are dropped from every tool result, and reading one is
-  refused outright — the model sees a refusal, not the content. That protection cannot
-  identify note content you manually paste into a message or the configured prompt.
-- **When:** only while you use chat (⌘J). No background calls.
-
-## Audio memos (off until you add a key)
-
-- **Where:** directly to your configured providers. OpenAI or Google receives the
-  recording for speech-to-text. A small text model from your configured OpenAI,
-  Anthropic, or Google provider receives the fresh transcript to create the memo
-  title and, when Transcription auto-format is enabled, add punctuation, paragraphs,
-  and light Markdown to the body.
-- **What:** the recorded audio bytes and the transcript produced from that recording.
-  Existing note content is never read or sent. The resulting Markdown is written
-  locally. Because no note content is read, recording works even when today's note is
-  private. Turn Transcription auto-format off in Settings to store the raw provider
-  transcript; the title-generation call still receives that transcript.
-- **When:** when you record a memo, and on retry for memos still awaiting
-  transcription.
-
-## Semantic search (off by default)
-
-- Embeddings are computed **on-device** (a bundled ONNX runtime; `all-MiniLM-L6-v2`)
-  and stored in `.dayjot/`. Note content never leaves the machine for embedding.
-- Enabling it downloads the model (~90 MB) **from Hugging Face, once**. That request
-  carries no user data; the model is cached locally afterwards.
+has its content sent to any external service.** The shared guard lives in
+`packages/core/src/privacy.ts`; every outbound feature (gist publishing today) calls it
+with the flag re-read from disk at call time, and it is covered by tests.
 
 ## Backup & sync (off until you connect)
 
@@ -57,6 +23,14 @@ disk at call time), and it is covered by tests.
 - GitHub sign-in uses the OAuth device flow against `github.com`; the token is stored
   in the OS keychain.
 
+## Publish to gist (per note, on demand)
+
+- **Where:** GitHub Gists, using the same GitHub token as backup.
+- **What:** the body of the one note you publish, as a **secret** gist. Republishing
+  updates the same gist. A note marked `private: true` is refused — the guard runs on
+  the content actually being sent.
+- **When:** only when you run the Publish-to-gist command on a note.
+
 ## Browser capture (the Chrome extension)
 
 - **Where:** nowhere on the network. The **DayJot Capture** extension hands each
@@ -64,7 +38,7 @@ disk at call time), and it is covered by tests.
   app registers on your machine; the host spools it to the capture inbox on disk
   (`<graph>/.dayjot/inbox/`) and the app drains it on next launch. **No DayJot-hosted
   server, no third party, and no other destination is ever contacted** — the extension
-  stores no keys and makes no AI or network calls of its own.
+  stores no keys and makes no network calls of its own.
 - **What:** only the page you explicitly capture (toolbar button or ⌘⇧K) — its URL,
   title, your current text selection, a screenshot of the visible tab, and, only when
   you tick "Capture page text", the page's extracted text. Nothing is read in the
@@ -73,9 +47,10 @@ disk at call time), and it is covered by tests.
 - **When:** when you capture. If the desktop app isn't reachable yet, the capture is
   held in the browser's local extension storage and retried automatically until it
   spools — it is never sent anywhere else in the meantime.
-- Once a capture lands in your graph, the desktop app's rules above apply unchanged:
-  any BYOK AI enrichment of it honors `private: true`, and no content leaves the device
-  except through the calls listed here.
+- **Enrichment:** after a capture lands, the app may fetch **the captured page's URL**
+  once to scrape its title and meta description. That request goes to the site you
+  captured — no other party — and sends no note content. A capture in a
+  `private: true` daily note is skipped entirely.
 
 ## Apple Contacts (off by default)
 
@@ -114,8 +89,6 @@ disk at call time), and it is covered by tests.
 
 ## Housekeeping calls
 
-- **API key validation:** adding a provider key sends one cheap authenticated probe to
-  that provider to test it. No content.
 - **Update check:** the packaged app fetches a release manifest (`latest.json`) from
   this repository's GitHub Releases on launch and every six hours. Stable builds check
   the latest stable release; beta builds check the beta feed. The app downloads the
@@ -125,19 +98,16 @@ disk at call time), and it is covered by tests.
 
 ## Secrets
 
-API keys and tokens live in the **OS keychain only** — never in markdown, never in
-`.dayjot/`, never in git. Deleting a provider in Settings deletes its keychain entry.
+The GitHub token lives in the **OS keychain only** — never in markdown, never in
+`.dayjot/`, never in git. Disconnecting GitHub in Settings deletes it.
 
 ## Summary table
 
 | Call | Destination | Carries note content? | Off by default? |
 | --- | --- | --- | --- |
-| AI chat | Your chosen provider | Yes — private-note tool reads are blocked | Yes (needs your key) |
-| Audio transcription | Your chosen providers | No existing note content; audio and its fresh transcript | Yes (needs your key) |
-| Embeddings | Nowhere (on-device) | — | Yes (opt-in download) |
-| Model download | Hugging Face | No | Yes (opt-in) |
 | Backup | Your git repository | Yes — including private notes | Yes (needs connecting) |
-| Key validation | The provider | No | — (only when adding a key) |
+| Publish to gist | GitHub Gists | Yes — one note, you chose it; private notes refused | — (per-note command) |
+| Capture page scrape | The site you captured | No | — (only after you capture) |
 | Update check | GitHub Releases | No | On in packaged builds |
 | Browser capture | Nowhere (local host on disk) | — (stays on your machine) | — (only when you capture) |
 | Contacts lookup | Nowhere (on-device OS store) | — (stays on your machine) | Yes (opt-in) |

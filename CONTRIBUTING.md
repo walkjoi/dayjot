@@ -3,7 +3,7 @@
 Thanks for helping build DayJot. This is the short version; the full
 contributor/agent guide lives in [AGENTS.md](AGENTS.md), and the architecture
 decisions in
-[docs/plans/architecture-conventions.md](docs/plans/architecture-conventions.md).
+[AGENTS.md](AGENTS.md).
 
 ## Setup
 
@@ -90,6 +90,5 @@ Step-by-step walkthroughs for the most common kinds of change:
 
 ## "Plan NN" in comments?
 
-Numbered plans in [docs/plans/](docs/plans/) are the implementation roadmap;
-a comment citing "Plan 04b" points at that plan's design rationale. Start with
-[docs/plans/00-overview.md](docs/plans/00-overview.md).
+The product's direction is summarized in [docs/product.md](docs/product.md);
+the pre-fork implementation plans live in git history.

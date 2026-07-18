@@ -1,5 +1,5 @@
 //! TEMPORARY Plan 19 spike-A instrumentation — the simulator verdict is
-//! recorded in `docs/plans/19-mobile.md` (step 1); delete once the physical-
+//! recorded in the pre-fork design notes (git history); delete once the physical-
 //! device half of the gate is recorded too.
 //!
 //! On mobile startup this exercises the native capabilities the spike must

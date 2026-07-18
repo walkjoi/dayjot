@@ -16,7 +16,7 @@ import { openSession } from '@/editor/open-documents'
 import { startOperation } from '@/lib/operations'
 
 /**
- * Note templates (docs/porting/note-templates.md): markdown files under
+ * Note templates: markdown files under
  * `templates/`, inserted verbatim at the cursor. This module owns the
  * file-level operations — reading a template's insertable body, inserting it,
  * creating, and renaming — shared by the palette commands, the slash menu,

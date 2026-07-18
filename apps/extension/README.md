@@ -8,7 +8,7 @@ then hand off to the **installed desktop app** through a local native-messaging
 host. No DayJot-hosted services are involved, and capture works even while the
 app is closed: the host spools into the graph's capture inbox
 (`<graph>/.dayjot/inbox/`), and the app drains it on next launch.
-[Plan 11](../../docs/plans/11-link-capture.md) is the design doc.
+[Plan 11](../../the pre-fork design notes (git history)) is the design doc.
 
 The Chrome Web Store carries the
 [upstream Reflect Capture listing](https://chromewebstore.google.com/detail/reflect-capture/ccabifmooehighoonjeiololjfofkhkd),

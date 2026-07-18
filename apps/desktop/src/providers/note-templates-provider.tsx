@@ -9,7 +9,7 @@ import {
 } from 'react'
 
 /**
- * Open state for the template surfaces (docs/porting/note-templates.md):
+ * Open state for the template surfaces:
  * the "Insert template…" picker and the "New template" name dialog — provided
  * once per workspace so the palette commands (via CommandContext) and the
  * dialogs themselves share one definition of "open", the same shape as the

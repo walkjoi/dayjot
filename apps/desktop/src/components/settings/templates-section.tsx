@@ -23,7 +23,7 @@ import { SettingsField } from './field'
 import { SettingsSection } from './section'
 
 /**
- * Note templates (docs/porting/note-templates.md): the `templates/` folder as
+ * Note templates: the `templates/` folder as
  * a settings card. Templates are plain markdown files — a row opens one in the
  * normal editor; rename moves the file to the new name's slug; delete sends it
  * to the trash. "New template" shares the palette command's dialog.
