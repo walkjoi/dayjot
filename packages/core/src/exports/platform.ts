@@ -141,6 +141,8 @@ export {
   SIDEBAR_WIDTH_RANGE,
   CONTEXT_SIDEBAR_WIDTH_RANGE,
   clampSidebarWidth,
+  timestampFormatSchema,
+  timestampKeybindingSchema,
   contactsEnabledSchema,
   themePreferenceSchema,
   timeFormatSchema,

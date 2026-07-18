@@ -4,6 +4,11 @@ import { notePathForRoute, type Route } from '@/routing/route'
 import type { NavigateOptions } from '@/routing/router'
 import { resetOperations } from '@/lib/operations'
 import type { CommandContext } from './types'
+import {
+  resetKeybindingOverridesForTests,
+  setCommandKeybindingOverride,
+} from './keybinding-overrides'
+import { keybindingFor } from './app-commands'
 
 const TODAY = '2026-06-09'
 
@@ -70,6 +75,7 @@ function fakeContext(overrides?: Partial<CommandContext>) {
     toggleSidebar: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
+    timestampFormat: () => '- HH:mm ',
     generation: () => 7,
     openPalette: vi.fn(),
     openShortcuts: vi.fn(),
@@ -372,4 +378,16 @@ describe('app commands', () => {
     }
   })
 
+})
+
+describe('keybindingFor', () => {
+  it('reflects a user override and falls back to the default when cleared', () => {
+    try {
+      setCommandKeybindingOverride('note.insertTimestamp', 'Alt-Mod-t', 'Mod-Shift-t')
+      expect(keybindingFor('note.insertTimestamp')).toBe('Alt-Mod-t')
+    } finally {
+      resetKeybindingOverridesForTests()
+    }
+    expect(keybindingFor('note.insertTimestamp')).toBe('Mod-Shift-t')
+  })
 })

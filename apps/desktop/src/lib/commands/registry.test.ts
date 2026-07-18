@@ -18,6 +18,7 @@ function fakeContext(overrides?: Partial<CommandContext>): CommandContext {
     toggleSidebar: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
+    timestampFormat: () => '- HH:mm ',
     generation: () => 1,
     openPalette: vi.fn(),
     openShortcuts: vi.fn(),

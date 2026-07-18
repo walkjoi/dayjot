@@ -2,7 +2,12 @@ import { useEffect, useMemo, useRef } from 'react'
 import { dailyPath } from '@dayjot/core'
 import { usePalette } from '@/components/command-palette/palette-provider'
 import { registerKeymap } from '@/editor/keymap'
-import { APP_COMMANDS } from '@/lib/commands/app-commands'
+import { APP_COMMANDS, defaultKeybindingFor } from '@/lib/commands/app-commands'
+import {
+  isSuppressedDefaultBinding,
+  overrideCommandIdForBinding,
+  setCommandKeybindingOverride,
+} from '@/lib/commands/keybinding-overrides'
 import { runCommand } from '@/lib/commands/registry'
 import { todayIso } from '@/lib/dates'
 import { setMenuCommandDispatch } from '@/lib/native-menu/dispatch'
@@ -13,6 +18,7 @@ import { useAudioMemo } from '@/providers/audio-memo-provider'
 import { useFocusedDailyDate } from '@/providers/focused-daily-provider'
 import { useGraph } from '@/providers/graph-provider'
 import { useNoteTemplates } from '@/providers/note-templates-provider'
+import { useSettings } from '@/providers/settings-provider'
 import { useShortcuts } from '@/providers/shortcuts-provider'
 import { useSidebar } from '@/providers/sidebar-provider'
 import { useTheme } from '@/providers/theme-provider'
@@ -129,8 +135,14 @@ function idForKeyDown(event: KeyboardEvent): string | null {
       // `Alt-Mod-l` can bind while an alt chord still never fires a plain
       // `Mod-` command.
       const candidate = `${prefix}${shift}${key}`
+      // A user override wins outright, and a default that was remapped away
+      // must stop firing — otherwise both chords would run the command.
+      const overridden = overrideCommandIdForBinding(candidate)
+      if (overridden !== null) {
+        return overridden
+      }
       const id = BINDING_TO_ID.get(candidate)
-      if (id !== undefined) {
+      if (id !== undefined && !isSuppressedDefaultBinding(candidate)) {
         return id
       }
     }
@@ -168,6 +180,21 @@ export function useAppShortcuts(): CommandContext {
   } = useNoteTemplates()
   const { toggleSidebar } = useSidebar()
   const { toggle: toggleAudioMemo } = useAudioMemo()
+  const { settings } = useSettings()
+  const timestampFormatRef = useRef(settings.timestampFormat)
+  useEffect(() => {
+    timestampFormatRef.current = settings.timestampFormat
+  })
+  // Keep the keybinding-override store in sync with Settings -> Editor: the
+  // store feeds both dispatch (above) and every binding display
+  // (keybindingFor), so a remap applies everywhere at once.
+  useEffect(() => {
+    setCommandKeybindingOverride(
+      'note.insertTimestamp',
+      settings.timestampKeybinding,
+      defaultKeybindingFor('note.insertTimestamp') ?? 'Mod-Shift-t',
+    )
+  }, [settings.timestampKeybinding])
 
   // The palette is modal: app shortcuts must not navigate behind its overlay.
   // A ref keeps the listener stable across open/close renders.
@@ -226,6 +253,7 @@ export function useAppShortcuts(): CommandContext {
         void openRecentRef.current(recent.root)
       },
       toggleAudioMemo,
+      timestampFormat: () => timestampFormatRef.current,
       generation: () => generationRef.current,
       openPalette,
       openShortcuts,

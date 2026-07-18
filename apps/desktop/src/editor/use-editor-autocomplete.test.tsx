@@ -21,7 +21,9 @@ vi.mock('@/providers/graph-provider', () => ({
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({
     settings: {
-      contactsEnabled: false,
+      timestampFormat: '- HH:mm ',
+          timestampKeybinding: 'Mod-Shift-t',
+          contactsEnabled: false,
       dateFormat: 'MMM d, yyyy',
       weekStartDay: 1,
     },

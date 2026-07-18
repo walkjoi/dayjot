@@ -10,6 +10,7 @@ import {
 import { attachFilesToNote } from '@/lib/attach-files'
 import { runCopyDeepLink } from '@/lib/note-deep-link'
 import { insertTimestamp } from '@/lib/note-timestamp'
+import { commandKeybindingOverride } from './keybinding-overrides'
 import { runGistPublish } from '@/lib/note-gist'
 import { toggleNotePinned } from '@/lib/note-pin'
 import { toggleNotePrivate } from '@/lib/note-private'
@@ -346,6 +347,11 @@ const APP_COMMANDS: AppCommand[] = [
  * command definition, and disappear if the binding ever does.
  */
 export function keybindingFor(commandId: string): string | null {
+  return commandKeybindingOverride(commandId) ?? defaultKeybindingFor(commandId)
+}
+
+/** The command's built-in binding, ignoring any user override. */
+export function defaultKeybindingFor(commandId: string): string | null {
   return APP_COMMANDS.find((command) => command.id === commandId)?.keybinding ?? null
 }
 

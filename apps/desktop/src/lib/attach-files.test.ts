@@ -22,6 +22,7 @@ function contextFor(notePath: string | null, generation: number | null): Command
     toggleSidebar: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
+    timestampFormat: () => '- HH:mm ',
     generation: () => generation,
     openPalette: vi.fn(),
     openShortcuts: vi.fn(),

@@ -183,6 +183,24 @@ export const allNotesFilterTagsSchema = z.array(z.string()).catch(['book', 'link
 export type AllNotesFilterTags = z.infer<typeof allNotesFilterTagsSchema>
 
 /**
+ * The Markdown the Insert-timestamp command (`note.insertTimestamp`) drops at
+ * the cursor. Tokens: `HH`/`H` (24-hour, padded/plain), `hh`/`h` (12-hour),
+ * `mm`, `ss`, `A`/`a` (AM/PM). Everything else is inserted literally. An
+ * invalid value degrades to the default list-line shape.
+ */
+export const timestampFormatSchema = z.string().min(1).max(120).catch('- HH:mm ')
+
+/**
+ * The Insert-timestamp keybinding, in the app keymap grammar
+ * (`[Alt-]Mod-[Shift-]<key>`; `Mod` is ⌘ on macOS, Ctrl elsewhere). An
+ * invalid value degrades to the default.
+ */
+export const timestampKeybindingSchema = z
+  .string()
+  .regex(/^(Alt-)?(Mod-|Meta-|Ctrl-)(Shift-)?[a-z0-9[\]\\/,.;'`=-]$/)
+  .catch('Mod-Shift-t')
+
+/**
  * Whether the user has finished the mobile onboarding choice (Plan 19, step
  * 6): iCloud Drive or this device. Off by default — a fresh install shows
  * the onboarding screen before anything seeds a graph. Once set, later
@@ -295,6 +313,8 @@ export const settingsSchema = z
     editorFullWidth: editorFullWidthSchema,
     sidebarWidth: sidebarWidthSchema,
     contextSidebarWidth: contextSidebarWidthSchema,
+    timestampFormat: timestampFormatSchema,
+    timestampKeybinding: timestampKeybindingSchema,
     contactsEnabled: contactsEnabledSchema,
     mobileOnboarded: mobileOnboardedSchema,
     mobileStorage: mobileStorageKindSchema,

@@ -13,6 +13,8 @@ describe('settingsSchema', () => {
       editorFullWidth: false,
       sidebarWidth: 260,
       contextSidebarWidth: 320,
+      timestampFormat: '- HH:mm ',
+      timestampKeybinding: 'Mod-Shift-t',
       contactsEnabled: false,
       mobileOnboarded: false,
       mobileStorage: 'local',
@@ -35,6 +37,8 @@ describe('settingsSchema', () => {
     expect(DEFAULT_SETTINGS.editorFullWidth).toBe(false)
     expect(DEFAULT_SETTINGS.sidebarWidth).toBe(260)
     expect(DEFAULT_SETTINGS.contextSidebarWidth).toBe(320)
+    expect(DEFAULT_SETTINGS.timestampFormat).toBe('- HH:mm ')
+    expect(DEFAULT_SETTINGS.timestampKeybinding).toBe('Mod-Shift-t')
     expect(DEFAULT_SETTINGS.contactsEnabled).toBe(false)
     expect(DEFAULT_SETTINGS.mobileOnboarded).toBe(false)
     expect(DEFAULT_SETTINGS.mobileStorage).toBe('local')
@@ -88,6 +92,8 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ dateFormat: 'mdy' }).dateFormat).toBe('mdy')
     expect(settingsSchema.parse({ weekStartDay: 'monday' }).weekStartDay).toBe('monday')
     expect(settingsSchema.parse({ weekStartDay: 'sunday' }).weekStartDay).toBe('sunday')
+    expect(settingsSchema.parse({ timestampFormat: '[HH:mm] ' }).timestampFormat).toBe('[HH:mm] ')
+    expect(settingsSchema.parse({ timestampKeybinding: 'Alt-Mod-t' }).timestampKeybinding).toBe('Alt-Mod-t')
     expect(settingsSchema.parse({ contactsEnabled: true }).contactsEnabled).toBe(true)
     expect(settingsSchema.parse({ contactsEnabled: false }).contactsEnabled).toBe(false)
     expect(
@@ -143,6 +149,10 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ dateFormat: 10 }).dateFormat).toBe('mdy')
     expect(settingsSchema.parse({ weekStartDay: 'saturday' }).weekStartDay).toBe('monday')
     expect(settingsSchema.parse({ weekStartDay: 42 }).weekStartDay).toBe('monday')
+    expect(settingsSchema.parse({ timestampFormat: '' }).timestampFormat).toBe('- HH:mm ')
+    expect(settingsSchema.parse({ timestampFormat: 42 }).timestampFormat).toBe('- HH:mm ')
+    expect(settingsSchema.parse({ timestampKeybinding: 'q' }).timestampKeybinding).toBe('Mod-Shift-t')
+    expect(settingsSchema.parse({ timestampKeybinding: 'Shift-t' }).timestampKeybinding).toBe('Mod-Shift-t')
     expect(settingsSchema.parse({ contactsEnabled: 'yes' }).contactsEnabled).toBe(false)
     expect(settingsSchema.parse({ contactsEnabled: 1 }).contactsEnabled).toBe(false)
     expect(settingsSchema.parse({ allNotesFilterTags: 'book' }).allNotesFilterTags).toEqual([
@@ -175,6 +185,8 @@ describe('settingsSchema', () => {
       editorFullWidth: false,
       sidebarWidth: 260,
       contextSidebarWidth: 320,
+      timestampFormat: '- HH:mm ',
+      timestampKeybinding: 'Mod-Shift-t',
       contactsEnabled: false,
       mobileOnboarded: false,
       mobileStorage: 'local',

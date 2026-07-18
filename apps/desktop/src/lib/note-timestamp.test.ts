@@ -5,7 +5,7 @@ import {
   unregisterNoteEditorHandle,
 } from '@/editor/editor-handle-registry'
 import type { CommandContext } from '@/lib/commands/types'
-import { insertTimestamp, timestampLine } from './note-timestamp'
+import { DEFAULT_TIMESTAMP_FORMAT, insertTimestamp, renderTimestamp } from './note-timestamp'
 
 function fakeHandle(): NoteEditorHandle & { inserted: string[] } {
   const inserted: string[] = []
@@ -21,8 +21,11 @@ function fakeHandle(): NoteEditorHandle & { inserted: string[] } {
   } as unknown as NoteEditorHandle & { inserted: string[] }
 }
 
-function contextFor(notePath: string | null): CommandContext {
-  return { notePath: () => notePath } as unknown as CommandContext
+function contextFor(
+  notePath: string | null,
+  format: string = DEFAULT_TIMESTAMP_FORMAT,
+): CommandContext {
+  return { notePath: () => notePath, timestampFormat: () => format } as unknown as CommandContext
 }
 
 const registered: Array<{ path: string; handle: NoteEditorHandle }> = []
@@ -38,23 +41,44 @@ afterEach(() => {
   }
 })
 
-describe('timestampLine', () => {
-  it('formats 24-hour local time as a list line, zero-padded', () => {
-    expect(timestampLine(new Date(2026, 6, 17, 14, 5))).toBe('- 14:05 ')
-    expect(timestampLine(new Date(2026, 6, 17, 9, 30))).toBe('- 09:30 ')
-    expect(timestampLine(new Date(2026, 6, 17, 0, 0))).toBe('- 00:00 ')
-    expect(timestampLine(new Date(2026, 6, 17, 23, 59))).toBe('- 23:59 ')
+describe('renderTimestamp', () => {
+  const at = new Date(2026, 6, 17, 14, 5, 9)
+
+  it('renders the default list-line shape, zero-padded 24-hour', () => {
+    expect(renderTimestamp(DEFAULT_TIMESTAMP_FORMAT, at)).toBe('- 14:05 ')
+    expect(renderTimestamp(DEFAULT_TIMESTAMP_FORMAT, new Date(2026, 6, 17, 0, 0))).toBe(
+      '- 00:00 ',
+    )
+    expect(renderTimestamp(DEFAULT_TIMESTAMP_FORMAT, new Date(2026, 6, 17, 23, 59))).toBe(
+      '- 23:59 ',
+    )
+  })
+
+  it('supports 12-hour, seconds, and AM/PM tokens', () => {
+    expect(renderTimestamp('h:mm A — ', at)).toBe('2:05 PM — ')
+    expect(renderTimestamp('hh:mm:ss a', at)).toBe('02:05:09 pm')
+    expect(renderTimestamp('h a', new Date(2026, 6, 17, 0, 30))).toBe('12 am')
+    expect(renderTimestamp('H:mm', new Date(2026, 6, 17, 9, 7))).toBe('9:07')
+  })
+
+  it('passes non-token text through literally — tokens only match standalone', () => {
+    expect(renderTimestamp('## HH:mm — ', at)).toBe('## 14:05 — ')
+    expect(renderTimestamp('> logged at HH:mm', at)).toBe('> logged at 14:05')
+    expect(renderTimestamp('hash', at)).toBe('hash')
   })
 })
 
 describe('insertTimestamp', () => {
-  it('inserts the timestamp line at the routed note’s caret and refocuses', () => {
+  it('inserts the configured format at the routed note’s caret and refocuses', () => {
     const handle = fakeHandle()
     mount('daily/2026-07-17.md', handle)
 
-    insertTimestamp(contextFor('daily/2026-07-17.md'), new Date(2026, 6, 17, 15, 42))
+    insertTimestamp(
+      contextFor('daily/2026-07-17.md', '[h:mm a] '),
+      new Date(2026, 6, 17, 15, 42),
+    )
 
-    expect(handle.inserted).toEqual(['- 15:42 '])
+    expect(handle.inserted).toEqual(['[3:42 pm] '])
     expect(handle.focus).toHaveBeenCalledTimes(1)
   })
 

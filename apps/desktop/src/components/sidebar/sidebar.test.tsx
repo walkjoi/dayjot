@@ -144,6 +144,7 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
     toggleSidebar: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
+    timestampFormat: () => '- HH:mm ',
     generation: () => 1,
     openPalette,
     openShortcuts: vi.fn(),

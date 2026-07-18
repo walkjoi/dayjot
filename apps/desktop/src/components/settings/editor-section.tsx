@@ -7,6 +7,7 @@ import { KeyboardShortcutsField } from './keyboard-shortcuts-field'
 import { SettingsOptionCard } from './option-card'
 import { SettingsSection } from './section'
 import { SettingsSwitchField } from './switch-field'
+import { TimestampField } from './timestamp-field'
 
 interface MarkdownSyntaxOption {
   value: EditorMarkdownSyntax
@@ -180,6 +181,7 @@ export function EditorSection(): ReactElement {
         onCheckedChange={(checked) => updateSettings({ editorSmoothCaretAnimation: checked })}
       />
 
+      <TimestampField />
       <KeyboardShortcutsField />
     </SettingsSection>
   )
