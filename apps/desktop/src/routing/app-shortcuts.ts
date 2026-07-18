@@ -44,10 +44,10 @@ export const APP_BINDINGS = registerKeymap(
 const BINDING_TO_ID = new Map(BOUND_COMMANDS.map(({ binding, command }) => [binding, command.id]))
 const HISTORY_COMMAND_IDS = new Set(['history.back', 'history.forward'])
 
-// AppKit owns this key equivalent on macOS. Keep it in the registry for
+// AppKit owns these key equivalents on macOS. Keep them in the registry for
 // display, collision detection, and the plain-browser/non-macOS fallback, but
-// do not consume its keydown in the webview before the native menu sees it.
-const NATIVE_MACOS_MENU_COMMAND_IDS = new Set(['sidebar.toggle'])
+// do not consume their keydown in the webview before the native menu sees it.
+const NATIVE_MACOS_MENU_COMMAND_IDS = new Set(['sidebar.toggle', 'contextPanel.toggle'])
 
 const CODE_TO_BINDING_KEY: Record<string, string> = {
   BracketLeft: '[',
@@ -177,7 +177,7 @@ export function useAppShortcuts(): CommandContext {
     pickerOpen: templatePickerOpen,
     createOpen: templateCreateOpen,
   } = useNoteTemplates()
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, toggleContextPanel } = useSidebar()
   const { settings } = useSettings()
   const timestampFormatRef = useRef(settings.timestampFormat)
   useEffect(() => {
@@ -243,6 +243,7 @@ export function useAppShortcuts(): CommandContext {
       clearScrollState,
       toggleTheme: () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'),
       toggleSidebar,
+      toggleContextPanel,
       switchGraph: (index) => {
         const recent = recentsRef.current[index]
         if (recent === undefined || recent.root === graphRootRef.current) {
@@ -269,6 +270,7 @@ export function useAppShortcuts(): CommandContext {
       openTemplatePicker,
       openTemplateCreate,
       toggleSidebar,
+      toggleContextPanel,
     ],
   )
 

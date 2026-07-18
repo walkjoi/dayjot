@@ -14,9 +14,10 @@ export interface CommandContext {
   route: () => Route
   /**
    * The note file note-scoped commands (pin, private, publish) act on, or null
-   * for screens that edit no note. Usually the routed note, but in the daily
-   * stream it's the **focused** day — the same note the context sidebar
-   * describes — so a command and the sidebar never target different days.
+   * for screens that edit no note. Usually the routed note, but on a daily
+   * view it's the day the canvas **shows** — the same note the context
+   * sidebar describes — so a command and the sidebar never target different
+   * days.
    */
   notePath: () => string | null
   back: () => void
@@ -24,8 +25,10 @@ export interface CommandContext {
   /** Discard the current view's saved scroll offsets so it re-anchors when revisited. */
   clearScrollState: () => void
   toggleTheme: () => void
-  /** Collapse/expand the workspace and contextual sidebars. */
+  /** Collapse/expand the left workspace sidebar. */
   toggleSidebar: () => void
+  /** Collapse/expand the right context panel. */
+  toggleContextPanel: () => void
   /** Switch to a recent graph by zero-based position in the graph switcher. */
   switchGraph: (index: number) => void
   /** The configured Insert-timestamp format (Settings -> Editor). */

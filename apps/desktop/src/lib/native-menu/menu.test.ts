@@ -124,6 +124,15 @@ describe('installNativeMenu', () => {
     expect(sidebarToggle?.action).toBeTypeOf('function')
     sidebarToggle?.action?.('sidebar.toggle')
     expect(dispatch).toHaveBeenCalledWith('sidebar.toggle')
+
+    // The context panel's toggle sits beside it, on the shifted accelerator.
+    const contextToggle = viewMenu?.items.find((item) => item.id === 'contextPanel.toggle')
+    expect(contextToggle).toMatchObject({
+      id: 'contextPanel.toggle',
+      text: 'Toggle context panel',
+      accelerator: 'CmdOrCtrl+Shift+\\',
+    })
+
     expect(menuNew).toHaveBeenCalledTimes(1)
     expect(setAsAppMenu).toHaveBeenCalledTimes(1)
     expect(isNativeMenuInstalled()).toBe(true)

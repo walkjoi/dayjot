@@ -221,13 +221,25 @@ describe('app shortcuts', () => {
 
   it('⌘\\ toggles the sidebar in both directions', () => {
     const { result } = shortcutsHook()
-    expect(result.current.sidebar.collapsed).toBe(false)
+    expect(result.current.sidebar.sidebarCollapsed).toBe(false)
 
     act(() => press('\\'))
-    expect(result.current.sidebar.collapsed).toBe(true)
+    expect(result.current.sidebar.sidebarCollapsed).toBe(true)
 
     act(() => press('\\'))
-    expect(result.current.sidebar.collapsed).toBe(false)
+    expect(result.current.sidebar.sidebarCollapsed).toBe(false)
+  })
+
+  it('⌘⇧\\ toggles the context panel without touching the sidebar', () => {
+    const { result } = shortcutsHook()
+    expect(result.current.sidebar.contextCollapsed).toBe(false)
+
+    act(() => press('\\', { shiftKey: true }))
+    expect(result.current.sidebar.contextCollapsed).toBe(true)
+    expect(result.current.sidebar.sidebarCollapsed).toBe(false)
+
+    act(() => press('\\', { shiftKey: true }))
+    expect(result.current.sidebar.contextCollapsed).toBe(false)
   })
 
   it('keeps the macOS webview fallback until the native menu is installed', () => {
@@ -243,7 +255,7 @@ describe('app shortcuts', () => {
       window.dispatchEvent(event)
     })
     expect(event.defaultPrevented).toBe(true)
-    expect(result.current.sidebar.collapsed).toBe(true)
+    expect(result.current.sidebar.sidebarCollapsed).toBe(true)
   })
 
   it('leaves ⌘\\ to the native macOS menu accelerator', () => {
@@ -260,10 +272,10 @@ describe('app shortcuts', () => {
       window.dispatchEvent(event)
     })
     expect(event.defaultPrevented).toBe(false)
-    expect(result.current.sidebar.collapsed).toBe(false)
+    expect(result.current.sidebar.sidebarCollapsed).toBe(false)
 
     act(() => dispatchMenuCommand('sidebar.toggle'))
-    expect(result.current.sidebar.collapsed).toBe(true)
+    expect(result.current.sidebar.sidebarCollapsed).toBe(true)
   })
 
   it('defers ⌘K to a focused editor that already handled it', () => {

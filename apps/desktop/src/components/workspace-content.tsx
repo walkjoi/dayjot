@@ -8,6 +8,7 @@ import { type ContextSidebarTarget } from '@/components/context-sidebar/sidebar-
 import { RouteContent } from '@/components/route-content'
 import { ShortcutsDialog } from '@/components/shortcuts-dialog'
 import { Sidebar } from '@/components/sidebar/sidebar'
+import { SidebarExpandButton } from '@/components/sidebar/sidebar-toggle'
 import { SidebarResizeHandle } from '@/components/sidebar-resize-handle'
 import { TemplateCreateDialog } from '@/components/templates/template-create-dialog'
 import { TemplatePicker } from '@/components/templates/template-picker'
@@ -39,7 +40,7 @@ function contextSidebarFor(target: ContextSidebarTarget | null): ReactElement | 
  * mounts.
  */
 export function WorkspaceContent({ graph }: WorkspaceContentProps): ReactElement {
-  const { collapsed } = useSidebar()
+  const { sidebarCollapsed, contextCollapsed } = useSidebar()
   const commandContext = useAppShortcuts()
   // Daily routes get the day's contextual panel and note routes the note's;
   // search/settings get none (AppShell omits the region when context is absent).
@@ -49,12 +50,15 @@ export function WorkspaceContent({ graph }: WorkspaceContentProps): ReactElement
 
   return (
     <AppShell
-      sidebar={collapsed ? undefined : <Sidebar graph={graph} context={commandContext} />}
+      sidebar={
+        sidebarCollapsed ? undefined : <Sidebar graph={graph} context={commandContext} />
+      }
       sidebarEdge={<SidebarResizeHandle panel="workspace" />}
-      context={collapsed ? undefined : contextSidebarFor(contextTarget)}
+      context={contextCollapsed ? undefined : contextSidebarFor(contextTarget)}
       contextEdge={<SidebarResizeHandle panel="context" />}
     >
       <div className="relative flex h-full flex-col">
+        {sidebarCollapsed ? <SidebarExpandButton /> : null}
         <div className="min-h-0 flex-1">
           <RouteContent />
         </div>

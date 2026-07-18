@@ -111,6 +111,7 @@ export function appMenuLayout(): AppSubmenuLayout[] {
         command('history.forward'),
         separator(),
         command('sidebar.toggle'),
+        command('contextPanel.toggle'),
         separator(),
         command('dev.toggleDevtools'),
       ],
@@ -178,8 +179,8 @@ function isMacosDesktop(): boolean {
  * menubar we haven't designed for, and every shortcut already works there
  * through the keydown path. Most keyboard equivalents the webview handles are
  * consumed before the menu sees them (`useAppShortcuts` prevents the default),
- * so a focused webview never double-fires a command. The sidebar toggle is
- * deliberately exempted there so its key equivalent belongs to this native
+ * so a focused webview never double-fires a command. The panel toggles are
+ * deliberately exempted there so their key equivalents belong to this native
  * macOS application menu.
  */
 export async function installNativeMenu(): Promise<void> {

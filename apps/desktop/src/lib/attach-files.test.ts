@@ -20,6 +20,7 @@ function contextFor(notePath: string | null, generation: number | null): Command
     forward: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
+    toggleContextPanel: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => generation,

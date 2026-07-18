@@ -2,14 +2,17 @@ import { cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GraphInfo } from '@dayjot/core'
 import type { ContextSidebarTarget } from '@/components/context-sidebar/sidebar-route'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 interface WorkspaceState {
-  collapsed: boolean
+  sidebarCollapsed: boolean
+  contextCollapsed: boolean
   target: ContextSidebarTarget | null
 }
 
 const workspaceState = vi.hoisted<WorkspaceState>(() => ({
-  collapsed: false,
+  sidebarCollapsed: false,
+  contextCollapsed: false,
   target: { kind: 'daily', date: '2026-07-11' },
 }))
 
@@ -39,7 +42,12 @@ vi.mock('@/providers/focused-daily-provider', () => ({
   useDailyContextTarget: () => workspaceState.target,
 }))
 vi.mock('@/providers/sidebar-provider', () => ({
-  useSidebar: () => ({ collapsed: workspaceState.collapsed, toggleSidebar: vi.fn() }),
+  useSidebar: () => ({
+    sidebarCollapsed: workspaceState.sidebarCollapsed,
+    contextCollapsed: workspaceState.contextCollapsed,
+    toggleSidebar: vi.fn(),
+    toggleContextPanel: vi.fn(),
+  }),
 }))
 // The AppShell asides mount resize handles, which read the persisted widths.
 vi.mock('@/providers/settings-provider', () => ({
@@ -56,38 +64,63 @@ const { WorkspaceContent } = await import('./workspace-content')
 const GRAPH: GraphInfo = { root: '/notes', name: 'Notes', generation: 1 }
 
 beforeEach(() => {
-  workspaceState.collapsed = false
+  workspaceState.sidebarCollapsed = false
+  workspaceState.contextCollapsed = false
   workspaceState.target = { kind: 'daily', date: '2026-07-11' }
 })
 
 afterEach(cleanup)
 
+function renderWorkspace() {
+  return render(
+    <TooltipProvider>
+      <WorkspaceContent graph={GRAPH} />
+    </TooltipProvider>,
+  )
+}
+
 describe('WorkspaceContent', () => {
-  it('hides and restores the workspace and daily context sidebars together', () => {
-    const view = render(<WorkspaceContent graph={GRAPH} />)
+  it('collapses the workspace sidebar on its own, leaving the context panel up', () => {
+    const view = renderWorkspace()
 
     expect(view.getByRole('complementary', { name: 'Workspace' })).toBeTruthy()
     expect(view.getByRole('complementary', { name: 'Context' })).toBeTruthy()
     expect(view.getByTestId('daily-context').textContent).toBe('2026-07-11')
+    expect(view.queryByRole('button', { name: 'Expand sidebar' })).toBeNull()
 
-    workspaceState.collapsed = true
-    view.rerender(<WorkspaceContent graph={GRAPH} />)
+    workspaceState.sidebarCollapsed = true
+    view.rerender(
+      <TooltipProvider>
+        <WorkspaceContent graph={GRAPH} />
+      </TooltipProvider>,
+    )
     expect(view.queryByRole('complementary', { name: 'Workspace' })).toBeNull()
-    expect(view.queryByRole('complementary', { name: 'Context' })).toBeNull()
-
-    workspaceState.collapsed = false
-    view.rerender(<WorkspaceContent graph={GRAPH} />)
-    expect(view.getByRole('complementary', { name: 'Workspace' })).toBeTruthy()
     expect(view.getByRole('complementary', { name: 'Context' })).toBeTruthy()
+    // The reopen affordance floats in the note pane while the sidebar hides.
+    expect(view.getByRole('button', { name: 'Expand sidebar' })).toBeTruthy()
+
+    workspaceState.sidebarCollapsed = false
+    view.rerender(
+      <TooltipProvider>
+        <WorkspaceContent graph={GRAPH} />
+      </TooltipProvider>,
+    )
+    expect(view.getByRole('complementary', { name: 'Workspace' })).toBeTruthy()
+    expect(view.queryByRole('button', { name: 'Expand sidebar' })).toBeNull()
   })
 
-  it('applies the same collapsed state to ordinary note context', () => {
+  it('collapses the context panel on its own, leaving the sidebar up', () => {
     workspaceState.target = { kind: 'note', path: 'notes/project.md' }
-    const view = render(<WorkspaceContent graph={GRAPH} />)
+    const view = renderWorkspace()
     expect(view.getByTestId('note-context').textContent).toBe('notes/project.md')
 
-    workspaceState.collapsed = true
-    view.rerender(<WorkspaceContent graph={GRAPH} />)
+    workspaceState.contextCollapsed = true
+    view.rerender(
+      <TooltipProvider>
+        <WorkspaceContent graph={GRAPH} />
+      </TooltipProvider>,
+    )
     expect(view.queryByRole('complementary', { name: 'Context' })).toBeNull()
+    expect(view.getByRole('complementary', { name: 'Workspace' })).toBeTruthy()
   })
 })

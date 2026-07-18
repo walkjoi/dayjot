@@ -12,6 +12,7 @@ import {
 import type { CommandContext } from '@/lib/commands/types'
 import type { NoteRoute, Route } from '@/routing/route'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { SidebarProvider } from '@/providers/sidebar-provider'
 import { UpdateProvider } from '@/providers/update-provider'
 import { RouterProvider } from '@/routing/router'
 
@@ -123,6 +124,7 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
     clearScrollState: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
+    toggleContextPanel: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 1,
@@ -138,7 +140,9 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
       <QueryClientProvider client={client}>
         <UpdateProvider autoCheck={false}>
           <RouterProvider initialRoute={initialRoute}>
-            <Sidebar graph={GRAPH} context={context} />
+            <SidebarProvider>
+              <Sidebar graph={GRAPH} context={context} />
+            </SidebarProvider>
           </RouterProvider>
         </UpdateProvider>
       </QueryClientProvider>
@@ -148,6 +152,12 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
 }
 
 describe('Sidebar', () => {
+  it('offers the collapse toggle in its top row', () => {
+    const { view } = renderSidebar()
+
+    expect(view.getByRole('button', { name: 'Collapse sidebar' })).toBeTruthy()
+  })
+
   it('nav rows navigate, with Daily notes always re-anchoring to today', async () => {
     const { view, navigate } = renderSidebar(undefined, { kind: 'settings' })
 

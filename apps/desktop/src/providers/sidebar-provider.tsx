@@ -10,32 +10,42 @@ import {
 
 /**
  * Side-panel visibility state, provided once per workspace so the shell
- * (which renders or hides both sidebar regions) and the command registry
- * (`⌘\` / "Toggle sidebar") share one source of truth. Session-only by
- * design — a relaunch starts expanded.
+ * (which renders or hides the two aside regions), the sidebar's own collapse
+ * button, and the command registry (`⌘\` / `⌘⇧\`) share one source of truth.
+ * The panels collapse independently: the left workspace sidebar and the
+ * right context panel each keep their own flag. Session-only by design — a
+ * relaunch starts expanded.
  */
 
 interface SidebarContextValue {
-  collapsed: boolean
+  /** The left workspace sidebar (navigation, pins, graph switcher). */
+  sidebarCollapsed: boolean
+  /** The right context panel (calendar, backlinks). */
+  contextCollapsed: boolean
   toggleSidebar: () => void
+  toggleContextPanel: () => void
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null)
 
 export function SidebarProvider({ children }: { children: ReactNode }): ReactElement {
-  const [collapsed, setCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [contextCollapsed, setContextCollapsed] = useState(false)
   const toggleSidebar = useCallback(() => {
-    setCollapsed((current) => !current)
+    setSidebarCollapsed((current) => !current)
+  }, [])
+  const toggleContextPanel = useCallback(() => {
+    setContextCollapsed((current) => !current)
   }, [])
 
   const value = useMemo<SidebarContextValue>(
-    () => ({ collapsed, toggleSidebar }),
-    [collapsed, toggleSidebar],
+    () => ({ sidebarCollapsed, contextCollapsed, toggleSidebar, toggleContextPanel }),
+    [sidebarCollapsed, contextCollapsed, toggleSidebar, toggleContextPanel],
   )
   return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
 }
 
-/** Access side-panel visibility + the toggle. Use within a SidebarProvider. */
+/** Access side-panel visibility + the toggles. Use within a SidebarProvider. */
 export function useSidebar(): SidebarContextValue {
   const context = useContext(SidebarContext)
   if (!context) {
