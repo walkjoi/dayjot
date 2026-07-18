@@ -9,7 +9,7 @@ app state, never a remote control.
 ## Navigation links
 
 ```text
-dayjot://today                     the daily stream, on today
+dayjot://today                     the daily view, on today
 dayjot://daily/2026-07-01          a specific day (ISO YYYY-MM-DD)
 dayjot://note/<target>             a note — see resolution below
 dayjot://search?q=meeting          the search screen, query prefilled

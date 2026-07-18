@@ -24,8 +24,8 @@ export type NoteLinkNavigation = (
  * scope while the open was in flight.
  *
  * @param scopeKey optional surface-local navigation state that should also
- *   invalidate a pending fallback (for example, the daily stream's focused
- *   date, which can change without a router navigation).
+ *   invalidate a pending fallback (for example, the sidebar calendar's
+ *   selected date, which can change without a router navigation).
  */
 export function useNoteLinkNavigation(scopeKey?: string | number | null): NoteLinkNavigation {
   const { navigate } = useRouter()

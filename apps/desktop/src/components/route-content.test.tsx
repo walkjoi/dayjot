@@ -7,6 +7,7 @@ import { setBridge } from '@dayjot/core'
 import { PaletteProvider, usePalette } from '@/components/command-palette/palette-provider'
 import { flushOpenDocuments } from '@/editor/open-documents'
 import type { NoteEditorHandle } from '@/editor/note-editor'
+import { FocusedDailyProvider } from '@/providers/focused-daily-provider'
 import { RouterProvider } from '@/routing/router'
 import type { Route } from '@/routing/route'
 import { setPlatformSurface } from '@/lib/platform-surface'
@@ -106,10 +107,7 @@ vi.mock('@/providers/settings-provider', () => ({
 vi.mock('@/components/settings-screen', () => ({
   SettingsScreen: () => <div data-testid="settings-screen" />,
 }))
-// The chat screen needs the ChatProvider stack (covered by its own tests);
-// here only the route → view mapping is under test.
-
-// jsdom implements neither — the daily stream's virtualizer needs both.
+// jsdom implements neither — All Notes' virtualized table needs both.
 class ResizeObserverStub {
   observe(): void {}
   unobserve(): void {}
@@ -169,33 +167,38 @@ function renderRoute(route: Route) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(<TooltipProvider><QueryClientProvider client={client}>
       <RouterProvider initialRoute={route}>
-        <PaletteProvider>
-          <RouteContent />
-          <PaletteProbe />
-        </PaletteProvider>
+        <FocusedDailyProvider>
+          <PaletteProvider>
+            <RouteContent />
+            <PaletteProbe />
+          </PaletteProvider>
+        </FocusedDailyProvider>
       </RouterProvider>
     </QueryClientProvider></TooltipProvider>)
 }
 
 describe('RouteContent', () => {
-  it('renders the daily stream for the today route', () => {
+  it('renders a single-day canvas for the today route', () => {
     const view = renderRoute({ kind: 'today' })
-    expect(view.getByTestId('daily-stream')).toBeDefined()
+    // Exactly one day heading on screen — the canvas never shows other dates.
+    expect(view.container.querySelectorAll('.dayjot-daily-subject')).toHaveLength(1)
+    expect(view.getByRole('button', { name: 'Previous day' })).toBeDefined()
+    expect(view.getByRole('button', { name: 'Next day' })).toBeDefined()
     view.unmount()
   })
 
-  it('renders the daily stream for a daily route, surviving a malformed date', () => {
+  it('renders a single-day canvas for a daily route, surviving a malformed date', () => {
     const view = renderRoute({ kind: 'daily', date: '2026-02-31' })
-    expect(view.getByTestId('daily-stream')).toBeDefined()
+    expect(view.container.querySelectorAll('.dayjot-daily-subject')).toHaveLength(1)
     view.unmount()
   })
 
-  it('renders an existing non-daily note as an editable pane, not the stream', async () => {
+  it('renders an existing non-daily note as an editable pane, not the daily canvas', async () => {
     files['notes/exist.md'] = '# Hello\n\nWorld.\n'
     const view = renderRoute({ kind: 'note', path: 'notes/exist.md' })
 
     await view.findByLabelText('Editing notes/exist.md')
-    expect(view.queryByTestId('daily-stream')).toBeNull()
+    expect(view.container.querySelector('.dayjot-daily-subject')).toBeNull()
     expect(view.getByTestId('fake-editor').textContent).toContain('# Hello')
     expect(editorProbe.hoverRenderer).toBe(true)
 
@@ -265,10 +268,10 @@ describe('RouteContent', () => {
   })
 
 
-  it('renders the All Notes screen for the allNotes route, not the stream', async () => {
+  it('renders the All Notes screen for the allNotes route, not the daily canvas', async () => {
     const view = renderRoute({ kind: 'allNotes', tag: null })
     expect(view.getByLabelText('All notes')).toBeDefined()
-    expect(view.queryByTestId('daily-stream')).toBeNull()
+    expect(view.container.querySelector('.dayjot-daily-subject')).toBeNull()
     // The pinned filter tabs come from settings; the table header renders
     // once the (empty) index query settles.
     expect(view.getByRole('button', { name: '#book' })).toBeDefined()
@@ -277,9 +280,9 @@ describe('RouteContent', () => {
     view.unmount()
   })
 
-  it('arriving on a search route opens the palette pre-filled over the stream', async () => {
+  it('arriving on a search route opens the palette pre-filled over the daily canvas', async () => {
     const view = renderRoute({ kind: 'search', query: 'roadmap' })
-    expect(view.getByTestId('daily-stream')).toBeDefined()
+    expect(view.container.querySelectorAll('.dayjot-daily-subject')).toHaveLength(1)
     await waitFor(() =>
       expect(JSON.parse(view.getByTestId('palette').textContent ?? '')).toEqual({
         open: true,

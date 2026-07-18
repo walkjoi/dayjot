@@ -15,27 +15,26 @@ import { effectiveDailyDate } from '@/routing/route'
 import { useRouter } from '@/routing/router'
 
 /**
- * Which day in the daily stream currently holds the user's focus, so the
- * context sidebar can describe *that* day rather than the routed one.
+ * Which day the daily canvas is showing, so the context sidebar can describe
+ * *that* day rather than the one the route would resolve to.
  *
- * The daily stream is a run of per-day editors under a single `daily/:date`
- * route: scrolling or clicking to another day moves focus but never changes the
- * route (only the calendar does). Without this, the right sidebar — derived
- * purely from the route — stays pinned to the routed day while the user edits a
- * different one, so its note actions (pin, private, publish) and the published
- * URL all describe the wrong note.
+ * The canvas shows exactly one day, but the `today` route pins its date at
+ * arrival time: after midnight the route still says "today" while the canvas
+ * (deliberately) keeps the day the user arrived on. Without this, the right
+ * sidebar — derived purely from the route — would flip to the new calendar
+ * day while the user is still editing yesterday's note, so its note actions
+ * (pin, publish) and backlinks would describe the wrong note.
  *
- * The stream is the only writer (it sets the focused day on focus); the
- * workspace shell reads it and falls back to the routed day when nothing in the
- * stream is focused — which is also the calendar-pick path. Split into separate
- * value/setter contexts so the heavy stream can consume the (stable) setter
- * without re-rendering every time the focused day changes.
+ * The daily canvas is the only writer (it reports the day it shows); the
+ * workspace shell reads it and falls back to the routed day when no canvas is
+ * mounted. Split into separate value/setter contexts so the canvas can
+ * consume the (stable) setter without re-rendering on every read.
  */
 
 const FocusedDailyDateContext = createContext<string | null>(null)
 const SetFocusedDailyDateContext = createContext<(date: string | null) => void>(() => {})
 
-/** Provides the focused-day state to the workspace shell and the daily stream. */
+/** Provides the focused-day state to the workspace shell and the daily canvas. */
 export function FocusedDailyProvider({ children }: { children: ReactNode }): ReactElement {
   const [focusedDate, setFocusedDate] = useState<string | null>(null)
   return (
@@ -47,7 +46,7 @@ export function FocusedDailyProvider({ children }: { children: ReactNode }): Rea
   )
 }
 
-/** The focused day, or `null` when nothing in the stream is focused. */
+/** The day on the daily canvas, or `null` when no canvas is mounted. */
 export function useFocusedDailyDate(): string | null {
   return useContext(FocusedDailyDateContext)
 }
@@ -58,19 +57,17 @@ export function useSetFocusedDailyDate(): (date: string | null) => void {
 }
 
 /**
- * The context-sidebar target for the current route, following the day focused
- * in the daily stream and snapping back to the routed subject on navigation.
+ * The context-sidebar target for the current route, following the day the
+ * daily canvas shows and snapping back to the routed subject on navigation.
  *
- * On a daily view the sidebar describes the focused day, not the routed one (the
- * stream keeps a single `daily/:date` route as focus moves between days) — the
- * {@link effectiveDailyDate} precedence the note-scoped commands share. Focus
- * deliberately *stays* through transient moves — opening ⌘K, clicking a sidebar
- * button — rather than flicking back and out again: what restores the routed day
- * is navigation, not blur. So the reset keys off the same signals the stream
- * re-anchors on (`arrivalSeq`/`entryId`), not the routed date, so re-targeting
- * the current day (a calendar pick on it, ⌘D to today) snaps back too. It runs
- * pre-paint (a layout effect) so no stale day shows before the stream re-focuses
- * the target; with nothing focused it is just the routed subject.
+ * On a daily view the sidebar describes the canvas's day, not the one the
+ * route resolves to (the `today` route pins its date at arrival, so after
+ * midnight they differ) — the {@link effectiveDailyDate} precedence the
+ * note-scoped commands share. The reported day deliberately *stays* through
+ * transient moves — opening ⌘K, clicking a sidebar button — and resets only
+ * on the signals a navigation produces (`arrivalSeq`/`entryId`), pre-paint
+ * (a layout effect) so no stale day shows before the canvas re-reports its
+ * target; with nothing reported it is just the routed subject.
  */
 export function useDailyContextTarget(): ContextSidebarTarget | null {
   const { route, arrivalSeq, entryId } = useRouter()

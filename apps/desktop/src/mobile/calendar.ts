@@ -7,9 +7,8 @@ import { monthOf } from '@/lib/month-grid'
  * Date math for the V1-parity Daily surface's **calendar strip** — the month
  * header and pageable week row above the day carousel. Pure; the strip
  * component and {@link module:@/mobile/use-week-strip} stay thin over it. The
- * carousel's own slide-window math is the shared
- * {@link module:@/lib/day-window} (the desktop daily stream uses the same
- * module), so day-paging stays consistent across surfaces.
+ * carousel's own slide-window math lives in
+ * {@link module:@/lib/day-window}, so day-paging stays consistent.
  */
 
 /** The first day of `date`'s week, honoring the week-start setting. */

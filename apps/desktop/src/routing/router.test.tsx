@@ -136,7 +136,7 @@ describe('router', () => {
 
   it('can restore the daily surface scroll when a tab switch returns to today', () => {
     const { result } = routerHook()
-    act(() => result.current.saveScrollState(500)) // user scrolled the daily stream
+    act(() => result.current.saveScrollState(500)) // user scrolled the day's note
     act(() => result.current.navigate({ kind: 'note', path: 'notes/a.md' }))
     act(() => result.current.navigate({ kind: 'today' }, { restoreSurfaceScroll: true }))
 

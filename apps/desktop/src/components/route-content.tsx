@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { AllNotesScreen } from '@/components/all-notes/all-notes-screen'
-import { DailyStream } from '@/components/daily-stream'
+import { DailyView } from '@/components/daily-view'
 import { SearchRoute } from '@/components/search-route'
 import { SingleNoteView } from '@/components/single-note-view'
 import { SettingsNavigator } from '@/components/settings/settings-navigator'
@@ -11,11 +11,11 @@ import { ScrollRestored } from '@/routing/scroll-restore'
 
 /**
  * The route → view mapping (Plan 06): the single place a {@link Route} kind
- * becomes a workspace surface. Daily routes render the chronological stream; a
+ * becomes a workspace surface. Daily routes render the single-day canvas; a
  * `note` route renders one ordinary note as a first-class editable pane (lazy,
  * so ⌘N's fresh path opens before any file exists). Extracted from the
  * workspace shell so this seam — the contract that non-daily notes are just as
- * editable as daily ones — is directly testable. The daily stream owns live
+ * editable as daily ones — is directly testable. The daily view owns live
  * today tracking so route arrivals and the highlighted current day use the
  * same clock.
  */
@@ -23,16 +23,16 @@ export function RouteContent(): ReactElement {
   const { route } = useRouter()
   switch (route.kind) {
     case 'today':
-      return <DailyStream target={{ kind: 'today' }} />
+      return <DailyView target={{ kind: 'today' }} />
     case 'daily':
       // The router normalizes daily routes (see normalizeRoute), so the date
       // is a real calendar day by the time it reaches a view.
-      return <DailyStream target={{ kind: 'date', date: route.date }} />
+      return <DailyView target={{ kind: 'date', date: route.date }} />
     case 'note':
       return <SingleNoteView path={route.path} />
     case 'allNotes':
       // Owns its scroll container (virtualized table + fixed header), so no
-      // ScrollRestored wrapper — same shape as the daily stream.
+      // ScrollRestored wrapper.
       return <AllNotesScreen tag={route.tag} />
     case 'tasks':
       // Owns its scroll container (a grouped list with a fixed header), so no

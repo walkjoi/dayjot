@@ -27,16 +27,16 @@ interface AllNotesScreenProps {
  * The All Notes screen (a routed view, like settings): every non-daily note,
  * newest first, filterable by tag. The active tag lives on the route so
  * back/forward and "open a note, come back" keep the filter. Daily notes are
- * deliberately absent — the stream is their home.
+ * deliberately absent — the daily canvas is their home.
  *
  * Rows are multi-selectable (V1 parity): click to select (⌘ toggle, Shift
  * range), the indicator gutter toggles, the subject or a double-click opens.
  * Keyboard shortcuts act on the selection — ↑/↓ (Shift to extend), ⌘A select
  * all, Return open, ⌘⌫ trash (to the OS trash, after a confirm), Esc clear.
  *
- * Owns its scroll container (the daily stream's shape, not `ScrollRestored`'s)
- * so the header and filter bar stay put while the virtualized table scrolls,
- * wired to the router's per-entry scroll memory by hand.
+ * Owns its scroll container (not `ScrollRestored`'s) so the header and
+ * filter bar stay put while the virtualized table scrolls, wired to the
+ * router's per-entry scroll memory by hand.
  */
 export function AllNotesScreen({ tag }: AllNotesScreenProps): ReactElement {
   const { graph } = useGraph()

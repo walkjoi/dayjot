@@ -248,7 +248,7 @@ describe('BacklinksPanel', () => {
     view.unmount()
   })
 
-  it('keeps simultaneously mounted panels in sync (one per day in the stream)', async () => {
+  it('keeps simultaneously mounted panels in sync (e.g. a note window beside the main view)', async () => {
     getBacklinksWithContext.mockResolvedValue([
       {
         sourcePath: 'notes/meeting.md',

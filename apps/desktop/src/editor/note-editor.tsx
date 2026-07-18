@@ -11,7 +11,6 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { errorMessage, type TimeFormat } from '@dayjot/core'
 import {
   type AcceptPendingReplacementOptions,
-  type ExitBoundaryHandler,
   type FileClickHandler,
   type FileInfoResolver,
   type FileLinkResolver,
@@ -81,13 +80,13 @@ export interface NoteEditorHandle {
   focus(): void
   /**
    * Move the caret to a document edge and scroll it into view. Used for
-   * cross-note arrow navigation in the daily stream (jump to the end of the
-   * previous day / the start of the next day).
+   * append-style capture arrivals (⌘D, the mobile daily double-tap), which
+   * land the caret at the end of the day's content.
    */
   setSelection(position: 'start' | 'end'): void
   /** The current selection's text (blocks separated by blank lines). */
   getSelectedText(): string
-  /** Open the selection AI menu (no-op on an empty selection). */
+  /** Open the selection menu (no-op on an empty selection). */
   openSelectionMenu(): void
   /** Stage a pending replacement over a range; false when the range is invalid. */
   startPendingReplacement(options: StartPendingReplacementOptions): boolean
@@ -182,17 +181,15 @@ interface NoteEditorProps {
   onPendingReplacementResolve?: PendingReplacementResolveHandler
   /** Host rows for the `/` insert menu (note templates). */
   onSlashMenuSearch?: SlashMenuSearchHandler
-  /** Handler when pressing ArrowUp/ArrowDown at the document edge. */
-  onExitBoundary?: ExitBoundaryHandler | undefined
   /**
    * Ghost text over a leading empty H1 (the new-note flow's "Untitled");
-   * omitted for documents without title semantics (the daily stream).
+   * omitted for documents without title semantics (daily notes).
    */
   titlePlaceholder?: string
   /**
    * Extra classes for the editable root. The contenteditable is the editor's
    * root, so e.g. a `min-h-*` here makes the whole reserved area
-   * click-to-focus (the daily stream uses this for per-day sizing).
+   * click-to-focus (the mobile carousel uses this for per-day sizing).
    */
   className?: string
   /** Imperative handle (React 19 ref-as-prop). */
@@ -229,7 +226,6 @@ export function NoteEditor({
   pendingReplacementActions,
   onPendingReplacementResolve,
   onSlashMenuSearch,
-  onExitBoundary,
   children,
   titlePlaceholder,
   className,
@@ -249,7 +245,6 @@ export function NoteEditor({
   const openAssetRef = useRef(openAsset)
   const saveFileRef = useRef(saveFile)
   const resolveFileInfoRef = useRef(resolveFileInfo)
-  const onExitBoundaryRef = useRef(onExitBoundary)
   useLayoutEffect(() => {
     onChangeRef.current = onChange
     onWikiLinkClickRef.current = onWikiLinkClick
@@ -259,7 +254,6 @@ export function NoteEditor({
     openAssetRef.current = openAsset
     saveFileRef.current = saveFile
     resolveFileInfoRef.current = resolveFileInfo
-    onExitBoundaryRef.current = onExitBoundary
   })
 
   const {
@@ -293,11 +287,6 @@ export function NoteEditor({
   const handleDocChange = useCallback(() => {
     onChangeRef.current?.(innerRef.current?.getMarkdown() ?? '')
   }, [])
-
-  const handleExitBoundary: ExitBoundaryHandler = useCallback(
-    (options) => onExitBoundaryRef.current?.(options) ?? false,
-    [],
-  )
 
   const handleWikilinkClick = useCallback(
     (payload: { target: string; event: MouseEvent | KeyboardEvent }) =>
@@ -434,7 +423,6 @@ export function NoteEditor({
         {...(resolveFileLink !== undefined ? { resolveFileLink } : {})}
         resolveFileInfo={handleResolveFileInfo}
         onFileClick={handleFileClick}
-        onExitBoundary={handleExitBoundary}
       >
         <EditorInputTraits />
         <FormattingToolbarBridge />

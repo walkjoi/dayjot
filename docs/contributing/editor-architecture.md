@@ -7,7 +7,7 @@ renames); this is the orientation layer those plans don't give you.
 ## The layers
 
 ```text
-NotePane / DailyStream / MobileNote     components — composition only
+NotePane / DailyView / MobileNote       components — composition only
   ├─ useNoteDocument()                  React adapter (use-note-document.ts)
   │    ├─ createDocumentBinding()       create/adopt/teardown/hand-off policy
   │    └─ createNoteSession()           pure document state machine (note-session.ts)
@@ -156,6 +156,7 @@ editor work must survive pane teardown. The pieces to understand are:
   share one grammar so chips and index links can't drift.
 - **Pane-level wiring** → a focused hook next to the existing ones, composed
   in `note-pane.tsx`; components stay composition-only. Desktop daily notes
-  mount panes through `daily-stream.tsx`; mobile mounts the same `NotePane`
-  through `mobile/day-carousel.tsx` and `mobile/screens/note.tsx`, so keep
-  note semantics shared and put surface-specific chrome outside the pane.
+  mount one pane per day through `daily-view.tsx`; mobile mounts the same
+  `NotePane` through `mobile/day-carousel.tsx` and `mobile/screens/note.tsx`,
+  so keep note semantics shared and put surface-specific chrome outside the
+  pane.

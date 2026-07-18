@@ -53,7 +53,7 @@ under every window at once.
 ## Opening a window
 
 The main workspace also exposes `note.openInNewWindow` at Cmd/Ctrl+Shift+O.
-It targets `CommandContext.notePath()`, so the focused day in the daily stream
+It targets `CommandContext.notePath()`, so the day shown on the daily canvas
 and an ordinary routed note both open through the same mechanism described
 below. The command is also exposed in the native Window menu.
 

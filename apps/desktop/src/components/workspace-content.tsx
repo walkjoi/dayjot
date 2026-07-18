@@ -34,8 +34,7 @@ function contextSidebarFor(target: ContextSidebarTarget | null): ReactElement | 
 /**
  * Everything inside the workspace's providers: the headerless shell — the
  * collapsible workspace and contextual sidebars beside the note pane — plus
- * the always-mounted global surfaces (operations status, ⌘K palette,
- * embeddings sync). Split
+ * the always-mounted global surfaces (operations status, ⌘K palette). Split
  * from {@link GraphWorkspace} because these hooks need the providers it
  * mounts.
  */
@@ -44,8 +43,8 @@ export function WorkspaceContent({ graph }: WorkspaceContentProps): ReactElement
   const commandContext = useAppShortcuts()
   // Daily routes get the day's contextual panel and note routes the note's;
   // search/settings get none (AppShell omits the region when context is absent).
-  // In the daily stream the route stays put while focus moves between days, so
-  // the panel follows the focused day and snaps back on navigation.
+  // The daily canvas reports the day it shows (the `today` route pins its
+  // date at arrival), so the panel follows the shown day, not the clock.
   const contextTarget = useDailyContextTarget()
 
   return (

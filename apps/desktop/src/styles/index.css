@@ -307,11 +307,11 @@ html:root {
   font-family: var(--font-reading, var(--font-sans));
 }
 
-/* The primary note editor (the note pane and every daily-stream row, both via
-   NotePane) reads at the user's chosen text size (Settings, Editor, "Text size";
-   default 16px) instead of inheriting <body>'s 14px chrome size. Scoped to this
-   class, never bare `.dayjot-editor`, so read-only previews keep their own
-   compact sizes. */
+/* The primary note editor (the note pane on every surface — regular notes,
+   the daily canvas, the mobile carousel) reads at the user's chosen text size
+   (Settings, Editor, "Text size"; default 16px) instead of inheriting <body>'s
+   14px chrome size. Scoped to this class, never bare `.dayjot-editor`, so
+   read-only previews keep their own compact sizes. */
 .dayjot-note-surface {
   font-size: var(--editor-font-size, var(--text-base));
 }
@@ -325,8 +325,8 @@ html:root {
    - On a normal note's editor (route-content.tsx) so the editor stretches edge to
      edge and its side gutters are part of it; pointer events there (block-handle
      hover, click-to-focus) land on the editor even over the blank margin.
-   - In the daily stream, on each row's day label, editor, and pane chrome, so they
-     share one column and line up.
+   - On the daily canvas, on the day heading row, editor, and pane chrome, so
+     they share one column and line up.
    Un-layered, so it beats both the `padding: 0` reset above and meowdown's layered
    `--meowdown-gutter` padding. */
 .dayjot-content-gutter {
@@ -439,9 +439,9 @@ html:root {
 
 /* NotePane's loading placeholder: hold the editor's reserved space silently,
    revealing the hint text only when a load is genuinely slow. Local note
-   reads resolve in milliseconds, and "Loading note…" flashing on every
-   daily-stream row reads as flicker while the stream anchors. Opacity only,
-   so the placeholder must keep its layout size either way. */
+   reads resolve in milliseconds, and "Loading note…" flashing on every pane
+   mount (each daily arrival, each carousel page) reads as flicker. Opacity
+   only, so the placeholder must keep its layout size either way. */
 .dayjot-note-loading {
   opacity: 0;
   animation: dayjot-note-loading-reveal var(--duration-slow, 300ms)

@@ -37,11 +37,11 @@ export function newNoteRoute(): Route {
 }
 
 /**
- * ⌘N from the daily stream leaves its saved scroll offsets behind as stale
+ * ⌘N from a daily view leaves its saved scroll offsets behind as stale
  * state: the fresh note is where attention moves, so a later return to the
- * stream — ⌘[ back or the Daily nav tab — should re-anchor to its target, not
+ * day — ⌘[ back or the Daily nav tab — should re-anchor to its target, not
  * restore the pre-note position. Other routes keep their offsets; only the
- * stream re-anchors around note creation.
+ * daily surface re-anchors around note creation.
  */
 function openNewNote(context: CommandContext): void {
   const route = context.route()
@@ -102,9 +102,9 @@ const APP_COMMANDS: AppCommand[] = [
     title: 'Open note in new window',
     keywords: ['window', 'duplicate', 'pop out'],
     keybinding: 'Mod-Shift-o',
-    // `notePath` follows the focused day inside the daily stream. Converting
-    // that path back to a route also canonicalizes Today to a dated daily
-    // link, so every way of opening the day dedupes to the same window.
+    // `notePath` follows the day the daily canvas shows. Converting that
+    // path back to a route also canonicalizes Today to a dated daily link,
+    // so every way of opening the day dedupes to the same window.
     run: async (context) => {
       const path = context.notePath()
       if (path === null) {

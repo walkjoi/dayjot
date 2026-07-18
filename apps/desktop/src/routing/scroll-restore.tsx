@@ -10,8 +10,8 @@ interface ScrollRestoredProps {
 /**
  * A scroll container wired to the router's per-entry scroll memory (Plan 06b):
  * it reports its offset as the user scrolls and restores the saved offset when
- * a history entry is revisited via back/forward. The daily stream does the same
- * through its virtualizer; this is for plain views (note, search).
+ * a history entry is revisited via back/forward. Used by the plain full-height
+ * views — the daily canvas, the note route, search.
  *
  * The container is positioned (`relative`) so absolutely-positioned
  * descendants — `sr-only` controls especially — resolve against it and scroll

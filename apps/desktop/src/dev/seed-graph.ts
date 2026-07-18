@@ -3,7 +3,7 @@
  * wiki links, pins, tasks, and a private note that every mobile surface — the
  * Daily carousel, the All tab with its filter badges, drawers, and search —
  * renders with believable data. Dates are computed relative to "today" so the
- * daily stream always lands on the current week.
+ * daily surfaces always land on the current week.
  */
 
 /** Local-time `YYYY-MM-DD` for `offsetDays` before today. */

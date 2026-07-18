@@ -521,7 +521,7 @@ fn plan_other_entry(
 /// Decide what writing a note `entry` should do. Same policy as
 /// [`plan_other_entry`], with one refinement: a *genuinely* same-named daily
 /// note merges (one day, one note) instead of renaming — a suffixed filename
-/// would fall out of the daily stream, whose dates parse from `YYYY-MM-DD.md`
+/// would fall out of the daily views, whose dates parse from `YYYY-MM-DD.md`
 /// names. A merely filesystem-aliased name is a distinct note and renames.
 fn plan_note_entry(
     root: &Path,
@@ -1057,7 +1057,7 @@ mod tests {
     }
 
     /// A conflicting daily note merges instead of renaming — one day, one
-    /// note (a suffixed daily filename would fall out of the daily stream).
+    /// note (a suffixed daily filename would fall out of the daily views).
     /// The imported entry's duplicate date heading is dropped.
     #[test]
     fn conflicting_daily_notes_merge_into_the_existing_note() {

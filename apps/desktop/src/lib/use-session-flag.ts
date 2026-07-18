@@ -20,8 +20,8 @@ function readFlag(key: string, defaultValue: boolean): boolean {
  * A boolean flag persisted in sessionStorage and shared live across every
  * mounted subscriber of the same key: setting it from one component updates
  * all the others immediately. Bare `useState` seeded from storage would
- * desync components mounted side by side — e.g. one backlinks panel per day
- * in the daily stream — until they remount.
+ * desync components mounted side by side — e.g. the backlinks panels of a
+ * note window and the main view — until they remount.
  */
 export function useSessionFlag(
   key: string,

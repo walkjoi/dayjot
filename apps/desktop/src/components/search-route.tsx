@@ -1,6 +1,6 @@
 import { useEffect, type ReactElement } from 'react'
 import { usePalette } from '@/components/command-palette/palette-provider'
-import { DailyStream } from '@/components/daily-stream'
+import { DailyView } from '@/components/daily-view'
 import { useRouter } from '@/routing/router'
 
 interface SearchRouteProps {
@@ -10,17 +10,17 @@ interface SearchRouteProps {
 
 /**
  * `search/:query` is a deep-link target, not a second search surface (decided
- * 2026-06-09): arriving opens the ⌘K palette pre-filled over the stream.
+ * 2026-06-09): arriving opens the ⌘K palette pre-filled over the daily view.
  */
 export function SearchRoute({ query }: SearchRouteProps): ReactElement {
   const { openPalette } = usePalette()
   const { arrivalSeq, entryId } = useRouter()
-  // Keyed on the *arrival*, not just the value (the daily stream's lesson):
-  // re-navigating to the same search route bumps arrivalSeq without a remount,
-  // and back/forward changes entryId without bumping arrivalSeq — both are
-  // arrivals, and arriving on search opens the palette (decided).
+  // Keyed on the *arrival*, not just the value: re-navigating to the same
+  // search route bumps arrivalSeq without a remount, and back/forward changes
+  // entryId without bumping arrivalSeq — both are arrivals, and arriving on
+  // search opens the palette (decided).
   useEffect(() => {
     openPalette(query)
   }, [query, arrivalSeq, entryId, openPalette])
-  return <DailyStream target={{ kind: 'today' }} />
+  return <DailyView target={{ kind: 'today' }} />
 }

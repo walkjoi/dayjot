@@ -75,14 +75,16 @@ function dailyDateForRoute(route: Route, today: string): string | null {
 }
 
 /**
- * The daily date the user is *effectively* working on: the day focused in the
- * daily stream when there is one, otherwise the route's own daily date. Null
- * when the route isn't a daily view, where the focused day is irrelevant.
+ * The daily date the user is *effectively* working on: the day the daily
+ * canvas reports when one is mounted, otherwise the route's own daily date.
+ * Null when the route isn't a daily view, where the focused day is
+ * irrelevant.
  *
- * The stream keeps a single `daily/:date` route as focus moves between days, so
- * the focused day — not the routed one — is what both the context sidebar and
- * note-scoped commands must point at. This is the one place that precedence
- * lives, so those two surfaces can never disagree about which day they target.
+ * The `today` route pins its date at arrival time, so after midnight the
+ * canvas's day — not what the route would resolve to now — is what both the
+ * context sidebar and note-scoped commands must point at. This is the one
+ * place that precedence lives, so those two surfaces can never disagree
+ * about which day they target.
  */
 export function effectiveDailyDate(
   route: Route,

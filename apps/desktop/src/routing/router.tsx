@@ -22,11 +22,11 @@ import { normalizeRoute, routesEqual, type Route } from './route'
  * theirs via `saveScrollState` (a ref write — safe from scroll handlers, never
  * re-renders) and read `savedScroll()` after a back/forward restores an entry.
  *
- * Long-lived surfaces (the daily stream, shared by the today/daily routes)
+ * Long-lived surfaces (the daily canvas, shared by the today/daily routes)
  * additionally keep a **surface offset** — the last reported position,
- * independent of any history entry — so a nav-tab return can resume the stream
- * where the user left it (`restoreSurfaceScroll`) even though it lands on a
- * fresh entry.
+ * independent of any history entry — so a nav-tab return can resume the
+ * canvas where the user left it (`restoreSurfaceScroll`) even though it
+ * lands on a fresh entry.
  */
 
 interface RouterValue {

@@ -71,7 +71,7 @@ export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactEle
     queryFn: () => dailyDatesInRange(grid.start, grid.end),
     enabled: hasBridge() && graph !== null,
   })
-  // The sidebar re-renders as the focused day scrolls through the stream; with
+  // The sidebar re-renders as the focused day moves between dates; with
   // the query result reference-stable (structural sharing), rebuild the lookup
   // set only when the noted dates actually change.
   const noted = useMemo(() => new Set(notedDates ?? []), [notedDates])

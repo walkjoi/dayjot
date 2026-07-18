@@ -8,12 +8,6 @@ interface SingleNoteViewProps {
   /** Graph-relative path of the note filling this view. */
   path: string
   /**
-   * The day this pane shows, when the note is a daily — forwarded to
-   * {@link NotePane} so daily behavior (day-keyed handles) holds outside the
-   * stream.
-   */
-  dailyDate?: string
-  /**
    * Chrome rendered above the pane inside the scrolling column — the note
    * window's day label, standing in for the title a daily doesn't carry.
    */
@@ -29,7 +23,7 @@ interface SingleNoteViewProps {
  * padding, so clicking anywhere in the note body (blank side margins
  * included) focuses it.
  */
-export function SingleNoteView({ path, dailyDate, heading }: SingleNoteViewProps): ReactElement {
+export function SingleNoteView({ path, heading }: SingleNoteViewProps): ReactElement {
   return (
     <ScrollRestored className="h-full overflow-auto px-0">
       <div className="relative mx-auto flex min-h-full w-full max-w-full flex-col py-8">
@@ -44,7 +38,6 @@ export function SingleNoteView({ path, dailyDate, heading }: SingleNoteViewProps
         {heading}
         <NotePane
           path={path}
-          {...(dailyDate !== undefined ? { dailyDate } : {})}
           lazy
           autoFocus
           className="flex grow flex-col"

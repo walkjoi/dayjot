@@ -13,10 +13,10 @@ import { useRouter } from '@/routing/router'
  * workspace sidebar, context panel, palette, or dialogs. A note window is an
  * editing surface; every other affordance lives in the main window.
  *
- * Daily targets render as a **single note pane**, not the daily stream: this
- * window shows the one requested note, so a daily source is treated like any
- * other note (`lazy` covers a not-yet-created day, same as the stream's
- * placeholder behavior).
+ * Daily targets render as a **single note pane** without the daily canvas's
+ * day-to-day chrome: this window shows the one requested note, so a daily
+ * source is treated like any other note (`lazy` covers a not-yet-created day,
+ * same as the canvas's placeholder behavior).
  */
 export function NoteWindowContent(): ReactElement {
   const { route } = useRouter()
@@ -41,10 +41,9 @@ export function NoteWindowContent(): ReactElement {
       {dailyDate !== null ? (
         <SingleNoteView
           path={dailyPath(dailyDate)}
-          dailyDate={dailyDate}
           heading={
-            // The stream's day label, standing in for the title a daily
-            // note doesn't carry.
+            // The daily canvas's day label, standing in for the title a
+            // daily note doesn't carry.
             <h2 className="dayjot-daily-subject dayjot-content-gutter mb-3">
               {formatDayLabel(dailyDate, settings.dateFormat)}
             </h2>

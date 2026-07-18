@@ -1,5 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState, type ReactElement } from 'react'
-import type { ExitBoundaryHandler } from '@meowdown/core'
+import { memo, useCallback, useRef, useState, type ReactElement } from 'react'
 import { detectConflictMarkers, isDaily, isTemplatePath, untitledNoteSeed } from '@dayjot/core'
 import { BacklinksPanel } from '@/components/backlinks-panel'
 import { ConflictNoteView } from '@/components/conflict-note-view'
@@ -50,19 +49,18 @@ interface NotePaneProps {
    */
   className?: string
   /**
-   * Extra classes for the editable area (e.g. the daily stream's per-day
+   * Extra classes for the editable area (e.g. the mobile carousel's
    * `min-h-*`). Applied to the contenteditable root, so the reserved space
    * is click-to-focus — and to the loading/error placeholders, so a pane
-   * holds the same space in every state instead of collapsing and re-expanding
-   * around the stream's scroll anchor while its note arrives.
+   * holds the same space in every state instead of collapsing and
+   * re-expanding while its note arrives.
    */
   editorClassName?: string
   /**
    * Horizontal gutter applied *inside* the pane's pieces — the contenteditable
    * itself plus the chrome around it (alerts, backlinks, loading/error text) —
-   * rather than on the pane root. The daily stream uses this so each day's row
-   * spans the pane's full width (dividers run edge to edge) while the gutter
-   * stays part of the editor's click-to-focus area.
+   * rather than on the pane root, so the pane spans its container's full
+   * width while the gutter stays part of the editor's click-to-focus area.
    */
   gutterClassName?: string
   /**
@@ -71,24 +69,6 @@ interface NotePaneProps {
    * `IncomingBacklinks` section over the same data layer.
    */
   showBacklinks?: boolean
-  /**
-   * The daily stream's day key for this pane (omitted by non-daily callers).
-   * Required for {@link registerHandle} and {@link onExitBoundary} to identify
-   * which day fired.
-   */
-  dailyDate?: string
-  /**
-   * Register (or, with `null`, unregister) this pane's editor handle with the
-   * daily stream, so it can move the caret here from an adjacent day. Keyed by
-   * {@link dailyDate}.
-   */
-  registerHandle?: (date: string, handle: NoteEditorHandle | null) => void
-  /**
-   * The caret tried to leave this pane's top (`'up'`) / bottom (`'down'`) edge.
-   * The daily stream moves focus to the adjacent day; returns `true` when it
-   * did, so the editor consumes the key.
-   */
-  onExitBoundary?: (date: string, direction: 'up' | 'down') => boolean
 }
 
 /**
@@ -96,8 +76,9 @@ interface NotePaneProps {
  * pipeline (debounced atomic writes, watcher-driven external reload, and a
  * non-destructive conflict prompt when an external change races unsaved edits).
  * Notes the editor can't faithfully round-trip open **protected** (read-only)
- * so a converter gap can never silently rewrite a file. Plan 06 mounts one of
- * these per day in the daily stream.
+ * so a converter gap can never silently rewrite a file. Every editing surface
+ * mounts one of these — the daily canvas, the note route, note windows, and
+ * the mobile carousel.
  *
  * The pane is composition only: document semantics live in
  * `useNoteDocument`/`note-session.ts`, link-click behavior in
@@ -113,9 +94,6 @@ export function NotePaneComponent({
   editorClassName,
   gutterClassName,
   showBacklinks = true,
-  dailyDate,
-  registerHandle,
-  onExitBoundary,
 }: NotePaneProps): ReactElement {
   const { graph } = useGraph()
   const { settings } = useSettings()
@@ -139,7 +117,7 @@ export function NotePaneComponent({
   const document = useNoteDocument(path, generation, {
     createIfMissing: lazy,
     // Daily notes are excluded from rename tracking: their date labels are
-    // stream chrome, not content (decided 2026-06-09). Templates too — see
+    // surface chrome, not content (decided 2026-06-09). Templates too — see
     // the `template` note above.
     trackRenames: !dailyNote && !template,
     // A missing ordinary note opens as a name-me template (old DayJot's
@@ -169,7 +147,6 @@ export function NotePaneComponent({
   const { onWikilinkSearch, onTagSearch } = useEditorAutocomplete()
 
   const bindEditor = document.bindEditor
-  const aiEditorRef = useRef<NoteEditorHandle | null>(null)
   // The registry entry this pane made, so unmount removes exactly it (a
   // remount of the same path may already have re-registered).
   const registeredHandle = useRef<{ path: string; handle: NoteEditorHandle } | null>(null)
@@ -182,7 +159,6 @@ export function NotePaneComponent({
   const handleRef = useCallback(
     (handle: NoteEditorHandle | null) => {
       bindEditor(handle)
-      aiEditorRef.current = handle
       if (handle === null) {
         if (registeredHandle.current !== null) {
           unregisterNoteEditorHandle(
@@ -195,9 +171,6 @@ export function NotePaneComponent({
         registerNoteEditorHandle(path, handle)
         registeredHandle.current = { path, handle }
       }
-      if (dailyDate !== undefined) {
-        registerHandle?.(dailyDate, handle)
-      }
       if (handle && autoFocus) {
         // By default the caret lands at the document start — for a seeded
         // new note that is the empty H1, so typing names the note. An `end`
@@ -209,24 +182,13 @@ export function NotePaneComponent({
         onAutoFocused?.()
       }
     },
-    [bindEditor, path, dailyDate, registerHandle, autoFocus, autoFocusSelection, onAutoFocused],
+    [bindEditor, path, autoFocus, autoFocusSelection, onAutoFocused],
   )
-
-
-
-  const handleExitBoundary: ExitBoundaryHandler | undefined = useMemo(() => {
-    if (!dailyDate || !onExitBoundary) {
-      return
-    }
-    return ({ direction }) => {
-      return onExitBoundary(dailyDate, direction)
-    }
-  }, [dailyDate, onExitBoundary])
 
   if (document.status === 'loading') {
     // `dayjot-note-loading` keeps the hint invisible for the first beat:
     // local reads resolve in milliseconds, and the text flashing on every
-    // daily-stream row reads as flicker while the stream anchors.
+    // pane mount (each daily arrival, each carousel page) reads as flicker.
     return (
       <div
         className={cn(
@@ -313,7 +275,7 @@ export function NotePaneComponent({
         <SyncConflictNotice path={path} className="mb-4" />
 
         {/* Daily notes are date-titled, so a contact can never match one —
-            the hook gates on it, and skipping the mount keeps the stream lean.
+            the hook gates on it, and skipping the mount keeps the pane lean.
             Keyed by path: a note switch must not carry one card's busy/error
             state into the next note's card. */}
         {!dailyNote ? <SuggestedContactCard key={path} path={path} /> : null}
@@ -358,7 +320,6 @@ export function NotePaneComponent({
         // also carry `dayjot-editor` keep their own context size.
         className={cn('dayjot-note-surface', gutterClassName, editorClassName)}
         handleRef={handleRef}
-        onExitBoundary={handleExitBoundary}
       />
 
       {showBacklinks ? (

@@ -43,7 +43,7 @@ export function GraphWorkspace({ graph }: GraphWorkspaceProps): ReactElement {
                     {/* Inside the router (deep links navigate) and beside capture
                         (deep-link writes spool into the same inbox drain). */}
                     <DeepLinkProvider graph={graph}>
-                      {/* Tracks the focused day in the daily stream so the right
+                      {/* Tracks the day on the daily canvas so the right
                           sidebar describes it, not just the routed day. */}
                       <FocusedDailyProvider>
                         {/* A ⌘-clicked note window is chrome-free: the routed

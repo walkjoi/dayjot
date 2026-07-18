@@ -10,10 +10,8 @@ import { getKeyboardHeight } from '@/mobile/use-keyboard'
  * editor, so the empty ones are cheap spacers. Swiping within
  * {@link RECENTER_MARGIN} of an edge (or a date-link beyond the window)
  * re-anchors it around the current day, so both directions stay effectively
- * infinite (V1 parity). The desktop daily stream shares the window math
- * ({@link createDayWindow}) with a wider, asymmetric reach — but it truly
- * virtualizes its rows, where the carousel renders every slide spacer and
- * only mounts the editors near the selection.
+ * infinite (V1 parity). The carousel renders every slide spacer and only
+ * mounts the editors near the selection.
  */
 export const CAROUSEL_RADIUS = 366
 
