@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { GraphInfo } from '@dayjot/core'
+import { dailyPath, type GraphInfo } from '@dayjot/core'
 import { AppShell } from '@/components/app-shell'
 import { CommandPalette } from '@/components/command-palette/command-palette'
 import { DailyContextSidebar } from '@/components/context-sidebar/daily-context-sidebar'
@@ -12,6 +12,8 @@ import { SidebarToggle } from '@/components/sidebar/sidebar-toggle'
 import { SidebarResizeHandle } from '@/components/sidebar-resize-handle'
 import { TemplateCreateDialog } from '@/components/templates/template-create-dialog'
 import { TemplatePicker } from '@/components/templates/template-picker'
+import { useNoteRow } from '@/hooks/use-note-row'
+import { useDayEvents } from '@/lib/use-calendar'
 import { cn } from '@/lib/utils'
 import { useDailyContextTarget } from '@/providers/focused-daily-provider'
 import { useSidebar } from '@/providers/sidebar-provider'
@@ -21,16 +23,34 @@ interface WorkspaceContentProps {
   graph: GraphInfo
 }
 
-/** The context panel for the route's sidebar target, if it gets one. */
-function contextSidebarFor(target: ContextSidebarTarget | null): ReactElement | undefined {
+// A valid ISO date to satisfy the always-on `useDayEvents` hook when there is
+// no daily target; the calendar integration is off by default, so this never
+// queries, and its result is ignored unless the target is actually daily.
+const NO_DAY = '2000-01-01'
+
+/**
+ * The right context panel for the route's target, or `undefined` when it would
+ * be empty. With the day-navigation calendar moved to the left sidebar, this
+ * panel only carries optional extras — a day's meetings, a note's share link —
+ * both of which most notes lack, so hiding the empty panel keeps the reading
+ * canvas a clean single column instead of a bare sunken rail.
+ */
+function useContextPanel(target: ContextSidebarTarget | null): ReactElement | undefined {
+  const dailyDate = target?.kind === 'daily' ? target.date : null
+  const notePath =
+    target?.kind === 'note' ? target.path : dailyDate !== null ? dailyPath(dailyDate) : ''
+  const row = useNoteRow(notePath)
+  const events = useDayEvents(dailyDate ?? NO_DAY)
+  const hasPublishedUrl = (row?.gistUrl ?? null) !== null
+  const hasEvents = dailyDate !== null && events.length > 0
+
   if (target === null) {
     return undefined
   }
-  return target.kind === 'daily' ? (
-    <DailyContextSidebar date={target.date} />
-  ) : (
-    <NoteContextSidebar path={target.path} />
-  )
+  if (target.kind === 'daily') {
+    return hasEvents || hasPublishedUrl ? <DailyContextSidebar date={target.date} /> : undefined
+  }
+  return hasPublishedUrl ? <NoteContextSidebar path={target.path} /> : undefined
 }
 
 /**
@@ -43,11 +63,12 @@ function contextSidebarFor(target: ContextSidebarTarget | null): ReactElement | 
 export function WorkspaceContent({ graph }: WorkspaceContentProps): ReactElement {
   const { sidebarCollapsed, contextCollapsed } = useSidebar()
   const commandContext = useAppShortcuts()
-  // Daily routes get the day's contextual panel and note routes the note's;
-  // search/settings get none (AppShell omits the region when context is absent).
   // The daily canvas reports the day it shows (the `today` route pins its
   // date at arrival), so the panel follows the shown day, not the clock.
+  // The panel appears only when it has content (a day's meetings or a share
+  // link); search/settings and an ordinary day get none.
   const contextTarget = useDailyContextTarget()
+  const contextPanel = useContextPanel(contextTarget)
 
   return (
     <AppShell
@@ -55,7 +76,7 @@ export function WorkspaceContent({ graph }: WorkspaceContentProps): ReactElement
         sidebarCollapsed ? undefined : <Sidebar graph={graph} context={commandContext} />
       }
       sidebarEdge={<SidebarResizeHandle panel="workspace" />}
-      context={contextCollapsed ? undefined : contextSidebarFor(contextTarget)}
+      context={contextCollapsed ? undefined : contextPanel}
       contextEdge={<SidebarResizeHandle panel="context" />}
     >
       {/* With the sidebar collapsed, the note pane becomes the window's

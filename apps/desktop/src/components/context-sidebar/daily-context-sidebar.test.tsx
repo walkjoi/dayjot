@@ -1,35 +1,18 @@
-import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react'
+import { cleanup, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ReactNode } from 'react'
 import type { NoteRow } from '@dayjot/core'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { formatDayLabel } from '@/lib/dates'
-import { monthLabel, monthOf } from '@/lib/month-grid'
-import type { NoteRoute } from '@/routing/route'
-import { RouterProvider, useRouter } from '@/routing/router'
+import { RouterProvider } from '@/routing/router'
 import { DailyContextSidebar } from './daily-context-sidebar'
 
-const dailyDatesInRange = vi.hoisted(() => vi.fn())
-const relatedNotes = vi.hoisted(() => vi.fn())
-const readNote = vi.hoisted(() => vi.fn())
 const useNoteRow = vi.hoisted(() => vi.fn<(path: string) => NoteRow | null>(() => null))
-const openRouteInNewWindow = vi.hoisted(() =>
-  vi.fn<(route: NoteRoute) => Promise<boolean>>(),
-)
 vi.mock('@dayjot/core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
-  dailyDatesInRange,
-  readNote,
-  relatedNotes,
 }))
 vi.mock('@/hooks/use-note-row', () => ({ useNoteRow }))
-vi.mock('@/lib/windows/open-in-new-window', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/windows/open-in-new-window')>()),
-  openRouteInNewWindow,
-}))
 vi.mock('@/providers/graph-provider', () => ({
   useGraph: () => ({ graph: { root: '/g', name: 'g', generation: 1 } }),
 }))
@@ -40,11 +23,6 @@ vi.mock('@/providers/settings-provider', () => ({
   }),
 }))
 
-function RouteProbe(): ReactNode {
-  const { route } = useRouter()
-  return <output data-testid="route">{JSON.stringify(route)}</output>
-}
-
 function renderSidebar(date: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -52,7 +30,6 @@ function renderSidebar(date: string) {
       <QueryClientProvider client={client}>
         <RouterProvider>
           <DailyContextSidebar date={date} />
-          <RouteProbe />
         </RouterProvider>
       </QueryClientProvider>
     </TooltipProvider>,
@@ -74,119 +51,10 @@ function noteRow(overrides: Partial<NoteRow> = {}): NoteRow {
 
 beforeEach(() => {
   window.sessionStorage.clear()
-  dailyDatesInRange.mockReset().mockResolvedValue([])
-  readNote.mockReset().mockResolvedValue('- daily entry\n')
-  relatedNotes.mockReset().mockResolvedValue([])
   useNoteRow.mockReset().mockReturnValue(null)
-  openRouteInNewWindow.mockReset().mockResolvedValue(true)
 })
 
 afterEach(cleanup)
-
-describe('DailyContextSidebar calendar header', () => {
-  it('jumps to today from the calendar-icon button', async () => {
-    const view = renderSidebar('2026-06-09')
-    await userEvent.click(view.getByRole('button', { name: 'Jump to today' }))
-    expect(view.getByTestId('route').textContent).toContain('"kind":"today"')
-    view.unmount()
-  })
-})
-
-describe('DailyContextSidebar calendar', () => {
-  it('marks days that have a daily note and navigates on day click', async () => {
-    dailyDatesInRange.mockResolvedValue(['2026-06-05'])
-    const view = renderSidebar('2026-06-09')
-
-    await view.findByTestId('note-dot-2026-06-05')
-    expect(dailyDatesInRange).toHaveBeenCalledWith('2026-06-01', '2026-07-05')
-    expect(view.queryByTestId('note-dot-2026-06-04')).toBeNull()
-
-    await userEvent.click(view.getByRole('button', { name: formatDayLabel('2026-06-18', 'mdy') }))
-    expect(view.getByTestId('route').textContent).toContain('2026-06-18')
-    view.unmount()
-  })
-
-  it('modifier-click opens a day in a new window without moving the current window', async () => {
-    const view = renderSidebar('2026-06-09')
-    const day = view.getByRole('button', { name: formatDayLabel('2026-06-18', 'mdy') })
-
-    fireEvent.click(day, { metaKey: true })
-
-    await waitFor(() =>
-      expect(openRouteInNewWindow).toHaveBeenCalledWith({
-        kind: 'daily',
-        date: '2026-06-18',
-      }),
-    )
-    expect(openRouteInNewWindow).toHaveBeenCalledTimes(1)
-    expect(view.getByTestId('route').textContent).toBe(JSON.stringify({ kind: 'today' }))
-    view.unmount()
-  })
-
-  it('does not fall back after the calendar scope moves to another selected day', async () => {
-    let finishOpen: (opened: boolean) => void = () => {}
-    openRouteInNewWindow.mockReturnValue(
-      new Promise((resolve) => {
-        finishOpen = resolve
-      }),
-    )
-    const view = renderSidebar('2026-06-09')
-    const day = view.getByRole('button', { name: formatDayLabel('2026-06-18', 'mdy') })
-
-    fireEvent.click(day, { metaKey: true })
-    await waitFor(() => expect(openRouteInNewWindow).toHaveBeenCalledTimes(1))
-    view.rerender(
-      <TooltipProvider>
-        <QueryClientProvider
-          client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
-        >
-          <RouterProvider>
-            <DailyContextSidebar date="2026-06-10" />
-            <RouteProbe />
-          </RouterProvider>
-        </QueryClientProvider>
-      </TooltipProvider>,
-    )
-
-    await act(async () => {
-      finishOpen(false)
-    })
-
-    expect(view.getByTestId('route').textContent).toBe(JSON.stringify({ kind: 'today' }))
-    view.unmount()
-  })
-
-  it('pages between months across year boundaries', async () => {
-    const view = renderSidebar('2026-01-15')
-    expect(view.getByText(monthLabel('2026-01'))).toBeDefined()
-    await userEvent.click(view.getByRole('button', { name: 'Previous month' }))
-    expect(view.getByText(monthLabel('2025-12'))).toBeDefined()
-    await userEvent.click(view.getByRole('button', { name: 'Next month' }))
-    await userEvent.click(view.getByRole('button', { name: 'Next month' }))
-    expect(view.getByText(monthLabel('2026-02'))).toBeDefined()
-    view.unmount()
-  })
-
-  it('re-anchors the visible month when the selected day changes', () => {
-    const view = renderSidebar('2026-06-09')
-    expect(view.getByText(monthLabel('2026-06'))).toBeDefined()
-    view.rerender(
-      <TooltipProvider>
-        <QueryClientProvider
-          client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
-        >
-          <RouterProvider>
-            <DailyContextSidebar date="2026-09-01" />
-            <RouteProbe />
-          </RouterProvider>
-        </QueryClientProvider>
-      </TooltipProvider>,
-    )
-    expect(view.getByText(monthLabel('2026-09'))).toBeDefined()
-    view.unmount()
-  })
-})
-
 
 describe('DailyContextSidebar sections', () => {
   it('collapses a section and persists the state for the session', async () => {
@@ -204,13 +72,6 @@ describe('DailyContextSidebar sections', () => {
       reopened.getByRole('button', { name: /Published URL/ }).getAttribute('aria-expanded'),
     ).toBe('false')
     reopened.unmount()
-  })
-
-  it('the calendar is not collapsible', () => {
-    const view = renderSidebar('2026-06-09')
-    expect(view.getByText(monthLabel(monthOf('2026-06-09')))).toBeDefined()
-    expect(view.queryByRole('button', { name: /^Calendar$/ })).toBeNull()
-    view.unmount()
   })
 })
 

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import { isUntitledNotePath, type GraphInfo } from '@dayjot/core'
 import { ListChecks, SquarePen } from 'lucide-react'
+import { DayCalendar } from '@/components/context-sidebar/day-calendar'
 import { ListIcon } from '@/components/icons/list-icon'
 import { PencilIcon } from '@/components/icons/pencil-icon'
 import { usePinnedNotes } from '@/hooks/use-pinned-notes'
@@ -10,6 +11,7 @@ import { useToday } from '@/lib/use-today'
 import type { CommandContext } from '@/lib/commands/types'
 import { hasMacosTitleBarOverlay } from '@/lib/window-chrome'
 import { cn } from '@/lib/utils'
+import { useFocusedDailyDate } from '@/providers/focused-daily-provider'
 import { notePathForRoute } from '@/routing/route'
 import { useRouter } from '@/routing/router'
 import { GraphFooter } from './graph-footer'
@@ -41,6 +43,12 @@ export function Sidebar({ graph, context }: SidebarProps): ReactElement {
   const currentNotePath = notePathForRoute(route, today)
   const hasActivePinnedNote =
     currentNotePath !== null && pinned.some((note) => note.path === currentNotePath)
+
+  // The calendar is a persistent date navigator: it highlights the day the
+  // daily canvas shows (which the `today` route pins across midnight), and
+  // falls back to today on non-daily screens so a click still jumps to a day.
+  const focusedDailyDate = useFocusedDailyDate()
+  const calendarDate = focusedDailyDate ?? (route.kind === 'daily' ? route.date : today)
 
   // Wrap the 16px Lucide glyphs in the custom icons' 24px box so nav rows
   // share one icon footprint.
@@ -120,7 +128,14 @@ export function Sidebar({ graph, context }: SidebarProps): ReactElement {
         </nav>
       </div>
 
-      <div className="mt-1 min-h-0 flex-1 overflow-y-auto pb-2">
+      {/* The primary date navigator, under the nav rows — daily notes are a
+          calendar-first surface, so the month grid lives with the other
+          "where do I go" controls rather than off in the right rail. */}
+      <div className="mt-4 flex-none">
+        <DayCalendar selectedDate={calendarDate} today={today} />
+      </div>
+
+      <div className="mt-2 min-h-0 flex-1 overflow-y-auto pb-2">
         <SidebarPinned />
       </div>
 

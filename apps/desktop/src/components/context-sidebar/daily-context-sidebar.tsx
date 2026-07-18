@@ -1,11 +1,7 @@
 import type { ReactElement } from 'react'
 import { dailyPath } from '@dayjot/core'
 import { DailyEventsSection } from './daily-events-section'
-import { DayCalendar } from './day-calendar'
 import { PublishedUrlSection } from './published-url-section'
-import { useToday } from '@/lib/use-today'
-import { cn } from '@/lib/utils'
-import { hasMacosTitleBarOverlay } from '@/lib/window-chrome'
 
 interface DailyContextSidebarProps {
   /** The day the sidebar describes — a validated ISO date from the route. */
@@ -13,26 +9,16 @@ interface DailyContextSidebarProps {
 }
 
 /**
- * The daily note's contextual sidebar (modeled on the old app's note context
- * sidebar): the month calendar up top — itself the day-navigation surface,
- * with a jump-to-today button — then note actions, the day's calendar
- * and events. Inbound links live under the note itself
- * (the incoming-backlinks section), not here. Rendered in the AppShell's
- * right region on daily routes only.
+ * A daily note's contextual sidebar: the day's meetings (Apple Calendar) and
+ * its share link. Both sections self-hide when empty, and the workspace omits
+ * this whole panel when neither applies (see `useContextPanel`) — so an
+ * ordinary day is a clean single column. Day navigation now lives in the left
+ * sidebar's calendar, and inbound links sit under the note itself. Rendered in
+ * the AppShell's right region on daily routes that have events or a share link.
  */
 export function DailyContextSidebar({ date }: DailyContextSidebarProps): ReactElement {
-  const today = useToday()
-
   return (
-    <div
-      className={cn(
-        'flex flex-col text-text',
-        // The calendar's controls must clear the WindowDragRegion strip when
-        // the macOS title bar is overlaid.
-        hasMacosTitleBarOverlay ? 'pt-0' : 'pt-2',
-      )}
-    >
-      <DayCalendar selectedDate={date} today={today} />
+    <div className="flex flex-col py-2 text-text">
       <div className="my-4 space-y-4 pb-4">
         <DailyEventsSection date={date} />
         <PublishedUrlSection path={dailyPath(date)} />

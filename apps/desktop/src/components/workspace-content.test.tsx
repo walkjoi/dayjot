@@ -8,12 +8,20 @@ interface WorkspaceState {
   sidebarCollapsed: boolean
   contextCollapsed: boolean
   target: ContextSidebarTarget | null
+  /** What `useNoteRow` returns — a gistUrl is what keeps a note's panel alive. */
+  noteRow: { gistUrl: string | null } | null
+  /** What `useDayEvents` returns — a day's meetings keep its panel alive. */
+  events: unknown[]
 }
 
 const workspaceState = vi.hoisted<WorkspaceState>(() => ({
   sidebarCollapsed: false,
   contextCollapsed: false,
   target: { kind: 'daily', date: '2026-07-11' },
+  // Default to a published note so the panel is present for the collapse tests;
+  // the hide-when-empty tests clear this.
+  noteRow: { gistUrl: 'https://gist.github.com/alex/x' },
+  events: [],
 }))
 
 vi.mock('@/components/command-palette/command-palette', () => ({
@@ -41,6 +49,8 @@ vi.mock('@/components/templates/template-picker', () => ({ TemplatePicker: () =>
 vi.mock('@/providers/focused-daily-provider', () => ({
   useDailyContextTarget: () => workspaceState.target,
 }))
+vi.mock('@/hooks/use-note-row', () => ({ useNoteRow: () => workspaceState.noteRow }))
+vi.mock('@/lib/use-calendar', () => ({ useDayEvents: () => workspaceState.events }))
 vi.mock('@/providers/sidebar-provider', () => ({
   useSidebar: () => ({
     sidebarCollapsed: workspaceState.sidebarCollapsed,
@@ -68,6 +78,8 @@ beforeEach(() => {
   workspaceState.sidebarCollapsed = false
   workspaceState.contextCollapsed = false
   workspaceState.target = { kind: 'daily', date: '2026-07-11' }
+  workspaceState.noteRow = { gistUrl: 'https://gist.github.com/alex/x' }
+  workspaceState.events = []
 })
 
 afterEach(cleanup)
@@ -127,5 +139,37 @@ describe('WorkspaceContent', () => {
     )
     expect(view.queryByRole('complementary', { name: 'Context' })).toBeNull()
     expect(view.getByRole('complementary', { name: 'Workspace' })).toBeTruthy()
+  })
+
+  it('omits the context panel for an ordinary day with no meetings or share link', () => {
+    // The calendar lives in the left sidebar now, so a bare day has nothing to
+    // put in the right rail — it stays a clean single column.
+    workspaceState.target = { kind: 'daily', date: '2026-07-11' }
+    workspaceState.noteRow = null
+    workspaceState.events = []
+    const view = renderWorkspace()
+
+    expect(view.queryByRole('complementary', { name: 'Context' })).toBeNull()
+    expect(view.queryByTestId('daily-context')).toBeNull()
+    expect(view.getByRole('complementary', { name: 'Workspace' })).toBeTruthy()
+  })
+
+  it('shows the daily context panel when the day has meetings', () => {
+    workspaceState.target = { kind: 'daily', date: '2026-07-11' }
+    workspaceState.noteRow = null
+    workspaceState.events = [{ id: 'e1' }]
+    const view = renderWorkspace()
+
+    expect(view.getByRole('complementary', { name: 'Context' })).toBeTruthy()
+    expect(view.getByTestId('daily-context').textContent).toBe('2026-07-11')
+  })
+
+  it('omits an unpublished note’s context panel', () => {
+    workspaceState.target = { kind: 'note', path: 'notes/project.md' }
+    workspaceState.noteRow = null
+    const view = renderWorkspace()
+
+    expect(view.queryByRole('complementary', { name: 'Context' })).toBeNull()
+    expect(view.queryByTestId('note-context')).toBeNull()
   })
 })

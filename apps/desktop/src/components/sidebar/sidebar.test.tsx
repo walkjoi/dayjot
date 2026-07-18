@@ -43,10 +43,12 @@ const updateSettingsWith = vi.hoisted(() =>
   vi.fn<(updater: (current: Settings) => Partial<Settings>) => void>(),
 )
 
+const dailyDatesInRange = vi.hoisted(() => vi.fn(async () => [] as string[]))
 vi.mock('@dayjot/core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getPinnedNotes,
+  dailyDatesInRange,
 }))
 vi.mock('@tauri-apps/plugin-opener', () => ({ revealItemInDir }))
 vi.mock('@/lib/windows/open-in-new-window', async (importOriginal) => ({
@@ -73,7 +75,7 @@ vi.mock('@/providers/graph-provider', () => ({
 }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({
-    settings: { dateFormat: 'mdy', graphColors: {} },
+    settings: { dateFormat: 'mdy', weekStartDay: 'monday', graphColors: {} },
     updateSettings: () => {},
     updateSettingsWith,
   }),
@@ -157,6 +159,14 @@ describe('Sidebar', () => {
     const { view } = renderSidebar()
 
     expect(view.getByRole('button', { name: 'Collapse sidebar' })).toBeTruthy()
+  })
+
+  it('shows the month calendar under the nav rows', () => {
+    // The calendar's jump-to-today control is its tell — its presence in the
+    // left sidebar proves the date navigator moved out of the right rail.
+    const { view } = renderSidebar()
+
+    expect(view.getByRole('button', { name: 'Jump to today' })).toBeTruthy()
   })
 
   it('nav rows navigate, with Daily notes always re-anchoring to today', async () => {
