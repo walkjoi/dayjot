@@ -230,6 +230,25 @@ describe('app shortcuts', () => {
     expect(result.current.sidebar.sidebarCollapsed).toBe(false)
   })
 
+  it('⌘⇧F toggles focus mode: both panels away, both back, mixed states collapse', () => {
+    const { result } = shortcutsHook()
+
+    act(() => press('f', { shiftKey: true }))
+    expect(result.current.sidebar.sidebarCollapsed).toBe(true)
+    expect(result.current.sidebar.contextCollapsed).toBe(true)
+
+    act(() => press('f', { shiftKey: true }))
+    expect(result.current.sidebar.sidebarCollapsed).toBe(false)
+    expect(result.current.sidebar.contextCollapsed).toBe(false)
+
+    // A mixed state means "get me to the bare canvas", not a strict flip.
+    act(() => press('\\'))
+    expect(result.current.sidebar.sidebarCollapsed).toBe(true)
+    act(() => press('f', { shiftKey: true }))
+    expect(result.current.sidebar.sidebarCollapsed).toBe(true)
+    expect(result.current.sidebar.contextCollapsed).toBe(true)
+  })
+
   it('⌘⇧\\ toggles the context panel without touching the sidebar', () => {
     const { result } = shortcutsHook()
     expect(result.current.sidebar.contextCollapsed).toBe(false)

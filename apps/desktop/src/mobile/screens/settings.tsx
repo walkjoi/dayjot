@@ -115,7 +115,7 @@ export function MobileSettings(): ReactElement {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex flex-col gap-6 px-4 py-4">
-          <SettingsGroup header="Graph">
+          <SettingsGroup header="Notebook">
             <SettingsNavRow
               label={graph?.name ?? '—'}
               value={storageLabel}

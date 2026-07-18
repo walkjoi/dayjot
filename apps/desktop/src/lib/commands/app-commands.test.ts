@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { NoteRow, PinnedNote } from '@dayjot/core'
+import { addDaysIso, todayIso } from '@/lib/dates'
 import { notePathForRoute, type Route } from '@/routing/route'
 import type { NavigateOptions } from '@/routing/router'
 import { resetOperations } from '@/lib/operations'
@@ -73,6 +74,7 @@ function fakeContext(overrides?: Partial<CommandContext>) {
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
     toggleContextPanel: vi.fn(),
+    toggleFocusMode: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 7,
@@ -354,6 +356,35 @@ describe('app commands', () => {
     }
   })
 
+  it('day.next / day.previous step the shown day (the notePath anchor)', async () => {
+    const { context, navigated } = fakeContext({
+      route: () => ({ kind: 'daily', date: '2026-06-09' }),
+    })
+    await command('day.next').run(context)
+    await command('day.previous').run(context)
+    expect(navigated).toEqual([
+      { kind: 'daily', date: '2026-06-10' },
+      { kind: 'daily', date: '2026-06-08' },
+    ])
+  })
+
+  it('a day step that lands on the live day routes today', async () => {
+    const yesterday = addDaysIso(todayIso(), -1)
+    const { context, navigated } = fakeContext({
+      route: () => ({ kind: 'daily', date: yesterday }),
+    })
+    await command('day.next').run(context)
+    expect(navigated).toEqual([{ kind: 'today' }])
+  })
+
+  it('day steps are no-ops off the daily views', async () => {
+    const { context, navigated } = fakeContext({
+      route: () => ({ kind: 'allNotes', tag: null }),
+    })
+    await command('day.next').run(context)
+    await command('day.previous').run(context)
+    expect(navigated).toEqual([])
+  })
 })
 
 describe('keybindingFor', () => {

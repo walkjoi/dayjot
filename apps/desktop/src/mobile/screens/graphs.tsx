@@ -121,7 +121,7 @@ export function MobileGraphs(): ReactElement {
                 ))}
                 {icloudDocumentsRoot !== null ? (
                   <SettingsActionRow
-                    label="New graph"
+                    label="New notebook"
                     icon={Plus}
                     disabled={busy}
                     onPress={() => setCreateOpen(true)}

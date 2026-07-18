@@ -159,4 +159,14 @@ describe('DailyView', () => {
 
     expect(screen.getByRole('button', { name: 'pin daily/2026-06-09.md' })).toBeDefined()
   })
+
+  it('shows a Today pill on other days that takes the canvas home, and hides it on today', () => {
+    renderView({ kind: 'daily', date: '2026-06-09' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Today' }))
+    expect(JSON.parse(screen.getByTestId('route').textContent!)).toEqual({ kind: 'today' })
+    expect(shownDay()).toBe(todayIso())
+    // Home again — nothing to escape from, so the pill withdraws.
+    expect(screen.queryByRole('button', { name: 'Today' })).toBeNull()
+  })
 })

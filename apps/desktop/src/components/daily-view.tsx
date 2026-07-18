@@ -3,7 +3,9 @@ import { dailyPath } from '@dayjot/core'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { NotePane } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
+import { ShortcutKeys } from '@/components/shortcut-keys'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { keybindingFor } from '@/lib/commands/app-commands'
 import { addDaysIso, formatDayLabel, todayIso } from '@/lib/dates'
 import { useToday } from '@/lib/use-today'
 import { cn } from '@/lib/utils'
@@ -87,24 +89,42 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
   return (
     <ScrollRestored className="h-full overflow-auto px-0">
       <div className="mx-auto flex min-h-full w-full max-w-full flex-col py-8">
-        <div className="dayjot-content-gutter mb-3 flex items-center justify-between gap-2">
+        <div className="dayjot-content-gutter group mb-3 flex items-center justify-between gap-2">
           <h2 className={cn('dayjot-daily-subject', isToday && 'text-accent')}>
             {formatDayLabel(date, settings.dateFormat)}
           </h2>
           <div className="flex items-center gap-1">
-            <NotePinButton path={dailyPath(date)} />
-            <DayChevron
-              label="Previous day"
-              onClick={() => navigate(routeForDay(addDaysIso(date, -1), today))}
-            >
-              <ChevronLeft aria-hidden strokeWidth={1.75} className="size-4" />
-            </DayChevron>
-            <DayChevron
-              label="Next day"
-              onClick={() => navigate(routeForDay(addDaysIso(date, 1), today))}
-            >
-              <ChevronRight aria-hidden strokeWidth={1.75} className="size-4" />
-            </DayChevron>
+            {/* Wayfinding home: only rendered off today, always full-strength
+                (unlike the quiet controls beside it) — the one-click way back
+                that ⌘D provides invisibly. */}
+            {!isToday ? (
+              <button
+                type="button"
+                onClick={() => navigate({ kind: 'today' })}
+                className="mr-1 rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-text-secondary transition-colors duration-100 hover:bg-surface-hover hover:text-text"
+              >
+                Today
+              </button>
+            ) : null}
+            {/* Reading chrome rests quiet; it sharpens on hover or when
+                focused, so a day you're only reading is a date and prose. */}
+            <div className="flex items-center gap-1 opacity-40 transition-opacity duration-100 focus-within:opacity-100 group-hover:opacity-100">
+              <NotePinButton path={dailyPath(date)} />
+              <DayChevron
+                label="Previous day"
+                binding={keybindingFor('day.previous')}
+                onClick={() => navigate(routeForDay(addDaysIso(date, -1), today))}
+              >
+                <ChevronLeft aria-hidden strokeWidth={1.75} className="size-4" />
+              </DayChevron>
+              <DayChevron
+                label="Next day"
+                binding={keybindingFor('day.next')}
+                onClick={() => navigate(routeForDay(addDaysIso(date, 1), today))}
+              >
+                <ChevronRight aria-hidden strokeWidth={1.75} className="size-4" />
+              </DayChevron>
+            </div>
           </div>
         </div>
         <NotePane
@@ -134,10 +154,12 @@ function routeForDay(
 
 function DayChevron({
   label,
+  binding,
   onClick,
   children,
 }: {
   label: string
+  binding: string | null
   onClick: () => void
   children: ReactElement
 }): ReactElement {
@@ -153,7 +175,9 @@ function DayChevron({
           {children}
         </button>
       </TooltipTrigger>
-      <TooltipContent side="bottom">{label}</TooltipContent>
+      <TooltipContent side="bottom">
+        {label} {binding !== null && <ShortcutKeys binding={binding} />}
+      </TooltipContent>
     </Tooltip>
   )
 }

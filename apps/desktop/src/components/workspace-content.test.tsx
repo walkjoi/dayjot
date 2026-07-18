@@ -47,6 +47,7 @@ vi.mock('@/providers/sidebar-provider', () => ({
     contextCollapsed: workspaceState.contextCollapsed,
     toggleSidebar: vi.fn(),
     toggleContextPanel: vi.fn(),
+    toggleFocusMode: vi.fn(),
   }),
 }))
 // The AppShell asides mount resize handles, which read the persisted widths.

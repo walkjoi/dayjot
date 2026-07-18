@@ -24,6 +24,12 @@ interface SidebarContextValue {
   contextCollapsed: boolean
   toggleSidebar: () => void
   toggleContextPanel: () => void
+  /**
+   * The "just me and the page" gesture: collapses both panels in one step,
+   * and restores both when everything is already hidden. Any mixed state
+   * collapses — the intent is a bare canvas, not a strict toggle.
+   */
+  toggleFocusMode: () => void
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null)
@@ -37,10 +43,21 @@ export function SidebarProvider({ children }: { children: ReactNode }): ReactEle
   const toggleContextPanel = useCallback(() => {
     setContextCollapsed((current) => !current)
   }, [])
+  const toggleFocusMode = useCallback(() => {
+    const expand = sidebarCollapsed && contextCollapsed
+    setSidebarCollapsed(!expand)
+    setContextCollapsed(!expand)
+  }, [sidebarCollapsed, contextCollapsed])
 
   const value = useMemo<SidebarContextValue>(
-    () => ({ sidebarCollapsed, contextCollapsed, toggleSidebar, toggleContextPanel }),
-    [sidebarCollapsed, contextCollapsed, toggleSidebar, toggleContextPanel],
+    () => ({
+      sidebarCollapsed,
+      contextCollapsed,
+      toggleSidebar,
+      toggleContextPanel,
+      toggleFocusMode,
+    }),
+    [sidebarCollapsed, contextCollapsed, toggleSidebar, toggleContextPanel, toggleFocusMode],
   )
   return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
 }

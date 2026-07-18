@@ -127,8 +127,8 @@ export function BackupSettingsField(): ReactElement {
         legend={genericRemote ? 'Backup' : 'GitHub sync'}
         description={
           genericRemote
-            ? 'This graph backs up to its own git remote. Edits back up automatically a few moments after you stop typing.'
-            : 'Back up this graph to a GitHub repository. Edits back up automatically a few moments after you stop typing.'
+            ? 'This notebook backs up to its own git remote. Edits back up automatically a few moments after you stop typing.'
+            : 'Back up this notebook to a GitHub repository. Edits back up automatically a few moments after you stop typing.'
         }
       >
         <div className="mt-3 flex flex-col gap-2">
@@ -174,7 +174,7 @@ export function BackupSettingsField(): ReactElement {
                 <Button
                   variant="ghost"
                   size="sm"
-                  title="This graph stops backing up; its history and your GitHub sign-in stay"
+                  title="This notebook stops backing up; its history and your GitHub sign-in stay"
                   onClick={() => void action.run(disconnectGraph)}
                 >
                   Stop backing up

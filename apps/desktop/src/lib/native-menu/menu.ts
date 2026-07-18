@@ -112,6 +112,7 @@ export function appMenuLayout(): AppSubmenuLayout[] {
         separator(),
         command('sidebar.toggle'),
         command('contextPanel.toggle'),
+        command('view.focusMode'),
         separator(),
         command('dev.toggleDevtools'),
       ],

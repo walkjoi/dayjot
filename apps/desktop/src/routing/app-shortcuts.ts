@@ -177,7 +177,7 @@ export function useAppShortcuts(): CommandContext {
     pickerOpen: templatePickerOpen,
     createOpen: templateCreateOpen,
   } = useNoteTemplates()
-  const { toggleSidebar, toggleContextPanel } = useSidebar()
+  const { toggleSidebar, toggleContextPanel, toggleFocusMode } = useSidebar()
   const { settings } = useSettings()
   const timestampFormatRef = useRef(settings.timestampFormat)
   useEffect(() => {
@@ -244,6 +244,7 @@ export function useAppShortcuts(): CommandContext {
       toggleTheme: () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'),
       toggleSidebar,
       toggleContextPanel,
+      toggleFocusMode,
       switchGraph: (index) => {
         const recent = recentsRef.current[index]
         if (recent === undefined || recent.root === graphRootRef.current) {
@@ -271,6 +272,7 @@ export function useAppShortcuts(): CommandContext {
       openTemplateCreate,
       toggleSidebar,
       toggleContextPanel,
+      toggleFocusMode,
     ],
   )
 

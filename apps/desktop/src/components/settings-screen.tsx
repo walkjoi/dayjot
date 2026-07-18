@@ -3,12 +3,10 @@ import { AboutSection } from './settings/about-section'
 import { AgentsSection } from './settings/agents-section'
 import { AllNotesSection } from './settings/all-notes-section'
 import { AppearanceSection } from './settings/appearance-section'
-import { DateTimeSection } from './settings/date-time-section'
 import { DestructiveSection } from './settings/destructive-section'
 import { EditorSection } from './settings/editor-section'
 import { ImportSection } from './settings/import-section'
 import { IntegrationsSection } from './settings/integrations-section'
-import { SearchSection } from './settings/search-section'
 import { SyncSection } from './settings/sync-section'
 import { TemplatesSection } from './settings/templates-section'
 
@@ -24,10 +22,8 @@ export function SettingsScreen(): ReactElement {
       <div className="mt-6">
         <AppearanceSection />
         <EditorSection />
-        <DateTimeSection />
         <TemplatesSection />
         <AllNotesSection />
-        <SearchSection />
         <AgentsSection />
         <IntegrationsSection />
         <SyncSection />
