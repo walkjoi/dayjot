@@ -8,7 +8,7 @@ import { type ContextSidebarTarget } from '@/components/context-sidebar/sidebar-
 import { RouteContent } from '@/components/route-content'
 import { ShortcutsDialog } from '@/components/shortcuts-dialog'
 import { Sidebar } from '@/components/sidebar/sidebar'
-import { SidebarExpandButton } from '@/components/sidebar/sidebar-toggle'
+import { SidebarToggle } from '@/components/sidebar/sidebar-toggle'
 import { SidebarResizeHandle } from '@/components/sidebar-resize-handle'
 import { TemplateCreateDialog } from '@/components/templates/template-create-dialog'
 import { TemplatePicker } from '@/components/templates/template-picker'
@@ -66,7 +66,7 @@ export function WorkspaceContent({ graph }: WorkspaceContentProps): ReactElement
       <div
         className={cn('relative flex h-full flex-col', sidebarCollapsed && 'pt-7')}
       >
-        {sidebarCollapsed ? <SidebarExpandButton /> : null}
+        {sidebarCollapsed ? <SidebarToggle /> : null}
         <div className="min-h-0 flex-1">
           <RouteContent />
         </div>

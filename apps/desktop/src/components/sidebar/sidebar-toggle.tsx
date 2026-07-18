@@ -14,51 +14,25 @@ const BUTTON_CLASS =
   'hover:bg-surface-hover hover:text-text'
 
 /**
- * Collapses the workspace sidebar — lives in the sidebar's top row, beside
- * the history arrows (and, like them, inside the overlaid macOS title-bar
- * band, so `window-drag-control` keeps its clicks from starting a window
- * drag). The same state is on `⌘\`; while collapsed,
- * {@link SidebarExpandButton} floats in the note pane to bring it back.
+ * The sidebar toggle, pinned to **one window position in both states** —
+ * right of the macOS traffic lights inside the title-bar band (the band's
+ * left edge without the overlay). The sidebar slides away underneath it;
+ * only the glyph and label flip, so switching modes never makes the control
+ * jump (the native Finder/Notes pattern). The sidebar hosts it while
+ * expanded and the note pane hosts it while collapsed — same coordinates,
+ * exactly one on screen. Absolute against the hosting region, which starts
+ * at the window's left edge in both cases; `window-drag-control` keeps its
+ * clicks from starting a window drag inside the band. The same state is on
+ * `⌘\`.
  */
-export function SidebarCollapseButton(): ReactElement {
-  const { toggleSidebar } = useSidebar()
-  return (
-    <div className="window-drag-control flex items-center">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            aria-label="Collapse sidebar"
-            onClick={toggleSidebar}
-            className={BUTTON_CLASS}
-          >
-            <PanelLeftClose aria-hidden className="size-4" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          Collapse sidebar {TOGGLE_BINDING && <ShortcutKeys binding={TOGGLE_BINDING} />}
-        </TooltipContent>
-      </Tooltip>
-    </div>
-  )
-}
-
-/**
- * Reopens the collapsed workspace sidebar — floats at the top-left of the
- * note pane (rendered only while the sidebar is hidden, so exactly one
- * toggle is on screen at a time). With the overlaid macOS title bar the
- * pane's top-left corner belongs to the traffic lights, so the button
- * shifts right of them, inside the title-bar band.
- */
-export function SidebarExpandButton(): ReactElement {
-  const { toggleSidebar } = useSidebar()
+export function SidebarToggle(): ReactElement {
+  const { sidebarCollapsed, toggleSidebar } = useSidebar()
+  const label = sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+  const Icon = sidebarCollapsed ? PanelLeftOpen : PanelLeftClose
   return (
     <div
       className={cn(
         'window-drag-control absolute',
-        // Inside the reserved title-bar band (the workspace adds `pt-7` to
-        // the pane while collapsed): right of the traffic lights under the
-        // overlay, at the band's left edge elsewhere.
         hasMacosTitleBarOverlay ? 'left-[4.75rem] top-[3px]' : 'left-2 top-0.5',
       )}
     >
@@ -66,15 +40,15 @@ export function SidebarExpandButton(): ReactElement {
         <TooltipTrigger asChild>
           <button
             type="button"
-            aria-label="Expand sidebar"
+            aria-label={label}
             onClick={toggleSidebar}
             className={BUTTON_CLASS}
           >
-            <PanelLeftOpen aria-hidden className="size-4" />
+            <Icon aria-hidden className="size-4" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          Expand sidebar {TOGGLE_BINDING && <ShortcutKeys binding={TOGGLE_BINDING} />}
+          {label} {TOGGLE_BINDING && <ShortcutKeys binding={TOGGLE_BINDING} />}
         </TooltipContent>
       </Tooltip>
     </div>
