@@ -14,7 +14,7 @@ import { notePathForRoute } from '@/routing/route'
 import { useRouter } from '@/routing/router'
 import { GraphFooter } from './graph-footer'
 import { NavigateArrows } from './navigate-arrows'
-import { SidebarCollapseButton } from './sidebar-toggle'
+import { SidebarToggle } from './sidebar-toggle'
 import { SidebarItem } from './sidebar-item'
 import { SidebarPinned } from './sidebar-pinned'
 import { SidebarSearch } from './sidebar-search'
@@ -55,9 +55,11 @@ export function Sidebar({ graph, context }: SidebarProps): ReactElement {
         hasMacosTitleBarOverlay ? 'pt-2' : 'pt-2.5',
       )}
     >
-      <div className="flex flex-none items-center justify-end gap-0.5 px-2 pt-1">
+      {/* Pinned beside the traffic lights — the identical spot the collapsed
+          state's toggle occupies, so switching modes never moves it. */}
+      <SidebarToggle />
+      <div className="flex flex-none items-center justify-end px-2 pt-1">
         <NavigateArrows />
-        <SidebarCollapseButton />
       </div>
 
       <div className="flex flex-none flex-col">
