@@ -2,13 +2,17 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactElem
 import { Virtualizer, type VirtualizerHandle } from 'virtua'
 import { dailyPath } from '@dayjot/core'
 import { NotePane } from '@/components/note-pane'
+import { NotePinButton } from '@/components/note-pin-button'
 import type { NoteEditorHandle } from '@/editor/note-editor'
 import { formatDayLabel, todayIso } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { useSettings } from '@/providers/settings-provider'
 import { useToday } from '@/lib/use-today'
 import { createDayWindow, dateAtIndex, indexOfDate, neighborDate } from '@/lib/day-window'
-import { useSetFocusedDailyDate } from '@/providers/focused-daily-provider'
+import {
+  useFocusedDailyDate,
+  useSetFocusedDailyDate,
+} from '@/providers/focused-daily-provider'
 import { useRouter } from '@/routing/router'
 
 interface DailyStreamProps {
@@ -91,6 +95,7 @@ export function DailyStream({ target }: DailyStreamProps): ReactElement {
   // on the day navigated to, but focus moves freely between stream rows, and the
   // sidebar's note actions / published link must describe the focused day.
   const setFocusedDailyDate = useSetFocusedDailyDate()
+  const focusedDailyDate = useFocusedDailyDate()
 
   // Cross-note arrow navigation (ArrowUp at the top of a day -> end of the
   // previous day; ArrowDown at the bottom -> start of the next day). The stream
@@ -221,11 +226,22 @@ export function DailyStream({ target }: DailyStreamProps): ReactElement {
             >
               {/* V1 renders the date as the note's H1-sized subject, with
                   today's tinted brand (its `highlightSubject`). */}
-              <h2
-                className={cn('dayjot-daily-subject mb-3', CONTENT_GUTTER, isToday && 'text-accent')}
-              >
-                {formatDayLabel(date, settings.dateFormat)}
-              </h2>
+              <div className={cn('group/day mb-3 flex items-center justify-between gap-2', CONTENT_GUTTER)}>
+                <h2 className={cn('dayjot-daily-subject', isToday && 'text-accent')}>
+                  {formatDayLabel(date, settings.dateFormat)}
+                </h2>
+                {/* The old note-actions pin, relocated: visible for the
+                    focused day (the one the sidebar describes), revealed on
+                    hover elsewhere. */}
+                <NotePinButton
+                  path={dailyPath(date)}
+                  className={cn(
+                    focusedDailyDate === date
+                      ? 'opacity-100'
+                      : 'opacity-0 focus-visible:opacity-100 group-hover/day:opacity-100',
+                  )}
+                />
+              </div>
               <NotePane
                 path={dailyPath(date)}
                 dailyDate={date}

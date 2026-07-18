@@ -1,5 +1,7 @@
 import type { ReactElement, ReactNode } from 'react'
 import { NotePane } from '@/components/note-pane'
+import { NotePinButton } from '@/components/note-pin-button'
+import { NoteTrashAction } from '@/components/context-sidebar/note-trash-action'
 import { ScrollRestored } from '@/routing/scroll-restore'
 
 interface SingleNoteViewProps {
@@ -30,7 +32,15 @@ interface SingleNoteViewProps {
 export function SingleNoteView({ path, dailyDate, heading }: SingleNoteViewProps): ReactElement {
   return (
     <ScrollRestored className="h-full overflow-auto px-0">
-      <div className="mx-auto flex min-h-full w-full max-w-full flex-col py-8">
+      <div className="relative mx-auto flex min-h-full w-full max-w-full flex-col py-8">
+        {/* The routed note is the focused note, so its actions are always
+            on screen: the pin (the old note-actions panel, relocated) and,
+            for regular notes, trash (the component hides itself for
+            dailies). */}
+        <div className="absolute right-4 top-3 z-10 flex items-center gap-1">
+          <NotePinButton path={path} />
+          <NoteTrashAction path={path} variant="icon" />
+        </div>
         {heading}
         <NotePane
           path={path}

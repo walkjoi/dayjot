@@ -1,4 +1,5 @@
 import { act, render, waitFor } from '@testing-library/react'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement } from 'react'
@@ -166,16 +167,14 @@ function PaletteProbe(): ReactElement {
 
 function renderRoute(route: Route) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
-    <QueryClientProvider client={client}>
+  return render(<TooltipProvider><QueryClientProvider client={client}>
       <RouterProvider initialRoute={route}>
         <PaletteProvider>
           <RouteContent />
           <PaletteProbe />
         </PaletteProvider>
       </RouterProvider>
-    </QueryClientProvider>,
-  )
+    </QueryClientProvider></TooltipProvider>)
 }
 
 describe('RouteContent', () => {

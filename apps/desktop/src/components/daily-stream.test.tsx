@@ -1,4 +1,5 @@
 import { act, fireEvent, render, waitFor } from '@testing-library/react'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react'
@@ -116,11 +117,9 @@ function NavigateTodayProbe({
 describe('DailyStream', () => {
   it('anchors its first scroll to today, with no top-of-window flicker', async () => {
     const today = todayIso()
-    const view = render(
-      <StreamProviders>
+    const view = render(<TooltipProvider><StreamProviders>
         <DailyStream target={{ kind: 'today' }} />
-      </StreamProviders>,
-    )
+      </StreamProviders></TooltipProvider>)
 
     const expected = indexOfDate(createDayWindow(today), today) * ESTIMATED_DAY_HEIGHT
     await waitFor(() => expect(scrollTops.length).toBeGreaterThan(0))
@@ -136,16 +135,14 @@ describe('DailyStream', () => {
     let navigateToday: () => void = () => {
       throw new Error('navigate not ready')
     }
-    const view = render(
-      <StreamProviders>
+    const view = render(<TooltipProvider><StreamProviders>
         <DailyStream target={{ kind: 'today' }} />
         <NavigateTodayProbe
           onReady={(run) => {
             navigateToday = run
           }}
         />
-      </StreamProviders>,
-    )
+      </StreamProviders></TooltipProvider>)
 
     const dayWindow = createDayWindow('2026-06-27')
     await act(async () => {
@@ -164,19 +161,15 @@ describe('DailyStream', () => {
   })
 
   it('mounts straight at a restored entry’s saved offset, not the anchor', async () => {
-    const view = render(
-      <StreamProviders>
+    const view = render(<TooltipProvider><StreamProviders>
         <SaveScrollProbe offset={4321} />
-      </StreamProviders>,
-    )
+      </StreamProviders></TooltipProvider>)
     scrollTops.length = 0
 
-    view.rerender(
-      <StreamProviders>
+    view.rerender(<TooltipProvider><StreamProviders>
         <SaveScrollProbe offset={4321} />
         <DailyStream target={{ kind: 'today' }} />
-      </StreamProviders>,
-    )
+      </StreamProviders></TooltipProvider>)
 
     await waitFor(() => expect(scrollTops.length).toBeGreaterThan(0))
     expect(scrollTops[0]).toBe(4321)
@@ -191,14 +184,12 @@ describe('DailyStream', () => {
       focused = useFocusedDailyDate()
       return null
     }
-    const view = render(
-      <StreamProviders>
+    const view = render(<TooltipProvider><StreamProviders>
         <FocusedDailyProvider>
           <DailyStream target={{ kind: 'date', date: today }} />
           <FocusProbe />
         </FocusedDailyProvider>
-      </StreamProviders>,
-    )
+      </StreamProviders></TooltipProvider>)
 
     // Focus enters a stream row (the route is unchanged): the sidebar's day
     // must move to that row's date, not stay on the routed day.
@@ -215,11 +206,9 @@ describe('DailyStream', () => {
   })
 
   it('reserves the editor’s space on loading placeholders, with the hint delayed', async () => {
-    const view = render(
-      <StreamProviders>
+    const view = render(<TooltipProvider><StreamProviders>
         <DailyStream target={{ kind: 'today' }} />
-      </StreamProviders>,
-    )
+      </StreamProviders></TooltipProvider>)
 
     const placeholders = await view.findAllByText('Loading note…')
     expect(placeholders.length).toBeGreaterThan(0)

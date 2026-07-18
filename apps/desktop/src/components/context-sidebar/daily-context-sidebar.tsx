@@ -2,7 +2,6 @@ import type { ReactElement } from 'react'
 import { dailyPath } from '@dayjot/core'
 import { DailyEventsSection } from './daily-events-section'
 import { DayCalendar } from './day-calendar'
-import { NoteActionsSection } from './note-actions-section'
 import { PublishedUrlSection } from './published-url-section'
 import { useToday } from '@/lib/use-today'
 import { cn } from '@/lib/utils'
@@ -35,7 +34,6 @@ export function DailyContextSidebar({ date }: DailyContextSidebarProps): ReactEl
     >
       <DayCalendar selectedDate={date} today={today} />
       <div className="my-4 space-y-4 pb-4">
-        <NoteActionsSection path={dailyPath(date)} />
         <DailyEventsSection date={date} />
         <PublishedUrlSection path={dailyPath(date)} />
       </div>

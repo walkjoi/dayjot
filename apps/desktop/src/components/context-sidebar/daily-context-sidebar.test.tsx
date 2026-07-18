@@ -190,19 +190,18 @@ describe('DailyContextSidebar calendar', () => {
 
 describe('DailyContextSidebar sections', () => {
   it('collapses a section and persists the state for the session', async () => {
+    useNoteRow.mockReturnValue(noteRow({ gistUrl: 'https://gist.github.com/alex/daily1' }))
     const view = renderSidebar('2026-06-09')
-    const header = view.getByRole('button', { name: /Note actions/ })
+    const header = view.getByRole('button', { name: /Published URL/ })
     expect(header.getAttribute('aria-expanded')).toBe('true')
-    expect(view.getByText('Pin this note')).toBeDefined()
 
     await userEvent.click(header)
     expect(header.getAttribute('aria-expanded')).toBe('false')
-    expect(view.queryByText('Pin this note')).toBeNull()
     view.unmount()
 
     const reopened = renderSidebar('2026-06-09')
     expect(
-      reopened.getByRole('button', { name: /Note actions/ }).getAttribute('aria-expanded'),
+      reopened.getByRole('button', { name: /Published URL/ }).getAttribute('aria-expanded'),
     ).toBe('false')
     reopened.unmount()
   })

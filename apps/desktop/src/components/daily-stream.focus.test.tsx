@@ -1,4 +1,5 @@
 import { act, fireEvent, render, waitFor } from '@testing-library/react'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEffect } from 'react'
 import { todayIso } from '@/lib/dates'
@@ -21,6 +22,7 @@ import { DailyStream, ESTIMATED_DAY_HEIGHT } from './daily-stream'
  * focus assignment as it mounts).
  */
 
+vi.mock('@/components/note-pin-button', () => ({ NotePinButton: () => null }))
 vi.mock('@/components/note-pane', () => ({
   NotePane: ({
     dailyDate,
@@ -83,16 +85,14 @@ function renderStream() {
   let navigate: Navigate = () => {
     throw new Error('navigate not ready')
   }
-  const view = render(
-    <RouterProvider initialRoute={{ kind: 'today' }}>
+  const view = render(<TooltipProvider><RouterProvider initialRoute={{ kind: 'today' }}>
       <DailyStream target={{ kind: 'today' }} />
       <NavigateProbe
         onReady={(run) => {
           navigate = run
         }}
       />
-    </RouterProvider>,
-  )
+    </RouterProvider></TooltipProvider>)
   const paneFor = (date: string) =>
     view.container.querySelector(`[data-testid="pane-probe"][data-date="${date}"]`)
   return {
