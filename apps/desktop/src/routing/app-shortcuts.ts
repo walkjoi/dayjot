@@ -14,7 +14,6 @@ import { setMenuCommandDispatch } from '@/lib/native-menu/dispatch'
 import { isNativeMenuInstalled } from '@/lib/native-menu/menu'
 import { isMacosDesktop } from '@/lib/platform'
 import type { CommandContext } from '@/lib/commands/types'
-import { useAudioMemo } from '@/providers/audio-memo-provider'
 import { useFocusedDailyDate } from '@/providers/focused-daily-provider'
 import { useGraph } from '@/providers/graph-provider'
 import { useNoteTemplates } from '@/providers/note-templates-provider'
@@ -179,7 +178,6 @@ export function useAppShortcuts(): CommandContext {
     createOpen: templateCreateOpen,
   } = useNoteTemplates()
   const { toggleSidebar } = useSidebar()
-  const { toggle: toggleAudioMemo } = useAudioMemo()
   const { settings } = useSettings()
   const timestampFormatRef = useRef(settings.timestampFormat)
   useEffect(() => {
@@ -252,7 +250,6 @@ export function useAppShortcuts(): CommandContext {
         }
         void openRecentRef.current(recent.root)
       },
-      toggleAudioMemo,
       timestampFormat: () => timestampFormatRef.current,
       generation: () => generationRef.current,
       openPalette,
@@ -272,7 +269,6 @@ export function useAppShortcuts(): CommandContext {
       openTemplatePicker,
       openTemplateCreate,
       toggleSidebar,
-      toggleAudioMemo,
     ],
   )
 

@@ -151,7 +151,6 @@ tauri-plugin-single-instance = { version = "2.4.2", features = ["deep-link"] }
 # plugin's `impact_light` command.)
 [target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
 tauri-plugin-keyboard = { path = "../../../plugins/tauri-plugin-keyboard" }
-tauri-plugin-recording = { path = "../../../plugins/tauri-plugin-recording" }
 
 [dev-dependencies]
 tauri = { version = "2.11.2", features = ["test"] }

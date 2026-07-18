@@ -192,7 +192,6 @@ pub fn run() {
     // mobile capture must survive the webview (interruptions, backgrounding),
     // so it runs on AVAudioRecorder behind this plugin.
     #[cfg(mobile)]
-    let builder = builder.plugin(tauri_plugin_recording::init());
 
     // The main window starts hidden (`visible: false`); desktop reveals it on
     // Ready after restoring geometry, but mobile has no window-state plugin,
@@ -344,34 +343,6 @@ pub fn run() {
                 {
                     windows::reopen_main_window(app);
                 }
-            }
-            // The lock-screen widget opens `dayjot://record-audio`; hand it
-            // to the recording plugin's persisted action queue (the V1
-            // handshake) so the request survives webview churn and cold
-            // starts. Desktop scheme opens flow through
-            // tauri-plugin-deep-link to the frontend instead.
-            #[cfg(any(target_os = "macos", target_os = "ios"))]
-            tauri::RunEvent::Opened { urls } => {
-                #[cfg(mobile)]
-                for url in urls {
-                    if url.scheme() == "dayjot" && url.host_str() == Some("record-audio") {
-                        // This callback runs on the main thread, and
-                        // `run_mobile_plugin` blocks its caller until the
-                        // Swift command resolves — which `queueAction` does
-                        // from the main queue. Calling it inline deadlocks
-                        // the main thread (the watchdog then kills the app),
-                        // so queue from a worker thread instead.
-                        let app = app.clone();
-                        tauri::async_runtime::spawn_blocking(move || {
-                            use tauri_plugin_recording::RecordingExt;
-                            if let Err(err) = app.recording().queue_action("recordAudio") {
-                                tracing::warn!(error = %err, "queueing the record-audio action failed");
-                            }
-                        });
-                    }
-                }
-                #[cfg(not(mobile))]
-                let _ = urls;
             }
             tauri::RunEvent::ExitRequested { code, api, .. } => {
                 // A user/OS-initiated quit (⌘Q — no exit code) with live

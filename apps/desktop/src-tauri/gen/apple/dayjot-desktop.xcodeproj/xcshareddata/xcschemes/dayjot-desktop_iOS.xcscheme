@@ -15,7 +15,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E2CEE6E5CCFA69CBA5F9AA3F"
+               BlueprintIdentifier = "ED0E80B707492C7A32259982"
                BuildableName = "dayjot-desktop_iOS.app"
                BlueprintName = "dayjot-desktop_iOS"
                ReferencedContainer = "container:dayjot-desktop.xcodeproj">
@@ -32,7 +32,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E2CEE6E5CCFA69CBA5F9AA3F"
+            BlueprintIdentifier = "ED0E80B707492C7A32259982"
             BuildableName = "dayjot-desktop_iOS.app"
             BlueprintName = "dayjot-desktop_iOS"
             ReferencedContainer = "container:dayjot-desktop.xcodeproj">
@@ -69,7 +69,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E2CEE6E5CCFA69CBA5F9AA3F"
+            BlueprintIdentifier = "ED0E80B707492C7A32259982"
             BuildableName = "dayjot-desktop_iOS.app"
             BlueprintName = "dayjot-desktop_iOS"
             ReferencedContainer = "container:dayjot-desktop.xcodeproj">
@@ -100,7 +100,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E2CEE6E5CCFA69CBA5F9AA3F"
+            BlueprintIdentifier = "ED0E80B707492C7A32259982"
             BuildableName = "dayjot-desktop_iOS.app"
             BlueprintName = "dayjot-desktop_iOS"
             ReferencedContainer = "container:dayjot-desktop.xcodeproj">

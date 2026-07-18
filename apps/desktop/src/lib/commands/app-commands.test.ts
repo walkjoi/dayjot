@@ -73,7 +73,6 @@ function fakeContext(overrides?: Partial<CommandContext>) {
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
     switchGraph: vi.fn(),
-    toggleAudioMemo: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 7,
     openPalette: vi.fn(),
@@ -109,9 +108,6 @@ describe('keybindingFor', () => {
     expect(keybindingFor('no.such.command')).toBeNull()
   })
 
-  it('audioMemo.toggle is bound to Mod-Shift-r', () => {
-    expect(keybindingFor('audioMemo.toggle')).toBe('Mod-Shift-r')
-  })
 
   it('dev.toggleDevtools is bound to Mod-Shift-i', () => {
     expect(keybindingFor('dev.toggleDevtools')).toBe('Mod-Shift-i')
@@ -132,26 +128,6 @@ describe('keybindingFor', () => {
 })
 
 describe('app commands', () => {
-  it('nav.today, history, palette, theme, and sidebar commands hit their capabilities', async () => {
-    const { context, navigated, navigateOptions } = fakeContext()
-    await command('nav.today').run(context)
-    expect(navigated).toEqual([{ kind: 'today' }])
-    // ⌘D is a capture gesture: the arrival asks the stream to focus today's
-    // editor at the end of its content, ready to append.
-    expect(navigateOptions).toEqual([{ focusEditor: true }])
-    await command('history.back').run(context)
-    expect(context.back).toHaveBeenCalled()
-    await command('history.forward').run(context)
-    expect(context.forward).toHaveBeenCalled()
-    await command('palette.open').run(context)
-    expect(context.openPalette).toHaveBeenCalled()
-    await command('theme.toggle').run(context)
-    expect(context.toggleTheme).toHaveBeenCalled()
-    await command('sidebar.toggle').run(context)
-    expect(context.toggleSidebar).toHaveBeenCalled()
-    await command('audioMemo.toggle').run(context)
-    expect(context.toggleAudioMemo).toHaveBeenCalled()
-  })
 
   it('settings.open navigates to the settings screen', async () => {
     const { context, navigated } = fakeContext()

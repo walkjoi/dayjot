@@ -3,7 +3,7 @@ import { listFiles, readNote, writeNote } from '../graph/commands'
 import { dailyPath } from '../graph/paths'
 import { hashContent } from '../indexing/hash'
 import { parseFrontmatter, splitFrontmatter, upsertFrontmatter } from '../markdown/frontmatter'
-import type { ReconcileStop } from './audio-memo'
+import type { ReconcileStop } from './reconcile'
 import {
   finishCaptureWrite,
   hasCaptureWriteTransaction,

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   assetPath,
-  audioMemoPath,
   dailyPath,
   dateFromDailyPath,
   isDaily,
@@ -30,7 +29,6 @@ describe('graph paths', () => {
     expect(notePath('charlotte-maccaw')).toBe('notes/charlotte-maccaw.md')
     expect(templatePath('journal')).toBe('templates/journal.md')
     expect(assetPath('screenshot.png')).toBe('assets/screenshot.png')
-    expect(audioMemoPath('memo.m4a')).toBe('audio-memos/memo.m4a')
   })
 
   it('recognizes indexable note paths, never recordings or assets', () => {

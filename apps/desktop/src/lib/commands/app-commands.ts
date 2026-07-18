@@ -273,13 +273,6 @@ const APP_COMMANDS: AppCommand[] = [
     run: (context) => context.openTemplateCreate(),
   },
   {
-    id: 'audioMemo.toggle',
-    title: 'Record audio memo',
-    keywords: ['voice', 'mic', 'dictate', 'transcribe', 'speech', 'capture'],
-    keybinding: 'Mod-Shift-r',
-    run: (context) => context.toggleAudioMemo(),
-  },
-  {
     id: 'theme.toggle',
     title: 'Toggle theme',
     keywords: ['dark', 'light', 'appearance'],

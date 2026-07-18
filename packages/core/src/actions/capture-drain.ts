@@ -18,7 +18,7 @@ import {
 } from '../markdown/edit'
 import { parseNote } from '../markdown/extract'
 import { parseFrontmatter, splitFrontmatter } from '../markdown/frontmatter'
-import type { ReconcileStop } from './audio-memo'
+import type { ReconcileStop } from './reconcile'
 import { ensureBacklinkTarget } from './backlink-target'
 import {
   captureFromPath,

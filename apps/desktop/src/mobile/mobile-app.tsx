@@ -1,12 +1,10 @@
 import { useEffect, type ReactElement } from 'react'
 import { installBackgroundFlush } from '@/lib/background-flush'
-import { MobileAudioMemoProvider } from '@/mobile/audio-memo-provider'
 import { MobileErrorBoundary } from '@/mobile/mobile-error-boundary'
 import { MobileOnboardingScreen } from '@/mobile/onboarding-screen'
 import { MobileShell } from '@/mobile/mobile-shell'
 import { MobileStatusLayer } from '@/mobile/status-layer'
 import { PendingGithubDrawer } from '@/mobile/pending-github-drawer'
-import { RecordingDrawer } from '@/mobile/recording-drawer'
 import { useICloudRefresh } from '@/mobile/use-icloud-refresh'
 import { useKeyboardCaretReveal, useKeyboardHeightVar } from '@/mobile/use-keyboard'
 import { useTaskCheckboxHaptics } from '@/mobile/use-task-haptics'
@@ -56,21 +54,12 @@ export function MobileApp(): ReactElement {
             {/* Link capture (Plan 11, iOS share extension): relay the App
                 Group inbox + drain on launch and on every resume. */}
             <CaptureProvider graph={graph}>
-              {/* Native recording over the shared capture pipeline — the
-                  mobile leg of desktop's audio memos. Mounted here so the
-                  queue, the reconciler, and the orphan scan survive tab
-                  switches. */}
-              <MobileAudioMemoProvider graph={graph}>
                 <MobileShell />
                 <MobileStatusLayer />
-                {/* Mounted beside the shell (not inside the daily screen)
-                    so a live recording's sheet survives tab switches. */}
-                <RecordingDrawer />
                 {/* First-run handoff: onboarding's GitHub path marks a
                     one-shot flag and this offers the Connect-GitHub sheet
                     once the graph is on screen. */}
                 <PendingGithubDrawer />
-              </MobileAudioMemoProvider>
             </CaptureProvider>
           </SyncProvider>
         </RouterProvider>

@@ -6,7 +6,6 @@ import { PendingGithubSetup } from '@/components/pending-github-setup'
 import { WorkspaceContent } from '@/components/workspace-content'
 import { getInitialWindowRoute } from '@/lib/windows/initial-window-route'
 import { isMainWindow } from '@/lib/windows/window-role'
-import { AudioMemoProvider } from '@/providers/audio-memo-provider'
 import { FocusedDailyProvider } from '@/providers/focused-daily-provider'
 import { CaptureProvider } from '@/providers/capture-provider'
 import { DeepLinkProvider } from '@/providers/deep-link-provider'
@@ -40,9 +39,6 @@ export function GraphWorkspace({ graph }: GraphWorkspaceProps): ReactElement {
           <ShortcutsProvider>
             <NoteTemplatesProvider>
               <SidebarProvider>
-                {/* Above the sidebar: a recording must survive the sidebar (and its
-                    mic button) unmounting on collapse. */}
-                <AudioMemoProvider graph={graph}>
                   <CaptureProvider graph={graph}>
                     {/* Inside the router (deep links navigate) and beside capture
                         (deep-link writes spool into the same inbox drain). */}
@@ -70,7 +66,6 @@ export function GraphWorkspace({ graph }: GraphWorkspaceProps): ReactElement {
                       </FocusedDailyProvider>
                     </DeepLinkProvider>
                   </CaptureProvider>
-                </AudioMemoProvider>
               </SidebarProvider>
             </NoteTemplatesProvider>
           </ShortcutsProvider>

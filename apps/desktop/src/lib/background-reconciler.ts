@@ -1,6 +1,6 @@
 /**
  * The shared lifecycle for a background reconcile loop — capture enrichment
- * ({@link createCaptureController}), audio-memo transcription
+ * ({@link createCaptureController}) and its peers
  * ({@link createTranscriptionReconciler}), and asset descriptions
  * ({@link createAssetDescribeController}) are all the same shape: a
  * generation-pinned, single-flight pass driven by watcher/focus/online events.

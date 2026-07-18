@@ -10,7 +10,6 @@ export const NOTES_DIR = 'notes'
 export const TEMPLATES_DIR = 'templates'
 export const ASSETS_DIR = 'assets'
 /** Audio-memo recordings live apart from pasted/dropped `assets/` files. */
-export const AUDIO_MEMOS_DIR = 'audio-memos'
 
 /** Matches a daily-note path and captures its ISO date. */
 const DAILY_PATH_RE = /^daily\/(\d{4}-\d{2}-\d{2})\.md$/
@@ -53,9 +52,6 @@ export function assetPath(name: string): string {
 }
 
 /** Graph-relative path to a stored recording under `audio-memos/`. */
-export function audioMemoPath(name: string): string {
-  return `${AUDIO_MEMOS_DIR}/${name}`
-}
 
 /**
  * Suffix of a managed asset-description file (Plan 20): the AI description +

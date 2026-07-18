@@ -34,8 +34,6 @@ maintained separately. Importing a Reflect V1 export is still supported.
   entirely on this device.
 - **Private notes:** `private: true` excludes a note's content from every
   external service (publishing included).
-- **Audio memos:** record audio; each memo is saved into the graph, filed
-  into its own note, and linked from that day's daily note.
 - **Browser capture:** save links, selected text, screenshots, and page text
   from Chrome.
 - **Sync choices:** connect GitHub (or any git remote) for versioned, synced
@@ -76,8 +74,7 @@ back up, sync, or edit with other tools:
 my-graph/
 ├── daily/2026-06-12.md     # Daily notes, named by date
 ├── notes/some-title.md     # Other notes, named from their titles
-├── assets/                 # Images and attachments
-└── audio-memos/            # Audio recordings
+└── assets/                 # Images and attachments
 ```
 
 Markdown files are the source of truth. DayJot adds search, backlinks, and

@@ -7,63 +7,47 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		14BE6EF4AB511AC099410853 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 57BCB79C0774021318852985 /* main.mm */; };
-		1C8847A7F1C163FBA53373F9 /* ExtensionClass.js in Resources */ = {isa = PBXBuildFile; fileRef = 536E4F5E21B7DCC3C7ECDC1A /* ExtensionClass.js */; };
-		266B3807E809464C8FC14146 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDC9BB81FAB5AF8D65160799 /* Metal.framework */; };
-		319EDF8F46AB05DFBA9D674F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 80E05926405BFDA2A3BC70BC /* libz.tbd */; };
-		495C9E97530FC781EB5645D6 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A58A746A41B6BF1D50A8547 /* ShareViewController.swift */; };
-		5693613DE956199D6486EA26 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8D0D6D72E614086946EBF890 /* LaunchScreen.storyboard */; };
-		6C3751B3B175DFE411D97C0F /* StopRecordingLiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3613166A0FB6AFF3C3B2F85C /* StopRecordingLiveActivityIntent.swift */; };
-		6C55CBAB912EC5920CE314DA /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29B88183661F5C1C960E074 /* RecordingIntents.swift */; };
-		74275EAEFEA922B7D8A2C78F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5249E1475DBD7CCB817F7D1B /* CoreGraphics.framework */; };
-		85FC869F776C24A9ED0A1779 /* RecordingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C228C4BA95B0BADA424A9E8A /* RecordingActivityAttributes.swift */; };
-		93F2A1181D6BC7832338EE9C /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93EF89A222208D739ABC00B8 /* ShareView.swift */; };
-		9611839F9E9EC688FCDFCC91 /* RecordingWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26DB86321DA75DFE1CD4B41 /* RecordingWidgetBundle.swift */; };
-		961AA49623F0DDC7AB09B777 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 39269153EFAD0C2FEFBE6696 /* UIKit.framework */; };
-		9C05940F9725363AAB9131D3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C94374B175075AF3AA7DE586 /* Security.framework */; };
-		9D7F5A94048CECBFC3D89BBA /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F28F8A628D32337E04C0CBC0 /* libapp.a */; };
-		A2E5A9558E714E679520EA9E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E66BC7105426B91F03659B53 /* MetalKit.framework */; };
-		B109D161D258110DC703F97C /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 51006DE1482D28D9562253A1 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		B6B5B091EADAF6EAEC6E2EDA /* ShareState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89342C7501B47DBB934B2D27 /* ShareState.swift */; };
-		BEA09DBDD61413051FFEB9E3 /* CaptureInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D357D2D54012FD394DF9423E /* CaptureInbox.swift */; };
-		BFB9F91C8E2628460C84C8A3 /* StopRecordingLiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3613166A0FB6AFF3C3B2F85C /* StopRecordingLiveActivityIntent.swift */; };
-		C1FBC0B57C41A13D88225DFB /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 3ED6411036D50396010D935D /* assets */; };
-		C4FAE42D7B978D8330E5D6DC /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D182B9445129EC2433F8218 /* Contacts.framework */; };
-		C605CBEEDBC31FA67F1A4F5E /* RecordingWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DB54D6D030C08888E9D17442 /* RecordingWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		D37EE1ED817FDDC16C5643BB /* RecordingActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3930E6E7AB28929B07A6D0 /* RecordingActivityWidget.swift */; };
-		DD1AE73F867F4264272EFED2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68D1FDE7F099CA5F909105EB /* QuartzCore.framework */; };
-		E413DBCB60FF081C8E58468A /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 088536D8F462855DCFDA7B06 /* WebKit.framework */; };
-		E7D75AA83CFA468E0EFBAB21 /* RecordAudioWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AC6BF821D47F74D41DFAFE /* RecordAudioWidget.swift */; };
-		E9E7B6C59015E7301EE63308 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 44C3B8C21F2D38187423AB2F /* libiconv.tbd */; };
-		F00F5EAED90E34102F9AE651 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A86D201016958E2276806466 /* Assets.xcassets */; };
+		0B32BD29704D7075844A8B1D /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 223AFF1F5069F8E5DEA896DC /* QuartzCore.framework */; };
+		0DEDD4BBA5F7F8952CAEEFF5 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DC19A8967C3432761C559D5 /* MetalKit.framework */; };
+		1CC107A4E58B6D8DF22BE5A9 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 267AB8FB54BD143E27B77CC4 /* WebKit.framework */; };
+		3B5F5A1E3FE779C0A288F2AA /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B352080D34D4D17C11FB28A5 /* libz.tbd */; };
+		40D80301F4AF36ADD3F031DA /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8E29CB355364AC4565387 /* Metal.framework */; };
+		4CCB5ABB67D020FFCF23F991 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B19C0F0A48FEA9794927C14 /* ShareView.swift */; };
+		59E6A15B79555505178D8A8F /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A608A8B0018DCB068C40B9FC /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		739020917F9A6231B70B7093 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 78889E542EBC07AC7E7CD92C /* libiconv.tbd */; };
+		854DAB95476FB2ADA848DC55 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 143867C364AA2D1A342306D7 /* assets */; };
+		8F16165DDB1DE2E5268A323C /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DF4DB112A418D096EA815BBE /* Security.framework */; };
+		9A14860598EAF2C2D9C4C294 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05C79FA746DFD5D48C3BD586 /* Contacts.framework */; };
+		9EE21D41BF32DBB3305B0214 /* ExtensionClass.js in Resources */ = {isa = PBXBuildFile; fileRef = 2BB2970BB68321BA9119A5A9 /* ExtensionClass.js */; };
+		9FAAD59A7B9A276A33EF96DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7DBB1369C35ADCC2D01ABEC1 /* Assets.xcassets */; };
+		A38A5505130200B3F41B60E0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D31DEBEDA18EB60B974DA380 /* LaunchScreen.storyboard */; };
+		AFEDFB04944F0A609E42C822 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D5E76DA6137DC1FB4C55DFFA /* libapp.a */; };
+		B71EE82EDE6820C54DC2B61C /* CaptureInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4653239ECBB1CB8404BA5BFF /* CaptureInbox.swift */; };
+		BD3E8D1517AD74449EA71D0B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A3DDEDBCF93F22015E6E4851 /* UIKit.framework */; };
+		BF279F576470D7B346F61F35 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A02F88D03763EB47E4C39B09 /* CoreGraphics.framework */; };
+		C75DD1D5B2B2E2B2D507AB6F /* ShareState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E041B0710EFA7EE4DEF11DD /* ShareState.swift */; };
+		CDD8CA1F766135E97A94116C /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 577E5B4DF3F00F23290EC707 /* main.mm */; };
+		F648C6758C117677E281AF09 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EC17381C4B4FD7FB6F2541C /* ShareViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		6A2683A904EF67AC778ED704 /* PBXContainerItemProxy */ = {
+		8DB60EB2393C763804616D2C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 5489219F37B2885D5C3112F4 /* Project object */;
+			containerPortal = B696C67D29D14665236F3120 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 665EB942B5F6FB93F8DF2A57;
-			remoteInfo = RecordingWidget;
-		};
-		E15A48A368A368CDA2B5A070 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 5489219F37B2885D5C3112F4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 85FC564C07724F1F4E282538;
+			remoteGlobalIDString = 6442ECFA9AD73CB215641BE1;
 			remoteInfo = ShareExtension;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		BD3D981F03353195982EBCE6 /* Embed Foundation Extensions */ = {
+		FFBEF9B24EB8C87A4B932D51 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				B109D161D258110DC703F97C /* ShareExtension.appex in Embed Foundation Extensions */,
-				C605CBEEDBC31FA67F1A4F5E /* RecordingWidget.appex in Embed Foundation Extensions */,
+				59E6A15B79555505178D8A8F /* ShareExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -71,372 +55,317 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		05ABE058940EC4D96B7CA5D9 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		088536D8F462855DCFDA7B06 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
-		08B3817A23175E584BA6FD8D /* error.rs */ = {isa = PBXFileReference; path = error.rs; sourceTree = "<group>"; };
-		11AB73085CB07EA1B7A3533C /* dayjot-desktop_iOS.dev.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "dayjot-desktop_iOS.dev.entitlements"; sourceTree = "<group>"; };
-		152767D3A95549268E140D0F /* graph_gitignore.rs */ = {isa = PBXFileReference; path = graph_gitignore.rs; sourceTree = "<group>"; };
-		18A732A38CD75FF514E4CF86 /* settings.rs */ = {isa = PBXFileReference; path = settings.rs; sourceTree = "<group>"; };
-		1A3930E6E7AB28929B07A6D0 /* RecordingActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingActivityWidget.swift; sourceTree = "<group>"; };
-		1A58A746A41B6BF1D50A8547 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
-		1B481887CBBFA6FB3C78F2B2 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
-		1EB2845C34150F5FE04A33D3 /* write.rs */ = {isa = PBXFileReference; path = write.rs; sourceTree = "<group>"; };
-		2130029E77013461A501E644 /* devtools.rs */ = {isa = PBXFileReference; path = devtools.rs; sourceTree = "<group>"; };
-		21F0526713DAC48C777B2D4C /* union.rs */ = {isa = PBXFileReference; path = union.rs; sourceTree = "<group>"; };
-		2490DACB2171344E8D9A8807 /* capture.rs */ = {isa = PBXFileReference; path = capture.rs; sourceTree = "<group>"; };
-		28AF2C553C3E42F07C4AF0DD /* shadow.rs */ = {isa = PBXFileReference; path = shadow.rs; sourceTree = "<group>"; };
-		28B078410B4B4507A763E297 /* ladder.rs */ = {isa = PBXFileReference; path = ladder.rs; sourceTree = "<group>"; };
-		2EDECD14A0418A8D4AA04512 /* remote.rs */ = {isa = PBXFileReference; path = remote.rs; sourceTree = "<group>"; };
-		2FA419867A84041644CC42E9 /* skill.rs */ = {isa = PBXFileReference; path = skill.rs; sourceTree = "<group>"; };
-		32B7D9FD2081133899440765 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		3613166A0FB6AFF3C3B2F85C /* StopRecordingLiveActivityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopRecordingLiveActivityIntent.swift; sourceTree = "<group>"; };
-		3779A211A168AE84C5573923 /* merge.rs */ = {isa = PBXFileReference; path = merge.rs; sourceTree = "<group>"; };
-		37EF719F509C3A532C0E0114 /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
-		383CB9669208178C6B235BE6 /* io.rs */ = {isa = PBXFileReference; path = io.rs; sourceTree = "<group>"; };
-		39269153EFAD0C2FEFBE6696 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
-		3AE251E5F7E95CDEFDD3C8B4 /* dayjot-desktop_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "dayjot-desktop_iOS.entitlements"; sourceTree = "<group>"; };
-		3D182B9445129EC2433F8218 /* Contacts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Contacts.framework; path = System/Library/Frameworks/Contacts.framework; sourceTree = SDKROOT; };
-		3ED6411036D50396010D935D /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
-		44C3B8C21F2D38187423AB2F /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
-		48F8214D2C537DF115410CC0 /* resolve.rs */ = {isa = PBXFileReference; path = resolve.rs; sourceTree = "<group>"; };
-		491E4F680A58FFBD620237F9 /* commit.rs */ = {isa = PBXFileReference; path = commit.rs; sourceTree = "<group>"; };
-		4B8413C8F746CEEC50B61694 /* import_assets.rs */ = {isa = PBXFileReference; path = import_assets.rs; sourceTree = "<group>"; };
-		4EE64B671C831953394179E2 /* watcher.rs */ = {isa = PBXFileReference; path = watcher.rs; sourceTree = "<group>"; };
-		51006DE1482D28D9562253A1 /* ShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		5249E1475DBD7CCB817F7D1B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		5306360328A772EEE5EDDD87 /* versions.rs */ = {isa = PBXFileReference; path = versions.rs; sourceTree = "<group>"; };
-		536E4F5E21B7DCC3C7ECDC1A /* ExtensionClass.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ExtensionClass.js; sourceTree = "<group>"; };
-		560C7C23BE58D7EA845F1170 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
-		57BCB79C0774021318852985 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
-		5C56D455FF36B2FFA8189246 /* repo.rs */ = {isa = PBXFileReference; path = repo.rs; sourceTree = "<group>"; };
-		5F2E1B8E7D79BDAFFCD2DCDE /* assets.rs */ = {isa = PBXFileReference; path = assets.rs; sourceTree = "<group>"; };
-		5F605BA8949402DAE91B9243 /* embed_write.rs */ = {isa = PBXFileReference; path = embed_write.rs; sourceTree = "<group>"; };
-		6572C3F24F414FF11A16F640 /* asset_protocol.rs */ = {isa = PBXFileReference; path = asset_protocol.rs; sourceTree = "<group>"; };
-		65C0E213C54BBE2152AA5DF2 /* chat_write.rs */ = {isa = PBXFileReference; path = chat_write.rs; sourceTree = "<group>"; };
-		68D1FDE7F099CA5F909105EB /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		6BB60C6D34C4AFB61F084B4D /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		73D6C2FDB2DD7919E24C4533 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		772B62ED093A33BDCD1864D8 /* calendar.rs */ = {isa = PBXFileReference; path = calendar.rs; sourceTree = "<group>"; };
-		80E05926405BFDA2A3BC70BC /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
-		88ED38A3B3D14839B5066255 /* embed.rs */ = {isa = PBXFileReference; path = embed.rs; sourceTree = "<group>"; };
-		89342C7501B47DBB934B2D27 /* ShareState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareState.swift; sourceTree = "<group>"; };
-		89B314CA06450414E4537033 /* query.rs */ = {isa = PBXFileReference; path = query.rs; sourceTree = "<group>"; };
-		8A676086DFF0C50E4E5C77A5 /* archive.rs */ = {isa = PBXFileReference; path = archive.rs; sourceTree = "<group>"; };
-		8C04E40F02C9B4AE9A24A9A4 /* recents.rs */ = {isa = PBXFileReference; path = recents.rs; sourceTree = "<group>"; };
-		8D0D6D72E614086946EBF890 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
-		93EF89A222208D739ABC00B8 /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
-		A26DB86321DA75DFE1CD4B41 /* RecordingWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingWidgetBundle.swift; sourceTree = "<group>"; };
-		A4F0D18C7B37B593ED8ACD6F /* scan.rs */ = {isa = PBXFileReference; path = scan.rs; sourceTree = "<group>"; };
-		A67279D745DF48458936735A /* storage.rs */ = {isa = PBXFileReference; path = storage.rs; sourceTree = "<group>"; };
-		A86D201016958E2276806466 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A8921CA643078550A7A02536 /* embed_mobile.rs */ = {isa = PBXFileReference; path = embed_mobile.rs; sourceTree = "<group>"; };
-		AABA262BFCEDA2C43E343A31 /* sweep.rs */ = {isa = PBXFileReference; path = sweep.rs; sourceTree = "<group>"; };
-		ACE1CDF45CDBB8D7B2446E36 /* windows.rs */ = {isa = PBXFileReference; path = windows.rs; sourceTree = "<group>"; };
-		ADB23521181EEB9EF095D4AB /* contacts.rs */ = {isa = PBXFileReference; path = contacts.rs; sourceTree = "<group>"; };
-		B667667E9C6C141128493B00 /* quit.rs */ = {isa = PBXFileReference; path = quit.rs; sourceTree = "<group>"; };
-		BC3901740F3A40252C3750C7 /* dayjot-desktop_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "dayjot-desktop_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C228C4BA95B0BADA424A9E8A /* RecordingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingActivityAttributes.swift; sourceTree = "<group>"; };
-		C38A6847351881E6D17A1DC2 /* migrations.rs */ = {isa = PBXFileReference; path = migrations.rs; sourceTree = "<group>"; };
-		C7BE8291B337F95D913C6AE9 /* commit_message.rs */ = {isa = PBXFileReference; path = commit_message.rs; sourceTree = "<group>"; };
-		C94374B175075AF3AA7DE586 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		CF582FB0094C95210BE919F7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		D05B757D9AB841897576F256 /* merge3.rs */ = {isa = PBXFileReference; path = merge3.rs; sourceTree = "<group>"; };
-		D2398DBC3478C5F96CC89402 /* background_task.rs */ = {isa = PBXFileReference; path = background_task.rs; sourceTree = "<group>"; };
-		D29B88183661F5C1C960E074 /* RecordingIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingIntents.swift; sourceTree = "<group>"; };
-		D357D2D54012FD394DF9423E /* CaptureInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureInbox.swift; sourceTree = "<group>"; };
-		D3691D8F671B7FA21D1E7BD7 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
-		D7AC6BF821D47F74D41DFAFE /* RecordAudioWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordAudioWidget.swift; sourceTree = "<group>"; };
-		D7DA2E13EA6655A16DFDE015 /* secrets.rs */ = {isa = PBXFileReference; path = secrets.rs; sourceTree = "<group>"; };
-		D8F1F4787BA60FD05FD83FD1 /* spike_mobile.rs */ = {isa = PBXFileReference; path = spike_mobile.rs; sourceTree = "<group>"; };
-		DB54D6D030C08888E9D17442 /* RecordingWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RecordingWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		DBD22A8C59FD8892E5F139EC /* tests.rs */ = {isa = PBXFileReference; path = tests.rs; sourceTree = "<group>"; };
-		DD5CA5DD1A0A2C6898BF16AE /* tests.rs */ = {isa = PBXFileReference; path = tests.rs; sourceTree = "<group>"; };
-		DFD67CD43D5BD05A1C511C01 /* import.rs */ = {isa = PBXFileReference; path = import.rs; sourceTree = "<group>"; };
-		E1940DEB1B975598A69CA93F /* frontmatter.rs */ = {isa = PBXFileReference; path = frontmatter.rs; sourceTree = "<group>"; };
-		E66BC7105426B91F03659B53 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
-		E8031FEC080EBAF422BEE44C /* markers.rs */ = {isa = PBXFileReference; path = markers.rs; sourceTree = "<group>"; };
-		EC45808CD3D13DD431212EAE /* watch.rs */ = {isa = PBXFileReference; path = watch.rs; sourceTree = "<group>"; };
-		F28F8A628D32337E04C0CBC0 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
-		F3173A0D7E498896FAC5A43E /* watcher_mobile.rs */ = {isa = PBXFileReference; path = watcher_mobile.rs; sourceTree = "<group>"; };
-		FDC9BB81FAB5AF8D65160799 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		030E56AE3C3F770229A0284A /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
+		05C79FA746DFD5D48C3BD586 /* Contacts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Contacts.framework; path = System/Library/Frameworks/Contacts.framework; sourceTree = SDKROOT; };
+		077725F4079E72AB98E318D9 /* chat_write.rs */ = {isa = PBXFileReference; path = chat_write.rs; sourceTree = "<group>"; };
+		0B878AFC9D782A1EFC333A87 /* watcher_mobile.rs */ = {isa = PBXFileReference; path = watcher_mobile.rs; sourceTree = "<group>"; };
+		0D3E729BFF42513AEBAB3274 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		0E68553EB32756804B00B008 /* migrations.rs */ = {isa = PBXFileReference; path = migrations.rs; sourceTree = "<group>"; };
+		11162CC48627A35162C822C3 /* sweep.rs */ = {isa = PBXFileReference; path = sweep.rs; sourceTree = "<group>"; };
+		12B7E8DF67028DA15AAB2868 /* import_assets.rs */ = {isa = PBXFileReference; path = import_assets.rs; sourceTree = "<group>"; };
+		143867C364AA2D1A342306D7 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
+		1925F56786A610524AF7E14D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1EBF735A76FAE3179F009E32 /* commit_message.rs */ = {isa = PBXFileReference; path = commit_message.rs; sourceTree = "<group>"; };
+		223AFF1F5069F8E5DEA896DC /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		267AB8FB54BD143E27B77CC4 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		27CCBC67C8751FFFD0D756C3 /* commit.rs */ = {isa = PBXFileReference; path = commit.rs; sourceTree = "<group>"; };
+		2863D8D18771028A1562E08A /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		2BB2970BB68321BA9119A5A9 /* ExtensionClass.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ExtensionClass.js; sourceTree = "<group>"; };
+		2FC786024E3F844B3E6C2397 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		358CA5AA2C530D2D170A597F /* contacts.rs */ = {isa = PBXFileReference; path = contacts.rs; sourceTree = "<group>"; };
+		3798E9E6D34D59926CF4A89F /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		3B45B939AEC54658C4A60A8F /* import.rs */ = {isa = PBXFileReference; path = import.rs; sourceTree = "<group>"; };
+		3DE396B675CFF75C3F7496A4 /* windows.rs */ = {isa = PBXFileReference; path = windows.rs; sourceTree = "<group>"; };
+		3E2AC8F9443311E12FB5CEE8 /* tests.rs */ = {isa = PBXFileReference; path = tests.rs; sourceTree = "<group>"; };
+		4653239ECBB1CB8404BA5BFF /* CaptureInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureInbox.swift; sourceTree = "<group>"; };
+		4C87F2DC9E4DB8C10800E2ED /* capture.rs */ = {isa = PBXFileReference; path = capture.rs; sourceTree = "<group>"; };
+		4DF79B2258EA7EF38841B685 /* frontmatter.rs */ = {isa = PBXFileReference; path = frontmatter.rs; sourceTree = "<group>"; };
+		4EB53B97CD852BF9A3BDDC15 /* shadow.rs */ = {isa = PBXFileReference; path = shadow.rs; sourceTree = "<group>"; };
+		54EB7C7977BD2DF7BD04AD05 /* markers.rs */ = {isa = PBXFileReference; path = markers.rs; sourceTree = "<group>"; };
+		577E5B4DF3F00F23290EC707 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		592EBDCA1AC7835EF416DA11 /* dayjot-desktop_iOS.dev.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "dayjot-desktop_iOS.dev.entitlements"; sourceTree = "<group>"; };
+		5C1570EA8A012F877A32F002 /* repo.rs */ = {isa = PBXFileReference; path = repo.rs; sourceTree = "<group>"; };
+		5E93600C4D375843B519B2C9 /* skill.rs */ = {isa = PBXFileReference; path = skill.rs; sourceTree = "<group>"; };
+		5EE0C3E8B6C5F031B970339B /* background_task.rs */ = {isa = PBXFileReference; path = background_task.rs; sourceTree = "<group>"; };
+		60C19DF19D9292BC36FFFFD7 /* calendar.rs */ = {isa = PBXFileReference; path = calendar.rs; sourceTree = "<group>"; };
+		697A1251A669C8A55DEF9AA4 /* watch.rs */ = {isa = PBXFileReference; path = watch.rs; sourceTree = "<group>"; };
+		69D515B31C6FF7E60C32079C /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
+		6D39B43405E53FB84532C9CF /* archive.rs */ = {isa = PBXFileReference; path = archive.rs; sourceTree = "<group>"; };
+		706A86F401AB847CF6A2D3ED /* scan.rs */ = {isa = PBXFileReference; path = scan.rs; sourceTree = "<group>"; };
+		72BD0C2DF97039117CBEE9A1 /* asset_protocol.rs */ = {isa = PBXFileReference; path = asset_protocol.rs; sourceTree = "<group>"; };
+		743EFBA2ABAA0AC44FC02F77 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		78889E542EBC07AC7E7CD92C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
+		79864FD8C22958B46F3A7055 /* remote.rs */ = {isa = PBXFileReference; path = remote.rs; sourceTree = "<group>"; };
+		7A2D97DDDA3046B000FC80BC /* graph_gitignore.rs */ = {isa = PBXFileReference; path = graph_gitignore.rs; sourceTree = "<group>"; };
+		7C6B81D2BDC4FD8E69C6F8CD /* storage.rs */ = {isa = PBXFileReference; path = storage.rs; sourceTree = "<group>"; };
+		7DBB1369C35ADCC2D01ABEC1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7DC19A8967C3432761C559D5 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		887C4877ACCABEDE92AF983B /* query.rs */ = {isa = PBXFileReference; path = query.rs; sourceTree = "<group>"; };
+		8A66643148B06A5C13540CA9 /* merge3.rs */ = {isa = PBXFileReference; path = merge3.rs; sourceTree = "<group>"; };
+		8C03572DDA024C429D7B2E91 /* versions.rs */ = {isa = PBXFileReference; path = versions.rs; sourceTree = "<group>"; };
+		8EC17381C4B4FD7FB6F2541C /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		8EF531EFBDABF13C027F624E /* write.rs */ = {isa = PBXFileReference; path = write.rs; sourceTree = "<group>"; };
+		90FFC77FC79EB3E88E71C3CC /* dayjot-desktop_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "dayjot-desktop_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		956EFEAAABA42C4FD249C5BC /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
+		961024357B34F9D06B24C45E /* merge.rs */ = {isa = PBXFileReference; path = merge.rs; sourceTree = "<group>"; };
+		9B19C0F0A48FEA9794927C14 /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
+		9E041B0710EFA7EE4DEF11DD /* ShareState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareState.swift; sourceTree = "<group>"; };
+		9E700CFE184FABF489BDCA0E /* recents.rs */ = {isa = PBXFileReference; path = recents.rs; sourceTree = "<group>"; };
+		A02F88D03763EB47E4C39B09 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		A2B9563F4C82AB85FEC441C4 /* error.rs */ = {isa = PBXFileReference; path = error.rs; sourceTree = "<group>"; };
+		A3DDEDBCF93F22015E6E4851 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		A4D5E300A9FE2EE916E02F63 /* tests.rs */ = {isa = PBXFileReference; path = tests.rs; sourceTree = "<group>"; };
+		A4ED9AA7318F52A1FFD9F6C6 /* watcher.rs */ = {isa = PBXFileReference; path = watcher.rs; sourceTree = "<group>"; };
+		A608A8B0018DCB068C40B9FC /* ShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB783B1851FAFED3AE1BBAA6 /* secrets.rs */ = {isa = PBXFileReference; path = secrets.rs; sourceTree = "<group>"; };
+		B2ABAECC9A3E92AEC5A9DC62 /* settings.rs */ = {isa = PBXFileReference; path = settings.rs; sourceTree = "<group>"; };
+		B352080D34D4D17C11FB28A5 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		C17E25D72D9FEC14FDEB3A17 /* resolve.rs */ = {isa = PBXFileReference; path = resolve.rs; sourceTree = "<group>"; };
+		CFD08B82291D6C3CBE5B84AB /* io.rs */ = {isa = PBXFileReference; path = io.rs; sourceTree = "<group>"; };
+		D31DEBEDA18EB60B974DA380 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		D3D4FB0D1AF09275E6842BDD /* dayjot-desktop_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "dayjot-desktop_iOS.entitlements"; sourceTree = "<group>"; };
+		D5E76DA6137DC1FB4C55DFFA /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		DA3E34F455691E01C0B59339 /* embed_write.rs */ = {isa = PBXFileReference; path = embed_write.rs; sourceTree = "<group>"; };
+		DF4DB112A418D096EA815BBE /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		E1EF07A2FE2D5D61684332A8 /* devtools.rs */ = {isa = PBXFileReference; path = devtools.rs; sourceTree = "<group>"; };
+		E42639E4B0314739A6DACC08 /* assets.rs */ = {isa = PBXFileReference; path = assets.rs; sourceTree = "<group>"; };
+		E9259BC2A96B2A41C30FA434 /* union.rs */ = {isa = PBXFileReference; path = union.rs; sourceTree = "<group>"; };
+		EBB024C6AD637773DEC9C676 /* quit.rs */ = {isa = PBXFileReference; path = quit.rs; sourceTree = "<group>"; };
+		F13B7A2C9B0B17AB2EB2735C /* spike_mobile.rs */ = {isa = PBXFileReference; path = spike_mobile.rs; sourceTree = "<group>"; };
+		F2AB90416998DB55972354DB /* ladder.rs */ = {isa = PBXFileReference; path = ladder.rs; sourceTree = "<group>"; };
+		FBD8E29CB355364AC4565387 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		EA5FF361D672FCDD65A1742F /* Frameworks */ = {
+		D7A070A18E0F8CFCBE067B35 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9D7F5A94048CECBFC3D89BBA /* libapp.a in Frameworks */,
-				319EDF8F46AB05DFBA9D674F /* libz.tbd in Frameworks */,
-				E9E7B6C59015E7301EE63308 /* libiconv.tbd in Frameworks */,
-				C4FAE42D7B978D8330E5D6DC /* Contacts.framework in Frameworks */,
-				74275EAEFEA922B7D8A2C78F /* CoreGraphics.framework in Frameworks */,
-				266B3807E809464C8FC14146 /* Metal.framework in Frameworks */,
-				A2E5A9558E714E679520EA9E /* MetalKit.framework in Frameworks */,
-				DD1AE73F867F4264272EFED2 /* QuartzCore.framework in Frameworks */,
-				9C05940F9725363AAB9131D3 /* Security.framework in Frameworks */,
-				961AA49623F0DDC7AB09B777 /* UIKit.framework in Frameworks */,
-				E413DBCB60FF081C8E58468A /* WebKit.framework in Frameworks */,
+				AFEDFB04944F0A609E42C822 /* libapp.a in Frameworks */,
+				3B5F5A1E3FE779C0A288F2AA /* libz.tbd in Frameworks */,
+				739020917F9A6231B70B7093 /* libiconv.tbd in Frameworks */,
+				9A14860598EAF2C2D9C4C294 /* Contacts.framework in Frameworks */,
+				BF279F576470D7B346F61F35 /* CoreGraphics.framework in Frameworks */,
+				40D80301F4AF36ADD3F031DA /* Metal.framework in Frameworks */,
+				0DEDD4BBA5F7F8952CAEEFF5 /* MetalKit.framework in Frameworks */,
+				0B32BD29704D7075844A8B1D /* QuartzCore.framework in Frameworks */,
+				8F16165DDB1DE2E5268A323C /* Security.framework in Frameworks */,
+				BD3E8D1517AD74449EA71D0B /* UIKit.framework in Frameworks */,
+				1CC107A4E58B6D8DF22BE5A9 /* WebKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		024093CF75026447063ECAFB /* bindings */ = {
+		51AA8542B066659603C652DE /* dayjot-desktop */ = {
 			isa = PBXGroup;
 			children = (
-				1B481887CBBFA6FB3C78F2B2 /* bindings.h */,
+				577E5B4DF3F00F23290EC707 /* main.mm */,
+				EAA62ED02E65ACD7FBF6F060 /* bindings */,
 			);
-			path = bindings;
+			path = "dayjot-desktop";
 			sourceTree = "<group>";
 		};
-		064330CA0617C1F023B33371 /* ShareExtension */ = {
+		54E64825239018E16783EA00 /* git */ = {
 			isa = PBXGroup;
 			children = (
-				D357D2D54012FD394DF9423E /* CaptureInbox.swift */,
-				536E4F5E21B7DCC3C7ECDC1A /* ExtensionClass.js */,
-				89342C7501B47DBB934B2D27 /* ShareState.swift */,
-				93EF89A222208D739ABC00B8 /* ShareView.swift */,
-				1A58A746A41B6BF1D50A8547 /* ShareViewController.swift */,
-			);
-			path = ShareExtension;
-			sourceTree = "<group>";
-		};
-		085B9B9F8FF6A8514F9F4511 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				DB54D6D030C08888E9D17442 /* RecordingWidget.appex */,
-				BC3901740F3A40252C3750C7 /* dayjot-desktop_iOS.app */,
-				51006DE1482D28D9562253A1 /* ShareExtension.appex */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		1D9398A0E5F4DDC402E05E94 /* git */ = {
-			isa = PBXGroup;
-			children = (
-				C7BE8291B337F95D913C6AE9 /* commit_message.rs */,
-				491E4F680A58FFBD620237F9 /* commit.rs */,
-				3779A211A168AE84C5573923 /* merge.rs */,
-				05ABE058940EC4D96B7CA5D9 /* mod.rs */,
-				2EDECD14A0418A8D4AA04512 /* remote.rs */,
-				5C56D455FF36B2FFA8189246 /* repo.rs */,
-				DBD22A8C59FD8892E5F139EC /* tests.rs */,
+				1EBF735A76FAE3179F009E32 /* commit_message.rs */,
+				27CCBC67C8751FFFD0D756C3 /* commit.rs */,
+				961024357B34F9D06B24C45E /* merge.rs */,
+				0D3E729BFF42513AEBAB3274 /* mod.rs */,
+				79864FD8C22958B46F3A7055 /* remote.rs */,
+				5C1570EA8A012F877A32F002 /* repo.rs */,
+				A4D5E300A9FE2EE916E02F63 /* tests.rs */,
 			);
 			path = git;
 			sourceTree = "<group>";
 		};
-		32CAD5F88380EB83D170715E = {
+		79EAC132456C194A4B56A537 /* fs */ = {
 			isa = PBXGroup;
 			children = (
-				3ED6411036D50396010D935D /* assets */,
-				A86D201016958E2276806466 /* Assets.xcassets */,
-				8D0D6D72E614086946EBF890 /* LaunchScreen.storyboard */,
-				59A902E5FAB9324234886822 /* Externals */,
-				90B73AA2E17A6707CD2373F8 /* RecordingWidget */,
-				B36B6C8C4266337158D8EA7E /* dayjot-desktop */,
-				D93D4C46C491FF3654305D76 /* dayjot-desktop_iOS */,
-				064330CA0617C1F023B33371 /* ShareExtension */,
-				3644284E3067EA5E39E59FDA /* Sources */,
-				503727866B7D08BD30A503FF /* Sources */,
-				55421F1EE94451C6C2F0F2F6 /* src */,
-				B6C98802589FDB7BF4EC3F7C /* Frameworks */,
-				085B9B9F8FF6A8514F9F4511 /* Products */,
+				72BD0C2DF97039117CBEE9A1 /* asset_protocol.rs */,
+				E42639E4B0314739A6DACC08 /* assets.rs */,
+				12B7E8DF67028DA15AAB2868 /* import_assets.rs */,
+				3B45B939AEC54658C4A60A8F /* import.rs */,
+				CFD08B82291D6C3CBE5B84AB /* io.rs */,
+				743EFBA2ABAA0AC44FC02F77 /* mod.rs */,
+				C17E25D72D9FEC14FDEB3A17 /* resolve.rs */,
 			);
+			path = fs;
 			sourceTree = "<group>";
 		};
-		3644284E3067EA5E39E59FDA /* Sources */ = {
+		8765A8F5B6619385D1CF1EF8 /* icloud */ = {
 			isa = PBXGroup;
 			children = (
-				B36B6C8C4266337158D8EA7E /* dayjot-desktop */,
+				2FC786024E3F844B3E6C2397 /* mod.rs */,
+				7C6B81D2BDC4FD8E69C6F8CD /* storage.rs */,
+				11162CC48627A35162C822C3 /* sweep.rs */,
+				8C03572DDA024C429D7B2E91 /* versions.rs */,
+				697A1251A669C8A55DEF9AA4 /* watch.rs */,
 			);
-			path = Sources;
+			path = icloud;
 			sourceTree = "<group>";
 		};
-		3F54925F5E584B8E6578AFAD /* conflict */ = {
-			isa = PBXGroup;
-			children = (
-				8A676086DFF0C50E4E5C77A5 /* archive.rs */,
-				E1940DEB1B975598A69CA93F /* frontmatter.rs */,
-				28B078410B4B4507A763E297 /* ladder.rs */,
-				E8031FEC080EBAF422BEE44C /* markers.rs */,
-				D05B757D9AB841897576F256 /* merge3.rs */,
-				6BB60C6D34C4AFB61F084B4D /* mod.rs */,
-				28AF2C553C3E42F07C4AF0DD /* shadow.rs */,
-				21F0526713DAC48C777B2D4C /* union.rs */,
-			);
-			path = conflict;
-			sourceTree = "<group>";
-		};
-		503727866B7D08BD30A503FF /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				C228C4BA95B0BADA424A9E8A /* RecordingActivityAttributes.swift */,
-			);
-			name = Sources;
-			path = "../../../../../plugins/tauri-plugin-recording/ios/Sources";
-			sourceTree = "<group>";
-		};
-		55421F1EE94451C6C2F0F2F6 /* src */ = {
-			isa = PBXGroup;
-			children = (
-				D2398DBC3478C5F96CC89402 /* background_task.rs */,
-				772B62ED093A33BDCD1864D8 /* calendar.rs */,
-				2490DACB2171344E8D9A8807 /* capture.rs */,
-				ADB23521181EEB9EF095D4AB /* contacts.rs */,
-				2130029E77013461A501E644 /* devtools.rs */,
-				A8921CA643078550A7A02536 /* embed_mobile.rs */,
-				88ED38A3B3D14839B5066255 /* embed.rs */,
-				08B3817A23175E584BA6FD8D /* error.rs */,
-				152767D3A95549268E140D0F /* graph_gitignore.rs */,
-				560C7C23BE58D7EA845F1170 /* lib.rs */,
-				37EF719F509C3A532C0E0114 /* main.rs */,
-				B667667E9C6C141128493B00 /* quit.rs */,
-				8C04E40F02C9B4AE9A24A9A4 /* recents.rs */,
-				D7DA2E13EA6655A16DFDE015 /* secrets.rs */,
-				18A732A38CD75FF514E4CF86 /* settings.rs */,
-				2FA419867A84041644CC42E9 /* skill.rs */,
-				D8F1F4787BA60FD05FD83FD1 /* spike_mobile.rs */,
-				F3173A0D7E498896FAC5A43E /* watcher_mobile.rs */,
-				4EE64B671C831953394179E2 /* watcher.rs */,
-				ACE1CDF45CDBB8D7B2446E36 /* windows.rs */,
-				3F54925F5E584B8E6578AFAD /* conflict */,
-				9E54DCC255F04D51453CC522 /* db */,
-				C0FD50680AFE75D524EF47A4 /* fs */,
-				1D9398A0E5F4DDC402E05E94 /* git */,
-				6DD6A3F991A69D4F41B1410B /* icloud */,
-			);
-			name = src;
-			path = ../../src;
-			sourceTree = "<group>";
-		};
-		59A902E5FAB9324234886822 /* Externals */ = {
+		94A5D169090930E520F6F7B3 /* Externals */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			path = Externals;
 			sourceTree = "<group>";
 		};
-		6DD6A3F991A69D4F41B1410B /* icloud */ = {
+		9BA9917C0A6AD7C91EFAD98E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				32B7D9FD2081133899440765 /* mod.rs */,
-				A67279D745DF48458936735A /* storage.rs */,
-				AABA262BFCEDA2C43E343A31 /* sweep.rs */,
-				5306360328A772EEE5EDDD87 /* versions.rs */,
-				EC45808CD3D13DD431212EAE /* watch.rs */,
+				90FFC77FC79EB3E88E71C3CC /* dayjot-desktop_iOS.app */,
+				A608A8B0018DCB068C40B9FC /* ShareExtension.appex */,
 			);
-			path = icloud;
+			name = Products;
 			sourceTree = "<group>";
 		};
-		90B73AA2E17A6707CD2373F8 /* RecordingWidget */ = {
+		9CF136171D07B2434358076E /* db */ = {
 			isa = PBXGroup;
 			children = (
-				D7AC6BF821D47F74D41DFAFE /* RecordAudioWidget.swift */,
-				1A3930E6E7AB28929B07A6D0 /* RecordingActivityWidget.swift */,
-				A26DB86321DA75DFE1CD4B41 /* RecordingWidgetBundle.swift */,
-			);
-			path = RecordingWidget;
-			sourceTree = "<group>";
-		};
-		9E54DCC255F04D51453CC522 /* db */ = {
-			isa = PBXGroup;
-			children = (
-				65C0E213C54BBE2152AA5DF2 /* chat_write.rs */,
-				5F605BA8949402DAE91B9243 /* embed_write.rs */,
-				C38A6847351881E6D17A1DC2 /* migrations.rs */,
-				73D6C2FDB2DD7919E24C4533 /* mod.rs */,
-				89B314CA06450414E4537033 /* query.rs */,
-				A4F0D18C7B37B593ED8ACD6F /* scan.rs */,
-				DD5CA5DD1A0A2C6898BF16AE /* tests.rs */,
-				1EB2845C34150F5FE04A33D3 /* write.rs */,
+				077725F4079E72AB98E318D9 /* chat_write.rs */,
+				DA3E34F455691E01C0B59339 /* embed_write.rs */,
+				0E68553EB32756804B00B008 /* migrations.rs */,
+				3798E9E6D34D59926CF4A89F /* mod.rs */,
+				887C4877ACCABEDE92AF983B /* query.rs */,
+				706A86F401AB847CF6A2D3ED /* scan.rs */,
+				3E2AC8F9443311E12FB5CEE8 /* tests.rs */,
+				8EF531EFBDABF13C027F624E /* write.rs */,
 			);
 			path = db;
 			sourceTree = "<group>";
 		};
-		B36B6C8C4266337158D8EA7E /* dayjot-desktop */ = {
+		A4F1BB6ECC474A0A3FBECB7A /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				57BCB79C0774021318852985 /* main.mm */,
-				D29B88183661F5C1C960E074 /* RecordingIntents.swift */,
-				3613166A0FB6AFF3C3B2F85C /* StopRecordingLiveActivityIntent.swift */,
-				024093CF75026447063ECAFB /* bindings */,
+				51AA8542B066659603C652DE /* dayjot-desktop */,
 			);
-			name = "dayjot-desktop";
-			path = "Sources/dayjot-desktop";
+			path = Sources;
 			sourceTree = "<group>";
 		};
-		B6C98802589FDB7BF4EC3F7C /* Frameworks */ = {
+		D5EBC0F227BB8B4065691FD2 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				3D182B9445129EC2433F8218 /* Contacts.framework */,
-				5249E1475DBD7CCB817F7D1B /* CoreGraphics.framework */,
-				F28F8A628D32337E04C0CBC0 /* libapp.a */,
-				44C3B8C21F2D38187423AB2F /* libiconv.tbd */,
-				80E05926405BFDA2A3BC70BC /* libz.tbd */,
-				FDC9BB81FAB5AF8D65160799 /* Metal.framework */,
-				E66BC7105426B91F03659B53 /* MetalKit.framework */,
-				68D1FDE7F099CA5F909105EB /* QuartzCore.framework */,
-				C94374B175075AF3AA7DE586 /* Security.framework */,
-				39269153EFAD0C2FEFBE6696 /* UIKit.framework */,
-				088536D8F462855DCFDA7B06 /* WebKit.framework */,
+				5EE0C3E8B6C5F031B970339B /* background_task.rs */,
+				60C19DF19D9292BC36FFFFD7 /* calendar.rs */,
+				4C87F2DC9E4DB8C10800E2ED /* capture.rs */,
+				358CA5AA2C530D2D170A597F /* contacts.rs */,
+				E1EF07A2FE2D5D61684332A8 /* devtools.rs */,
+				A2B9563F4C82AB85FEC441C4 /* error.rs */,
+				7A2D97DDDA3046B000FC80BC /* graph_gitignore.rs */,
+				69D515B31C6FF7E60C32079C /* lib.rs */,
+				956EFEAAABA42C4FD249C5BC /* main.rs */,
+				EBB024C6AD637773DEC9C676 /* quit.rs */,
+				9E700CFE184FABF489BDCA0E /* recents.rs */,
+				AB783B1851FAFED3AE1BBAA6 /* secrets.rs */,
+				B2ABAECC9A3E92AEC5A9DC62 /* settings.rs */,
+				5E93600C4D375843B519B2C9 /* skill.rs */,
+				F13B7A2C9B0B17AB2EB2735C /* spike_mobile.rs */,
+				0B878AFC9D782A1EFC333A87 /* watcher_mobile.rs */,
+				A4ED9AA7318F52A1FFD9F6C6 /* watcher.rs */,
+				3DE396B675CFF75C3F7496A4 /* windows.rs */,
+				D91D6883003ED2EAE9636612 /* conflict */,
+				9CF136171D07B2434358076E /* db */,
+				79EAC132456C194A4B56A537 /* fs */,
+				54E64825239018E16783EA00 /* git */,
+				8765A8F5B6619385D1CF1EF8 /* icloud */,
 			);
-			name = Frameworks;
+			name = src;
+			path = ../../src;
 			sourceTree = "<group>";
 		};
-		C0FD50680AFE75D524EF47A4 /* fs */ = {
+		D91D6883003ED2EAE9636612 /* conflict */ = {
 			isa = PBXGroup;
 			children = (
-				6572C3F24F414FF11A16F640 /* asset_protocol.rs */,
-				5F2E1B8E7D79BDAFFCD2DCDE /* assets.rs */,
-				4B8413C8F746CEEC50B61694 /* import_assets.rs */,
-				DFD67CD43D5BD05A1C511C01 /* import.rs */,
-				383CB9669208178C6B235BE6 /* io.rs */,
-				D3691D8F671B7FA21D1E7BD7 /* mod.rs */,
-				48F8214D2C537DF115410CC0 /* resolve.rs */,
+				6D39B43405E53FB84532C9CF /* archive.rs */,
+				4DF79B2258EA7EF38841B685 /* frontmatter.rs */,
+				F2AB90416998DB55972354DB /* ladder.rs */,
+				54EB7C7977BD2DF7BD04AD05 /* markers.rs */,
+				8A66643148B06A5C13540CA9 /* merge3.rs */,
+				2863D8D18771028A1562E08A /* mod.rs */,
+				4EB53B97CD852BF9A3BDDC15 /* shadow.rs */,
+				E9259BC2A96B2A41C30FA434 /* union.rs */,
 			);
-			path = fs;
+			path = conflict;
 			sourceTree = "<group>";
 		};
-		D93D4C46C491FF3654305D76 /* dayjot-desktop_iOS */ = {
+		DE2B73ECEAD81E59FB2DE1E0 /* dayjot-desktop_iOS */ = {
 			isa = PBXGroup;
 			children = (
-				CF582FB0094C95210BE919F7 /* Info.plist */,
-				11AB73085CB07EA1B7A3533C /* dayjot-desktop_iOS.dev.entitlements */,
-				3AE251E5F7E95CDEFDD3C8B4 /* dayjot-desktop_iOS.entitlements */,
+				592EBDCA1AC7835EF416DA11 /* dayjot-desktop_iOS.dev.entitlements */,
+				D3D4FB0D1AF09275E6842BDD /* dayjot-desktop_iOS.entitlements */,
+				1925F56786A610524AF7E14D /* Info.plist */,
 			);
 			path = "dayjot-desktop_iOS";
+			sourceTree = "<group>";
+		};
+		DF90CDDBEA0F922A875AD168 /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				4653239ECBB1CB8404BA5BFF /* CaptureInbox.swift */,
+				2BB2970BB68321BA9119A5A9 /* ExtensionClass.js */,
+				9E041B0710EFA7EE4DEF11DD /* ShareState.swift */,
+				9B19C0F0A48FEA9794927C14 /* ShareView.swift */,
+				8EC17381C4B4FD7FB6F2541C /* ShareViewController.swift */,
+			);
+			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+		EAA62ED02E65ACD7FBF6F060 /* bindings */ = {
+			isa = PBXGroup;
+			children = (
+				030E56AE3C3F770229A0284A /* bindings.h */,
+			);
+			path = bindings;
+			sourceTree = "<group>";
+		};
+		F25E692A4E0098647B0950E7 = {
+			isa = PBXGroup;
+			children = (
+				143867C364AA2D1A342306D7 /* assets */,
+				7DBB1369C35ADCC2D01ABEC1 /* Assets.xcassets */,
+				D31DEBEDA18EB60B974DA380 /* LaunchScreen.storyboard */,
+				DE2B73ECEAD81E59FB2DE1E0 /* dayjot-desktop_iOS */,
+				94A5D169090930E520F6F7B3 /* Externals */,
+				DF90CDDBEA0F922A875AD168 /* ShareExtension */,
+				A4F1BB6ECC474A0A3FBECB7A /* Sources */,
+				D5EBC0F227BB8B4065691FD2 /* src */,
+				F81791AC17F62F178EE93451 /* Frameworks */,
+				9BA9917C0A6AD7C91EFAD98E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F81791AC17F62F178EE93451 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				05C79FA746DFD5D48C3BD586 /* Contacts.framework */,
+				A02F88D03763EB47E4C39B09 /* CoreGraphics.framework */,
+				D5E76DA6137DC1FB4C55DFFA /* libapp.a */,
+				78889E542EBC07AC7E7CD92C /* libiconv.tbd */,
+				B352080D34D4D17C11FB28A5 /* libz.tbd */,
+				FBD8E29CB355364AC4565387 /* Metal.framework */,
+				7DC19A8967C3432761C559D5 /* MetalKit.framework */,
+				223AFF1F5069F8E5DEA896DC /* QuartzCore.framework */,
+				DF4DB112A418D096EA815BBE /* Security.framework */,
+				A3DDEDBCF93F22015E6E4851 /* UIKit.framework */,
+				267AB8FB54BD143E27B77CC4 /* WebKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		665EB942B5F6FB93F8DF2A57 /* RecordingWidget */ = {
+		6442ECFA9AD73CB215641BE1 /* ShareExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0CB80A8B9A6F429446C05ECD /* Build configuration list for PBXNativeTarget "RecordingWidget" */;
+			buildConfigurationList = 08525768B44703FAB27F45DC /* Build configuration list for PBXNativeTarget "ShareExtension" */;
 			buildPhases = (
-				6E18E3E924D4531333C9C477 /* Sources */,
-				823BEF2AC9236315045FA6B8 /* Preserve entitlements on skip-codesign builds */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = RecordingWidget;
-			packageProductDependencies = (
-			);
-			productName = RecordingWidget;
-			productReference = DB54D6D030C08888E9D17442 /* RecordingWidget.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
-		85FC564C07724F1F4E282538 /* ShareExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 85C256481A6DA4978244EF0C /* Build configuration list for PBXNativeTarget "ShareExtension" */;
-			buildPhases = (
-				6C4170AF0104E2BB23FF2992 /* Sources */,
-				D66D7A4411695309647B6A04 /* Resources */,
-				E8E8484E1F59D64EA785432B /* Preserve entitlements on skip-codesign builds */,
+				A6EDC4D229C1AFE1DA99A05D /* Sources */,
+				C9F62AEA3A9B5C6A25D26095 /* Resources */,
+				CB3267057AFBE2B8CB09CA0B /* Preserve entitlements on skip-codesign builds */,
 			);
 			buildRules = (
 			);
@@ -446,137 +375,93 @@
 			packageProductDependencies = (
 			);
 			productName = ShareExtension;
-			productReference = 51006DE1482D28D9562253A1 /* ShareExtension.appex */;
+			productReference = A608A8B0018DCB068C40B9FC /* ShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		E2CEE6E5CCFA69CBA5F9AA3F /* dayjot-desktop_iOS */ = {
+		ED0E80B707492C7A32259982 /* dayjot-desktop_iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 10FFF2E018E94EEF95D56337 /* Build configuration list for PBXNativeTarget "dayjot-desktop_iOS" */;
+			buildConfigurationList = E1AF0213E393BAFE6CFBB54B /* Build configuration list for PBXNativeTarget "dayjot-desktop_iOS" */;
 			buildPhases = (
-				F27159B8EA2BAA999947A4AF /* Build Rust Code */,
-				B34A0474C6B6B9C6508E3011 /* Sources */,
-				85955AB12D745102D2B8C7AD /* Resources */,
-				EA5FF361D672FCDD65A1742F /* Frameworks */,
-				BD3D981F03353195982EBCE6 /* Embed Foundation Extensions */,
+				C9FAB6BD7E6A6BFB7477DD24 /* Build Rust Code */,
+				8BD162CAB132BDA208B30E70 /* Sources */,
+				0E7521D56E1572E2B5000481 /* Resources */,
+				D7A070A18E0F8CFCBE067B35 /* Frameworks */,
+				FFBEF9B24EB8C87A4B932D51 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				4117F1E82CF9953D0AD38F11 /* PBXTargetDependency */,
-				D540AFE4185360A528491534 /* PBXTargetDependency */,
+				957CA27DC68EBD8E0F40AB9B /* PBXTargetDependency */,
 			);
 			name = "dayjot-desktop_iOS";
 			packageProductDependencies = (
 			);
 			productName = "dayjot-desktop_iOS";
-			productReference = BC3901740F3A40252C3750C7 /* dayjot-desktop_iOS.app */;
+			productReference = 90FFC77FC79EB3E88E71C3CC /* dayjot-desktop_iOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		5489219F37B2885D5C3112F4 /* Project object */ = {
+		B696C67D29D14665236F3120 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					665EB942B5F6FB93F8DF2A57 = {
+					6442ECFA9AD73CB215641BE1 = {
 						DevelopmentTeam = 789ULN5MZB;
 						ProvisioningStyle = Automatic;
 					};
-					85FC564C07724F1F4E282538 = {
-						DevelopmentTeam = 789ULN5MZB;
-						ProvisioningStyle = Automatic;
-					};
-					E2CEE6E5CCFA69CBA5F9AA3F = {
+					ED0E80B707492C7A32259982 = {
 						DevelopmentTeam = 789ULN5MZB;
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 47E439873CFF570779B9F87C /* Build configuration list for PBXProject "dayjot-desktop" */;
+			buildConfigurationList = E0D14A8F51A40F0BC56742E4 /* Build configuration list for PBXProject "dayjot-desktop" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
 				en,
 			);
-			mainGroup = 32CAD5F88380EB83D170715E;
+			mainGroup = F25E692A4E0098647B0950E7;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 085B9B9F8FF6A8514F9F4511 /* Products */;
+			productRefGroup = 9BA9917C0A6AD7C91EFAD98E /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				665EB942B5F6FB93F8DF2A57 /* RecordingWidget */,
-				85FC564C07724F1F4E282538 /* ShareExtension */,
-				E2CEE6E5CCFA69CBA5F9AA3F /* dayjot-desktop_iOS */,
+				6442ECFA9AD73CB215641BE1 /* ShareExtension */,
+				ED0E80B707492C7A32259982 /* dayjot-desktop_iOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		85955AB12D745102D2B8C7AD /* Resources */ = {
+		0E7521D56E1572E2B5000481 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F00F5EAED90E34102F9AE651 /* Assets.xcassets in Resources */,
-				5693613DE956199D6486EA26 /* LaunchScreen.storyboard in Resources */,
-				C1FBC0B57C41A13D88225DFB /* assets in Resources */,
+				9FAAD59A7B9A276A33EF96DE /* Assets.xcassets in Resources */,
+				A38A5505130200B3F41B60E0 /* LaunchScreen.storyboard in Resources */,
+				854DAB95476FB2ADA848DC55 /* assets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D66D7A4411695309647B6A04 /* Resources */ = {
+		C9F62AEA3A9B5C6A25D26095 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C8847A7F1C163FBA53373F9 /* ExtensionClass.js in Resources */,
+				9EE21D41BF32DBB3305B0214 /* ExtensionClass.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		823BEF2AC9236315045FA6B8 /* Preserve entitlements on skip-codesign builds */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Preserve entitlements on skip-codesign builds";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"${CODE_SIGNING_ALLOWED:-YES}\" = \"NO\" ]; then\n  /usr/bin/codesign --force --sign - \\\n    --entitlements \"${SRCROOT:?}/RecordingWidget/RecordingWidget.entitlements\" \\\n    \"${CODESIGNING_FOLDER_PATH:?}\"\nfi\n";
-		};
-		E8E8484E1F59D64EA785432B /* Preserve entitlements on skip-codesign builds */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Preserve entitlements on skip-codesign builds";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"${CODE_SIGNING_ALLOWED:-YES}\" = \"NO\" ]; then\n  /usr/bin/codesign --force --sign - \\\n    --entitlements \"${SRCROOT:?}/ShareExtension/ShareExtension.entitlements\" \\\n    \"${CODESIGNING_FOLDER_PATH:?}\"\nfi\n";
-		};
-		F27159B8EA2BAA999947A4AF /* Build Rust Code */ = {
+		C9FAB6BD7E6A6BFB7477DD24 /* Build Rust Code */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -597,90 +482,70 @@
 			shellPath = /bin/sh;
 			shellScript = "CI=true pnpm tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}";
 		};
+		CB3267057AFBE2B8CB09CA0B /* Preserve entitlements on skip-codesign builds */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Preserve entitlements on skip-codesign builds";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"${CODE_SIGNING_ALLOWED:-YES}\" = \"NO\" ]; then\n  /usr/bin/codesign --force --sign - \\\n    --entitlements \"${SRCROOT:?}/ShareExtension/ShareExtension.entitlements\" \\\n    \"${CODESIGNING_FOLDER_PATH:?}\"\nfi\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		6C4170AF0104E2BB23FF2992 /* Sources */ = {
+		8BD162CAB132BDA208B30E70 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BEA09DBDD61413051FFEB9E3 /* CaptureInbox.swift in Sources */,
-				B6B5B091EADAF6EAEC6E2EDA /* ShareState.swift in Sources */,
-				93F2A1181D6BC7832338EE9C /* ShareView.swift in Sources */,
-				495C9E97530FC781EB5645D6 /* ShareViewController.swift in Sources */,
+				CDD8CA1F766135E97A94116C /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6E18E3E924D4531333C9C477 /* Sources */ = {
+		A6EDC4D229C1AFE1DA99A05D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E7D75AA83CFA468E0EFBAB21 /* RecordAudioWidget.swift in Sources */,
-				85FC869F776C24A9ED0A1779 /* RecordingActivityAttributes.swift in Sources */,
-				D37EE1ED817FDDC16C5643BB /* RecordingActivityWidget.swift in Sources */,
-				9611839F9E9EC688FCDFCC91 /* RecordingWidgetBundle.swift in Sources */,
-				BFB9F91C8E2628460C84C8A3 /* StopRecordingLiveActivityIntent.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B34A0474C6B6B9C6508E3011 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6C55CBAB912EC5920CE314DA /* RecordingIntents.swift in Sources */,
-				6C3751B3B175DFE411D97C0F /* StopRecordingLiveActivityIntent.swift in Sources */,
-				14BE6EF4AB511AC099410853 /* main.mm in Sources */,
+				B71EE82EDE6820C54DC2B61C /* CaptureInbox.swift in Sources */,
+				C75DD1D5B2B2E2B2D507AB6F /* ShareState.swift in Sources */,
+				4CCB5ABB67D020FFCF23F991 /* ShareView.swift in Sources */,
+				F648C6758C117677E281AF09 /* ShareViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		4117F1E82CF9953D0AD38F11 /* PBXTargetDependency */ = {
+		957CA27DC68EBD8E0F40AB9B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 85FC564C07724F1F4E282538 /* ShareExtension */;
-			targetProxy = E15A48A368A368CDA2B5A070 /* PBXContainerItemProxy */;
-		};
-		D540AFE4185360A528491534 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 665EB942B5F6FB93F8DF2A57 /* RecordingWidget */;
-			targetProxy = 6A2683A904EF67AC778ED704 /* PBXContainerItemProxy */;
+			target = 6442ECFA9AD73CB215641BE1 /* ShareExtension */;
+			targetProxy = 8DB60EB2393C763804616D2C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		045CAFDCB110568CC41B98CF /* release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 789ULN5MZB;
-				INFOPLIST_FILE = ShareExtension/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios.share;
-				PRODUCT_NAME = ShareExtension;
-				DAYJOT_DISPLAY_NAME = DayJot;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = release;
-		};
-		30A46A347AF8452DE397F2BE /* release */ = {
+		29C04B420F1C0095867F3A73 /* debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = (
 					arm64,
 				);
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = "dayjot-desktop_iOS/dayjot-desktop_iOS.entitlements";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Dev";
+				CODE_SIGN_ENTITLEMENTS = "dayjot-desktop_iOS/dayjot-desktop_iOS.dev.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DAYJOT_DISPLAY_NAME = "DayJot Dev";
 				DEVELOPMENT_TEAM = 789ULN5MZB;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
@@ -695,17 +560,72 @@
 				);
 				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
 				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios.dev;
 				PRODUCT_NAME = DayJot;
-				DAYJOT_DISPLAY_NAME = DayJot;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = arm64;
 			};
+			name = debug;
+		};
+		4FE8A5EDD42DD46028FD8F40 /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
 			name = release;
 		};
-		335E5B85056C0A6D68E52006 /* debug */ = {
+		7D1F2A3258602EB3D4AE010B /* debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -768,33 +688,12 @@
 			};
 			name = debug;
 		};
-		A96125CC5A34976C051BA669 /* debug */ = {
+		8FDE578EC9CD3149E612E076 /* release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = RecordingWidget/RecordingWidget.dev.entitlements;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 789ULN5MZB;
-				INFOPLIST_FILE = RecordingWidget/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios.dev.widgets;
-				PRODUCT_NAME = RecordingWidget;
-				DAYJOT_DISPLAY_NAME = "DayJot Dev";
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = debug;
-		};
-		ABFF23DB75DCB9354EA41A14 /* debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.dev.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				DAYJOT_DISPLAY_NAME = DayJot;
 				DEVELOPMENT_TEAM = 789ULN5MZB;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -802,48 +701,26 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios.dev.share;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios.share;
 				PRODUCT_NAME = ShareExtension;
-				DAYJOT_DISPLAY_NAME = "DayJot Dev";
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = debug;
-		};
-		B60F0D6C1613C372224A6C74 /* release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = RecordingWidget/RecordingWidget.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 789ULN5MZB;
-				INFOPLIST_FILE = RecordingWidget/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios.widgets;
-				PRODUCT_NAME = RecordingWidget;
-				DAYJOT_DISPLAY_NAME = DayJot;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = release;
 		};
-		CB0922CFF8EEBA69B8A9C2FB /* debug */ = {
+		D2F0BBF497BB6DBD1C8E2313 /* release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = (
 					arm64,
 				);
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Dev";
-				CODE_SIGN_ENTITLEMENTS = "dayjot-desktop_iOS/dayjot-desktop_iOS.dev.entitlements";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "dayjot-desktop_iOS/dayjot-desktop_iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DAYJOT_DISPLAY_NAME = DayJot;
 				DEVELOPMENT_TEAM = 789ULN5MZB;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
@@ -858,112 +735,67 @@
 				);
 				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
 				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios;
 				PRODUCT_NAME = DayJot;
-				DAYJOT_DISPLAY_NAME = "DayJot Dev";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = arm64;
 			};
-			name = debug;
+			name = release;
 		};
-		E6D1AD905464771F14459628 /* release */ = {
+		F748CDD0021652EF64647812 /* debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.dev.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DAYJOT_DISPLAY_NAME = "DayJot Dev";
+				DEVELOPMENT_TEAM = 789ULN5MZB;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.dayjot.ios.dev.share;
+				PRODUCT_NAME = ShareExtension;
 				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
-			name = release;
+			name = debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0CB80A8B9A6F429446C05ECD /* Build configuration list for PBXNativeTarget "RecordingWidget" */ = {
+		08525768B44703FAB27F45DC /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A96125CC5A34976C051BA669 /* debug */,
-				B60F0D6C1613C372224A6C74 /* release */,
+				F748CDD0021652EF64647812 /* debug */,
+				8FDE578EC9CD3149E612E076 /* release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = debug;
 		};
-		10FFF2E018E94EEF95D56337 /* Build configuration list for PBXNativeTarget "dayjot-desktop_iOS" */ = {
+		E0D14A8F51A40F0BC56742E4 /* Build configuration list for PBXProject "dayjot-desktop" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				CB0922CFF8EEBA69B8A9C2FB /* debug */,
-				30A46A347AF8452DE397F2BE /* release */,
+				7D1F2A3258602EB3D4AE010B /* debug */,
+				4FE8A5EDD42DD46028FD8F40 /* release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = debug;
 		};
-		47E439873CFF570779B9F87C /* Build configuration list for PBXProject "dayjot-desktop" */ = {
+		E1AF0213E393BAFE6CFBB54B /* Build configuration list for PBXNativeTarget "dayjot-desktop_iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				335E5B85056C0A6D68E52006 /* debug */,
-				E6D1AD905464771F14459628 /* release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = debug;
-		};
-		85C256481A6DA4978244EF0C /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				ABFF23DB75DCB9354EA41A14 /* debug */,
-				045CAFDCB110568CC41B98CF /* release */,
+				29C04B420F1C0095867F3A73 /* debug */,
+				D2F0BBF497BB6DBD1C8E2313 /* release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 5489219F37B2885D5C3112F4 /* Project object */;
+	rootObject = B696C67D29D14665236F3120 /* Project object */;
 }

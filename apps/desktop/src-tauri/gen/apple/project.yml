@@ -78,33 +78,15 @@ targets:
         # Mirrored from src-tauri/Info.plist (which merges at build) so that
         # xcodegen regens keep them in the committed generated Info.plist
         # instead of silently dropping them.
-        NSMicrophoneUsageDescription: DayJot uses the microphone to record audio memos that are transcribed into your daily note.
         NSCalendarsFullAccessUsageDescription: DayJot reads your calendar to show the day's meetings beside your daily note. Access is read-only and stays on this device.
         NSCalendarsUsageDescription: DayJot reads your calendar to show the day's meetings beside your daily note. Access is read-only and stays on this device.
-        # Audio memos keep recording through screen lock and backgrounding
-        # (audio-memos wave 2). The recording plugin activates the audio
-        # session only while a recording is live, so the mode never keeps the
-        # app running outside an actual capture.
-        UIBackgroundModes: [audio]
-        # The `dayjot://` scheme (audio-memos wave 3): the lock-screen
-        # widget opens `dayjot://record-audio`, which the Rust shell hands
-        # to the recording plugin's action queue. Desktop registers the same
-        # scheme through the deep-link plugin config in tauri.conf.json.
-        # Both flavors register the same scheme: widget taps and quick
-        # actions always open their own containing app, so the dev widget
-        # opens the dev app without a per-flavor scheme. Only dayjot://
-        # links from other apps are ambiguous when both are installed.
+        # The `dayjot://` scheme. Desktop registers the same scheme through
+        # the deep-link plugin config in tauri.conf.json. Both flavors
+        # register it: scheme links from other apps are ambiguous only when
+        # both are installed.
         CFBundleURLTypes:
           - CFBundleURLName: $(PRODUCT_BUNDLE_IDENTIFIER)
             CFBundleURLSchemes: [dayjot]
-        # The recording Live Activity (audio-memos wave 3).
-        NSSupportsLiveActivities: true
-        # Home-screen quick action (audio-memos wave 3); handled by the
-        # recording plugin via the shortcut-item delegate hook.
-        UIApplicationShortcutItems:
-          - UIApplicationShortcutItemType: app.dayjot.record-audio
-            UIApplicationShortcutItemTitle: Record audio
-            UIApplicationShortcutItemIconType: UIApplicationShortcutIconTypeAudio
         CFBundleDisplayName: $(DAYJOT_DISPLAY_NAME)
         UILaunchStoryboardName: LaunchScreen
         UIRequiredDeviceCapabilities: [arm64, metal]
@@ -164,9 +146,6 @@ targets:
       # into the app bundle and signed with it.
       - target: ShareExtension
         embed: true
-      # The audio-memo widget extension (wave 3): lock-screen record widget
-      # + the recording Live Activity; embedded and signed with the app.
-      - target: RecordingWidget
         embed: true
       - framework: libapp.a
         embed: false
@@ -265,64 +244,6 @@ targets:
           if [ "${CODE_SIGNING_ALLOWED:-YES}" = "NO" ]; then
             /usr/bin/codesign --force --sign - \
               --entitlements "${SRCROOT:?}/ShareExtension/ShareExtension.entitlements" \
-              "${CODESIGNING_FOLDER_PATH:?}"
-          fi
-        name: Preserve entitlements on skip-codesign builds
-        basedOnDependencyAnalysis: false
-
-  # The audio-memo widget extension (wave 3): the lock-screen / home-screen
-  # "record" widget plus the recording Live Activity. Swift only — no Rust,
-  # no webview. Two sources are shared by path: the Live Activity attributes
-  # (also compiled into the recording plugin — ActivityKit matches app and
-  # widget by type name) and the stop LiveActivityIntent (also compiled into
-  # the app target, where it executes).
-  RecordingWidget:
-    type: app-extension
-    platform: iOS
-    deploymentTarget: "16.2"
-    sources:
-      - path: RecordingWidget/RecordingWidgetBundle.swift
-      - path: RecordingWidget/RecordAudioWidget.swift
-      - path: RecordingWidget/RecordingActivityWidget.swift
-      - path: Sources/dayjot-desktop/StopRecordingLiveActivityIntent.swift
-      - path: ../../../../../plugins/tauri-plugin-recording/ios/Sources/RecordingActivityAttributes.swift
-    info:
-      path: RecordingWidget/Info.plist
-      properties:
-        CFBundleDisplayName: $(DAYJOT_DISPLAY_NAME)
-        CFBundleShortVersionString: 0.6.0
-        CFBundleVersion: 0.6.0.8
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
-    # The widget needs no capability of its own, but the release pipeline
-    # asserts every appex carries the App Group (release-ios.mjs), and the
-    # skip-codesign ad-hoc phase below must have entitlements to preserve —
-    # exactly like ShareExtension (including the hand-maintained per-config
-    # entitlement files; see the main target's comment).
-    settings:
-      base:
-        PRODUCT_NAME: RecordingWidget
-        CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: 789ULN5MZB
-        SWIFT_VERSION: "5.0"
-        TARGETED_DEVICE_FAMILY: 1,2
-      configs:
-        debug:
-          PRODUCT_BUNDLE_IDENTIFIER: app.dayjot.ios.dev.widgets
-          DAYJOT_DISPLAY_NAME: DayJot Dev
-          CODE_SIGN_ENTITLEMENTS: RecordingWidget/RecordingWidget.dev.entitlements
-        release:
-          PRODUCT_BUNDLE_IDENTIFIER: app.dayjot.ios.widgets
-          DAYJOT_DISPLAY_NAME: DayJot
-          CODE_SIGN_ENTITLEMENTS: RecordingWidget/RecordingWidget.entitlements
-    postBuildScripts:
-      # Same skip-codesign entitlement preservation as ShareExtension: CI
-      # TestFlight builds archive unsigned, and export re-signing only keeps
-      # entitlements already present in a signature.
-      - script: |
-          if [ "${CODE_SIGNING_ALLOWED:-YES}" = "NO" ]; then
-            /usr/bin/codesign --force --sign - \
-              --entitlements "${SRCROOT:?}/RecordingWidget/RecordingWidget.entitlements" \
               "${CODESIGNING_FOLDER_PATH:?}"
           fi
         name: Preserve entitlements on skip-codesign builds

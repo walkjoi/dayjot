@@ -3,7 +3,6 @@ import { untitledNotePath } from '@dayjot/core'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToday } from '@/lib/use-today'
-import { AudioMemoFab } from '@/mobile/audio-memo-fab'
 import { CalendarStrip } from '@/mobile/calendar-strip'
 import { DayCarousel } from '@/mobile/day-carousel'
 import { useDailyArrivals } from '@/mobile/use-daily-arrivals'
@@ -79,7 +78,6 @@ export function MobileDaily({ date }: { date: string }): ReactElement {
       >
         <Plus className="size-6" />
       </Button>
-      <AudioMemoFab />
     </div>
   )
 }
