@@ -11,7 +11,6 @@ DayJot is a modern note‑taking tool with a TypeScript codebase: offline-first,
 Drawn from the product docs — read these for deeper context:
 [V1 Overview](docs/reflect-v1-overview.md) · [V2 Product Vision](docs/dayjot-v2-product-vision.md) · [V2 Grounding Brief](docs/dayjot-v2-grounding-brief.md) · [Indexing Strategy](docs/dayjot-v2-indexing-strategy.md) · [Sync Strategy](docs/dayjot-v2-sync-strategy.md)
 
-
 - **Daily notes first.** The app opens to today's note. All capture flows into the daily note by default.
 - **Association over hierarchy.** `[[Wiki Links]]` replace folders. The note graph is the organizing model; there are no folders.
 - **Markdown is the source of truth.** Notes are `.md` files (`daily/YYYY-MM-DD.md`, `notes/`). SQLite under `.dayjot/` is a rebuildable projection of the notes. (Legacy `chat_*` and embedding tables remain in the schema, dormant — DayJot has no AI features.)

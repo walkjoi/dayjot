@@ -9,6 +9,7 @@ import {
 } from '@dayjot/core'
 import { attachFilesToNote } from '@/lib/attach-files'
 import { runCopyDeepLink } from '@/lib/note-deep-link'
+import { insertTimestamp } from '@/lib/note-timestamp'
 import { runGistPublish } from '@/lib/note-gist'
 import { toggleNotePinned } from '@/lib/note-pin'
 import { toggleNotePrivate } from '@/lib/note-private'
@@ -210,6 +211,15 @@ const APP_COMMANDS: AppCommand[] = [
     // file on the note). No default keybinding: the palette keeps it
     // keyboard-reachable without spending a shortcut.
     run: (context) => attachFilesToNote(context),
+  },
+  {
+    id: 'note.insertTimestamp',
+    title: 'Insert timestamp',
+    keywords: ['time', 'clock', 'now', 'journal', 'log'],
+    // Interstitial journaling: a `- HH:mm` list line at the caret, ready to
+    // type after.
+    keybinding: 'Mod-Shift-t',
+    run: (context) => insertTimestamp(context),
   },
   {
     id: 'note.copyDeepLink',

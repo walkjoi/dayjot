@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  Clock,
   ArrowRight,
   CalendarDays,
   CloudUpload,
@@ -25,6 +26,7 @@ import {
 const COMMAND_ICONS: Record<string, LucideIcon> = {
   'nav.today': CalendarDays,
   'note.new': SquarePen,
+  'note.insertTimestamp': Clock,
   'history.back': ArrowLeft,
   'history.forward': ArrowRight,
   'palette.open': Search,
