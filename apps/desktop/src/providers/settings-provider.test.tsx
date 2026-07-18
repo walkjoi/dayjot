@@ -2,7 +2,7 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { ReactNode } from 'react'
-import { setBridge, type AiProviderConfig } from '@dayjot/core'
+import { setBridge } from '@dayjot/core'
 import { resetOperations, useOperations } from '@/lib/operations'
 import { flushSettings } from '@/lib/settings-flush'
 import { SETTINGS_QUERY_KEY, SettingsProvider, useSettings } from './settings-provider'
@@ -137,9 +137,6 @@ describe('SettingsProvider', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -152,11 +149,6 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -209,9 +201,6 @@ describe('SettingsProvider', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -224,11 +213,6 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
           futureKey: true,
         },
       ]),
@@ -266,9 +250,6 @@ describe('SettingsProvider', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -281,11 +262,6 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
           futureKey: true,
         },
       ]),
@@ -317,9 +293,6 @@ describe('SettingsProvider', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -332,11 +305,6 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -344,12 +312,7 @@ describe('SettingsProvider', () => {
   })
 
   it('updateSettingsWith builds each patch from the latest settings, not the closure', async () => {
-    stored = {
-      aiProviders: [
-        { id: 'a', provider: 'openai', model: 'gpt-5.1', keyHint: '11111' },
-        { id: 'b', provider: 'openai', model: 'gpt-5', keyHint: '22222' },
-      ],
-    }
+    stored = { calendarIds: ['a', 'b'] }
     const { result } = renderHook(() => useSettings(), { wrapper })
     await loadSettled()
 
@@ -358,69 +321,54 @@ describe('SettingsProvider', () => {
     // first's result; a snapshot-based merge would resurrect entry 'a'.
     act(() => {
       result.current.updateSettingsWith((current) => ({
-        aiProviders: current.aiProviders.filter((model) => model.id !== 'a'),
+        calendarIds: current.calendarIds.filter((id) => id !== 'a'),
       }))
       result.current.updateSettingsWith((current) => ({
-        aiProviders: current.aiProviders.filter((model) => model.id !== 'b'),
+        calendarIds: current.calendarIds.filter((id) => id !== 'b'),
       }))
     })
-    expect(result.current.settings.aiProviders).toEqual([])
+    expect(result.current.settings.calendarIds).toEqual([])
   })
 
   it('a read-modify-write racing the initial load replays over the loaded document', async () => {
-    const persisted: AiProviderConfig = {
-      id: 'a',
-      provider: 'openai',
-      model: 'gpt-5.1',
-      keyHint: '11111',
-    }
-    const added: AiProviderConfig = {
-      id: 'b',
-      provider: 'anthropic',
-      model: 'claude-opus-4-8',
-      keyHint: '22222',
-    }
-    stored = { aiProviders: [persisted] }
+    const persisted = 'cal-a'
+    const added = 'cal-b'
+    stored = { calendarIds: [persisted] }
     gateLoad = true
     const { result } = renderHook(() => useSettings(), { wrapper })
 
     act(() => {
       result.current.updateSettingsWith((current) => ({
-        aiProviders: [...current.aiProviders, added],
+        calendarIds: [...current.calendarIds, added],
       }))
     })
     // Held until hydration: applied over defaults, this "add one" would
     // compute [added] and the eventual save would erase the persisted entry.
-    expect(result.current.settings.aiProviders).toEqual([])
+    expect(result.current.settings.calendarIds).toEqual([])
     expect(saved).toEqual([])
 
     act(() => {
       releaseLoad()
     })
-    await waitFor(() => expect(result.current.settings.aiProviders).toEqual([persisted, added]))
+    await waitFor(() => expect(result.current.settings.calendarIds).toEqual([persisted, added]))
     await waitFor(() =>
-      expect(saved).toEqual([expect.objectContaining({ aiProviders: [persisted, added] })]),
+      expect(saved).toEqual([expect.objectContaining({ calendarIds: [persisted, added] })]),
     )
   })
 
   it('a queued read-modify-write still applies session-only when the load fails', async () => {
-    const added: AiProviderConfig = {
-      id: 'b',
-      provider: 'anthropic',
-      model: 'claude-opus-4-8',
-      keyHint: '22222',
-    }
+    const added = 'cal-b'
     failLoad = true
     const { result } = renderHook(() => useSettings(), { wrapper })
 
     act(() => {
       result.current.updateSettingsWith((current) => ({
-        aiProviders: [...current.aiProviders, added],
+        calendarIds: [...current.calendarIds, added],
       }))
     })
     // The failed load drains the queue over defaults — the edit must not
     // vanish — but nothing is written over a store that couldn't be read.
-    await waitFor(() => expect(result.current.settings.aiProviders).toEqual([added]))
+    await waitFor(() => expect(result.current.settings.calendarIds).toEqual([added]))
     await act(async () => {
       await flushSettings()
     })
@@ -494,9 +442,6 @@ describe('SettingsProvider', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -509,11 +454,6 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -548,9 +488,6 @@ describe('SettingsProvider', () => {
         editorFullWidth: false,
         sidebarWidth: 260,
         contextSidebarWidth: 320,
-        semanticSearchEnabled: false,
-        describeAssets: true,
-        transcriptionFormat: true,
         contactsEnabled: false,
         mobileOnboarded: false,
         mobileStorage: 'local',
@@ -563,11 +500,6 @@ describe('SettingsProvider', () => {
         calendarEnabled: false,
         calendarIds: [],
         graphColors: {},
-        aiProviders: [],
-        defaultAiProviderId: null,
-        chatModelSelection: null,
-        chatSystemPrompt: '',
-        aiPrompts: [],
       },
     ])
   })

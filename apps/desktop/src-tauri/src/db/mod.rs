@@ -31,7 +31,6 @@ use crate::error::{AppError, AppResult};
 use crate::fs::GraphState;
 
 pub use chat_write::{ChatConversation, ChatMessageRow};
-pub use embed_write::EmbeddedChunk;
 pub use write::IndexedNote;
 
 /// The open index connection plus its monotonic generation, kept **under one
@@ -468,49 +467,6 @@ pub fn chat_conversation_delete(
     }
     let conn = state.conn.as_ref().ok_or_else(AppError::no_graph)?;
     chat_write::delete_conversation(conn, &id)
-}
-
-/// Replace a note's embedding chunk set (diff applied in one transaction;
-/// no-op if stale). Unchanged chunks keep their vectors — the hash-skip.
-#[tauri::command]
-pub fn embed_apply(
-    path: String,
-    chunks: Vec<EmbeddedChunk>,
-    generation: u64,
-    index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
-) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot embeddings update");
-    let mut state = lock_state(&index)?;
-    if state.generation != generation {
-        return Ok(());
-    }
-    let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
-    let tx = conn.transaction()?;
-    embed_write::apply_chunks(&tx, &path, &chunks)?;
-    tx.commit()?;
-    Ok(())
-}
-
-/// Drop a deleted note's chunks + vectors (no-op if stale).
-#[tauri::command]
-pub fn embed_remove(
-    path: String,
-    generation: u64,
-    index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
-) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot embeddings remove");
-    let mut state = lock_state(&index)?;
-    if state.generation != generation {
-        return Ok(());
-    }
-    let conn = state.conn.as_mut().ok_or_else(AppError::no_graph)?;
-    // Two DELETEs (vectors, then rows): atomic, mirroring embed_apply.
-    let tx = conn.transaction()?;
-    embed_write::remove_chunks(&tx, &path)?;
-    tx.commit()?;
-    Ok(())
 }
 
 /// Execute a read query (compiled by Kysely on the frontend) and return rows.

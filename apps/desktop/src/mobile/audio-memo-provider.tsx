@@ -59,8 +59,6 @@ interface MobileAudioMemoContextValue {
   pendingCount: number
   /** False without the native bridge. */
   available: boolean
-  /** False when no OpenAI/Gemini model is configured; the drawer then guides key setup. */
-  hasTranscriptionConfig: boolean
   /** The failure shown in the error phase. */
   error: string | null
   /** True when a retry can re-run the failed capture. */
@@ -172,12 +170,6 @@ export function MobileAudioMemoProvider({
       return
     }
     setDrawerOpen(true)
-    // Recording never starts without a transcription key: the drawer opens on
-    // its key-setup guidance instead. OS entry points (Siri, the widget, the
-    // quick action) funnel through here too, so they surface the same guidance.
-    if (!pipeline.hasTranscriptionConfig) {
-      return
-    }
     try {
       await startRecorder()
       hapticImpactLight()
@@ -195,7 +187,7 @@ export function MobileAudioMemoProvider({
     }
     stoppingRef.current = true
     // The stop tap commits the memo: the drawer closes now, and the FAB's
-    // 'transcribing' state carries the progress from here.
+    // 'saving' state carries the progress from here.
     setStopping(true)
     setDrawerOpen(false)
     try {
@@ -270,8 +262,8 @@ export function MobileAudioMemoProvider({
         ? 'requesting'
         : pipeline.error !== null
           ? 'error'
-          : stopping || pipeline.pendingCount > 0 || pipeline.transcribing
-            ? 'transcribing'
+          : stopping || pipeline.pendingCount > 0 || pipeline.filing
+            ? 'saving'
             : 'idle'
 
   const value = useMemo<MobileAudioMemoContextValue>(
@@ -281,7 +273,6 @@ export function MobileAudioMemoProvider({
       level: recorder.level,
       pendingCount: pipeline.pendingCount,
       available,
-      hasTranscriptionConfig: pipeline.hasTranscriptionConfig,
       error: pipeline.error,
       canRetry: pipeline.canRetry,
       drawerOpen,
@@ -298,7 +289,6 @@ export function MobileAudioMemoProvider({
       recorder.level,
       pipeline.pendingCount,
       available,
-      pipeline.hasTranscriptionConfig,
       pipeline.error,
       pipeline.canRetry,
       pipeline.retry,

@@ -20,7 +20,6 @@ function contextFor(notePath: string | null, generation: number | null): Command
     forward: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
-    newChat: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
     generation: () => generation,
@@ -28,7 +27,6 @@ function contextFor(notePath: string | null, generation: number | null): Command
     openShortcuts: vi.fn(),
     openTemplatePicker: vi.fn(),
     openTemplateCreate: vi.fn(),
-    enableSemanticSearch: vi.fn(),
     clearScrollState: vi.fn(),
   }
 }

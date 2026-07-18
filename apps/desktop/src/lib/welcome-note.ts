@@ -38,8 +38,7 @@ DayJot is a daily notebook: press ⌘D any time to land on today's note and writ
 
 When you want more, open Settings (⌘,):
 
-- **Backup** — free, private backup of your graph to GitHub.
-- **AI providers** — add your own API key to chat with your notes (⌘J). Notes marked private never leave this device.
+- **Backup** — free, private backup of your graph to GitHub. Notes marked private never leave this device.
 
 This note is pinned to the sidebar — unpin it (⌘O) when you're done.
 `

@@ -4,7 +4,6 @@ import { dailyPath } from '../graph/paths'
 import { hashContent } from '../indexing/hash'
 import { parseNote } from '../markdown/extract'
 import { parseFrontmatter, splitFrontmatter, upsertFrontmatter } from '../markdown/frontmatter'
-import type { AiProviderConfig } from '../settings/schema'
 import type { CaptureIdentity } from './capture-identity'
 import {
   captureNoteMeta,
@@ -37,7 +36,6 @@ interface PersistCaptureEnrichmentInput {
   fromTitle: string
   toTitle: string
   status: Exclude<CaptureStatus, 'skipped'>
-  provider: AiProviderConfig | null
   generation: number
 }
 
@@ -182,8 +180,6 @@ export async function persistCaptureEnrichment(
       captureStatus: titleChanged ? 'pending' : input.status,
       captureMetadataStatus: 'done',
       captureHash,
-      captureProvider: input.provider?.provider,
-      captureModel: input.provider?.model,
       captureDailyFromTitle: titleChanged ? input.fromTitle : undefined,
       captureFinalizeStatus: titleChanged ? input.status : undefined,
     }),

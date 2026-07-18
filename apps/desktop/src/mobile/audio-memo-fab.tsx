@@ -42,7 +42,7 @@ export function AudioMemoFab(): ReactElement | null {
       }}
       onClick={() => memo.toggle()}
     >
-      {memo.phase === 'transcribing' ? (
+      {memo.phase === 'saving' ? (
         <Spinner className="size-5" />
       ) : recording ? (
         <Square aria-hidden fill="currentColor" className="size-4" />

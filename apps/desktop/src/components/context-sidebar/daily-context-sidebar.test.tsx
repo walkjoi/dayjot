@@ -35,7 +35,7 @@ vi.mock('@/providers/graph-provider', () => ({
 }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({
-    settings: { semanticSearchEnabled: true, dateFormat: 'mdy', weekStartDay: 'monday' },
+    settings: { dateFormat: 'mdy', weekStartDay: 'monday' },
     updateSettings: () => {},
   }),
 }))
@@ -187,45 +187,6 @@ describe('DailyContextSidebar calendar', () => {
   })
 })
 
-describe('DailyContextSidebar related notes', () => {
-  it('renders no Similar notes section without results', async () => {
-    const view = renderSidebar('2026-06-09')
-    await waitFor(() => expect(relatedNotes).toHaveBeenCalledWith('daily/2026-06-09.md', 6))
-    expect(view.queryByText('Similar notes')).toBeNull()
-    view.unmount()
-  })
-
-  it('does not calculate Similar notes for an empty-bullet daily note', async () => {
-    readNote.mockResolvedValue('- \n')
-    const view = renderSidebar('2026-06-09')
-    await waitFor(() => expect(readNote).toHaveBeenCalledWith('daily/2026-06-09.md'))
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(relatedNotes).not.toHaveBeenCalled()
-    expect(view.queryByText('Similar notes')).toBeNull()
-    view.unmount()
-  })
-
-  it('lists semantic neighbors when they exist', async () => {
-    relatedNotes.mockResolvedValue([
-      {
-        path: 'notes/rust.md',
-        title: 'Rust',
-        score: 0.9,
-        snippet: 'borrow checker notes',
-        heading: null,
-        isPrivate: false,
-      },
-    ])
-    const view = renderSidebar('2026-06-09')
-    await view.findByText('Rust')
-    // The daily sidebar wires SimilarNotesSection (note-context-sidebar's
-    // tests pin the same title).
-    expect(view.getByText('Similar notes')).toBeDefined()
-    await userEvent.click(view.getByText('Rust'))
-    expect(view.getByTestId('route').textContent).toContain('notes/rust.md')
-    view.unmount()
-  })
-})
 
 describe('DailyContextSidebar sections', () => {
   it('collapses a section and persists the state for the session', async () => {

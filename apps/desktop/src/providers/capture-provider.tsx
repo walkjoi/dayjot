@@ -1,15 +1,13 @@
-import { useEffect, useRef, type ReactElement, type ReactNode } from 'react'
+import { type ReactElement, type ReactNode } from 'react'
 import {
   captureHostRegister,
   captureSharedInboxRelay,
   hasBridge,
-  type AiProvidersState,
   type GraphInfo,
 } from '@dayjot/core'
 import { useMainWindowEffect } from '@/hooks/use-main-window-effect'
 import { createCaptureController } from '@/lib/capture-controller'
 import { isMobileSurface } from '@/lib/platform-surface'
-import { useSettings } from '@/providers/settings-provider'
 
 /**
  * Mounts the link-capture lifecycle for the open graph (Plan 11): registers
@@ -30,20 +28,7 @@ interface CaptureProviderProps {
 }
 
 export function CaptureProvider({ graph, children }: CaptureProviderProps): ReactElement {
-  const { settings } = useSettings()
 
-  // Read lazily at the start of every pass — a key added in Settings
-  // mid-session must be seen without rebuilding the controller.
-  const providersRef = useRef<AiProvidersState>({
-    providers: settings.aiProviders,
-    defaultProviderId: settings.defaultAiProviderId,
-  })
-  useEffect(() => {
-    providersRef.current = {
-      providers: settings.aiProviders,
-      defaultProviderId: settings.defaultAiProviderId,
-    }
-  })
 
   // One drain per app: a secondary note window running its own would race
   // the main window's over the same spooled envelopes.
@@ -51,7 +36,6 @@ export function CaptureProvider({ graph, children }: CaptureProviderProps): Reac
     const mobile = isMobileSurface()
     const controller = createCaptureController({
       generation: graph.generation,
-      getProviders: () => providersRef.current,
       ...(mobile
         ? { relaySharedInbox: () => captureSharedInboxRelay(graph.generation) }
         : {}),

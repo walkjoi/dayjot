@@ -26,7 +26,6 @@ vi.mock('@/components/context-sidebar/note-context-sidebar', () => ({
     <div data-testid="note-context">{path}</div>
   ),
 }))
-vi.mock('@/components/embeddings-sync', () => ({ EmbeddingsSync: () => null }))
 vi.mock('@/components/route-content', () => ({ RouteContent: () => <div>Route content</div> }))
 vi.mock('@/components/shortcuts-dialog', () => ({ ShortcutsDialog: () => null }))
 vi.mock('@/components/sidebar/sidebar', () => ({

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CHAT_SYSTEM_PROMPT_MAX_LENGTH, DEFAULT_SETTINGS, settingsSchema } from './schema'
+import { DEFAULT_SETTINGS, settingsSchema } from './schema'
 
 describe('settingsSchema', () => {
   it('defaults every key on an empty document (fresh install)', () => {
@@ -13,9 +13,6 @@ describe('settingsSchema', () => {
       editorFullWidth: false,
       sidebarWidth: 260,
       contextSidebarWidth: 320,
-      semanticSearchEnabled: false,
-      describeAssets: true,
-      transcriptionFormat: true,
       contactsEnabled: false,
       mobileOnboarded: false,
       mobileStorage: 'local',
@@ -28,11 +25,6 @@ describe('settingsSchema', () => {
       calendarEnabled: false,
       calendarIds: [],
       graphColors: {},
-      aiProviders: [],
-      defaultAiProviderId: null,
-      chatModelSelection: null,
-      chatSystemPrompt: '',
-      aiPrompts: [],
     })
     expect(DEFAULT_SETTINGS.editorMarkdownSyntax).toBe('hide')
     expect(DEFAULT_SETTINGS.editorSpellCheck).toBe(true)
@@ -43,9 +35,6 @@ describe('settingsSchema', () => {
     expect(DEFAULT_SETTINGS.editorFullWidth).toBe(false)
     expect(DEFAULT_SETTINGS.sidebarWidth).toBe(260)
     expect(DEFAULT_SETTINGS.contextSidebarWidth).toBe(320)
-    expect(DEFAULT_SETTINGS.semanticSearchEnabled).toBe(false)
-    expect(DEFAULT_SETTINGS.describeAssets).toBe(true)
-    expect(DEFAULT_SETTINGS.transcriptionFormat).toBe(true)
     expect(DEFAULT_SETTINGS.contactsEnabled).toBe(false)
     expect(DEFAULT_SETTINGS.mobileOnboarded).toBe(false)
     expect(DEFAULT_SETTINGS.mobileStorage).toBe('local')
@@ -57,11 +46,6 @@ describe('settingsSchema', () => {
     expect(DEFAULT_SETTINGS.calendarEnabled).toBe(false)
     expect(DEFAULT_SETTINGS.calendarIds).toEqual([])
     expect(DEFAULT_SETTINGS.graphColors).toEqual({})
-    expect(DEFAULT_SETTINGS.aiProviders).toEqual([])
-    expect(DEFAULT_SETTINGS.defaultAiProviderId).toBeNull()
-    expect(DEFAULT_SETTINGS.chatModelSelection).toBeNull()
-    expect(DEFAULT_SETTINGS.chatSystemPrompt).toBe('')
-    expect(DEFAULT_SETTINGS.aiPrompts).toEqual([])
   })
 
   it('accepts valid values', () => {
@@ -104,12 +88,6 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ dateFormat: 'mdy' }).dateFormat).toBe('mdy')
     expect(settingsSchema.parse({ weekStartDay: 'monday' }).weekStartDay).toBe('monday')
     expect(settingsSchema.parse({ weekStartDay: 'sunday' }).weekStartDay).toBe('sunday')
-    expect(settingsSchema.parse({ semanticSearchEnabled: true }).semanticSearchEnabled).toBe(true)
-    expect(settingsSchema.parse({ semanticSearchEnabled: false }).semanticSearchEnabled).toBe(false)
-    expect(settingsSchema.parse({ describeAssets: true }).describeAssets).toBe(true)
-    expect(settingsSchema.parse({ describeAssets: false }).describeAssets).toBe(false)
-    expect(settingsSchema.parse({ transcriptionFormat: true }).transcriptionFormat).toBe(true)
-    expect(settingsSchema.parse({ transcriptionFormat: false }).transcriptionFormat).toBe(false)
     expect(settingsSchema.parse({ contactsEnabled: true }).contactsEnabled).toBe(true)
     expect(settingsSchema.parse({ contactsEnabled: false }).contactsEnabled).toBe(false)
     expect(
@@ -125,17 +103,6 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ calendarIds: [] }).calendarIds).toEqual([])
     expect(settingsSchema.parse({ mobileStorage: 'icloud' }).mobileStorage).toBe('icloud')
     expect(settingsSchema.parse({ mobileStorage: 'local' }).mobileStorage).toBe('local')
-    expect(
-      settingsSchema.parse({ chatSystemPrompt: 'Answer as a Socratic coach.\nBe concise.' })
-        .chatSystemPrompt,
-    ).toBe('Answer as a Socratic coach.\nBe concise.')
-    expect(settingsSchema.parse({ chatSystemPrompt: '  Be concise.  ' }).chatSystemPrompt).toBe(
-      'Be concise.',
-    )
-    const oversizedPrompt = `${'x'.repeat(CHAT_SYSTEM_PROMPT_MAX_LENGTH)}trailing text`
-    expect(settingsSchema.parse({ chatSystemPrompt: oversizedPrompt }).chatSystemPrompt).toBe(
-      oversizedPrompt.slice(0, CHAT_SYSTEM_PROMPT_MAX_LENGTH),
-    )
   })
 
   it('degrades an invalid value to its default instead of failing the load', () => {
@@ -176,14 +143,6 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ dateFormat: 10 }).dateFormat).toBe('mdy')
     expect(settingsSchema.parse({ weekStartDay: 'saturday' }).weekStartDay).toBe('monday')
     expect(settingsSchema.parse({ weekStartDay: 42 }).weekStartDay).toBe('monday')
-    expect(settingsSchema.parse({ semanticSearchEnabled: 'yes' }).semanticSearchEnabled).toBe(false)
-    expect(settingsSchema.parse({ semanticSearchEnabled: 1 }).semanticSearchEnabled).toBe(false)
-    // `.catch(true)` keeps the resilient-degrade pattern: an invalid value falls
-    // back to the default rather than failing the whole settings load.
-    expect(settingsSchema.parse({ describeAssets: 'yes' }).describeAssets).toBe(true)
-    expect(settingsSchema.parse({ describeAssets: 0 }).describeAssets).toBe(true)
-    expect(settingsSchema.parse({ transcriptionFormat: 'yes' }).transcriptionFormat).toBe(true)
-    expect(settingsSchema.parse({ transcriptionFormat: 0 }).transcriptionFormat).toBe(true)
     expect(settingsSchema.parse({ contactsEnabled: 'yes' }).contactsEnabled).toBe(false)
     expect(settingsSchema.parse({ contactsEnabled: 1 }).contactsEnabled).toBe(false)
     expect(settingsSchema.parse({ allNotesFilterTags: 'book' }).allNotesFilterTags).toEqual([
@@ -202,7 +161,6 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ calendarIds: [7] }).calendarIds).toEqual([])
     expect(settingsSchema.parse({ mobileStorage: 'dropbox' }).mobileStorage).toBe('local')
     expect(settingsSchema.parse({ mobileStorage: 1 }).mobileStorage).toBe('local')
-    expect(settingsSchema.parse({ chatSystemPrompt: 42 }).chatSystemPrompt).toBe('')
   })
 
   it('preserves unknown keys so newer-version settings survive a round trip', () => {
@@ -217,9 +175,6 @@ describe('settingsSchema', () => {
       editorFullWidth: false,
       sidebarWidth: 260,
       contextSidebarWidth: 320,
-      semanticSearchEnabled: false,
-      describeAssets: true,
-      transcriptionFormat: true,
       contactsEnabled: false,
       mobileOnboarded: false,
       mobileStorage: 'local',
@@ -232,11 +187,6 @@ describe('settingsSchema', () => {
       calendarEnabled: false,
       calendarIds: [],
       graphColors: {},
-      aiProviders: [],
-      defaultAiProviderId: null,
-      chatModelSelection: null,
-      chatSystemPrompt: '',
-      aiPrompts: [],
       futureKey: true,
     })
   })
@@ -260,109 +210,4 @@ describe('settingsSchema', () => {
     })
   })
 
-  describe('aiProviders', () => {
-    const valid = {
-      id: 'abc',
-      provider: 'anthropic',
-      model: 'claude-opus-4-8',
-      keyHint: 'wxyz1',
-    }
-
-    it('passes valid entries through', () => {
-      expect(settingsSchema.parse({ aiProviders: [valid] }).aiProviders).toEqual([valid])
-    })
-
-    it('accepts OpenRouter entries', () => {
-      const entry = {
-        id: 'openrouter',
-        provider: 'openrouter',
-        model: 'openrouter/auto',
-        keyHint: 'wxyz1',
-      }
-      expect(settingsSchema.parse({ aiProviders: [entry] }).aiProviders).toEqual([entry])
-    })
-
-    it('defaults the per-entry display fields', () => {
-      const entry = { id: 'abc', provider: 'openai', model: 'gpt-5.1' }
-      expect(settingsSchema.parse({ aiProviders: [entry] }).aiProviders).toEqual([
-        { ...entry, keyHint: '' },
-      ])
-    })
-
-    it('drops a corrupt entry without losing the rest', () => {
-      const parsed = settingsSchema.parse({
-        aiProviders: [valid, { provider: 'aliens' }, 42],
-      })
-      expect(parsed.aiProviders).toEqual([valid])
-    })
-
-    it('degrades a non-array value to the empty list', () => {
-      expect(settingsSchema.parse({ aiProviders: 'nope' }).aiProviders).toEqual([])
-      expect(settingsSchema.parse({ aiProviders: { id: 'x' } }).aiProviders).toEqual([])
-    })
-  })
-
-  describe('aiPrompts', () => {
-    const valid = {
-      id: 'prompt-1',
-      label: 'Translate to French',
-      body: 'Translate the following text to French.\n\n{{selectedText}}',
-      mode: 'replace',
-    }
-
-    it('passes valid entries through', () => {
-      expect(settingsSchema.parse({ aiPrompts: [valid] }).aiPrompts).toEqual([valid])
-    })
-
-    it('defaults an invalid mode to replace', () => {
-      const entry = { ...valid, mode: 'sideways' }
-      expect(settingsSchema.parse({ aiPrompts: [entry] }).aiPrompts).toEqual([
-        { ...valid, mode: 'replace' },
-      ])
-    })
-
-    it('drops a corrupt entry without losing the rest', () => {
-      const parsed = settingsSchema.parse({
-        aiPrompts: [valid, { label: 'no body' }, 42],
-      })
-      expect(parsed.aiPrompts).toEqual([valid])
-    })
-
-    it('degrades a non-array value to the empty list', () => {
-      expect(settingsSchema.parse({ aiPrompts: 'nope' }).aiPrompts).toEqual([])
-    })
-
-    it('defaults to the empty list (built-ins live in code)', () => {
-      expect(settingsSchema.parse({}).aiPrompts).toEqual([])
-    })
-  })
-
-  describe('defaultAiProviderId', () => {
-    it('passes a string id through and defaults invalid values to null', () => {
-      expect(settingsSchema.parse({ defaultAiProviderId: 'abc' }).defaultAiProviderId).toBe('abc')
-      expect(settingsSchema.parse({ defaultAiProviderId: null }).defaultAiProviderId).toBeNull()
-      expect(settingsSchema.parse({ defaultAiProviderId: 42 }).defaultAiProviderId).toBeNull()
-    })
-  })
-
-  describe('chatModelSelection', () => {
-    it('passes a valid selection through', () => {
-      const selection = { configId: 'abc', modelId: 'claude-opus-4-8' }
-      expect(settingsSchema.parse({ chatModelSelection: selection }).chatModelSelection).toEqual(
-        selection,
-      )
-      expect(settingsSchema.parse({ chatModelSelection: null }).chatModelSelection).toBeNull()
-    })
-
-    it('degrades an invalid value to null', () => {
-      expect(settingsSchema.parse({ chatModelSelection: 'gpt-5.5' }).chatModelSelection).toBeNull()
-      expect(
-        settingsSchema.parse({ chatModelSelection: { configId: 'abc' } }).chatModelSelection,
-      ).toBeNull()
-      expect(
-        settingsSchema.parse({ chatModelSelection: { configId: '', modelId: 'gpt-5.5' } })
-          .chatModelSelection,
-      ).toBeNull()
-    })
-  })
 })

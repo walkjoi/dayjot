@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { isUntitledNotePath, type GraphInfo } from '@dayjot/core'
-import { ListChecks, MessageSquare, SquarePen } from 'lucide-react'
+import { ListChecks, SquarePen } from 'lucide-react'
 import { AudioMemoButton } from '@/components/audio-memo/audio-memo-button'
 import { ListIcon } from '@/components/icons/list-icon'
 import { PencilIcon } from '@/components/icons/pencil-icon'
@@ -114,17 +114,6 @@ export function Sidebar({ graph, context }: SidebarProps): ReactElement {
             binding={keybindingFor('nav.tasks') ?? undefined}
             active={route.kind === 'tasks'}
             onClick={() => void runCommand('nav.tasks', context)}
-          />
-          <SidebarItem
-            icon={
-              <span className={lucideBox}>
-                <MessageSquare aria-hidden strokeWidth={1.75} className="size-4" />
-              </span>
-            }
-            label="Chat"
-            binding={keybindingFor('chat.open') ?? undefined}
-            active={route.kind === 'chat'}
-            onClick={() => void runCommand('chat.open', context)}
           />
         </nav>
       </div>

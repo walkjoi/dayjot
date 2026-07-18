@@ -145,73 +145,9 @@ describe('MobileSettings', () => {
     expect(updateSettings).toHaveBeenCalledWith({ editorBulletAfterHeading: false })
   })
 
-  it('toggles audio transcription formatting', async () => {
-    const user = userEvent.setup()
-    mount()
 
-    const toggle = screen.getByRole('switch', { name: 'Transcription auto-format' })
-    const descriptionId = toggle.getAttribute('aria-describedby')
-    expect(descriptionId).not.toBeNull()
-    expect(document.getElementById(descriptionId ?? '')?.textContent).toContain(
-      'Uses AI to add punctuation, paragraphs, and light Markdown',
-    )
 
-    await user.click(toggle)
 
-    expect(updateSettings).toHaveBeenCalledWith({ transcriptionFormat: false })
-  })
-
-  it('edits the AI chat system prompt', async () => {
-    const user = userEvent.setup()
-    mount()
-
-    await user.click(screen.getByRole('button', { name: /System prompt.*Default/ }))
-    const textarea = screen.getByRole('textbox', { name: 'System prompt instructions' })
-    await user.type(textarea, 'Challenge my assumptions.')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-
-    expect(updateSettings).toHaveBeenCalledWith({
-      chatSystemPrompt: 'Challenge my assumptions.',
-    })
-  })
-
-  it('tracks a prompt that hydrates while its editor is open', async () => {
-    const user = userEvent.setup()
-    const view = mount()
-    await user.click(screen.getByRole('button', { name: /System prompt.*Default/ }))
-
-    settingsState.current = {
-      ...settingsState.current,
-      chatSystemPrompt: 'Persisted instructions loaded from disk.',
-    }
-    view.rerender(
-      <QueryClientProvider client={queryClient}>
-        <MobileSettings />
-      </QueryClientProvider>,
-    )
-
-    const textarea = screen.getByRole('textbox', { name: 'System prompt instructions' })
-    expect((textarea as HTMLTextAreaElement).value).toBe('Persisted instructions loaded from disk.')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-    expect(updateSettings).toHaveBeenCalledWith({
-      chatSystemPrompt: 'Persisted instructions loaded from disk.',
-    })
-  })
-
-  it('restores the default prompt immediately from the mobile editor', async () => {
-    const user = userEvent.setup()
-    settingsState.current = {
-      ...settingsState.current,
-      chatSystemPrompt: 'Always answer in haiku.',
-    }
-    mount()
-
-    await user.click(screen.getByRole('button', { name: /System prompt.*Custom/ }))
-    await user.click(screen.getByRole('button', { name: 'Use default' }))
-
-    expect(updateSettings).toHaveBeenCalledWith({ chatSystemPrompt: '' })
-    expect(screen.queryByRole('textbox', { name: 'System prompt instructions' })).toBeNull()
-  })
 
   it('shows the connected repo and the live plain-language status', async () => {
     mount()

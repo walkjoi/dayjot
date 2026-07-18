@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer'
 import { useMobileAudioMemo } from '@/mobile/audio-memo-provider'
 import { RecordingLevelWaveform } from '@/mobile/recording-level-waveform'
-import { useRouter } from '@/routing/router'
 
 /**
  * The recording sheet (V1's recording modal as a bottom drawer): waveform +
@@ -39,8 +38,6 @@ export function RecordingDrawer(): ReactElement {
               </Button>
             </div>
           </div>
-        ) : !memo.hasTranscriptionConfig ? (
-          <KeySetupControls memo={memo} />
         ) : (
           <LiveRecordingControls key={memo.drawerOpen ? 'open' : 'closed'} memo={memo} />
         )}
@@ -55,26 +52,6 @@ interface LiveRecordingControlsProps {
   memo: MobileAudioMemo
 }
 
-function KeySetupControls({ memo }: LiveRecordingControlsProps): ReactElement {
-  const { navigate } = useRouter()
-
-  return (
-    <div className="flex flex-col items-center gap-4 px-4 pb-2 text-center">
-      <p className="text-sm text-text-muted">
-        Audio memos are transcribed into your notes with your own OpenAI or Gemini API key. Add
-        one in Settings to start recording.
-      </p>
-      <Button
-        onClick={() => {
-          memo.onDrawerOpenChange(false)
-          navigate({ kind: 'settings' })
-        }}
-      >
-        Open Settings
-      </Button>
-    </div>
-  )
-}
 
 function LiveRecordingControls({ memo }: LiveRecordingControlsProps): ReactElement {
   const [discardArmed, setDiscardArmed] = useState(false)

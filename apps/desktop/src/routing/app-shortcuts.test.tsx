@@ -43,7 +43,7 @@ vi.mock('@/providers/theme-provider', () => ({
 }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({
-    settings: { editorMarkdownSyntax: 'hide', semanticSearchEnabled: false, theme: 'system' },
+    settings: { editorMarkdownSyntax: 'hide', theme: 'system' },
     updateSettings: vi.fn(),
   }),
 }))
@@ -119,7 +119,6 @@ describe('app shortcuts', () => {
       'Mod-d',
       'Mod-Shift-a',
       'Mod-n',
-      'Mod-Shift-n',
       'Mod-Shift-o',
       'Mod-[',
       'Mod-]',
@@ -290,16 +289,6 @@ describe('app shortcuts', () => {
     expect(result.current.router.route).toEqual({ kind: 'allNotes', tag: null })
   })
 
-  it('⌘⇧N starts a fresh chat when the chat route is active', () => {
-    newChat.mockClear()
-    const { result } = shortcutsHook()
-
-    act(() => press('j'))
-    expect(result.current.router.route).toEqual({ kind: 'chat' })
-
-    act(() => press('n', { shiftKey: true }))
-    expect(newChat).toHaveBeenCalledTimes(1)
-  })
 
   it('⌘⇧N is inert outside the chat route', () => {
     newChat.mockClear()

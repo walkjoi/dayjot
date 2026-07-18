@@ -4,7 +4,7 @@ import type { FilteredSearchHit, WikiSuggestion } from '@dayjot/core'
 
 /**
  * What the palette actually reads off a search hit — a subset of
- * {@link FilteredSearchHit}, so the semantic-search adapter doesn't have to
+ * {@link FilteredSearchHit}, so search adapters don't have to
  * fabricate list-only fields (preview, mtime) it has no values for.
  */
 export type PaletteHit = Pick<FilteredSearchHit, 'path' | 'title' | 'dailyDate' | 'snippet'>

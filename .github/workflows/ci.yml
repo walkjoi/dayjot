@@ -115,25 +115,6 @@ jobs:
           # so the next push doesn't pay the cold-build cost again.
           cache-on-failure: true
 
-      # ort-sys (fastembed → ort) downloads prebuilt ONNX Runtime binaries at
-      # build time and extracts them to ~/.cache/ort.pyke.io — outside target/,
-      # so rust-cache never captures them and every run re-downloads. The build
-      # script skips the download when the extracted dir is already present.
-      # Entries are content-addressed (dfbin/<target>/<hash>), so restoring a
-      # stale cache after an ort upgrade is safe — it just downloads anew.
-      - name: Cache ONNX Runtime binaries
-        uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
-        with:
-          path: ~/.cache/ort.pyke.io
-          key: ort-bin-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            ort-bin-${{ runner.os }}-
-
-      # Without this, actions/cache warns at save time on builds that never
-      # trigger the ort download (the path wouldn't exist).
-      - name: Ensure ort cache dir exists
-        run: mkdir -p ~/.cache/ort.pyke.io
-
       # tauri-build requires the sidecar to exist before the desktop crate's
       # build script runs (clippy/test compile it), so stage the CLI first.
       - name: Stage the dayjot CLI sidecar

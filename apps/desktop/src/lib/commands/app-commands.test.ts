@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { EmbedStatus, NoteRow, PinnedNote } from '@dayjot/core'
+import type { NoteRow, PinnedNote } from '@dayjot/core'
 import { notePathForRoute, type Route } from '@/routing/route'
 import type { NavigateOptions } from '@/routing/router'
 import { resetOperations } from '@/lib/operations'
@@ -9,10 +9,6 @@ const TODAY = '2026-06-09'
 
 const randomNotePath = vi.hoisted(() => vi.fn())
 const rebuildIndex = vi.hoisted(() => vi.fn())
-const embedStatus = vi.hoisted(() =>
-  vi.fn<() => Promise<EmbedStatus>>(async () => ({ status: 'uninitialized' })),
-)
-const backfillEmbeddingsVisibly = vi.hoisted(() => vi.fn(async () => 'completed'))
 const toggleNotePinned = vi.hoisted(() => vi.fn(async () => true))
 const toggleNotePrivate = vi.hoisted(() => vi.fn(async () => true))
 const runCopyDeepLink = vi.hoisted(() => vi.fn(async () => undefined))
@@ -25,10 +21,6 @@ const operationFail = vi.hoisted(() => vi.fn())
 const startOperation = vi.hoisted(() =>
   vi.fn(() => ({ progress: vi.fn(), done: vi.fn(), fail: operationFail })),
 )
-vi.mock('@/lib/semantic', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/semantic')>()),
-  backfillEmbeddingsVisibly,
-}))
 vi.mock('@/lib/note-pin', () => ({ toggleNotePinned }))
 vi.mock('@/lib/note-private', () => ({ toggleNotePrivate }))
 vi.mock('@/lib/note-deep-link', () => ({ runCopyDeepLink }))
@@ -41,7 +33,6 @@ vi.mock('@dayjot/core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@dayjot/core')>()),
   randomNotePath,
   rebuildIndex,
-  embedStatus,
   getNote,
   getPinnedNotes,
   hasBridge,
@@ -77,7 +68,6 @@ function fakeContext(overrides?: Partial<CommandContext>) {
     clearScrollState: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
-    newChat: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
     generation: () => 7,
@@ -85,7 +75,6 @@ function fakeContext(overrides?: Partial<CommandContext>) {
     openShortcuts: vi.fn(),
     openTemplatePicker: vi.fn(),
     openTemplateCreate: vi.fn(),
-    enableSemanticSearch: vi.fn(),
     ...overrides,
   }
   return { context, navigated, navigateOptions }
@@ -189,16 +178,6 @@ describe('app commands', () => {
     expect(context.openTemplateCreate).toHaveBeenCalledTimes(1)
   })
 
-  it('chat.new starts a fresh conversation only from the chat route', async () => {
-    const { context } = fakeContext({ route: () => ({ kind: 'chat' }) })
-    await command('chat.new').run(context)
-    expect(context.newChat).toHaveBeenCalledTimes(1)
-    expect(keybindingFor('chat.new')).toBe('Mod-Shift-n')
-
-    const { context: outsideChat } = fakeContext()
-    await command('chat.new').run(outsideChat)
-    expect(outsideChat.newChat).not.toHaveBeenCalled()
-  })
 
   it('graph switch commands select their recent graph position', async () => {
     const switchGraph = vi.fn()
@@ -373,12 +352,6 @@ describe('app commands', () => {
     hasBridge.mockReturnValue(true)
   })
 
-  it('semantic.enable persists the opt-in through the context capability', async () => {
-    const { context } = fakeContext()
-    await command('semantic.enable').run(context)
-    // EmbeddingsSync owns the download reaction; the command only opts in.
-    expect(context.enableSemanticSearch).toHaveBeenCalled()
-  })
 
   it('index.rebuild runs at the open generation and reports as an operation', async () => {
     try {
@@ -399,19 +372,4 @@ describe('app commands', () => {
     }
   })
 
-  it('index.rebuild re-runs the embedding backfill when the model is ready', async () => {
-    try {
-      rebuildIndex.mockResolvedValueOnce(undefined)
-      embedStatus.mockResolvedValueOnce({ status: 'ready', model: 'all-MiniLM-L6-v2' })
-      const { context } = fakeContext()
-      await command('index.rebuild').run(context)
-      // index_clear wiped the embedding tables; rebuild must repopulate them.
-      expect(backfillEmbeddingsVisibly).toHaveBeenCalledWith({
-        generation: 7,
-        modelId: 'all-MiniLM-L6-v2',
-      })
-    } finally {
-      resetOperations()
-    }
-  })
 })

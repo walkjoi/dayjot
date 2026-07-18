@@ -17,7 +17,6 @@ export type Route =
   | { kind: 'allNotes'; tag: string | null }
   | { kind: 'search'; query: string }
   | { kind: 'tasks' }
-  | { kind: 'chat' }
   | { kind: 'settings' }
   // The graph-switcher screen — a mobile settings sub-screen; desktop renders
   // it as the settings screen (its switcher lives in the sidebar footer).
@@ -34,7 +33,6 @@ export function routesEqual(a: Route, b: Route): boolean {
   switch (a.kind) {
     case 'today':
     case 'tasks':
-    case 'chat':
     case 'settings':
     case 'graphs':
       return true

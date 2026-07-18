@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setBridge, type EmbedStatus, type GraphInfo } from '@dayjot/core'
+import { setBridge, type GraphInfo } from '@dayjot/core'
 import { formatFullDate } from '@/lib/dates'
 import { resetOperations } from '@/lib/operations'
 import { NoteTemplatesProvider } from '@/providers/note-templates-provider'
@@ -57,7 +57,6 @@ Element.prototype.scrollIntoView ??= () => {}
 let stored: Record<string, unknown>
 let saved: unknown[]
 let invoked: string[]
-let embedStatus: EmbedStatus
 
 function installFakeBridge(): void {
   saved = []
@@ -73,7 +72,7 @@ function installFakeBridge(): void {
           return null
         case 'embed_status':
         case 'embed_ensure':
-          return embedStatus
+          return { status: 'uninitialized' }
         case 'list_files':
           return []
         case 'db_query':
@@ -119,7 +118,6 @@ function radio(name: RegExp): HTMLInputElement {
 
 beforeEach(() => {
   stored = {}
-  embedStatus = { status: 'uninitialized' }
   graph.current = null
   graph.indexGeneration = 7
   graph.forget.mockClear()
@@ -143,31 +141,7 @@ describe('SettingsScreen', () => {
     expect(screen.getByRole('button', { name: /check for updates/i })).toBeTruthy()
   })
 
-  it('persists the default-on transcription auto-format preference', async () => {
-    renderScreen()
-    const toggle = screen.getByRole('switch', { name: /transcription auto-format/i })
-    expect(toggle.getAttribute('aria-checked')).toBe('true')
-    const descriptionId = toggle.getAttribute('aria-describedby')
-    expect(descriptionId).not.toBeNull()
-    expect(document.getElementById(descriptionId ?? '')?.textContent).toContain(
-      'Use AI to add punctuation, paragraphs, and light Markdown',
-    )
 
-    fireEvent.click(toggle)
-
-    expect(toggle.getAttribute('aria-checked')).toBe('false')
-    await waitFor(() =>
-      expect(saved.at(-1)).toMatchObject({ transcriptionFormat: false }),
-    )
-  })
-
-  it('reflects a persisted transcription auto-format opt-out', async () => {
-    stored = { transcriptionFormat: false }
-    renderScreen()
-
-    const toggle = screen.getByRole('switch', { name: /transcription auto-format/i })
-    await waitFor(() => expect(toggle.getAttribute('aria-checked')).toBe('false'))
-  })
 
   it('confirms before forgetting the open graph from saved graphs', async () => {
     graph.current = { root: '/graphs/work', name: 'Work', generation: 1 }
@@ -236,9 +210,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -251,11 +222,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -288,9 +254,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -303,11 +266,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -354,9 +312,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -369,11 +324,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -427,9 +377,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -442,11 +389,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -479,9 +421,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -494,11 +433,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -524,9 +458,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -539,11 +470,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -582,9 +508,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -597,11 +520,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -633,9 +551,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -648,11 +563,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -690,9 +600,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -705,11 +612,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -744,9 +646,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -759,11 +658,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -789,9 +683,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -804,11 +695,6 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
@@ -866,9 +752,6 @@ describe('SettingsScreen', () => {
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
-          semanticSearchEnabled: false,
-          describeAssets: true,
-          transcriptionFormat: true,
           contactsEnabled: false,
           mobileOnboarded: false,
           mobileStorage: 'local',
@@ -881,99 +764,9 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
-          aiProviders: [],
-          defaultAiProviderId: null,
-          chatModelSelection: null,
-          chatSystemPrompt: '',
-          aiPrompts: [],
         },
       ]),
     )
-  })
-
-  it('enabling semantic search persists the opt-in', async () => {
-    renderScreen()
-    const enable = await screen.findByRole('button', { name: /enable semantic search/i })
-
-    fireEvent.click(enable)
-
-    await waitFor(() =>
-      expect(saved).toEqual([
-        { editorMarkdownSyntax: 'hide', editorSpellCheck: true, editorDefaultBullet: true, editorBulletAfterHeading: true, editorSmoothCaretAnimation: true, editorTextSize: 'small', editorFullWidth: false, sidebarWidth: 260, contextSidebarWidth: 320, semanticSearchEnabled: true, describeAssets: true, transcriptionFormat: true, contactsEnabled: false, mobileOnboarded: false, mobileStorage: 'local', mobileGraphName: '', theme: 'system', timeFormat: '12h', dateFormat: 'mdy', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], calendarEnabled: false, calendarIds: [], graphColors: {}, aiProviders: [], defaultAiProviderId: null, chatModelSelection: null, chatSystemPrompt: '', aiPrompts: [] },
-      ]),
-    )
-    // The control flips to the loading state (EmbeddingsSync owns the actual
-    // download; the runtime here still reports `uninitialized`).
-    expect(screen.getByRole('progressbar', { name: /model download/i })).toBeTruthy()
-  })
-
-  it('shows byte-level progress while the model downloads', async () => {
-    stored = { semanticSearchEnabled: true }
-    embedStatus = { status: 'loading', progress: { downloaded: 45_000_000, total: 90_000_000 } }
-    renderScreen()
-
-    const bar = await screen.findByRole('progressbar', { name: /model download/i })
-    await waitFor(() => expect(bar.getAttribute('aria-valuenow')).toBe('50'))
-    expect(screen.getByText('Downloading the model — 45 MB of 90 MB')).toBeTruthy()
-  })
-
-  it('shows the downloaded model once ready and persists a disable', async () => {
-    stored = { semanticSearchEnabled: true }
-    embedStatus = { status: 'ready', model: 'all-MiniLM-L6-v2' }
-    renderScreen()
-
-    expect(await screen.findByText(/model downloaded \(all-MiniLM-L6-v2\)/i)).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: /disable/i }))
-
-    await waitFor(() =>
-      expect(saved).toEqual([
-        { editorMarkdownSyntax: 'hide', editorSpellCheck: true, editorDefaultBullet: true, editorBulletAfterHeading: true, editorSmoothCaretAnimation: true, editorTextSize: 'small', editorFullWidth: false, sidebarWidth: 260, contextSidebarWidth: 320, semanticSearchEnabled: false, describeAssets: true, transcriptionFormat: true, contactsEnabled: false, mobileOnboarded: false, mobileStorage: 'local', mobileGraphName: '', theme: 'system', timeFormat: '12h', dateFormat: 'mdy', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], calendarEnabled: false, calendarIds: [], graphColors: {}, aiProviders: [], defaultAiProviderId: null, chatModelSelection: null, chatSystemPrompt: '', aiPrompts: [] },
-      ]),
-    )
-    expect(screen.getByRole('button', { name: /enable semantic search/i })).toBeTruthy()
-    // Disabling is immediate — every semantic consumer gates on the setting,
-    // so there is no "takes effect on the next launch" caveat to show even
-    // while the runtime still reports `ready`.
-    expect(screen.queryByText(/next launch/i)).toBeNull()
-  })
-
-  it('re-enabling after a failed load retries the download', async () => {
-    embedStatus = { status: 'failed', message: 'offline' }
-    renderScreen()
-    const enable = await screen.findByRole('button', { name: /enable semantic search/i })
-
-    fireEvent.click(enable)
-
-    // The opt-in persists AND the broken runtime gets a fresh embed_ensure —
-    // EmbeddingsSync only loads `uninitialized` runtimes, so the explicit
-    // action carries the retry.
-    await waitFor(() => expect(invoked).toContain('embed_ensure'))
-    await waitFor(() =>
-      expect(saved).toEqual([
-        { editorMarkdownSyntax: 'hide', editorSpellCheck: true, editorDefaultBullet: true, editorBulletAfterHeading: true, editorSmoothCaretAnimation: true, editorTextSize: 'small', editorFullWidth: false, sidebarWidth: 260, contextSidebarWidth: 320, semanticSearchEnabled: true, describeAssets: true, transcriptionFormat: true, contactsEnabled: false, mobileOnboarded: false, mobileStorage: 'local', mobileGraphName: '', theme: 'system', timeFormat: '12h', dateFormat: 'mdy', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], calendarEnabled: false, calendarIds: [], graphColors: {}, aiProviders: [], defaultAiProviderId: null, chatModelSelection: null, chatSystemPrompt: '', aiPrompts: [] },
-      ]),
-    )
-  })
-
-  it('surfaces a failed load with retry and disable affordances', async () => {
-    stored = { semanticSearchEnabled: true }
-    embedStatus = { status: 'failed', message: 'no disk space' }
-    renderScreen()
-
-    expect(await screen.findByRole('alert')).toBeTruthy()
-    expect(screen.getByText(/no disk space/i)).toBeTruthy()
-    expect(screen.getByRole('button', { name: /try again/i })).toBeTruthy()
-
-    // Backing out after a failure must work too — the opt-in isn't a trap.
-    fireEvent.click(screen.getByRole('button', { name: /disable/i }))
-
-    await waitFor(() =>
-      expect(saved).toEqual([
-        { editorMarkdownSyntax: 'hide', editorSpellCheck: true, editorDefaultBullet: true, editorBulletAfterHeading: true, editorSmoothCaretAnimation: true, editorTextSize: 'small', editorFullWidth: false, sidebarWidth: 260, contextSidebarWidth: 320, semanticSearchEnabled: false, describeAssets: true, transcriptionFormat: true, contactsEnabled: false, mobileOnboarded: false, mobileStorage: 'local', mobileGraphName: '', theme: 'system', timeFormat: '12h', dateFormat: 'mdy', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], calendarEnabled: false, calendarIds: [], graphColors: {}, aiProviders: [], defaultAiProviderId: null, chatModelSelection: null, chatSystemPrompt: '', aiPrompts: [] },
-      ]),
-    )
-    expect(screen.getByRole('button', { name: /enable semantic search/i })).toBeTruthy()
   })
 
   it('rebuilding the index wipes and re-applies the projection through the bridge', async () => {
@@ -1015,105 +808,4 @@ describe('SettingsScreen', () => {
     expect(within(dialog).getByText('Open the AI menu on the selection')).toBeTruthy()
   })
 
-  it('reflects and persists the AI chat system prompt', async () => {
-    stored = { chatSystemPrompt: 'Answer as a careful research partner.' }
-    renderScreen()
-    const textarea = screen.getByRole('textbox', { name: 'System prompt' })
-    await waitFor(() =>
-      expect((textarea as HTMLTextAreaElement).value).toBe(stored['chatSystemPrompt']),
-    )
-
-    fireEvent.change(textarea, {
-      target: { value: '  Challenge my assumptions.\nKeep the recommendation short.  ' },
-    })
-    fireEvent.blur(textarea)
-
-    await waitFor(() =>
-      expect(saved.at(-1)).toMatchObject({
-        chatSystemPrompt: 'Challenge my assumptions.\nKeep the recommendation short.',
-      }),
-    )
-  })
-
-  it('restores the default AI chat prompt', async () => {
-    stored = { chatSystemPrompt: 'Always answer in haiku.' }
-    renderScreen()
-    const section = screen.getByRole('region', { name: 'AI chat' })
-    await waitFor(() =>
-      expect((within(section).getByRole('textbox') as HTMLTextAreaElement).value).toBe(
-        'Always answer in haiku.',
-      ),
-    )
-
-    fireEvent.click(within(section).getByRole('button', { name: 'Use default' }))
-
-    await waitFor(() => expect(saved.at(-1)).toMatchObject({ chatSystemPrompt: '' }))
-  })
-
-  it('adding an AI prompt persists the full document', async () => {
-    renderScreen()
-    const section = screen.getByRole('region', { name: 'AI prompts' })
-
-    fireEvent.click(within(section).getByRole('button', { name: /add prompt/i }))
-    const dialog = screen.getByRole('dialog', { name: /add prompt/i })
-    fireEvent.change(within(dialog).getByPlaceholderText('Translate to French'), {
-      target: { value: 'Translate to French' },
-    })
-    fireEvent.change(within(dialog).getByPlaceholderText(/Translate the following/), {
-      target: { value: 'Translate to French.\n\n{{selectedText}}' },
-    })
-    fireEvent.submit(within(dialog).getByRole('button', { name: /add prompt/i }))
-
-    await waitFor(() =>
-      expect(saved).toEqual([
-        { editorMarkdownSyntax: 'hide', editorSpellCheck: true, editorDefaultBullet: true, editorBulletAfterHeading: true, editorSmoothCaretAnimation: true, editorTextSize: 'small', editorFullWidth: false, sidebarWidth: 260, contextSidebarWidth: 320, semanticSearchEnabled: false, describeAssets: true, transcriptionFormat: true, contactsEnabled: false, mobileOnboarded: false, mobileStorage: 'local', mobileGraphName: '', theme: 'system', timeFormat: '12h', dateFormat: 'mdy', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], calendarEnabled: false, calendarIds: [], graphColors: {}, aiProviders: [], defaultAiProviderId: null, chatModelSelection: null, chatSystemPrompt: '', aiPrompts: [{ id: expect.any(String), label: 'Translate to French', body: 'Translate to French.\n\n{{selectedText}}', mode: 'replace' }] },
-      ]),
-    )
-    expect(within(section).getByText('Translate to French')).toBeTruthy()
-  })
-
-  it('removing a saved AI prompt persists the emptied list', async () => {
-    stored = {
-      aiPrompts: [
-        { id: 'p1', label: 'Translate to French', body: '{{selectedText}}', mode: 'replace' },
-      ],
-    }
-    renderScreen()
-    const section = screen.getByRole('region', { name: 'AI prompts' })
-    const remove = await within(section).findByRole('button', {
-      name: /remove translate to french/i,
-    })
-
-    fireEvent.click(remove)
-
-    await waitFor(() =>
-      expect(saved).toEqual([
-        { editorMarkdownSyntax: 'hide', editorSpellCheck: true, editorDefaultBullet: true, editorBulletAfterHeading: true, editorSmoothCaretAnimation: true, editorTextSize: 'small', editorFullWidth: false, sidebarWidth: 260, contextSidebarWidth: 320, semanticSearchEnabled: false, describeAssets: true, transcriptionFormat: true, contactsEnabled: false, mobileOnboarded: false, mobileStorage: 'local', mobileGraphName: '', theme: 'system', timeFormat: '12h', dateFormat: 'mdy', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], calendarEnabled: false, calendarIds: [], graphColors: {}, aiProviders: [], defaultAiProviderId: null, chatModelSelection: null, chatSystemPrompt: '', aiPrompts: [] },
-      ]),
-    )
-  })
-
-  it('editing a saved AI prompt persists the change', async () => {
-    stored = {
-      aiPrompts: [
-        { id: 'p1', label: 'Translate to French', body: '{{selectedText}}', mode: 'replace' },
-      ],
-    }
-    renderScreen()
-    const section = screen.getByRole('region', { name: 'AI prompts' })
-    const edit = await within(section).findByRole('button', { name: /edit translate to french/i })
-
-    fireEvent.click(edit)
-    const dialog = screen.getByRole('dialog', { name: /edit prompt/i })
-    fireEvent.change(within(dialog).getByPlaceholderText('Translate to French'), {
-      target: { value: 'Translate to German' },
-    })
-    fireEvent.submit(within(dialog).getByRole('button', { name: /^save$/i }))
-
-    await waitFor(() =>
-      expect(saved).toEqual([
-        { editorMarkdownSyntax: 'hide', editorSpellCheck: true, editorDefaultBullet: true, editorBulletAfterHeading: true, editorSmoothCaretAnimation: true, editorTextSize: 'small', editorFullWidth: false, sidebarWidth: 260, contextSidebarWidth: 320, semanticSearchEnabled: false, describeAssets: true, transcriptionFormat: true, contactsEnabled: false, mobileOnboarded: false, mobileStorage: 'local', mobileGraphName: '', theme: 'system', timeFormat: '12h', dateFormat: 'mdy', weekStartDay: 'monday', allNotesFilterTags: ['book', 'link', 'person'], calendarEnabled: false, calendarIds: [], graphColors: {}, aiProviders: [], defaultAiProviderId: null, chatModelSelection: null, chatSystemPrompt: '', aiPrompts: [{ id: 'p1', label: 'Translate to German', body: '{{selectedText}}', mode: 'replace' }] },
-      ]),
-    )
-  })
 })

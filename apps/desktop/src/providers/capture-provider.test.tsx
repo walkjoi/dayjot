@@ -21,7 +21,7 @@ vi.mock('@dayjot/core', () => ({ captureHostRegister, captureSharedInboxRelay, h
 vi.mock('@/lib/platform-surface', () => ({ isMobileSurface }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({
-    settings: { aiProviders: [], defaultAiProviderId: null },
+    settings: {},
   }),
 }))
 

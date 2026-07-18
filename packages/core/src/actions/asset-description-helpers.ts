@@ -1,6 +1,8 @@
 import { z } from 'zod'
-import { type AssetKind } from '../ai/describe-asset'
 import { ASSETS_DIR, DESCRIPTION_SUFFIX } from '../graph/paths'
+
+/** What the asset is — decides eligibility and how tooling treats it. */
+export type AssetKind = 'image' | 'pdf' | 'svg'
 import { parseFrontmatter, splitFrontmatter, upsertFrontmatter } from '../markdown/frontmatter'
 
 /** The eligible asset type and how it enters a provider request. */

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const memo = vi.hoisted(() => ({
-  phase: 'recording' as 'idle' | 'requesting' | 'recording' | 'transcribing' | 'error',
+  phase: 'recording' as 'idle' | 'requesting' | 'recording' | 'saving' | 'error',
   elapsedMs: 65_000,
   level: 0.4,
   pendingCount: 0,
@@ -93,16 +93,4 @@ describe('RecordingDrawer', () => {
     expect(memo.stopAndSave).toHaveBeenCalledOnce()
   })
 
-  it('without a transcription model, guides key setup instead of recording', async () => {
-    memo.hasTranscriptionConfig = false
-    const user = userEvent.setup()
-    const view = render(<RecordingDrawer />)
-
-    expect(view.getByText(/OpenAI or Gemini API key/)).not.toBeNull()
-    expect(view.queryByRole('button', { name: 'Stop recording' })).toBeNull()
-
-    await user.click(view.getByRole('button', { name: 'Open Settings' }))
-    expect(navigate).toHaveBeenCalledWith({ kind: 'settings' })
-    expect(memo.onDrawerOpenChange).toHaveBeenCalledWith(false)
-  })
 })

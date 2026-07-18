@@ -2,7 +2,6 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { useState, type ReactElement, type ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type {
-  AiProvidersState,
   AudioMemoIdentity,
   CaptureAudioMemoInput,
   CaptureAudioMemoOutcome,
@@ -23,7 +22,7 @@ const reconcilerControls = vi.hoisted(() => {
     start: vi.fn(),
     schedule: vi.fn(),
     dispose: vi.fn(),
-    getTranscribing: vi.fn((): boolean => false),
+    getFiling: vi.fn((): boolean => false),
     subscribe: vi.fn((listener: () => void) => {
       listeners.add(listener)
       return () => {
@@ -34,20 +33,18 @@ const reconcilerControls = vi.hoisted(() => {
   return {
     fake,
     listeners,
-    setTranscribing(value: boolean): void {
-      fake.getTranscribing.mockReturnValue(value)
+    setSaving(value: boolean): void {
+      fake.getFiling.mockReturnValue(value)
       for (const listener of [...listeners]) {
         listener()
       }
     },
   }
 })
-const createTranscriptionReconciler = vi.hoisted(() =>
+const createAudioMemoReconciler = vi.hoisted(() =>
   vi.fn(
     (_options: {
       generation: number
-      getProviders: () => AiProvidersState
-      getTranscriptionFormat: () => boolean
     }) => reconcilerControls.fake,
   ),
 )
@@ -75,8 +72,8 @@ vi.mock('@dayjot/core', async (importOriginal) => ({
   captureAudioMemo,
 }))
 
-vi.mock('@/lib/transcription-reconciler', () => ({
-  createTranscriptionReconciler,
+vi.mock('@/lib/audio-memo-reconciler', () => ({
+  createAudioMemoReconciler,
 }))
 
 vi.mock('@/hooks/use-audio-recorder', () => ({
@@ -115,9 +112,6 @@ vi.mock('@/hooks/use-audio-recorder', () => ({
 
 const SETTINGS = vi.hoisted(() => ({
   current: {
-    aiProviders: [{ id: 'cfg-openai', provider: 'openai', model: 'gpt-5.1', keyHint: 'wxyz1' }],
-    defaultAiProviderId: 'cfg-openai',
-    transcriptionFormat: true,
   },
 }))
 
@@ -168,14 +162,11 @@ beforeEach(() => {
   recorderControls.options = null
   sidebarState.collapsed = false
   SETTINGS.current = {
-    aiProviders: [{ id: 'cfg-openai', provider: 'openai', model: 'gpt-5.1', keyHint: 'wxyz1' }],
-    defaultAiProviderId: 'cfg-openai',
-    transcriptionFormat: true,
   }
   captureAudioMemo.mockResolvedValue({ ok: true, memo: MEMO })
-  reconcilerControls.fake.getTranscribing.mockReturnValue(false)
+  reconcilerControls.fake.getFiling.mockReturnValue(false)
   reconcilerControls.listeners.clear()
-  createTranscriptionReconciler.mockReturnValue(reconcilerControls.fake)
+  createAudioMemoReconciler.mockReturnValue(reconcilerControls.fake)
 })
 
 afterEach(cleanup)
@@ -203,29 +194,24 @@ describe('AudioMemoProvider', () => {
     })
   })
 
-  it('mounts one reconciler per graph session and reads formatting lazily', async () => {
+  it('mounts one reconciler per graph session', async () => {
     const { rerender, unmount } = renderHook(() => useAudioMemo(), { wrapper })
 
-    expect(createTranscriptionReconciler).toHaveBeenCalledTimes(1)
-    const options = createTranscriptionReconciler.mock.calls[0]?.[0]
+    expect(createAudioMemoReconciler).toHaveBeenCalledTimes(1)
+    const options = createAudioMemoReconciler.mock.calls[0]?.[0]
     expect(options?.generation).toBe(3)
-    // Models are read lazily, so a key added mid-session reaches the next pass.
-    expect(options?.getProviders().defaultProviderId).toBe('cfg-openai')
-    expect(options?.getTranscriptionFormat()).toBe(true)
     expect(reconcilerControls.fake.start).toHaveBeenCalledTimes(1)
 
-    SETTINGS.current = { ...SETTINGS.current, transcriptionFormat: false }
     await act(async () => {
       rerender()
     })
-    expect(options?.getTranscriptionFormat()).toBe(false)
-    expect(createTranscriptionReconciler).toHaveBeenCalledTimes(1)
+    expect(createAudioMemoReconciler).toHaveBeenCalledTimes(1)
 
     unmount()
     expect(reconcilerControls.fake.dispose).toHaveBeenCalledTimes(1)
   })
 
-  it('a saved capture schedules transcription without waiting on the watcher', async () => {
+  it('a saved capture schedules filing without waiting on the watcher', async () => {
     const { result } = renderHook(() => useAudioMemo(), { wrapper })
 
     await act(async () => {
@@ -239,28 +225,6 @@ describe('AudioMemoProvider', () => {
     expect(reconcilerControls.fake.schedule).toHaveBeenCalled()
   })
 
-  it('adding the first transcription-capable model kicks the pass the gate was suppressing', async () => {
-    SETTINGS.current = {
-      aiProviders: [
-        { id: 'claude', provider: 'anthropic', model: 'claude-fable-5', keyHint: 'wxyz1' },
-      ],
-      defaultAiProviderId: 'claude',
-      transcriptionFormat: true,
-    }
-    const { rerender } = renderHook(() => useAudioMemo(), { wrapper })
-    expect(reconcilerControls.fake.schedule).not.toHaveBeenCalled()
-
-    SETTINGS.current = {
-      aiProviders: [{ id: 'cfg-openai', provider: 'openai', model: 'gpt-5.1', keyHint: 'wxyz1' }],
-      defaultAiProviderId: 'cfg-openai',
-      transcriptionFormat: true,
-    }
-    await act(async () => {
-      rerender()
-    })
-
-    expect(reconcilerControls.fake.schedule).toHaveBeenCalledTimes(1)
-  })
 
   it('a too-short recording is discarded without saving', async () => {
     recorderControls.stopResult = null
@@ -345,7 +309,7 @@ describe('AudioMemoProvider', () => {
     })
     // The recorder's stop hasn't settled, but the phase already left
     // 'recording' — cancel() is unreachable from the popover.
-    expect(result.current.phase).toBe('transcribing')
+    expect(result.current.phase).toBe('saving')
 
     await act(async () => {
       recorderControls.releaseStop()
@@ -364,7 +328,7 @@ describe('AudioMemoProvider', () => {
     act(() => {
       void result.current.toggle()
     })
-    expect(result.current.phase).toBe('transcribing')
+    expect(result.current.phase).toBe('saving')
 
     // The button already reads as the idle mic — the click must not be
     // swallowed by the stop's re-entry guard.
@@ -403,7 +367,7 @@ describe('AudioMemoProvider', () => {
     await act(async () => {
       result.current.toggle()
     })
-    expect(result.current.phase).toBe('transcribing')
+    expect(result.current.phase).toBe('saving')
 
     // The first capture is still in flight — the mic must accept the next memo.
     await act(async () => {
@@ -415,7 +379,7 @@ describe('AudioMemoProvider', () => {
     await act(async () => {
       result.current.toggle()
     })
-    expect(result.current.phase).toBe('transcribing')
+    expect(result.current.phase).toBe('saving')
     expect(result.current.pendingCount).toBe(2)
     // Serial: the second memo waits — captures must land in recording order.
     expect(captureAudioMemo).toHaveBeenCalledTimes(1)
@@ -637,28 +601,6 @@ describe('AudioMemoProvider', () => {
     expect(recorderControls.startSpy).toHaveBeenCalled()
   })
 
-  it('is unavailable without an OpenAI or Gemini model, and nothing runs', async () => {
-    SETTINGS.current = {
-      aiProviders: [
-        { id: 'claude', provider: 'anthropic', model: 'claude-fable-5', keyHint: 'wxyz1' },
-      ],
-      defaultAiProviderId: 'claude',
-      transcriptionFormat: true,
-    }
-    const { result } = renderHook(() => useAudioMemo(), { wrapper })
-
-    expect(result.current.available).toBe(false)
-    expect(result.current.unavailableReason).toMatch(/OpenAI or Gemini/)
-
-    await act(async () => {
-      result.current.toggle()
-    })
-    expect(result.current.phase).toBe('idle')
-    expect(recorderControls.startSpy).not.toHaveBeenCalled()
-    // The reconciler still mounts (its passes gate internally), but nothing
-    // here schedules one.
-    expect(reconcilerControls.fake.schedule).not.toHaveBeenCalled()
-  })
 
   it('cancel discards the recording without saving', async () => {
     const { result } = renderHook(() => useAudioMemo(), { wrapper })
@@ -675,17 +617,17 @@ describe('AudioMemoProvider', () => {
     expect(captureAudioMemo).not.toHaveBeenCalled()
   })
 
-  it('shows the transcribing phase while the reconciler reports work', async () => {
+  it('shows the saving phase while the reconciler reports work', async () => {
     const { result } = renderHook(() => useAudioMemo(), { wrapper })
     expect(result.current.phase).toBe('idle')
 
     act(() => {
-      reconcilerControls.setTranscribing(true)
+      reconcilerControls.setSaving(true)
     })
-    expect(result.current.phase).toBe('transcribing')
+    expect(result.current.phase).toBe('saving')
 
     act(() => {
-      reconcilerControls.setTranscribing(false)
+      reconcilerControls.setSaving(false)
     })
     expect(result.current.phase).toBe('idle')
   })

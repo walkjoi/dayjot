@@ -32,14 +32,9 @@ mod settings;
 mod skill;
 mod windows;
 
-// The watcher and the embedding runtime are desktop capabilities (Plan 19):
-// mobile swaps in stand-ins with the identical command surface, so the
-// `invoke_handler` list below needs no platform branches.
-#[cfg(desktop)]
-mod embed;
-#[cfg(mobile)]
-#[path = "embed_mobile.rs"]
-mod embed;
+// The watcher is a desktop capability (Plan 19): mobile swaps in a stand-in
+// with the identical command surface, so the `invoke_handler` list below
+// needs no platform branches.
 #[cfg(desktop)]
 mod watcher;
 #[cfg(mobile)]
@@ -233,7 +228,6 @@ pub fn run() {
         .manage(watcher::WatcherState::default())
         .manage(quit::QuitState::default())
         .manage(windows::WindowInit::default())
-        .manage(embed::EmbedState::default())
         .invoke_handler(tauri::generate_handler![
             app_version,
             app_platform,
@@ -291,11 +285,6 @@ pub fn run() {
             db::db_query,
             db::chat_message_save,
             db::chat_conversation_delete,
-            db::embed_apply,
-            db::embed_remove,
-            embed::embed_status,
-            embed::embed_ensure,
-            embed::embed_texts,
             watcher::watch_start,
             watcher::watch_stop,
             calendar::calendar_authorization_status,

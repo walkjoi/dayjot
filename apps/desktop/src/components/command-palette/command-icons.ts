@@ -12,7 +12,6 @@ import {
   Search,
   Settings,
   Shuffle,
-  Sparkles,
   SquarePen,
   SunMoon,
   type LucideIcon,
@@ -37,7 +36,6 @@ const COMMAND_ICONS: Record<string, LucideIcon> = {
   'theme.toggle': SunMoon,
   'sidebar.toggle': PanelLeft,
   'settings.open': Settings,
-  'semantic.enable': Sparkles,
   'index.rebuild': RefreshCw,
 }
 

@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { EmbedStatus } from '@dayjot/core'
 import { resetOperations } from '@/lib/operations'
 
 const rebuildIndex = vi.hoisted(() =>
@@ -10,13 +9,9 @@ const rebuildIndex = vi.hoisted(() =>
     }) => Promise<void>
   >(async () => undefined),
 )
-const embedStatus = vi.hoisted(() =>
-  vi.fn<() => Promise<EmbedStatus>>(async () => ({ status: 'uninitialized' })),
-)
 vi.mock('@dayjot/core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@dayjot/core')>()),
   rebuildIndex,
-  embedStatus,
 }))
 
 const { rebuildIndexVisibly } = await import('./rebuild-index')

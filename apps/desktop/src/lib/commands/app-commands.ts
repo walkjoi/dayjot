@@ -112,25 +112,6 @@ const APP_COMMANDS: AppCommand[] = [
     },
   },
   {
-    id: 'chat.open',
-    title: 'Chat',
-    keywords: ['ai', 'assistant', 'copilot', 'ask'],
-    keybinding: 'Mod-j',
-    run: (context) => context.navigate({ kind: 'chat' }),
-  },
-  {
-    id: 'chat.new',
-    title: 'New chat',
-    keywords: ['ai', 'assistant', 'copilot', 'conversation'],
-    keybinding: 'Mod-Shift-n',
-    run: (context) => {
-      if (context.route().kind !== 'chat') {
-        return
-      }
-      context.newChat()
-    },
-  },
-  {
     id: 'history.back',
     title: 'Back',
     keybinding: 'Mod-[',
@@ -313,17 +294,6 @@ const APP_COMMANDS: AppCommand[] = [
     keywords: ['cheat', 'sheet', 'keys', 'bindings', 'hotkeys', 'help'],
     keybinding: 'Mod-/',
     run: (context) => context.openShortcuts(),
-  },
-  {
-    id: 'semantic.enable',
-    title: 'Enable semantic search',
-    keywords: ['embeddings', 'ai', 'similar', 'model'],
-    // Downloads the local model (~90MB) — deliberately opt-in, never
-    // automatic: the first network fetch is the user's call. Persisting the
-    // setting is the entire command — EmbeddingsSync loads the model when the
-    // flag flips on and backfills once it's `ready`; later launches load from
-    // cache without asking again.
-    run: (context) => context.enableSemanticSearch(),
   },
   {
     id: 'index.rebuild',

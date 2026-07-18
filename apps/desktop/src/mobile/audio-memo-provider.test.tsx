@@ -2,7 +2,6 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { useState, type ReactElement, type ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type {
-  AiProvidersState,
   AudioMemoIdentity,
   CaptureAudioMemoInput,
   CaptureAudioMemoOutcome,
@@ -32,7 +31,7 @@ const reconcilerControls = vi.hoisted(() => {
     start: vi.fn(),
     schedule: vi.fn(),
     dispose: vi.fn(),
-    getTranscribing: vi.fn((): boolean => false),
+    getFiling: vi.fn((): boolean => false),
     subscribe: vi.fn((listener: () => void) => {
       listeners.add(listener)
       return () => {
@@ -42,12 +41,10 @@ const reconcilerControls = vi.hoisted(() => {
   }
   return { fake, listeners }
 })
-const createTranscriptionReconciler = vi.hoisted(() =>
+const createAudioMemoReconciler = vi.hoisted(() =>
   vi.fn(
     (_options: {
       generation: number
-      getProviders: () => AiProvidersState
-      getTranscriptionFormat: () => boolean
     }) => reconcilerControls.fake,
   ),
 )
@@ -89,8 +86,8 @@ vi.mock('@tauri-apps/api/core', () => ({
   ),
 }))
 
-vi.mock('@/lib/transcription-reconciler', () => ({
-  createTranscriptionReconciler,
+vi.mock('@/lib/audio-memo-reconciler', () => ({
+  createAudioMemoReconciler,
 }))
 
 vi.mock('@/lib/operations', () => ({
@@ -143,9 +140,6 @@ vi.mock('@/mobile/use-native-audio-recorder', () => ({
 
 const SETTINGS = vi.hoisted(() => ({
   current: {
-    aiProviders: [{ id: 'cfg-openai', provider: 'openai', model: 'gpt-5.1', keyHint: 'wxyz1' }],
-    defaultAiProviderId: 'cfg-openai',
-    transcriptionFormat: true,
   },
 }))
 
@@ -190,14 +184,11 @@ beforeEach(() => {
   stagedControls.recordingStatus.mockResolvedValue({ recording: false, elapsedMs: 0 })
   stagedControls.stopActive.mockResolvedValue(null)
   SETTINGS.current = {
-    aiProviders: [{ id: 'cfg-openai', provider: 'openai', model: 'gpt-5.1', keyHint: 'wxyz1' }],
-    defaultAiProviderId: 'cfg-openai',
-    transcriptionFormat: true,
   }
   captureAudioMemo.mockResolvedValue({ ok: true, memo: MEMO })
   invoke.mockResolvedValue({ files: [] })
   pluginEvents.handlers.clear()
-  reconcilerControls.fake.getTranscribing.mockReturnValue(false)
+  reconcilerControls.fake.getFiling.mockReturnValue(false)
   reconcilerControls.listeners.clear()
 })
 
@@ -501,26 +492,4 @@ describe('MobileAudioMemoProvider', () => {
     }
   })
 
-  it('without an OpenAI or Gemini model, toggle opens the drawer for key setup, never the mic', async () => {
-    SETTINGS.current = {
-      aiProviders: [
-        { id: 'claude', provider: 'anthropic', model: 'claude-fable-5', keyHint: 'wxyz1' },
-      ],
-      defaultAiProviderId: 'claude',
-      transcriptionFormat: true,
-    }
-    const { result } = renderHook(() => useMobileAudioMemo(), { wrapper })
-
-    // The FAB stays visible (available) so the feature is discoverable; only
-    // the recording itself waits for a key.
-    expect(result.current.available).toBe(true)
-    expect(result.current.hasTranscriptionConfig).toBe(false)
-
-    await act(async () => {
-      result.current.toggle()
-    })
-    expect(result.current.drawerOpen).toBe(true)
-    expect(result.current.phase).toBe('idle')
-    expect(recorderControls.startSpy).not.toHaveBeenCalled()
-  })
 })

@@ -2,65 +2,53 @@ import {
   audioMemoFromPath,
   hasBridge,
   isSilentStop,
-  pickTranscriptionConfig,
   reconcileAudioMemos,
   subscribeFileChanges,
-  type AiProvidersState,
   type ReconcileStop,
 } from '@dayjot/core'
 import { createBackgroundReconciler } from '@/lib/background-reconciler'
 import { startOperation } from '@/lib/operations'
-import { providerFetch } from '@/lib/provider-fetch'
 
 /**
- * The background-transcription lifecycle for one graph session. Built on
- * {@link createBackgroundReconciler} (shared with capture and asset
- * descriptions): the single-flight loop, focus/online retries, and teardown live
- * there; this adds the transcription pass, the config gate (no IO without a
- * transcription-capable model), and the `transcribing` flag the mic spinner
- * reads. The provider shrinks to create/start/dispose plus a `schedule()` after
- * its own captures.
+ * The background memo-filing lifecycle for one graph session. Built on
+ * {@link createBackgroundReconciler} (shared with capture): the single-flight
+ * loop, focus/online retries, and teardown live there; this adds the filing
+ * pass (each recording gets its memo note + daily backlink) and the `filing`
+ * flag the mic spinner reads. The provider shrinks to create/start/dispose
+ * plus a `schedule()` after its own captures.
  */
-export interface TranscriptionReconciler {
+export interface AudioMemoReconciler {
   /** Attach the triggers (focus, online, file changes) and run the launch pass. */
   start(): void
   /** Request a pass; coalesces while one runs (at most one follow-up). */
   schedule(): void
-  /** True while a pass has memos to transcribe — drives the mic spinner. */
-  getTranscribing(): boolean
-  /** Subscribe to `transcribing` changes; returns the unsubscribe. */
+  /** True while a pass has memos to file — drives the mic spinner. */
+  getFiling(): boolean
+  /** Subscribe to `filing` changes; returns the unsubscribe. */
   subscribe(listener: () => void): () => void
   /** Tear down triggers and abort an in-flight pass at its next gate. */
   dispose(): void
 }
 
-export interface TranscriptionReconcilerOptions {
+export interface AudioMemoReconcilerOptions {
   /** The open graph's generation — every pass's reads and writes pin to it. */
   generation: number
-  /**
-   * The configured-providers state, read at the start of every pass rather than
-   * captured once — a key the user adds in Settings mid-session must be seen
-   * by the very next pass.
-   */
-  getProviders: () => AiProvidersState
-  /** Read lazily so a settings toggle applies to the next reconcile pass. */
-  getTranscriptionFormat: () => boolean
 }
 
 /** Build the reconciler for one graph session. `dispose()` is terminal. */
-export function createTranscriptionReconciler(
-  options: TranscriptionReconcilerOptions,
-): TranscriptionReconciler {
-  let transcribing = false
+export function createAudioMemoReconciler(
+  options: AudioMemoReconcilerOptions,
+): AudioMemoReconciler {
+  let filing = false
   const listeners = new Set<() => void>()
   /** Last surfaced stop message — focus/online retries must not re-toast it. */
   let surfacedStop: string | null = null
 
-  function setTranscribing(next: boolean): void {
-    if (transcribing === next) {
+  function setFiling(next: boolean): void {
+    if (filing === next) {
       return
     }
-    transcribing = next
+    filing = next
     for (const listener of listeners) {
       listener()
     }
@@ -71,37 +59,28 @@ export function createTranscriptionReconciler(
       surfacedStop = null
       return
     }
-    // Expected, self-healing stops (network/config/stale) stay silent: offline
-    // retries on the next trigger, and a missing provider/key already disables
-    // the mic with the reason as its tooltip.
+    // Expected, self-healing stops (network/config/stale) stay silent — the
+    // next trigger retries.
     if (isSilentStop(stopped) || surfacedStop === stopped.message) {
       return
     }
     surfacedStop = stopped.message
-    startOperation('Transcribing audio memo').fail(stopped.message)
+    startOperation('Filing audio memo').fail(stopped.message)
   }
 
-  /** One pass: transcribe pending memos, gated behind a transcription-capable model. */
+  /** One pass: file pending memos into notes + daily backlinks. */
   const reconcile = async (isStale: () => boolean): Promise<void> => {
-    // Gate before any IO: without a transcription-capable model every pass
-    // would list the graph just to stop on `config`.
-    if (pickTranscriptionConfig(options.getProviders()) === null) {
-      return
-    }
     const outcome = await reconcileAudioMemos({
-      providers: options.getProviders(),
       generation: options.generation,
-      formatTranscript: options.getTranscriptionFormat(),
-      fetchFn: providerFetch,
       isStale,
-      onPending: (count) => setTranscribing(count > 0),
+      onPending: (count) => setFiling(count > 0),
     })
     surfaceStop(outcome.stopped)
   }
 
   const loop = createBackgroundReconciler({
     pass: reconcile,
-    onSettled: () => setTranscribing(false),
+    onSettled: () => setFiling(false),
   })
 
   function start(): void {
@@ -115,9 +94,9 @@ export function createTranscriptionReconciler(
       return // browser dev: no watcher to follow, no native foreground
     }
     // Foregrounding on iOS doesn't reliably fire `focus`/`online` on the
-    // webview — `visibilitychange` → visible does. A memo captured (or its
-    // transcription failed offline) while backgrounded gets its retry when
-    // the app comes back. Bridge-gated, so desktop keeps focus/online only.
+    // webview — `visibilitychange` → visible does. A memo captured while
+    // backgrounded gets its filing pass when the app comes back.
+    // Bridge-gated, so desktop keeps focus/online only.
     const onVisible = (): void => {
       if (document.visibilityState === 'visible') {
         loop.schedule()
@@ -137,14 +116,14 @@ export function createTranscriptionReconciler(
       .catch((cause: unknown) => {
         // Degrades to the other triggers (focus/online/capture); surfaced
         // for diagnosis rather than left as an unhandled rejection.
-        console.error('transcription file-change subscription failed:', cause)
+        console.error('audio memo file-change subscription failed:', cause)
       })
   }
 
   return {
     start,
     schedule: loop.schedule,
-    getTranscribing: () => transcribing,
+    getFiling: () => filing,
     subscribe: (listener) => {
       listeners.add(listener)
       return () => {

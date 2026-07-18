@@ -1,12 +1,8 @@
 import type { ReactElement } from 'react'
 import { AboutSection } from './settings/about-section'
 import { AgentsSection } from './settings/agents-section'
-import { AiChatSection } from './settings/ai-chat-section'
-import { AiPromptsSection } from './settings/ai-prompts-section'
-import { AiProvidersSection } from './settings/ai-providers-section'
 import { AllNotesSection } from './settings/all-notes-section'
 import { AppearanceSection } from './settings/appearance-section'
-import { AudioMemosSection } from './settings/audio-memos-section'
 import { DateTimeSection } from './settings/date-time-section'
 import { DestructiveSection } from './settings/destructive-section'
 import { EditorSection } from './settings/editor-section'
@@ -32,10 +28,6 @@ export function SettingsScreen(): ReactElement {
         <TemplatesSection />
         <AllNotesSection />
         <SearchSection />
-        <AiProvidersSection />
-        <AudioMemosSection />
-        <AiChatSection />
-        <AiPromptsSection />
         <AgentsSection />
         <IntegrationsSection />
         <SyncSection />

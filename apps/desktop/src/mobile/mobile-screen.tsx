@@ -1,7 +1,6 @@
 import { type ReactElement } from 'react'
 import { useToday } from '@/lib/use-today'
 import { MobileAllNotes } from '@/mobile/screens/all-notes'
-import { MobileChat } from '@/mobile/screens/chat'
 import { MobileDaily } from '@/mobile/screens/daily'
 import { MobileGraphs } from '@/mobile/screens/graphs'
 import { MobileNote } from '@/mobile/screens/note'
@@ -74,8 +73,6 @@ export function MobileScreen({
       )
     case 'tasks':
       return <MobileTasks key="tasks" />
-    case 'chat':
-      return <MobileChat key="chat" />
     case 'settings':
       return <MobileSettings key="settings" />
     case 'graphs':

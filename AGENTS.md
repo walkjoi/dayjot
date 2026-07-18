@@ -14,10 +14,9 @@ Drawn from the product docs — read these for deeper context:
 
 - **Daily notes first.** The app opens to today's note. All capture flows into the daily note by default.
 - **Association over hierarchy.** `[[Wiki Links]]` replace folders. The note graph is the organizing model; there are no folders.
-- **Markdown is the source of truth.** Notes are `.md` files (`daily/YYYY-MM-DD.md`, `notes/`). SQLite under `.dayjot/` is a rebuildable projection of the notes — with one durable exception: the `chat_*` tables hold AI chat history, which is not derivable from markdown. Index wipes and rebuilds must leave them untouched.
-- **No DayJot-hosted APIs.** LLM calls go directly to user-approved providers (OpenAI, Anthropic, etc.). Sync goes to GitHub/iCloud/Git. Never proxy through DayJot infrastructure.
-- **BYOK AI.** AI features use user-supplied keys. Never assume DayJot operates AI infrastructure.
-- **`private: true` is a hard block.** Notes with this frontmatter flag must never have their content sent to any external service — AI, transcription, or otherwise. Enforce at every call site.
+- **Markdown is the source of truth.** Notes are `.md` files (`daily/YYYY-MM-DD.md`, `notes/`). SQLite under `.dayjot/` is a rebuildable projection of the notes. (Legacy `chat_*` and embedding tables remain in the schema, dormant — DayJot has no AI features.)
+- **No AI, no DayJot-hosted APIs.** DayJot ships no AI features and calls no model providers. Sync goes to GitHub/iCloud/Git. Never proxy through DayJot infrastructure.
+- **`private: true` is a hard block.** Notes with this frontmatter flag must never have their content sent to any external service — publishing, sync metadata, or otherwise. Enforce at every call site (`packages/core/src/privacy.ts`).
 - **Keyboard-native UX.** Every core workflow must be reachable from the keyboard. This is product identity, not polish.
 - **Minimal UI.** Do less, and do it well. Don't add surfaces that compete with the editor.
 - **Secrets in the OS keychain.** API keys and credentials never go in markdown, Git, or `.dayjot/`.
@@ -133,7 +132,7 @@ dayjot/
 │   └── native-host/        # `dayjot-capture-host` — native-messaging spooler sidecar (Plan 11)
 ├── packages/
 │   ├── core/               # @dayjot/core — ALL TS business logic (markdown/, indexing/,
-│   │                       #   graph/, embeddings/, ai/, settings/, ipc/)
+│   │                       #   graph/, actions/, settings/, ipc/)
 │   └── db/                 # @dayjot/db — generated Kysely schema + the IPC dialect
 ├── crates/
 │   └── index-schema/       # Shared SQLite migrations for <graph>/.dayjot/index.sqlite

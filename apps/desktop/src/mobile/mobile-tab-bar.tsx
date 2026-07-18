@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, type ReactElement } from 'react'
-import { CircleCheck, Files, MessageSquare, SquarePen } from 'lucide-react'
+import { CircleCheck, Files, SquarePen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { hapticImpactLight } from '@/mobile/haptics'
 import type { Route } from '@/routing/route'
 
-export type MobileTab = 'daily' | 'all' | 'tasks' | 'chat'
+export type MobileTab = 'daily' | 'all' | 'tasks'
 
 /** The tab whose root screen a route shows, or `null` for stacked screens. */
 export function tabRootFor(route: Route): MobileTab | null {
@@ -17,8 +17,6 @@ export function tabRootFor(route: Route): MobileTab | null {
       return 'all'
     case 'tasks':
       return 'tasks'
-    case 'chat':
-      return 'chat'
     default:
       return null
   }
@@ -88,12 +86,6 @@ export function MobileTabBar({ tab, onSelect }: MobileTabBarProps): ReactElement
         icon={<CircleCheck className="size-5" />}
         active={tab === 'tasks'}
         onClick={() => onSelect('tasks')}
-      />
-      <TabButton
-        label="Chat"
-        icon={<MessageSquare className="size-5" />}
-        active={tab === 'chat'}
-        onClick={() => onSelect('chat')}
       />
     </nav>
   )

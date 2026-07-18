@@ -4,7 +4,6 @@ import { DailyEventsSection } from './daily-events-section'
 import { DayCalendar } from './day-calendar'
 import { NoteActionsSection } from './note-actions-section'
 import { PublishedUrlSection } from './published-url-section'
-import { SimilarNotesSection } from './similar-notes-section'
 import { useToday } from '@/lib/use-today'
 import { cn } from '@/lib/utils'
 import { hasMacosTitleBarOverlay } from '@/lib/window-chrome'
@@ -18,7 +17,7 @@ interface DailyContextSidebarProps {
  * The daily note's contextual sidebar (modeled on the old app's note context
  * sidebar): the month calendar up top — itself the day-navigation surface,
  * with a jump-to-today button — then note actions, the day's calendar
- * events, and semantic neighbors. Inbound links live under the note itself
+ * and events. Inbound links live under the note itself
  * (the incoming-backlinks section), not here. Rendered in the AppShell's
  * right region on daily routes only.
  */
@@ -39,7 +38,6 @@ export function DailyContextSidebar({ date }: DailyContextSidebarProps): ReactEl
         <NoteActionsSection path={dailyPath(date)} />
         <DailyEventsSection date={date} />
         <PublishedUrlSection path={dailyPath(date)} />
-        <SimilarNotesSection path={dailyPath(date)} />
       </div>
     </div>
   )

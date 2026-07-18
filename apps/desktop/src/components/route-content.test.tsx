@@ -97,10 +97,6 @@ vi.mock('@/providers/settings-provider', () => ({
     settings: {
       editorMarkdownSyntax: 'hide',
       allNotesFilterTags: ['book', 'link', 'person'],
-      aiProviders: [],
-      defaultAiProviderId: null,
-      chatSystemPrompt: '',
-      aiPrompts: [],
     },
     updateSettings: async () => {},
     updateSettingsWith: () => {},
@@ -111,9 +107,6 @@ vi.mock('@/components/settings-screen', () => ({
 }))
 // The chat screen needs the ChatProvider stack (covered by its own tests);
 // here only the route → view mapping is under test.
-vi.mock('@/components/chat/chat-screen', () => ({
-  ChatScreen: () => <div data-testid="chat-screen" />,
-}))
 
 // jsdom implements neither — the daily stream's virtualizer needs both.
 class ResizeObserverStub {
@@ -272,12 +265,6 @@ describe('RouteContent', () => {
     view.unmount()
   })
 
-  it('renders the chat screen for the chat route, not the stream', () => {
-    const view = renderRoute({ kind: 'chat' })
-    expect(view.getByTestId('chat-screen')).toBeDefined()
-    expect(view.queryByTestId('daily-stream')).toBeNull()
-    view.unmount()
-  })
 
   it('renders the All Notes screen for the allNotes route, not the stream', async () => {
     const view = renderRoute({ kind: 'allNotes', tag: null })

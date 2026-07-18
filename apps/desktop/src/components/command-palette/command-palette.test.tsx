@@ -39,16 +39,9 @@ vi.mock('@/lib/windows/open-in-new-window', async (importOriginal) => ({
 // it was before Plan 09 (hybrid mode is additive). The gating tests flip both
 // halves of the hybrid opt-in.
 const embedReady = vi.hoisted(() => ({ value: false }))
-vi.mock('@/lib/use-embed-status', () => ({
-  useEmbedStatus: () =>
-    embedReady.value
-      ? { status: 'ready', model: 'all-MiniLM-L6-v2' }
-      : { status: 'uninitialized' },
-}))
-const semanticSetting = vi.hoisted(() => ({ enabled: false }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({
-    settings: { semanticSearchEnabled: semanticSetting.enabled, dateFormat: 'mdy' },
+    settings: { dateFormat: 'mdy' },
     updateSettings: () => {},
   }),
 }))
@@ -66,7 +59,6 @@ afterEach(cleanup)
 
 beforeEach(() => {
   embedReady.value = false
-  semanticSetting.enabled = false
   readNote.mockReset().mockResolvedValue('')
   openRouteInNewWindow.mockReset().mockResolvedValue(true)
 })
@@ -104,7 +96,6 @@ function renderPalette(query: string, context?: Partial<CommandContext>) {
     clearScrollState: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
-    newChat: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
     generation: () => 1,
@@ -112,7 +103,6 @@ function renderPalette(query: string, context?: Partial<CommandContext>) {
     openShortcuts: vi.fn(),
     openTemplatePicker: vi.fn(),
     openTemplateCreate: vi.fn(),
-    enableSemanticSearch: vi.fn(),
     ...context,
   }
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -283,7 +273,6 @@ describe('CommandPalette', () => {
 
   it('stays lexical when the model is ready but semantic search is disabled', async () => {
     embedReady.value = true
-    semanticSetting.enabled = false
     suggestWikiTargets.mockResolvedValue([])
     searchWithFilters.mockClear().mockResolvedValue([])
     retrieve.mockClear()
@@ -293,24 +282,6 @@ describe('CommandPalette', () => {
     expect(retrieve).not.toHaveBeenCalled()
   })
 
-  it('blends semantic hits once enabled and the model is ready', async () => {
-    embedReady.value = true
-    semanticSetting.enabled = true
-    suggestWikiTargets.mockResolvedValue([])
-    retrieve.mockClear().mockResolvedValue([
-      {
-        path: 'notes/rust.md',
-        title: 'Rust Notes',
-        score: 0.9,
-        snippet: 'borrow checker notes',
-        heading: null,
-        isPrivate: false,
-      },
-    ])
-    const { view } = renderPalette('rust')
-    await view.findByText('Rust Notes')
-    expect(retrieve).toHaveBeenCalledWith('rust', { mode: 'hybrid' })
-  })
 
   it('previews the highlighted note and follows arrow-key selection', async () => {
     suggestWikiTargets.mockResolvedValue([])

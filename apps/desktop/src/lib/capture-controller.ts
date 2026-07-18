@@ -7,12 +7,10 @@ import {
   reconcileCaptureEnrichment,
   subscribeFileChanges,
   toAppError,
-  type AiProvidersState,
   type ReconcileStop,
 } from '@dayjot/core'
 import { createBackgroundReconciler } from '@/lib/background-reconciler'
 import { startOperation } from '@/lib/operations'
-import { providerFetch } from '@/lib/provider-fetch'
 
 /**
  * The link-capture lifecycle for one graph session. Built on
@@ -38,11 +36,6 @@ export interface CaptureController {
 export interface CaptureControllerOptions {
   /** The open graph's generation — every pass's reads and writes pin to it. */
   generation: number
-  /**
-   * The configured-providers state, read at the start of every pass — a key
-   * added in Settings mid-session must be seen by the very next pass.
-   */
-  getProviders: () => AiProvidersState
   /**
    * Mobile only: move envelopes the iOS share extension spooled into the App
    * Group inbox into the graph's capture inbox, ahead of every drain.
@@ -102,9 +95,7 @@ export function createCaptureController(options: CaptureControllerOptions): Capt
       return
     }
     const enriched = await reconcileCaptureEnrichment({
-      providers: options.getProviders(),
       generation: options.generation,
-      fetchFn: providerFetch,
       isStale,
     })
     surfaceStop('Enriching link capture', enriched.stopped)

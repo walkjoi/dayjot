@@ -33,8 +33,6 @@ vi.mock('@/lib/operations', () => ({
   startOperation: () => ({ progress: vi.fn(), done: vi.fn(), fail: failOperation }),
 }))
 
-const NO_PROVIDERS = { providers: [], defaultProviderId: null }
-
 function drained(overrides: Partial<DrainCaptureInboxOutcome> = {}): DrainCaptureInboxOutcome {
   return { pending: 0, drained: 0, deduped: 0, invalid: 0, stopped: null, ...overrides }
 }
@@ -54,7 +52,6 @@ let controller: CaptureController | null = null
 function create(relaySharedInbox?: () => Promise<number>): CaptureController {
   controller = createCaptureController({
     generation: 3,
-    getProviders: () => NO_PROVIDERS,
     ...(relaySharedInbox ? { relaySharedInbox } : {}),
   })
   return controller

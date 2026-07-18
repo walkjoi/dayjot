@@ -1,22 +1,15 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import {
-  captureAudioMemo,
-  errorMessage,
-  pickTranscriptionConfig,
-  type AiProvidersState,
-  type GraphInfo,
-} from '@dayjot/core'
+import { captureAudioMemo, errorMessage, type GraphInfo } from '@dayjot/core'
 import { useMainWindowEffect } from '@/hooks/use-main-window-effect'
-import { startOperation } from '@/lib/operations'
 import {
-  createTranscriptionReconciler,
-  type TranscriptionReconciler,
-} from '@/lib/transcription-reconciler'
-import { useSettings } from '@/providers/settings-provider'
+  createAudioMemoReconciler,
+  type AudioMemoReconciler,
+} from '@/lib/audio-memo-reconciler'
+import { startOperation } from '@/lib/operations'
 
 /**
  * The platform-neutral half of the audio-memo surface: the serial capture
- * queue and the per-graph transcription-reconciler lifecycle. Desktop
+ * queue and the per-graph filing-reconciler lifecycle. Desktop
  * (`AudioMemoProvider`, webview MediaRecorder) and mobile
  * (`MobileAudioMemoProvider`, the native recorder plugin) both drain their
  * recordings through this hook; what differs — how audio is recorded and how
@@ -24,10 +17,10 @@ import { useSettings } from '@/providers/settings-provider'
  *
  * The pipeline is raw-first (see `actions/audio-memo` in core): a queued
  * recording is written into the graph's `audio-memos/` — local, instant — and
- * transcription belongs to the reconciler this hook mounts, which owns every
- * trigger and retry rule. Captures drain through a serial queue so memos can
- * be recorded back-to-back; a failed *capture* (the one step that can lose
- * audio) parks the queue behind a Retry/Discard error.
+ * filing it into a note belongs to the reconciler this hook mounts, which
+ * owns every trigger and retry rule. Captures drain through a serial queue so
+ * memos can be recorded back-to-back; a failed *capture* (the one step that
+ * can lose audio) parks the queue behind a Retry/Discard error.
  */
 
 /** A stopped recording waiting its turn through the capture queue. */
@@ -48,7 +41,7 @@ export interface PendingAudioCapture {
 
 /** Configuration for {@link useAudioMemoPipeline}. */
 export interface UseAudioMemoPipelineOptions {
-  /** The open graph — pins captures/transcription and scopes the reconciler. */
+  /** The open graph — pins captures/filing and scopes the reconciler. */
   graph: GraphInfo
   /**
    * Whether the capture-error UI (popover, drawer) is on screen. When it is
@@ -60,16 +53,14 @@ export interface UseAudioMemoPipelineOptions {
 
 /**
  * The audio-memo surface's platform-neutral state and actions: capture-queue
- * progress, the transcription flag, availability, the parked-error state, and
- * the enqueue/retry/discard/report-error controls each provider drives.
+ * progress, the filing flag, the parked-error state, and the
+ * enqueue/retry/discard/report-error controls each provider drives.
  */
 export interface UseAudioMemoPipelineValue {
   /** Recordings committed but not yet written to the graph. */
   pendingCount: number
-  /** True while a reconcile pass has memos to transcribe. */
-  transcribing: boolean
-  /** False when no OpenAI/Gemini model is configured. */
-  hasTranscriptionConfig: boolean
+  /** True while a reconcile pass has memos to file. */
+  filing: boolean
   /** The failure shown in the error phase. */
   error: string | null
   /** True when a retry can re-run a failed capture. */
@@ -85,25 +76,18 @@ export interface UseAudioMemoPipelineValue {
 }
 
 /**
- * Mount the capture queue and the transcription reconciler for one graph
- * session. Mount exactly once per surface — the reconciler half is already
+ * Mount the capture queue and the filing reconciler for one graph session.
+ * Mount exactly once per surface — the reconciler half is already
  * main-window-gated, but the queue is per-instance state.
  */
 export function useAudioMemoPipeline(
   options: UseAudioMemoPipelineOptions,
 ): UseAudioMemoPipelineValue {
   const { graph } = options
-  const { settings } = useSettings()
 
   const [pendingCount, setPendingCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [resume, setResume] = useState<PendingAudioCapture | null>(null)
-
-  const hasTranscriptionConfig =
-    pickTranscriptionConfig({
-      providers: settings.aiProviders,
-      defaultProviderId: settings.defaultAiProviderId,
-    }) !== null
 
   /** Committed recordings waiting their turn; the pump owns the head. */
   const queueRef = useRef<PendingAudioCapture[]>([])
@@ -122,38 +106,16 @@ export function useAudioMemoPipeline(
     errorSurfaceVisibleRef.current = options.isErrorSurfaceVisible
   })
 
-  // The configured-models state, by ref: the reconciler reads it lazily at
-  // the start of every pass, so a key added mid-session is seen without
-  // rebuilding the lifecycle on every settings change.
-  const providersRef = useRef<AiProvidersState>({
-    providers: settings.aiProviders,
-    defaultProviderId: settings.defaultAiProviderId,
-  })
-  useEffect(() => {
-    providersRef.current = {
-      providers: settings.aiProviders,
-      defaultProviderId: settings.defaultAiProviderId,
-    }
-  })
-  const transcriptionFormatRef = useRef(settings.transcriptionFormat)
-  useEffect(() => {
-    transcriptionFormatRef.current = settings.transcriptionFormat
-  })
-
   // One reconciler per graph session (the hosting provider remounts per
   // graph). It owns the launch pass and all retry triggers; the pump only
-  // schedules. Main window only: two reconcilers would double-transcribe (and
-  // double-bill) the same memos. Recording still works in a note window —
-  // the saved memo is transcribed by the main window's reconciler, which
-  // sees it arrive on the watcher stream.
-  const [reconciler, setReconciler] = useState<TranscriptionReconciler | null>(null)
-  const reconcilerRef = useRef<TranscriptionReconciler | null>(null)
+  // schedules. Main window only: two reconcilers would double-file the same
+  // memos. Recording still works in a note window — the saved memo is filed
+  // by the main window's reconciler, which sees it arrive on the watcher
+  // stream.
+  const [reconciler, setReconciler] = useState<AudioMemoReconciler | null>(null)
+  const reconcilerRef = useRef<AudioMemoReconciler | null>(null)
   useMainWindowEffect(() => {
-    const next = createTranscriptionReconciler({
-      generation: graph.generation,
-      getProviders: () => providersRef.current,
-      getTranscriptionFormat: () => transcriptionFormatRef.current,
-    })
+    const next = createAudioMemoReconciler({ generation: graph.generation })
     setReconciler(next)
     reconcilerRef.current = next
     next.start()
@@ -164,20 +126,10 @@ export function useAudioMemoPipeline(
     }
   }, [graph.generation])
 
-  // Passes gate on a configured model before any IO — when the user adds the
-  // first key mid-session, kick the pass that gate was suppressing.
-  const hadConfigRef = useRef(hasTranscriptionConfig)
-  useEffect(() => {
-    if (hasTranscriptionConfig && !hadConfigRef.current) {
-      reconciler?.schedule()
-    }
-    hadConfigRef.current = hasTranscriptionConfig
-  }, [hasTranscriptionConfig, reconciler])
-
-  /** True while a reconcile pass has memos to transcribe. */
-  const transcribing = useSyncExternalStore(
+  /** True while a reconcile pass has memos to file. */
+  const filing = useSyncExternalStore(
     reconciler?.subscribe ?? (() => () => {}),
-    reconciler?.getTranscribing ?? (() => false),
+    reconciler?.getFiling ?? (() => false),
   )
 
   const pump = useCallback(async (): Promise<void> => {
@@ -228,8 +180,8 @@ export function useAudioMemoPipeline(
     if (captured) {
       // The watcher (or mobile's in-process write echo) reports the recording
       // write, which feeds the sync engine's commit debounce like any note
-      // edit. Transcription is kicked directly rather than waiting on the
-      // watcher's own debounce to echo our write back.
+      // edit. Filing is kicked directly rather than waiting on the watcher's
+      // own debounce to echo our write back.
       reconcilerRef.current?.schedule()
     }
   }, [graph.generation])
@@ -279,8 +231,7 @@ export function useAudioMemoPipeline(
 
   return {
     pendingCount,
-    transcribing,
-    hasTranscriptionConfig,
+    filing,
     error,
     canRetry: resume !== null,
     enqueue,

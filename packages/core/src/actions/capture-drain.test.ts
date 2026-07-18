@@ -3,7 +3,6 @@ import {
   addSpool,
   CAPTURED_AT,
   DAILY,
-  describeMock,
   drain,
   envelope,
   files,
@@ -33,13 +32,6 @@ vi.mock('../graph/commands', () => ({
 }))
 vi.mock('./meta-scrape', () => ({
   scrapePageMeta: vi.fn(),
-}))
-vi.mock('../ai/describe-page', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../ai/describe-page')>()),
-  describePage: vi.fn(),
-}))
-vi.mock('../secrets/keychain', () => ({
-  getSecret: vi.fn(),
 }))
 vi.mock('./backlink-target', () => ({
   ensureBacklinkTarget: ensureBacklinkTargetMock,
@@ -541,7 +533,6 @@ describe('drainCaptureInbox (text captures)', () => {
 
     expect(files.get(DAILY)).toContain('- call the bank')
     expect(scrapeMock).not.toHaveBeenCalled()
-    expect(describeMock).not.toHaveBeenCalled()
   })
 
   it('quarantines a text envelope that fails validation', async () => {

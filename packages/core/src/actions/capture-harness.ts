@@ -1,6 +1,4 @@
 import { vi } from 'vitest'
-import { describePage } from '../ai/describe-page'
-import type { AiProvidersState } from '../ai/provider-config'
 import {
   captureInboxList,
   captureInboxRead,
@@ -12,7 +10,6 @@ import {
   readNote,
   writeNote,
 } from '../graph/commands'
-import { getSecret } from '../secrets/keychain'
 import {
   captureIdentity,
   drainCaptureInbox,
@@ -30,9 +27,8 @@ import { scrapePageMeta } from './meta-scrape'
  * are about.
  *
  * `vi.mock(...)` calls are hoisted per test file and cannot live here: each
- * test file declares its own mock blocks for `../graph/commands`,
- * `./meta-scrape`, `../ai/describe-page`, and `../secrets/keychain`, then
- * calls {@link wireCaptureMocks} from `beforeEach`.
+ * test file declares its own mock blocks for `../graph/commands` and
+ * `./meta-scrape`, then calls {@link wireCaptureMocks} from `beforeEach`.
  */
 
 export const inboxListMock = vi.mocked(captureInboxList)
@@ -45,14 +41,6 @@ export const readAssetMock = vi.mocked(readAsset)
 export const readNoteMock = vi.mocked(readNote)
 export const writeNoteMock = vi.mocked(writeNote)
 export const scrapeMock = vi.mocked(scrapePageMeta)
-export const describeMock = vi.mocked(describePage)
-export const getSecretMock = vi.mocked(getSecret)
-
-export const PROVIDERS: AiProvidersState = {
-  providers: [{ id: 'cfg-openai', provider: 'openai', model: 'gpt-5.5', keyHint: 'wxyz1' }],
-  defaultProviderId: 'cfg-openai',
-}
-export const NO_PROVIDERS: AiProvidersState = { providers: [], defaultProviderId: null }
 
 /** 2026-06-11 15:30:22.845 local — every derived name is asserted from it. */
 export const CAPTURED_AT = new Date(2026, 5, 11, 15, 30, 22, 845)
@@ -104,7 +92,7 @@ export function drain(overrides: Partial<Parameters<typeof drainCaptureInbox>[0]
 }
 
 export function reconcile(overrides: Partial<ReconcileCaptureEnrichmentInput> = {}) {
-  return reconcileCaptureEnrichment({ providers: PROVIDERS, generation: 3, ...overrides })
+  return reconcileCaptureEnrichment({ generation: 3, ...overrides })
 }
 
 /** Reset the maps and point every mocked command at them; call from `beforeEach`. */
@@ -151,7 +139,5 @@ export function wireCaptureMocks(): void {
     [...files.keys()].map((path) => ({ path, size: 1, modifiedMs: 0 })),
   )
   readAssetMock.mockResolvedValue(btoa('jpeg-bytes'))
-  getSecretMock.mockResolvedValue('sk-live-key')
   scrapeMock.mockResolvedValue({ title: 'An article', description: null, siteName: null })
-  describeMock.mockResolvedValue({ title: null, description: 'An AI description of the page.' })
 }

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const memo = vi.hoisted(() => ({
-  phase: 'idle' as 'idle' | 'requesting' | 'recording' | 'transcribing' | 'error',
+  phase: 'idle' as 'idle' | 'requesting' | 'recording' | 'saving' | 'error',
   elapsedMs: 0,
   level: 0,
   pendingCount: 0,

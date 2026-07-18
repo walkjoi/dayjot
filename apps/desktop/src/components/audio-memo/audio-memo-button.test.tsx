@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 const memo = vi.hoisted(() => ({
-  phase: 'idle' as 'idle' | 'requesting' | 'recording' | 'transcribing' | 'error',
+  phase: 'idle' as 'idle' | 'requesting' | 'recording' | 'saving' | 'error',
   elapsedMs: 0,
   stream: null,
   available: true,
@@ -70,7 +70,7 @@ describe('AudioMemoButton', () => {
     expect(memo.toggle).toHaveBeenCalled()
   })
 
-  it('escape cancels a recording without transcribing', async () => {
+  it('escape cancels a recording without saving', async () => {
     memo.phase = 'recording'
     const view = renderButton()
 
@@ -80,8 +80,8 @@ describe('AudioMemoButton', () => {
     expect(memo.toggle).not.toHaveBeenCalled()
   })
 
-  it('escape is inert while transcribing — stopping committed the save', async () => {
-    memo.phase = 'transcribing'
+  it('escape is inert while saving — stopping committed the save', async () => {
+    memo.phase = 'saving'
     renderButton()
 
     await userEvent.keyboard('{Escape}')
@@ -89,11 +89,11 @@ describe('AudioMemoButton', () => {
     expect(memo.discard).not.toHaveBeenCalled()
   })
 
-  it('transcribing shows progress while the mic stays live for the next memo', async () => {
-    memo.phase = 'transcribing'
+  it('saving shows progress while the mic stays live for the next memo', async () => {
+    memo.phase = 'saving'
     const view = renderButton()
 
-    expect(view.getByText('Transcribing…')).not.toBeNull()
+    expect(view.getByText('Saving memo…')).not.toBeNull()
     const micButton = view.getByRole('button', { name: 'Record audio memo' })
     expect(micButton).toHaveProperty('disabled', false)
     await userEvent.click(micButton)

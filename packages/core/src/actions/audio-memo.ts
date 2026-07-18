@@ -1,86 +1,79 @@
 import { errorMessage, isAppError, toAppError, type AppError } from '../errors'
-import {
-  pickTranscriptionConfig,
-  type AiProvidersState,
-} from '../ai/provider-config'
-import { aiKeySecretName } from '../ai/secrets'
-import {
-  audioMemoEnrichmentConfig,
-  pickAudioMemoEnrichmentConfig,
-  type AudioMemoEnrichmentCredentials,
-} from '../ai/audio-memo-title'
-import { buildAudioMemoTranscript } from '../ai/audio-memo-transcript'
-import {
-  AUDIO_EXTENSION_BY_MIME,
-  base64ToBytes,
-  baseMimeType,
-  bytesToBase64,
-} from '../ai/transcribe'
-import { listDir, listFiles, readAsset, readNote, writeAsset, writeNote } from '../graph/commands'
+import { listDir, listFiles, readNote, writeAsset, writeNote } from '../graph/commands'
+import { bytesToBase64 } from '../graph/base64'
 import { AUDIO_MEMOS_DIR, audioMemoPath, dailyPath, notePath } from '../graph/paths'
 import { appendUnderBacklinkedHeading, wikiLinkSafe } from '../markdown/edit'
-import { getSecret } from '../secrets/keychain'
 import { ensureBacklinkTarget } from './backlink-target'
 
 /**
  * Capture actions for audio memos (the first of the `actions/` capture
- * family — Plan 11's link capture will sit alongside). The pipeline is
- * raw-first, like the capture-inbox spool: the recording itself is the durable
- * artifact, and transcription is async enrichment that can fail and retry freely.
+ * family — Plan 11's link capture sits alongside). The pipeline is raw-first,
+ * like the capture-inbox spool: the recording itself is the durable artifact,
+ * and filing it into the note graph is async work that can fail and retry
+ * freely.
  *
  * 1. **Capture** ({@link captureAudioMemo}): the recording is written to
  *    `audio-memos/audio-memo-<date>-<time>.<ext>` — local, instant, no
  *    network. The sync engine commits it like any other change.
- * 2. **Reconcile** ({@link reconcileAudioMemos}): a memo's transcription is a
- *    note with the **same basename** (`notes/<base>.md`). Any memo without
- *    one resolves or creates the `Audio memos` category note, is transcribed
- *    (BYOK provider), optionally formatted and named in one best-effort
- *    small-model pass, written to its transcription note, and backlinked from
- *    its day's daily note — transcript note first,
- *    because it carries the result: a failure between
- *    the two writes leaves an unlinked note, never a tombstoned memo whose
- *    transcript was dropped. A
- *    failed pass (offline, bad key) leaves the memo pending; the next
- *    trigger retries. Nothing is ever lost to a network error. A recording
- *    the provider *refuses* (oversized, unsupported container) is tombstoned
- *    with a failure note instead — retrying the same bytes can't help, and
- *    stopping would wedge every memo behind it.
+ * 2. **Reconcile** ({@link reconcileAudioMemos}): a memo's note is a note with
+ *    the **same basename** (`notes/<base>.md`). Any memo without one resolves
+ *    or creates the `Audio memos` category note, gets a memo note holding a
+ *    link to the recording, and is backlinked from its day's daily note —
+ *    memo note first, because it carries the result: a failure between the
+ *    two writes leaves an unlinked note, never a tombstoned memo whose note
+ *    was dropped. A failed pass leaves the memo pending; the next trigger
+ *    retries. Nothing is ever lost to an error.
  *
- * Deleting a transcription note does **not** resurrect it: the daily-note
- * backlink doubles as the tombstone (a memo is only pending while *neither*
- * its note nor its backlink exists). Deleting both regenerates the
- * transcription on the next pass — the documented way to redo one. The
- * backlink targets the memo's *base name*, declared as a frontmatter alias
- * on the transcription note: bases are unique per recording, so two memos
- * stopped within the same second (whose display titles collide) can never
- * tombstone each other, and the link survives a note-title rename.
+ * Deleting a memo note does **not** resurrect it: the daily-note backlink
+ * doubles as the tombstone (a memo is only pending while *neither* its note
+ * nor its backlink exists). Deleting both regenerates the note on the next
+ * pass — the documented way to redo one. The backlink targets the memo's
+ * *base name*, declared as a frontmatter alias on the memo note: bases are
+ * unique per recording, so two memos stopped within the same second (whose
+ * display titles collide) can never tombstone each other, and the link
+ * survives a note-title rename.
  *
- * Privacy: the captured audio and its fresh transcript (for naming and optional
- * formatting) are sent to user-configured providers — never any existing note
- * content. All output is written locally, so recording is allowed even when the
- * daily note is `private: true`.
+ * Everything here is local file work — no note content or audio ever leaves
+ * the device.
  */
 
 /** Everything derivable from a memo's shared basename. */
 export interface AudioMemoIdentity {
   /**
    * The shared basename, e.g. `audio-memo-2026-06-11-153022-845` — also the
-   * daily-note wikilink target, resolvable through the transcription note's
+   * daily-note wikilink target, resolvable through the memo note's
    * frontmatter alias.
    */
   base: string
   /** Local ISO day it was recorded — the daily note that backlinks it. */
   date: string
-  /** The timestamp fallback title, before the transcript-derived name exists. */
+  /** The timestamp title of the memo note. */
   title: string
-  /** Timestamp fallback alias for the daily-note link, e.g. `Audio memo 15:30`. */
+  /** Timestamp alias for the daily-note link, e.g. `Audio memo 15:30`. */
   alias: string
   /** Graph-relative path of the recording under `audio-memos/`. */
   audioPath: string
-  /** Graph-relative path of the transcription note, `notes/<base>.md`. */
+  /** Graph-relative path of the memo note, `notes/<base>.md`. */
   notePath: string
   /** The recording's MIME type, as stored (derived from the extension). */
   mimeType: string
+}
+
+/**
+ * File extension per audio MIME type — the on-disk naming of saved memos.
+ * An audio-only MP4 *is* an M4A, and `.m4a` is the conventional name for it.
+ */
+const AUDIO_EXTENSION_BY_MIME: Record<string, string> = {
+  'audio/mp4': 'm4a',
+  'audio/webm': 'webm',
+  'audio/ogg': 'ogg',
+  'audio/wav': 'wav',
+  'audio/mpeg': 'mp3',
+}
+
+/** `audio/mp4;codecs=…` → `audio/mp4` — recorders append codec parameters. */
+function baseMimeType(mimeType: string): string {
+  return (mimeType.split(';')[0] ?? mimeType).trim().toLowerCase()
 }
 
 /** `audio/mp4` ← `m4a` etc. — the inverse of the storage-naming map. */
@@ -132,8 +125,8 @@ export function audioMemoIdentity(recordedAt: Date, mimeType: string): AudioMemo
 /**
  * Recover a memo's identity from its recording path, or `null` for anything
  * that isn't a well-formed memo recording (a stray file dropped into
- * `audio-memos/` is never touched — reconciliation must not transcribe
- * arbitrary user files).
+ * `audio-memos/` is never touched — reconciliation must not file arbitrary
+ * user files).
  */
 export function audioMemoFromPath(path: string): AudioMemoIdentity | null {
   const match = MEMO_PATH_RE.exec(path)
@@ -179,8 +172,8 @@ export type CaptureAudioMemoOutcome =
   | { ok: false; message: string }
 
 /**
- * Persist one recording into the graph — the durable step, no network. The
- * transcription happens later, in {@link reconcileAudioMemos}.
+ * Persist one recording into the graph — the durable step. Filing it into a
+ * note happens later, in {@link reconcileAudioMemos}.
  */
 export async function captureAudioMemo(
   input: CaptureAudioMemoInput,
@@ -217,11 +210,11 @@ function hasBacklink(source: string, memo: AudioMemoIdentity): boolean {
 }
 
 /**
- * Memos awaiting transcription, oldest first: a recording under
- * `audio-memos/` with no same-named transcription note and no daily-note
- * backlink (the backlink is the tombstone — see the module doc). Every read
- * is pinned to `generation` — recordings, notes, and daily-note tombstones
- * must come from one graph session, never a mix across a switch.
+ * Memos awaiting filing, oldest first: a recording under `audio-memos/` with
+ * no same-named memo note and no daily-note backlink (the backlink is the
+ * tombstone — see the module doc). Every read is pinned to `generation` —
+ * recordings, notes, and daily-note tombstones must come from one graph
+ * session, never a mix across a switch.
  */
 export async function listPendingAudioMemos(generation: number): Promise<AudioMemoIdentity[]> {
   const [recordings, notes] = await Promise.all([
@@ -231,8 +224,7 @@ export async function listPendingAudioMemos(generation: number): Promise<AudioMe
   const existingNotes = new Set(notes.map((file) => file.path))
   const candidates = recordings
     // An iCloud-evicted recording lists under its logical name but its bytes
-    // aren't local — reading it would abort the pass. It transcribes on a
-    // later pass, once downloaded (Plan 21).
+    // aren't local — leave it pending until downloaded (Plan 21).
     .filter((file) => file.placeholder !== true)
     .map((file) => audioMemoFromPath(file.path))
     .filter((memo): memo is AudioMemoIdentity => memo !== null)
@@ -252,8 +244,8 @@ export async function listPendingAudioMemos(generation: number): Promise<AudioMe
  * (`[[<base>|…]]`) resolves through the index — and keeps resolving if the
  * user renames the title.
  */
-function transcriptionNote(memo: AudioMemoIdentity, title: string, body: string): string {
-  return `---\naliases: [${memo.base}]\n---\n\n# ${title}\n\n[Recording](${memo.audioPath})\n\n${body}\n`
+function audioMemoNote(memo: AudioMemoIdentity): string {
+  return `---\naliases: [${memo.base}]\n---\n\n# ${memo.title}\n\n[Recording](${memo.audioPath})\n`
 }
 
 /** The category note every audio-memo section backlinks. */
@@ -280,9 +272,9 @@ async function ensureDailyBacklink(
 }
 
 /**
- * Why a reconcile pass ended with memos still pending. `config` = no capable
- * provider/key (self-heals when settings change); `stale` = the caller's
- * abort gate fired; anything else is the failing step's error kind
+ * Why a reconcile pass ended with items still pending. `config` = a required
+ * setting is missing (self-heals when settings change); `stale` = the
+ * caller's abort gate fired; anything else is the failing step's error kind
  * (`network` while offline is the expected, silent case).
  */
 export interface ReconcileStop {
@@ -293,51 +285,41 @@ export interface ReconcileStop {
 /**
  * Whether a {@link ReconcileStop} is an expected, self-healing stop that a
  * background controller should swallow rather than surface to the user:
- * `network` (offline — retries on the next trigger), `config` (no provider/key
- * yet — the work waits), or `stale` (a graph switch tore the pass down). Any
- * other reason is an unexpected failure worth surfacing or logging. Shared by
- * every background reconcile loop (capture, transcription, asset descriptions).
+ * `network` (offline — retries on the next trigger), `config` (a setting is
+ * missing — the work waits), or `stale` (a graph switch tore the pass down).
+ * Any other reason is an unexpected failure worth surfacing or logging.
+ * Shared by every background reconcile loop (capture, audio memos).
  */
 export function isSilentStop(stopped: ReconcileStop): boolean {
   return stopped.reason === 'network' || stopped.reason === 'config' || stopped.reason === 'stale'
 }
 
 export interface ReconcileAudioMemosInput {
-  /** The configured-providers state — decides the provider and keychain entry. */
-  providers: AiProvidersState
   /** `GraphInfo.generation` — pins every write to the issuing graph. */
   generation: number
-  /** Whether a best-effort text-model pass formats each fresh transcript. */
-  formatTranscript: boolean
-  /** Host transport for the provider call (the Tauri HTTP plugin's fetch). */
-  fetchFn?: typeof fetch
   /** Abort gate, checked between memos (graph switch / unmount). */
   isStale?: () => boolean
-  /** Observes how many memos need transcription, before work starts. */
+  /** Observes how many memos need filing, before work starts. */
   onPending?: (count: number) => void
 }
 
 export interface ReconcileAudioMemosOutcome {
-  /** Memos that had no transcription when the pass started. */
+  /** Memos that had no note when the pass started. */
   pending: number
-  /** Memos this pass transcribed and backlinked. */
-  transcribed: number
-  /** Memos whose recording the provider refused — tombstoned with a failure note. */
-  rejected: number
+  /** Memos this pass filed into a note and backlinked. */
+  filed: number
   /** Why memos remain pending, or `null` when the pass drained. */
   stopped: ReconcileStop | null
 }
 
 /**
- * Transcribe every pending memo: ensure the category target, read the
- * recording, transcribe, write the transcription note, then append the daily
- * backlink. The transcript note is written **first** — it carries the result,
- * so a failure between the
- * two writes leaves an unlinked note (recoverable from All Notes), never a
- * backlink-tombstoned memo whose transcript was dropped. A recording the
- * provider refuses gets a failure note (tombstoning it) and the pass moves
- * on; any other failure stops the pass — one memo's network or auth error
- * means the rest would fail the same way. Never throws.
+ * File every pending memo: ensure the category target, write the memo note
+ * (title + a link to the recording), then append the daily backlink. The
+ * memo note is written **first** — it carries the result, so a failure
+ * between the two writes leaves an unlinked note (recoverable from All
+ * Notes), never a backlink-tombstoned memo whose note was dropped. Any
+ * failure stops the pass — one memo's write error means the rest would fail
+ * the same way. Never throws.
  */
 export async function reconcileAudioMemos(
   input: ReconcileAudioMemosInput,
@@ -348,67 +330,21 @@ export async function reconcileAudioMemos(
   } catch (cause) {
     return {
       pending: 0,
-      transcribed: 0,
-      rejected: 0,
+      filed: 0,
       stopped: { reason: toAppError(cause).kind, message: errorMessage(cause) },
     }
   }
   input.onPending?.(pending.length)
   if (pending.length === 0) {
-    return { pending: 0, transcribed: 0, rejected: 0, stopped: null }
+    return { pending: 0, filed: 0, stopped: null }
   }
 
-  // Re-picked on every pass (not once at record time): a pass after the user
-  // fixes their model configuration must see the fix.
-  const config = pickTranscriptionConfig(input.providers)
-  if (config === null) {
-    return {
-      pending: pending.length,
-      transcribed: 0,
-      rejected: 0,
-      stopped: { reason: 'config', message: 'No OpenAI or Gemini model is configured.' },
-    }
-  }
-  const apiKey = await getSecret(aiKeySecretName(config.id)).catch(() => null)
-  if (apiKey === null) {
-    return {
-      pending: pending.length,
-      transcribed: 0,
-      rejected: 0,
-      stopped: {
-        reason: 'config',
-        message: `The API key for the configured ${config.provider} model is missing from the keychain.`,
-      },
-    }
-  }
-  const enrichmentConfig = pickAudioMemoEnrichmentConfig(input.providers)
-  const enrichmentApiKey =
-    enrichmentConfig === null
-      ? null
-      : enrichmentConfig.id === config.id
-        ? apiKey
-        : await getSecret(aiKeySecretName(enrichmentConfig.id)).catch(() => null)
-  const fallbackEnrichmentConfig = audioMemoEnrichmentConfig(config)
-  const enrichmentCredentials: AudioMemoEnrichmentCredentials | null =
-    enrichmentConfig !== null && enrichmentApiKey !== null
-      ? { config: enrichmentConfig, apiKey: enrichmentApiKey }
-      : fallbackEnrichmentConfig !== null
-        ? { config: fallbackEnrichmentConfig, apiKey }
-        : null
-
-  let transcribed = 0
-  let rejected = 0
+  let filed = 0
   let memosNoteTitle: string | null = null
-  // The gate is consulted again after every slow await (the asset read, the
-  // provider call), not just per memo: a graph switch mid-transcription must
-  // not bill another provider call or touch any note. Reads and writes are
-  // additionally generation-pinned in Rust, so even the unguardable gap
-  // between a gate check and the IPC call cannot cross graphs.
   const stale = (): boolean => input.isStale?.() === true
   const stalled = (): ReconcileAudioMemosOutcome => ({
     pending: pending.length,
-    transcribed,
-    rejected,
+    filed,
     stopped: { reason: 'stale', message: 'the graph session ended mid-pass' },
   })
   for (const memo of pending) {
@@ -417,42 +353,19 @@ export async function reconcileAudioMemos(
     }
     try {
       memosNoteTitle ??= await ensureBacklinkTarget(MEMOS_NOTE_TITLE, input.generation)
-      if (stale()) return stalled()
-      const audio = new Blob([base64ToBytes(await readAsset(memo.audioPath, input.generation))], {
-        type: memo.mimeType,
-      })
       if (stale()) {
         return stalled()
       }
-      const note = await buildAudioMemoTranscript({
-        audio,
-        mimeType: memo.mimeType,
-        config,
-        apiKey,
-        enrichmentCredentials,
-        formatTranscript: input.formatTranscript,
-        fallbackTitle: memo.title,
-        fetchFn: input.fetchFn,
-        isStale: stale,
-      })
-      if (note.status === 'stale' || stale()) {
-        return stalled()
-      }
-      await writeNote(memo.notePath, transcriptionNote(memo, note.title, note.body), input.generation)
-      await ensureDailyBacklink(memo, note.title, memosNoteTitle, input.generation)
-      if (note.rejected) {
-        rejected += 1
-      } else {
-        transcribed += 1
-      }
+      await writeNote(memo.notePath, audioMemoNote(memo), input.generation)
+      await ensureDailyBacklink(memo, memo.title, memosNoteTitle, input.generation)
+      filed += 1
     } catch (cause) {
       return {
         pending: pending.length,
-        transcribed,
-        rejected,
+        filed,
         stopped: { reason: toAppError(cause).kind, message: errorMessage(cause) },
       }
     }
   }
-  return { pending: pending.length, transcribed, rejected, stopped: null }
+  return { pending: pending.length, filed, stopped: null }
 }

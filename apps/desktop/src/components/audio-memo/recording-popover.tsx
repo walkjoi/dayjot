@@ -7,12 +7,12 @@ import { useAudioMemo } from '@/providers/audio-memo-provider'
 
 /**
  * The floating panel beside the mic while a memo is in flight: waveform +
- * elapsed time during recording, a spinner while transcribing, and the
+ * elapsed time during recording, a spinner while saving, and the
  * failure state with Retry/Discard. Esc cancels a live recording and
- * dismisses an error, but is deliberately inert while transcribing — the
+ * dismisses an error, but is deliberately inert while saving — the
  * user already committed the memo by stopping, and "cancelling" a save
  * that may have reached the provider would only feign control. The mic
- * beside the panel stays live while transcribing: memos queue, so the next
+ * beside the panel stays live while saving: memos queue, so the next
  * recording can start immediately. Clicks elsewhere don't dismiss; the
  * recording owns its lifecycle.
  */
@@ -49,10 +49,10 @@ export function RecordingPopover(): ReactElement {
             </Button>
           </div>
         </div>
-      ) : memo.phase === 'transcribing' ? (
+      ) : memo.phase === 'saving' ? (
         <div className="flex items-center gap-2 text-sm text-text-muted">
           <Spinner />
-          Transcribing…
+          Saving memo…
         </div>
       ) : (
         <div className="flex items-center gap-3">

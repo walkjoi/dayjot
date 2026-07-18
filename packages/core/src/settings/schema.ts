@@ -183,31 +183,6 @@ export const allNotesFilterTagsSchema = z.array(z.string()).catch(['book', 'link
 export type AllNotesFilterTags = z.infer<typeof allNotesFilterTagsSchema>
 
 /**
- * Whether semantic search is on. Off by default — turning it on downloads the
- * ~90MB embedding model, and that first network fetch is the user's call
- * (Plan 09). Later launches load the cached model because this flag is set.
- */
-export const semanticSearchEnabledSchema = z.boolean().catch(false)
-
-/**
- * Whether new eligible images/PDFs added under `assets/` are automatically
- * described by the configured AI provider into a managed `.dayjot.md` description
- * (Plan 20). On by default — only new assets, gated to those referenced by
- * public notes; existing assets are never auto-scanned (the Settings backfill
- * action handles those, with a cost warning). Off disables the automatic path
- * entirely.
- */
-export const describeAssetsSchema = z.boolean().catch(true)
-
-/**
- * Whether audio-memo transcripts receive a best-effort AI formatting pass
- * before they are written as Markdown. On by default, matching the original
- * DayJot preference. Turning it off keeps the transcription provider's raw
- * body; transcript-derived title generation remains enabled.
- */
-export const transcriptionFormatSchema = z.boolean().catch(true)
-
-/**
  * Whether the user has finished the mobile onboarding choice (Plan 19, step
  * 6): iCloud Drive or this device. Off by default — a fresh install shows
  * the onboarding screen before anything seeds a graph. Once set, later
@@ -309,133 +284,6 @@ export const graphColorsSchema = z
     return colors
   })
 
-/**
- * The cloud AI providers DayJot can call directly (BYOK — the user's own
- * keys, no DayJot-hosted proxy).
- */
-export const aiProviderIdSchema = z.enum(['openai', 'anthropic', 'google', 'openrouter'])
-
-export type AiProviderId = z.infer<typeof aiProviderIdSchema>
-
-/**
- * One configured AI provider: the provider, its default model id, and a key
- * hint. The API key itself lives in the OS keychain (addressed by `id` — see
- * `aiKeySecretName`) and **never** in this document; `keyHint` keeps only the
- * key's trailing characters so the settings UI can identify it. Which entry
- * is the app-wide default is a sibling scalar (`defaultAiProviderId`), not a
- * per-entry flag, so "at most one default" holds by construction.
- */
-export const aiProviderConfigSchema = z.object({
-  id: z.string().min(1),
-  provider: aiProviderIdSchema,
-  model: z.string().min(1),
-  keyHint: z.string().catch(''),
-})
-
-export type AiProviderConfig = z.infer<typeof aiProviderConfigSchema>
-
-/**
- * The `aiProviders` entry AI features use by default. A dangling or null id
- * is legal (hand-edits, removed entries) — readers resolve it through
- * `defaultAiProvider`, which falls back to the first entry.
- */
-export const defaultAiProviderIdSchema = z.string().nullable().catch(null)
-
-/**
- * The model the chat last used: a configured `aiProviders` entry (`configId`)
- * plus a model id within it. Persisted so the next chat session starts on
- * whatever the user picked last; null (the default) means the app default
- * entry and its configured model. A dangling reference is legal (the entry
- * may have been removed since) — readers resolve it through
- * `resolveChatModel`, which falls back to the default entry — and an invalid
- * value degrades to null.
- */
-export const chatModelSelectionSchema = z
-  .object({
-    configId: z.string().min(1),
-    modelId: z.string().min(1),
-  })
-  .nullable()
-  .catch(null)
-
-/** A chat model choice — a configured provider entry + a model within it. */
-export type ChatModelSelection = NonNullable<z.infer<typeof chatModelSelectionSchema>>
-
-/** Maximum user-configured system prompt size (~5,000 prose tokens). */
-export const CHAT_SYSTEM_PROMPT_MAX_LENGTH = 20_000
-
-/** Canonicalize a user-configured chat prompt before storing or sending it. */
-export function normalizeChatSystemPrompt(value: string): string {
-  return value.trim().slice(0, CHAT_SYSTEM_PROMPT_MAX_LENGTH)
-}
-
-/**
- * Additional instructions the user wants included in every AI chat system
- * prompt. DayJot's built-in grounding and privacy rules remain in place;
- * this text is appended after them so users can configure tone, format, and
- * other assistant behavior. Empty (the default) adds nothing. Oversized
- * hand-edited values are truncated so the prompt cannot consume the model's
- * context window on its own.
- */
-export const chatSystemPromptSchema = z.string().catch('').transform(normalizeChatSystemPrompt)
-
-/**
- * The configured AI providers. Resilience is per entry, not per list: a
- * corrupt entry is dropped while the rest load, so one bad hand-edit can't
- * wipe every configured provider. A non-array value degrades to the empty
- * list.
- */
-export const aiProvidersSchema = z
-  .array(z.unknown())
-  .catch([])
-  .transform((entries) =>
-    entries.flatMap((entry) => {
-      const parsed = aiProviderConfigSchema.safeParse(entry)
-      return parsed.success ? [parsed.data] : []
-    }),
-  )
-
-/**
- * Where an AI selection prompt's accepted result lands: `replace` swaps the
- * selection for the result; `append` inserts the result after the selection's
- * block (e.g. "Continue writing"). An invalid value degrades to `replace`.
- */
-export const aiPromptModeSchema = z.enum(['replace', 'append']).catch('replace')
-
-export type AiPromptMode = z.infer<typeof aiPromptModeSchema>
-
-/**
- * One saved AI selection prompt: a label for the picker and a body sent to
- * the provider. The body may reference the selection with the
- * `{{selectedText}}` placeholder (old DayJot's syntax, so saved v1 prompts
- * port over verbatim); a body without the placeholder gets the selection
- * appended after it.
- */
-export const aiPromptSchema = z.object({
-  id: z.string().min(1),
-  label: z.string().min(1),
-  body: z.string().min(1),
-  mode: aiPromptModeSchema,
-})
-
-export type AiPrompt = z.infer<typeof aiPromptSchema>
-
-/**
- * The user's saved AI selection prompts, shown in the editor's AI menu after
- * the built-in set. Global across graphs — prompts are workflow, not note
- * content. Resilience is per entry: a corrupt entry is dropped while the rest
- * load, and a non-array value degrades to the empty list.
- */
-export const aiPromptsSchema = z
-  .array(z.unknown())
-  .catch([])
-  .transform((entries) =>
-    entries.flatMap((entry) => {
-      const parsed = aiPromptSchema.safeParse(entry)
-      return parsed.success ? [parsed.data] : []
-    }),
-  )
-
 export const settingsSchema = z
   .looseObject({
     editorMarkdownSyntax: editorMarkdownSyntaxSchema,
@@ -447,9 +295,6 @@ export const settingsSchema = z
     editorFullWidth: editorFullWidthSchema,
     sidebarWidth: sidebarWidthSchema,
     contextSidebarWidth: contextSidebarWidthSchema,
-    semanticSearchEnabled: semanticSearchEnabledSchema,
-    describeAssets: describeAssetsSchema,
-    transcriptionFormat: transcriptionFormatSchema,
     contactsEnabled: contactsEnabledSchema,
     mobileOnboarded: mobileOnboardedSchema,
     mobileStorage: mobileStorageKindSchema,
@@ -462,11 +307,6 @@ export const settingsSchema = z
     calendarEnabled: calendarEnabledSchema,
     calendarIds: calendarIdsSchema,
     graphColors: graphColorsSchema,
-    aiProviders: aiProvidersSchema,
-    defaultAiProviderId: defaultAiProviderIdSchema,
-    chatModelSelection: chatModelSelectionSchema,
-    chatSystemPrompt: chatSystemPromptSchema,
-    aiPrompts: aiPromptsSchema,
   })
 
 export type Settings = z.infer<typeof settingsSchema>

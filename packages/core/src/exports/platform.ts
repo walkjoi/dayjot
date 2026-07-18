@@ -36,27 +36,6 @@ export {
   type AgentSkillInstallState,
   type AgentSkillStatus,
 } from '../app/agent-skill'
-export { chunkNote, type NoteChunk } from '../embeddings/chunk'
-export {
-  embedStatus,
-  embedEnsure,
-  embedTexts,
-  embedApply,
-  embedRemove,
-  subscribeEmbedStatus,
-  embedStatusSchema,
-  type EmbedStatus,
-  type EmbedProgress,
-  type EmbedChunkPayload,
-} from '../embeddings/commands'
-export { embedNote, backfillEmbeddings } from '../embeddings/pipeline'
-export {
-  retrieve,
-  relatedNotes,
-  fuseRanked,
-  type RetrievalHit,
-  type RetrieveOptions,
-} from '../embeddings/retrieve'
 export {
   appErrorSchema,
   errorMessage,
@@ -162,9 +141,6 @@ export {
   SIDEBAR_WIDTH_RANGE,
   CONTEXT_SIDEBAR_WIDTH_RANGE,
   clampSidebarWidth,
-  semanticSearchEnabledSchema,
-  describeAssetsSchema,
-  transcriptionFormatSchema,
   contactsEnabledSchema,
   themePreferenceSchema,
   timeFormatSchema,
@@ -176,17 +152,6 @@ export {
   graphColorSchema,
   graphColorsSchema,
   GRAPH_COLOR_IDS,
-  aiProviderIdSchema,
-  aiProviderConfigSchema,
-  aiProvidersSchema,
-  defaultAiProviderIdSchema,
-  chatModelSelectionSchema,
-  chatSystemPromptSchema,
-  CHAT_SYSTEM_PROMPT_MAX_LENGTH,
-  normalizeChatSystemPrompt,
-  aiPromptModeSchema,
-  aiPromptSchema,
-  aiPromptsSchema,
   DEFAULT_SETTINGS,
   type Settings,
   type EditorMarkdownSyntax,
@@ -200,10 +165,6 @@ export {
   type CalendarIds,
   type GraphColor,
   type GraphColors,
-  type AiProviderId,
-  type AiProviderConfig,
-  type AiPrompt,
-  type AiPromptMode,
 } from '../settings/schema'
 export { loadSettings, saveSettings } from '../settings/commands'
 export {

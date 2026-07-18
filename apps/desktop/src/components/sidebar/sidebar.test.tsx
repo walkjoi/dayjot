@@ -142,7 +142,6 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
     clearScrollState: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
-    newChat: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
     generation: () => 1,
@@ -150,7 +149,6 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
     openShortcuts: vi.fn(),
     openTemplatePicker: vi.fn(),
     openTemplateCreate: vi.fn(),
-    enableSemanticSearch: vi.fn(),
     ...overrides,
   }
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -183,8 +181,6 @@ describe('Sidebar', () => {
     await userEvent.click(view.getByRole('button', { name: /settings/i }))
     await waitFor(() => expect(navigate).toHaveBeenCalledWith({ kind: 'settings' }))
 
-    await userEvent.click(view.getByRole('button', { name: /chat/i }))
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith({ kind: 'chat' }))
   })
 
   it('New note runs its command and shows active while the placeholder note is open', async () => {

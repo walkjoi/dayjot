@@ -8,8 +8,6 @@ import { NoteConflictBanner } from '@/components/note-conflict-banner'
 import { ProtectedNoteView } from '@/components/protected-note-view'
 import { SuggestedContactCard } from '@/components/suggested-contact-card'
 import { SyncConflictNotice } from '@/components/sync-conflict-notice'
-import { EditorAiKeymap } from '@/editor/ai-menu/editor-ai-keymap'
-import { useEditorAiMenu } from '@/editor/ai-menu/use-editor-ai-menu'
 import { editorBodyWithDefaultBullet } from '@/editor/default-bullet'
 import {
   registerNoteEditorHandle,
@@ -214,11 +212,6 @@ export function NotePaneComponent({
     [bindEditor, path, dailyDate, registerHandle, autoFocus, autoFocusSelection, onAutoFocused],
   )
 
-  const aiMenu = useEditorAiMenu({
-    path,
-    sessionEpoch: document.sessionEpoch,
-    editorRef: aiEditorRef,
-  })
 
 
   const handleExitBoundary: ExitBoundaryHandler | undefined = useMemo(() => {
@@ -356,11 +349,6 @@ export function NotePaneComponent({
         onTagClick={onTagClick}
         onWikilinkSearch={onWikilinkSearch}
         onTagSearch={onTagSearch}
-        {...(aiMenu.onSelectionMenuSearch !== undefined
-          ? { onSelectionMenuSearch: aiMenu.onSelectionMenuSearch }
-          : {})}
-        pendingReplacementActions={aiMenu.pendingReplacementActions}
-        onPendingReplacementResolve={aiMenu.onPendingReplacementResolve}
         onSlashMenuSearch={onSlashMenuSearch}
         // Daily notes carry no title semantics (the date is their subject),
         // so an empty leading H1 there is just an empty heading.
@@ -371,9 +359,7 @@ export function NotePaneComponent({
         className={cn('dayjot-note-surface', gutterClassName, editorClassName)}
         handleRef={handleRef}
         onExitBoundary={handleExitBoundary}
-      >
-        <EditorAiKeymap onTrigger={aiMenu.openMenu} />
-      </NoteEditor>
+      />
 
       {showBacklinks ? (
         <div className={gutterClassName}>

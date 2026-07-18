@@ -8,7 +8,6 @@ describe('tabRootFor', () => {
     expect(tabRootFor({ kind: 'allNotes', tag: null })).toBe('all')
     expect(tabRootFor({ kind: 'search', query: 'x' })).toBe('all')
     expect(tabRootFor({ kind: 'tasks' })).toBe('tasks')
-    expect(tabRootFor({ kind: 'chat' })).toBe('chat')
     expect(tabRootFor({ kind: 'note', path: 'notes/a.md' })).toBeNull()
     expect(tabRootFor({ kind: 'settings' })).toBeNull()
   })

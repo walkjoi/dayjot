@@ -11,9 +11,9 @@ import { useAudioMemo } from '@/providers/audio-memo-provider'
 /**
  * The microphone beside the sidebar search box. Idle it starts a memo;
  * recording it becomes the red stop control with the recording panel anchored
- * beside it. While earlier memos are still transcribing the mic stays live —
+ * beside it. While earlier memos are still saving the mic stays live —
  * memos queue, so the next recording can start immediately. Disabled (with
- * the reason as a tooltip) when no OpenAI/Gemini model is configured —
+ * the reason as a tooltip) —
  * `aria-disabled` rather than `disabled` so the tooltip still fires.
  */
 export function AudioMemoButton(): ReactElement {
@@ -48,7 +48,7 @@ export function AudioMemoButton(): ReactElement {
     )
   }
 
-  if (memo.phase === 'transcribing') {
+  if (memo.phase === 'saving') {
     return (
       <Popover open>
         <PopoverAnchor asChild>

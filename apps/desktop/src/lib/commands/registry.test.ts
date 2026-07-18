@@ -16,7 +16,6 @@ function fakeContext(overrides?: Partial<CommandContext>): CommandContext {
     clearScrollState: vi.fn(),
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
-    newChat: vi.fn(),
     switchGraph: vi.fn(),
     toggleAudioMemo: vi.fn(),
     generation: () => 1,
@@ -24,7 +23,6 @@ function fakeContext(overrides?: Partial<CommandContext>): CommandContext {
     openShortcuts: vi.fn(),
     openTemplatePicker: vi.fn(),
     openTemplateCreate: vi.fn(),
-    enableSemanticSearch: vi.fn(),
     ...overrides,
   }
 }

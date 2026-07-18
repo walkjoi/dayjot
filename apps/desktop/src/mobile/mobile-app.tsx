@@ -11,7 +11,6 @@ import { useICloudRefresh } from '@/mobile/use-icloud-refresh'
 import { useKeyboardCaretReveal, useKeyboardHeightVar } from '@/mobile/use-keyboard'
 import { useTaskCheckboxHaptics } from '@/mobile/use-task-haptics'
 import { CaptureProvider } from '@/providers/capture-provider'
-import { ChatProvider } from '@/providers/chat-provider'
 import { useGraph } from '@/providers/graph-provider'
 import { SyncProvider } from '@/providers/sync-provider'
 import { RouterProvider } from '@/routing/router'
@@ -57,27 +56,21 @@ export function MobileApp(): ReactElement {
             {/* Link capture (Plan 11, iOS share extension): relay the App
                 Group inbox + drain on launch and on every resume. */}
             <CaptureProvider graph={graph}>
-              {/* Same chat session engine as desktop (Plan 23): the
-                  conversation and composer draft live here so the Chat tab
-                  survives tab switches; semantic search is forced off on
-                  this surface inside the provider. */}
-              <ChatProvider graph={graph}>
-                {/* Native recording over the shared capture pipeline — the
-                    mobile leg of desktop's audio memos. Mounted here so the
-                    queue, the reconciler, and the orphan scan survive tab
-                    switches. */}
-                <MobileAudioMemoProvider graph={graph}>
-                  <MobileShell />
-                  <MobileStatusLayer />
-                  {/* Mounted beside the shell (not inside the daily screen)
-                      so a live recording's sheet survives tab switches. */}
-                  <RecordingDrawer />
-                  {/* First-run handoff: onboarding's GitHub path marks a
-                      one-shot flag and this offers the Connect-GitHub sheet
-                      once the graph is on screen. */}
-                  <PendingGithubDrawer />
-                </MobileAudioMemoProvider>
-              </ChatProvider>
+              {/* Native recording over the shared capture pipeline — the
+                  mobile leg of desktop's audio memos. Mounted here so the
+                  queue, the reconciler, and the orphan scan survive tab
+                  switches. */}
+              <MobileAudioMemoProvider graph={graph}>
+                <MobileShell />
+                <MobileStatusLayer />
+                {/* Mounted beside the shell (not inside the daily screen)
+                    so a live recording's sheet survives tab switches. */}
+                <RecordingDrawer />
+                {/* First-run handoff: onboarding's GitHub path marks a
+                    one-shot flag and this offers the Connect-GitHub sheet
+                    once the graph is on screen. */}
+                <PendingGithubDrawer />
+              </MobileAudioMemoProvider>
             </CaptureProvider>
           </SyncProvider>
         </RouterProvider>

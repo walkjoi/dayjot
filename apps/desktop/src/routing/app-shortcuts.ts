@@ -8,14 +8,11 @@ import { todayIso } from '@/lib/dates'
 import { setMenuCommandDispatch } from '@/lib/native-menu/dispatch'
 import { isNativeMenuInstalled } from '@/lib/native-menu/menu'
 import { isMacosDesktop } from '@/lib/platform'
-import { retryFailedEmbeddings } from '@/lib/semantic'
 import type { CommandContext } from '@/lib/commands/types'
 import { useAudioMemo } from '@/providers/audio-memo-provider'
-import { useChatSession } from '@/providers/chat-provider'
 import { useFocusedDailyDate } from '@/providers/focused-daily-provider'
 import { useGraph } from '@/providers/graph-provider'
 import { useNoteTemplates } from '@/providers/note-templates-provider'
-import { useSettings } from '@/providers/settings-provider'
 import { useShortcuts } from '@/providers/shortcuts-provider'
 import { useSidebar } from '@/providers/sidebar-provider'
 import { useTheme } from '@/providers/theme-provider'
@@ -171,8 +168,6 @@ export function useAppShortcuts(): CommandContext {
   } = useNoteTemplates()
   const { toggleSidebar } = useSidebar()
   const { toggle: toggleAudioMemo } = useAudioMemo()
-  const { newChat } = useChatSession()
-  const { updateSettings } = useSettings()
 
   // The palette is modal: app shortcuts must not navigate behind its overlay.
   // A ref keeps the listener stable across open/close renders.
@@ -223,7 +218,6 @@ export function useAppShortcuts(): CommandContext {
       clearScrollState,
       toggleTheme: () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'),
       toggleSidebar,
-      newChat,
       switchGraph: (index) => {
         const recent = recentsRef.current[index]
         if (recent === undefined || recent.root === graphRootRef.current) {
@@ -237,12 +231,6 @@ export function useAppShortcuts(): CommandContext {
       openShortcuts,
       openTemplatePicker,
       openTemplateCreate,
-      enableSemanticSearch: () => {
-        updateSettings({ semanticSearchEnabled: true })
-        // EmbeddingsSync loads an untouched runtime; a `failed` one only
-        // retries on an explicit action like this command.
-        void retryFailedEmbeddings()
-      },
     }),
     [
       navigate,
@@ -256,9 +244,7 @@ export function useAppShortcuts(): CommandContext {
       openTemplatePicker,
       openTemplateCreate,
       toggleSidebar,
-      newChat,
       toggleAudioMemo,
-      updateSettings,
     ],
   )
 

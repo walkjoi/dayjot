@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react'
 import { AllNotesScreen } from '@/components/all-notes/all-notes-screen'
-import { ChatScreen } from '@/components/chat/chat-screen'
 import { DailyStream } from '@/components/daily-stream'
 import { SearchRoute } from '@/components/search-route'
 import { SingleNoteView } from '@/components/single-note-view'
@@ -41,10 +40,6 @@ export function RouteContent(): ReactElement {
       return <TasksScreen />
     case 'search':
       return <SearchRoute query={route.query} />
-    case 'chat':
-      // Owns its scroll container (the message list pins to the bottom while
-      // streaming), so no ScrollRestored wrapper — same shape as All Notes.
-      return <ChatScreen />
     case 'graphs':
     // The graph-switcher route is a mobile settings sub-screen; on desktop
     // graph switching lives in the sidebar footer, so it renders as settings.

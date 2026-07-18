@@ -26,8 +26,6 @@ export interface CommandContext {
   toggleTheme: () => void
   /** Collapse/expand the workspace and contextual sidebars. */
   toggleSidebar: () => void
-  /** Start a fresh chat conversation. */
-  newChat: () => void
   /** Switch to a recent graph by zero-based position in the graph switcher. */
   switchGraph: (index: number) => void
   /** Start an audio memo, or stop-and-save the one recording. */
@@ -46,12 +44,6 @@ export interface CommandContext {
   openTemplatePicker: () => void
   /** Open the "New template" name dialog. */
   openTemplateCreate: () => void
-  /**
-   * Persist the semantic-search opt-in (`semanticSearchEnabled`).
-   * EmbeddingsSync reacts to the setting by loading — first time:
-   * downloading — the model, so flipping the flag is the whole command.
-   */
-  enableSemanticSearch: () => void
 }
 
 export interface AppCommand {

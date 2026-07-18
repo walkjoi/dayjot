@@ -6,11 +6,9 @@ import { PendingGithubSetup } from '@/components/pending-github-setup'
 import { WorkspaceContent } from '@/components/workspace-content'
 import { getInitialWindowRoute } from '@/lib/windows/initial-window-route'
 import { isMainWindow } from '@/lib/windows/window-role'
-import { AssetDescribeProvider } from '@/providers/asset-describe-provider'
 import { AudioMemoProvider } from '@/providers/audio-memo-provider'
 import { FocusedDailyProvider } from '@/providers/focused-daily-provider'
 import { CaptureProvider } from '@/providers/capture-provider'
-import { ChatProvider } from '@/providers/chat-provider'
 import { DeepLinkProvider } from '@/providers/deep-link-provider'
 import { NoteTemplatesProvider } from '@/providers/note-templates-provider'
 import { ShortcutsProvider } from '@/providers/shortcuts-provider'
@@ -49,32 +47,27 @@ export function GraphWorkspace({ graph }: GraphWorkspaceProps): ReactElement {
                     {/* Inside the router (deep links navigate) and beside capture
                         (deep-link writes spool into the same inbox drain). */}
                     <DeepLinkProvider graph={graph}>
-                      <AssetDescribeProvider graph={graph}>
-                        <ChatProvider graph={graph}>
-                          {/* Tracks the focused day in the daily stream so the right
-                              sidebar describes it, not just the routed day. */}
-                          <FocusedDailyProvider>
-                            {/* A ⌘-clicked note window is chrome-free: the
-                                routed view only, no sidebar/palette shell.
-                                The V1 import lives above the routed views so
-                                closing settings can't orphan a running
-                                import; main window only — its dialog is the
-                                import's single face. */}
-                            {isMainWindow() ? (
-                              <V1ImportProvider graph={graph}>
-                                <WorkspaceContent graph={graph} />
-                                {/* First-run handoff: the chooser's GitHub
-                                    card marks a one-shot flag and this offers
-                                    the Connect-GitHub wizard once the graph
-                                    is on screen. */}
-                                <PendingGithubSetup graph={graph} />
-                              </V1ImportProvider>
-                            ) : (
-                              <NoteWindowContent />
-                            )}
-                          </FocusedDailyProvider>
-                        </ChatProvider>
-                      </AssetDescribeProvider>
+                      {/* Tracks the focused day in the daily stream so the right
+                          sidebar describes it, not just the routed day. */}
+                      <FocusedDailyProvider>
+                        {/* A ⌘-clicked note window is chrome-free: the routed
+                            view only, no sidebar/palette shell. The V1 import
+                            lives above the routed views so closing settings
+                            can't orphan a running import; main window only —
+                            its dialog is the import's single face. */}
+                        {isMainWindow() ? (
+                          <V1ImportProvider graph={graph}>
+                            <WorkspaceContent graph={graph} />
+                            {/* First-run handoff: the chooser's GitHub card
+                                marks a one-shot flag and this offers the
+                                Connect-GitHub wizard once the graph is on
+                                screen. */}
+                            <PendingGithubSetup graph={graph} />
+                          </V1ImportProvider>
+                        ) : (
+                          <NoteWindowContent />
+                        )}
+                      </FocusedDailyProvider>
                     </DeepLinkProvider>
                   </CaptureProvider>
                 </AudioMemoProvider>

@@ -26,11 +26,11 @@ import { useSidebar } from '@/providers/sidebar-provider'
  */
 
 /**
- * 'transcribing' means committed memos are still being captured or
+ * 'saving' means committed memos are still being captured or
  * transcribed in the background — the mic stays available, so the next
  * recording can start immediately.
  */
-export type AudioMemoPhase = 'idle' | 'requesting' | 'recording' | 'transcribing' | 'error'
+export type AudioMemoPhase = 'idle' | 'requesting' | 'recording' | 'saving' | 'error'
 
 interface AudioMemoContextValue {
   phase: AudioMemoPhase
@@ -63,7 +63,6 @@ const AudioMemoContext = createContext<AudioMemoContextValue | null>(null)
 /** Auto-stop cap: bounds the transcription payload (Gemini inlines base64). */
 const MAX_DURATION_MS = 10 * 60_000
 
-const NO_PROVIDER_REASON = 'Add an OpenAI or Gemini model in Settings to record audio memos'
 const UNSUPPORTED_REASON = 'Audio recording is not supported on this platform'
 
 /** Same macOS check as `hasMacosTitleBarOverlay` — settings paths differ per OS. */
@@ -120,7 +119,7 @@ export function AudioMemoProvider({ graph, children }: AudioMemoProviderProps): 
   const stopSettledRef = useRef<Promise<void>>(Promise.resolve())
 
   const start = useCallback(async (): Promise<void> => {
-    if (!supported || !pipeline.hasTranscriptionConfig) {
+    if (!supported) {
       return
     }
     if (collapsedRef.current) {
@@ -143,7 +142,7 @@ export function AudioMemoProvider({ graph, children }: AudioMemoProviderProps): 
       return
     }
     stoppingRef.current = true
-    // The stop click commits the memo: flip to 'transcribing' before the stop
+    // The stop click commits the memo: flip to 'saving' before the stop
     // settles, so an Esc landing in the await gap can't read a lingering
     // 'recording' phase and cancel a recording the user just saved.
     setStopping(true)
@@ -225,15 +224,11 @@ export function AudioMemoProvider({ graph, children }: AudioMemoProviderProps): 
         ? 'requesting'
         : pipeline.error !== null
           ? 'error'
-          : stopping || pipeline.pendingCount > 0 || pipeline.transcribing
-            ? 'transcribing'
+          : stopping || pipeline.pendingCount > 0 || pipeline.filing
+            ? 'saving'
             : 'idle'
 
-  const unavailableReason = !supported
-    ? UNSUPPORTED_REASON
-    : !pipeline.hasTranscriptionConfig
-      ? NO_PROVIDER_REASON
-      : null
+  const unavailableReason = !supported ? UNSUPPORTED_REASON : null
 
   const value = useMemo<AudioMemoContextValue>(
     () => ({
