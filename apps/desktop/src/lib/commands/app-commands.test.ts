@@ -8,7 +8,6 @@ import {
   resetKeybindingOverridesForTests,
   setCommandKeybindingOverride,
 } from './keybinding-overrides'
-import { keybindingFor } from './app-commands'
 
 const TODAY = '2026-06-09'
 
