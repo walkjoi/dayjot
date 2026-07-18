@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, type MouseEvent, type ReactElement } from 'react'
 import { Virtualizer, type VirtualizerHandle } from 'virtua'
 import type { NoteListEntry } from '@dayjot/core'
+import { formatBindingLabel } from '@/lib/keybindings'
 import { type ListSelection } from '@/lib/selection/use-list-selection'
 import { cn } from '@/lib/utils'
 import type { NewWindowClickEvent } from '@/lib/windows/open-in-new-window'
@@ -80,7 +81,9 @@ export function AllNotesTable({
       </div>
       {notes.length === 0 ? (
         <p className="py-8 pl-12 pr-7 text-sm text-text-muted">
-          {tag === null ? 'No notes yet.' : `No notes tagged #${tag}.`}
+          {tag === null
+            ? `No notes yet — press ${formatBindingLabel('Mod-n')} to write the first one.`
+            : `No notes tagged #${tag}.`}
         </p>
       ) : (
         <Virtualizer

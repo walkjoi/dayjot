@@ -8,6 +8,7 @@ import { useNoteLinkNavigation } from '@/hooks/use-note-link-navigation'
 import { runCommand } from '@/lib/commands/registry'
 import type { CommandContext } from '@/lib/commands/types'
 import { formatDayLabel } from '@/lib/dates'
+import { formatBindingLabel } from '@/lib/keybindings'
 import { cn } from '@/lib/utils'
 import type { NewWindowClickEvent } from '@/lib/windows/open-in-new-window'
 import { useSettings } from '@/providers/settings-provider'
@@ -179,7 +180,10 @@ export function CommandPalette({ context }: CommandPaletteProps): ReactElement |
                 </div>
               ) : null}
               {resultsSettled && !searchFailed ? (
-                <Command.Empty className="dayjot-palette-empty">No results</Command.Empty>
+                <Command.Empty className="dayjot-palette-empty">
+                  No results — try fewer words, or start a note with{' '}
+                  {formatBindingLabel('Mod-n')}.
+                </Command.Empty>
               ) : null}
               {sections.notes.length > 0 ? (
                 <Command.Group

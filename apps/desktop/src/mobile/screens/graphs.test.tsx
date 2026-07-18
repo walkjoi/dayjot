@@ -123,7 +123,7 @@ describe('MobileGraphs', () => {
     const user = userEvent.setup()
     mount()
 
-    await user.click(await screen.findByRole('button', { name: 'New graph' }))
+    await user.click(await screen.findByRole('button', { name: 'New notebook' }))
     await user.type(screen.getByLabelText('Name'), 'Journal')
     await user.click(screen.getByRole('button', { name: 'Create' }))
 
@@ -136,7 +136,7 @@ describe('MobileGraphs', () => {
     const user = userEvent.setup()
     mount()
 
-    await user.click(await screen.findByRole('button', { name: 'New graph' }))
+    await user.click(await screen.findByRole('button', { name: 'New notebook' }))
     await user.type(screen.getByLabelText('Name'), 'Work')
 
     expect(await screen.findByText(/already exists in iCloud Drive/)).toBeTruthy()
@@ -162,6 +162,6 @@ describe('MobileGraphs', () => {
     mount()
 
     expect(await screen.findByText(/iCloud Drive isn’t available/)).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'New graph' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'New notebook' })).toBeNull()
   })
 })

@@ -125,6 +125,7 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
     toggleContextPanel: vi.fn(),
+    toggleFocusMode: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 1,
@@ -368,7 +369,7 @@ describe('Sidebar', () => {
     expect(openRecent).toHaveBeenCalledWith('/work')
 
     await userEvent.click(view.getByRole('button', { name: /Notes/ }))
-    await userEvent.click(view.getByRole('menuitem', { name: /open another graph/i }))
+    await userEvent.click(view.getByRole('menuitem', { name: /open another notebook/i }))
     expect(chooseGraph).toHaveBeenCalled()
     expect(pickAndOpen).not.toHaveBeenCalled()
   })
@@ -386,7 +387,7 @@ describe('Sidebar', () => {
     const { view } = renderSidebar()
 
     await userEvent.click(view.getByRole('button', { name: /Notes/ }))
-    await userEvent.click(view.getByRole('menuitem', { name: /reveal graph in finder/i }))
+    await userEvent.click(view.getByRole('menuitem', { name: /reveal notebook in finder/i }))
 
     expect(revealItemInDir).toHaveBeenCalledWith('/notes')
   })

@@ -23,7 +23,7 @@ interface ConnectGithubDialogProps {
 }
 
 const STEP_DESCRIPTIONS: Record<ConnectWizardStep, string> = {
-  repo: 'Back up this graph to a private GitHub repository.',
+  repo: 'Back up this notebook to a private GitHub repository.',
   auth: 'Sign in so DayJot can push your backups.',
   finish: 'Connecting your repository…',
 }

@@ -1,13 +1,16 @@
 import {
+  dateFromDailyPath,
   errorMessage,
   getNote,
   getPinnedNotes,
   hasBridge,
+  isDaily,
   randomNotePath,
   toggleDevtools,
   untitledNotePath,
 } from '@dayjot/core'
 import { attachFilesToNote } from '@/lib/attach-files'
+import { addDaysIso, todayIso } from '@/lib/dates'
 import { runCopyDeepLink } from '@/lib/note-deep-link'
 import { insertTimestamp } from '@/lib/note-timestamp'
 import { commandKeybindingOverride } from './keybinding-overrides'
@@ -51,12 +54,28 @@ function openNewNote(context: CommandContext): void {
   context.navigate(newNoteRoute())
 }
 
+/**
+ * Step the daily canvas to a neighbor day. Anchored on `notePath` — the day
+ * the canvas *shows* (which the `today` route pins at arrival) — so the step
+ * is always relative to what's on screen, and a no-op off the daily views.
+ * Landing on the live day routes `today`, keeping the canvas rolling over.
+ */
+function navigateDay(context: CommandContext, delta: 1 | -1): void {
+  const path = context.notePath()
+  const date = path !== null && isDaily(path) ? dateFromDailyPath(path) : null
+  if (date === null) {
+    return
+  }
+  const target = addDaysIso(date, delta)
+  context.navigate(target === todayIso() ? { kind: 'today' } : { kind: 'daily', date: target })
+}
+
 const GRAPH_SWITCH_COMMANDS: AppCommand[] = Array.from({ length: 9 }, (_, index) => {
   const position = index + 1
   return {
     id: `graph.switch${position}`,
-    title: `Switch to graph ${position}`,
-    keywords: ['graph', 'workspace', 'switch', 'recent'],
+    title: `Switch to notebook ${position}`,
+    keywords: ['graph', 'notebook', 'workspace', 'switch', 'recent'],
     keybinding: `Meta-${position}`,
     run: (context) => context.switchGraph(index),
   }
@@ -112,6 +131,20 @@ const APP_COMMANDS: AppCommand[] = [
       }
       await openRouteInNewWindow(routeForPath(path))
     },
+  },
+  {
+    id: 'day.previous',
+    title: 'Previous day',
+    keywords: ['yesterday', 'daily', 'earlier'],
+    keybinding: 'Alt-Mod-arrowleft',
+    run: (context) => navigateDay(context, -1),
+  },
+  {
+    id: 'day.next',
+    title: 'Next day',
+    keywords: ['tomorrow', 'daily', 'later'],
+    keybinding: 'Alt-Mod-arrowright',
+    run: (context) => navigateDay(context, 1),
   },
   {
     id: 'history.back',
@@ -291,6 +324,13 @@ const APP_COMMANDS: AppCommand[] = [
     keywords: ['collapse', 'expand', 'backlinks', 'calendar', 'focus', 'right', 'panel'],
     keybinding: 'Mod-Shift-\\',
     run: (context) => context.toggleContextPanel(),
+  },
+  {
+    id: 'view.focusMode',
+    title: 'Toggle focus mode',
+    keywords: ['zen', 'distraction', 'free', 'writing', 'hide', 'panels', 'bare'],
+    keybinding: 'Mod-Shift-f',
+    run: (context) => context.toggleFocusMode(),
   },
   {
     id: 'settings.open',

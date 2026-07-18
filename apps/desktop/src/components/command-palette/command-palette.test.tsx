@@ -97,6 +97,7 @@ function renderPalette(query: string, context?: Partial<CommandContext>) {
     toggleTheme: vi.fn(),
     toggleSidebar: vi.fn(),
     toggleContextPanel: vi.fn(),
+    toggleFocusMode: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 1,
@@ -130,9 +131,9 @@ describe('CommandPalette', () => {
       }),
     )
     const { view } = renderPalette('')
-    expect(view.queryByText('No results')).toBeNull() // loading ≠ empty
+    expect(view.queryByText(/No results/)).toBeNull() // loading ≠ empty
     release([])
-    await waitFor(() => expect(view.queryByText('No results')).not.toBeNull())
+    await waitFor(() => expect(view.queryByText(/No results/)).not.toBeNull())
   })
 
   it('no "No results" while FTS is still answering a non-empty query', async () => {
@@ -144,16 +145,16 @@ describe('CommandPalette', () => {
     searchWithFilters.mockImplementation(() => pending)
     const { view } = renderPalette('rust')
     await waitFor(() => expect(suggestWikiTargets).toHaveBeenCalled())
-    expect(view.queryByText('No results')).toBeNull() // body hits still in flight
+    expect(view.queryByText(/No results/)).toBeNull() // body hits still in flight
     release([])
-    await waitFor(() => expect(view.queryByText('No results')).not.toBeNull())
+    await waitFor(() => expect(view.queryByText(/No results/)).not.toBeNull())
   })
 
   it('a failed index query shows an error, not "No results"', async () => {
     suggestWikiTargets.mockRejectedValue(new Error('index unavailable'))
     const { view } = renderPalette('')
     await view.findByText('Search unavailable — the index didn’t answer.')
-    expect(view.queryByText('No results')).toBeNull()
+    expect(view.queryByText(/No results/)).toBeNull()
   })
 
   it('empty query shows the recent-notes recall feed', async () => {

@@ -29,6 +29,8 @@ export interface CommandContext {
   toggleSidebar: () => void
   /** Collapse/expand the right context panel. */
   toggleContextPanel: () => void
+  /** Collapse both panels for a bare canvas; restore both when all hidden. */
+  toggleFocusMode: () => void
   /** Switch to a recent graph by zero-based position in the graph switcher. */
   switchGraph: (index: number) => void
   /** The configured Insert-timestamp format (Settings -> Editor). */

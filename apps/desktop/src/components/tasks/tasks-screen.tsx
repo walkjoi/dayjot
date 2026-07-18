@@ -323,7 +323,9 @@ export function TasksScreen(): ReactElement {
           </p>
         ) : ready && groups.length === 0 ? (
           <p className="px-4 py-6 text-sm text-text-muted lg:px-12">
-            {needle ? 'No matching tasks.' : 'No tasks to show.'}
+            {needle
+              ? 'No matching tasks.'
+              : 'No tasks to show — type “- [ ]” in any note to add one.'}
           </p>
         ) : (
           <div className="flex flex-col gap-5">

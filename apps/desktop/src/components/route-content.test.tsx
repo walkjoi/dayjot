@@ -276,7 +276,7 @@ describe('RouteContent', () => {
     // once the (empty) index query settles.
     expect(view.getByRole('button', { name: '#book' })).toBeDefined()
     await view.findByText('Subject')
-    expect(view.getByText('No notes yet.')).toBeDefined()
+    expect(view.getByText(/No notes yet/)).toBeDefined()
     view.unmount()
   })
 

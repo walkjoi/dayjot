@@ -148,13 +148,13 @@ describe('SettingsScreen', () => {
     renderScreen()
 
     const section = screen.getByRole('region', { name: 'Danger zone' })
-    fireEvent.click(within(section).getByRole('button', { name: /forget graph/i }))
+    fireEvent.click(within(section).getByRole('button', { name: /forget notebook/i }))
 
-    const dialog = screen.getByRole('dialog', { name: /forget graph/i })
+    const dialog = screen.getByRole('dialog', { name: /forget notebook/i })
     expect(within(dialog).getByText('/graphs/work')).toBeTruthy()
     expect(graph.forget).not.toHaveBeenCalled()
 
-    fireEvent.click(within(dialog).getByRole('button', { name: /forget graph/i }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /forget notebook/i }))
 
     await waitFor(() => expect(graph.forget).toHaveBeenCalledWith('/graphs/work'))
   })
@@ -164,14 +164,14 @@ describe('SettingsScreen', () => {
     renderScreen()
 
     const section = screen.getByRole('region', { name: 'Danger zone' })
-    fireEvent.click(within(section).getByRole('button', { name: /delete graph/i }))
+    fireEvent.click(within(section).getByRole('button', { name: /delete notebook/i }))
 
-    const dialog = screen.getByRole('dialog', { name: /delete graph/i })
+    const dialog = screen.getByRole('dialog', { name: /delete notebook/i })
     expect(within(dialog).getByText('/graphs/work')).toBeTruthy()
-    const confirm = within(dialog).getByRole('button', { name: /delete graph/i })
+    const confirm = within(dialog).getByRole('button', { name: /delete notebook/i })
     expect(confirm.hasAttribute('disabled')).toBe(true)
 
-    const nameInput = within(dialog).getByLabelText('Graph name')
+    const nameInput = within(dialog).getByLabelText('Notebook name')
     fireEvent.change(nameInput, { target: { value: 'Wor' } })
     expect(confirm.hasAttribute('disabled')).toBe(true)
     // Enter with a mismatched name must not delete either.
@@ -584,15 +584,15 @@ describe('SettingsScreen', () => {
     )
   })
 
-  it('shows the week start setting in Date & time', async () => {
+  it('shows the week start setting in Appearance (Date & time folded in)', async () => {
     renderScreen()
-    const dateTime = screen.getByRole('region', { name: 'Date & time' })
     const appearance = screen.getByRole('region', { name: 'Appearance' })
 
     await waitFor(() =>
-      expect(within(dateTime).getByRole('combobox', { name: 'Start week on' })).toBeTruthy(),
+      expect(within(appearance).getByRole('combobox', { name: 'Start week on' })).toBeTruthy(),
     )
-    expect(within(appearance).queryByRole('combobox', { name: 'Start week on' })).toBeNull()
+    // The old standalone section is gone — one fewer place to look.
+    expect(screen.queryByRole('region', { name: 'Date & time' })).toBeNull()
   })
 
   it('selecting Sunday persists the week start day', async () => {

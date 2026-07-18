@@ -34,12 +34,12 @@ DayJot is a daily notebook: press ⌘D any time to land on today's note and writ
 
 - **Stamp the moment.** ⌘⇧T drops the time at your cursor — jot what's happening, when it happened.
 - **Link as you think.** Type \`[[\` and a title — [[Wiki Links]] connect notes. There are no folders.
-- **Find anything.** ⌘K searches your whole graph; ⌘/ lists every shortcut.
-- **Your files, only yours.** Every note is a markdown file in this folder, portable forever — and nothing leaves this device unless you connect sync. No accounts, no AI.
+- **Find anything.** ⌘K searches your whole notebook; ⌘/ lists every shortcut.
+- **Your files, only yours.** Every note is a markdown file in this notebook folder, portable forever — and nothing leaves this device unless you connect sync. No accounts, no AI.
 
 When you want more, open Settings (⌘,):
 
-- **Backup** — free, private backup of your graph to a GitHub repo you control.
+- **Backup** — free, private backup of your notebook to a GitHub repo you control.
 - **Editor** — tune the timestamp format and shortcut, text size, and markdown display.
 
 This note is pinned to the sidebar — unpin it (⌘O) when you're done.

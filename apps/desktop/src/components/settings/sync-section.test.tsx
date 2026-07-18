@@ -102,7 +102,7 @@ describe('SyncSection', () => {
 
     const section = screen.getByRole('region', { name: 'Sync' })
     expect(within(section).getByText('iCloud Drive', { selector: 'legend' })).toBeTruthy()
-    expect(await within(section).findByText('1 graph in iCloud Drive.')).toBeTruthy()
+    expect(await within(section).findByText('1 notebook in iCloud Drive.')).toBeTruthy()
     expect(within(section).getByText('GitHub sync', { selector: 'legend' })).toBeTruthy()
     expect(within(section).getByRole('button', { name: /connect github/i })).toBeTruthy()
     // GitHub is the default sync path, so its field leads the section.

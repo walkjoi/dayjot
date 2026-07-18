@@ -33,9 +33,9 @@ const PENDING_NOTES_REFETCH_MS = 5_000
 
 function graphCountLine(count: number): string {
   if (count === 0) {
-    return 'No graphs in iCloud Drive yet.'
+    return 'No notebooks in iCloud Drive yet.'
   }
-  return count === 1 ? '1 graph in iCloud Drive.' : `${count} graphs in iCloud Drive.`
+  return count === 1 ? '1 notebook in iCloud Drive.' : `${count} notebooks in iCloud Drive.`
 }
 
 function pendingNotesLine(count: number): string {
@@ -166,9 +166,9 @@ export function IcloudSettingsField(): ReactElement | null {
         legend="iCloud Drive"
         description={
           hosted
-            ? 'This graph lives in iCloud Drive — edits sync to your other devices, and conflicts resolve automatically where possible.'
+            ? 'This notebook lives in iCloud Drive — edits sync to your other devices, and conflicts resolve automatically where possible.'
             : status?.available === true
-              ? 'Copy this graph into iCloud Drive to sync it with your other devices.'
+              ? 'Copy this notebook into iCloud Drive to sync it with your other devices.'
               : 'iCloud Drive isn’t reachable from this app — sign in to iCloud, or use a build with iCloud enabled.'
         }
       >
@@ -198,7 +198,7 @@ export function IcloudSettingsField(): ReactElement | null {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Move this graph to iCloud Drive?</DialogTitle>
+                  <DialogTitle>Move this notebook to iCloud Drive?</DialogTitle>
                   <DialogDescription>
                     Your notes are copied into iCloud Drive and the graph reopens there. The
                     current folder stays on disk, untouched, as a recovery copy.

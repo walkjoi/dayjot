@@ -115,7 +115,7 @@ export function GraphFooter({ graph, context }: GraphFooterProps): ReactElement 
           </TooltipTrigger>
           <TooltipContent>{graph.root}</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent aria-label="Switch graph" side="top" sideOffset={6}>
+        <DropdownMenuContent aria-label="Switch notebook" side="top" sideOffset={6}>
           {recents.map((recent, index) => {
             const current = recent.root === graph.root
             const binding = graphSwitchBindingFor(index)
@@ -174,7 +174,7 @@ export function GraphFooter({ graph, context }: GraphFooterProps): ReactElement 
             className={MENU_ITEM_CLASS}
           >
             <LocateFixed aria-hidden strokeWidth={1.75} className="size-3.5 shrink-0" />
-            <span className="min-w-0 flex-1 truncate">Reveal graph in Finder</span>
+            <span className="min-w-0 flex-1 truncate">Reveal notebook in Finder</span>
           </DropdownMenuItem>
           {/* Graph switching re-roots every window; note windows hide it. */}
           {isMainWindow() ? (
@@ -183,7 +183,7 @@ export function GraphFooter({ graph, context }: GraphFooterProps): ReactElement 
               className={MENU_ITEM_CLASS}
             >
               <FolderOpen aria-hidden strokeWidth={1.75} className="size-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate">Open another graph…</span>
+              <span className="min-w-0 flex-1 truncate">Open another notebook…</span>
             </DropdownMenuItem>
           ) : null}
           <DropdownMenuItem

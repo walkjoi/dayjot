@@ -34,7 +34,7 @@ export function ImportSection(): ReactElement {
     <SettingsSection id="import">
       <SettingsField
         legend="Reflect V1"
-        description="Choose the .zip export from Reflect V1. Its notes and attachments are added to this graph; nothing already here is replaced."
+        description="Choose the .zip export from Reflect V1. Its notes and attachments are added to this notebook; nothing already here is replaced."
       >
         <div className="mt-2">
           <Button
