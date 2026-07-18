@@ -12,6 +12,7 @@ import { SidebarExpandButton } from '@/components/sidebar/sidebar-toggle'
 import { SidebarResizeHandle } from '@/components/sidebar-resize-handle'
 import { TemplateCreateDialog } from '@/components/templates/template-create-dialog'
 import { TemplatePicker } from '@/components/templates/template-picker'
+import { cn } from '@/lib/utils'
 import { useDailyContextTarget } from '@/providers/focused-daily-provider'
 import { useSidebar } from '@/providers/sidebar-provider'
 import { useAppShortcuts } from '@/routing/app-shortcuts'
@@ -57,7 +58,14 @@ export function WorkspaceContent({ graph }: WorkspaceContentProps): ReactElement
       context={contextCollapsed ? undefined : contextSidebarFor(contextTarget)}
       contextEdge={<SidebarResizeHandle panel="context" />}
     >
-      <div className="relative flex h-full flex-col">
+      {/* With the sidebar collapsed, the note pane becomes the window's
+          leftmost surface: the macOS traffic lights, the drag strip, and the
+          floating expand button all land on its top edge. Reserve that band
+          (`pt-7`, the strip's height) so route headers — All Notes' search
+          row especially — never slide under the window chrome. */}
+      <div
+        className={cn('relative flex h-full flex-col', sidebarCollapsed && 'pt-7')}
+      >
         {sidebarCollapsed ? <SidebarExpandButton /> : null}
         <div className="min-h-0 flex-1">
           <RouteContent />

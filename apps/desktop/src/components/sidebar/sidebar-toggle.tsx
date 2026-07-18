@@ -56,7 +56,10 @@ export function SidebarExpandButton(): ReactElement {
     <div
       className={cn(
         'window-drag-control absolute',
-        hasMacosTitleBarOverlay ? 'left-[4.75rem] top-[3px]' : 'left-2 top-2',
+        // Inside the reserved title-bar band (the workspace adds `pt-7` to
+        // the pane while collapsed): right of the traffic lights under the
+        // overlay, at the band's left edge elsewhere.
+        hasMacosTitleBarOverlay ? 'left-[4.75rem] top-[3px]' : 'left-2 top-0.5',
       )}
     >
       <Tooltip>
