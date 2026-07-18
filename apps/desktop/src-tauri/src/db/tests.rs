@@ -1227,3 +1227,51 @@ fn sqlite_vec_loads_and_runs_knn() {
         .expect("vec0 knn");
     assert_eq!(nearest, 1);
 }
+
+#[test]
+fn drop_ai_leftovers_migration_removes_populated_chat_and_embedding_tables() {
+    // 0019 runs against real user databases still at v18, which may hold chat
+    // history and embedding rows from before the AI removal. Stage v18, seed
+    // the affected tables with rows (chat_messages carries the FK to
+    // chat_conversations), then apply the rest — 0019 must drop them all
+    // without error, leaving the index a pure markdown projection. (The
+    // vec0 embedding_vectors table's populated drop is already exercised by
+    // 0003's own copy-and-drop, replayed here.)
+    let mut conn = open_in_memory().expect("open with vec");
+    migrate_to(&mut conn, 18).expect("stage v18");
+    conn.execute_batch(
+        "INSERT INTO chat_conversations(id, title, created_ms, updated_ms)
+           VALUES ('c1', 'q', 1, 1);
+         INSERT INTO chat_messages(
+             id, conversation_id, seq, user_text, attachments, parts,
+             response_messages, created_ms)
+           VALUES ('m1', 'c1', 0, 'hi', '[]', '[]', '[]', 1);
+         INSERT INTO embedding_chunks(
+             note_path, pos_from, pos_to, text, content_hash, model_id)
+           VALUES ('notes/a.md', 0, 3, 'hi', 'h1', 'm');",
+    )
+    .expect("seed v18 rows");
+
+    migrate(&mut conn).expect("apply 0019 over populated tables");
+
+    for table in [
+        "chat_messages",
+        "chat_conversations",
+        "embedding_vectors",
+        "embedding_chunks",
+    ] {
+        let exists: i64 = conn
+            .query_row(
+                "SELECT count(*) FROM sqlite_master WHERE name = ?1",
+                [table],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(exists, 0, "{table} should be dropped by 0019");
+    }
+
+    let version: i64 = conn
+        .query_row("PRAGMA user_version", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(version, LATEST_SCHEMA_VERSION as i64);
+}
