@@ -37,7 +37,7 @@ export interface CommandContext {
   timestampFormat: () => string
   /**
    * The open **index session** generation (`index_open`), or null when none —
-   * what index/embedding commands echo. File writes (`note_write`) take
+   * what index commands echo. File writes (`note_write`) take
    * `graph.generation` instead; no current command needs that one.
    */
   generation: () => number | null

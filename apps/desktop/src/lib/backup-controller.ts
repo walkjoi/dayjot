@@ -175,8 +175,7 @@ export function createBackupController(options: BackupControllerOptions): Backup
     // launch pull can land before watch start), so consumers are notified
     // directly. The whole batch goes to the local file-changes channel —
     // every subscriber filters by path (open editors match their own note,
-    // the index and embeddings take markdown notes, the audio-memo
-    // reconciler takes recordings) — and the index additionally gets a
+    // the index takes markdown notes) — and the index additionally gets a
     // direct apply (idempotent if a live watcher subscription double-applies).
     emitFileChanges(changes)
     const indexable = changes.filter((change) => isNotePath(change.path))

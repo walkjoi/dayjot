@@ -10,9 +10,10 @@
 //! pragma. Append a new `M::up(include_str!(...))` (never edit a shipped one)
 //! as later plans add tables — and bump [`LATEST_SCHEMA_VERSION`] with it.
 //!
-//! Almost every table is a rebuildable projection of the markdown — except
-//! the `chat_*` tables (0008), which hold durable chat history. Wipe-style
-//! migrations (0004, 0006) and `index_clear` must never touch them.
+//! Every table is a rebuildable projection of the markdown, so `index_clear`
+//! and a fresh open can always reconstruct the index from the notes. (The
+//! former exception — the durable `chat_*` tables from 0008 — was dropped in
+//! 0019 along with the dormant embedding tables when AI was removed.)
 
 /// Directory inside a graph that holds the index (and marks a dir as a graph).
 pub const DAYJOT_DIR: &str = ".dayjot";
@@ -23,7 +24,7 @@ pub const INDEX_FILE: &str = "index.sqlite";
 /// `user_version` after every migration has run. Read-only consumers compare
 /// this against `PRAGMA user_version` to detect an index written by a newer
 /// (or older) app than they were built for.
-pub const LATEST_SCHEMA_VERSION: usize = 18;
+pub const LATEST_SCHEMA_VERSION: usize = 19;
 
 /// The `index_meta` key holding the TS-owned projection version (the rows'
 /// derivation version, distinct from the schema version above).
@@ -61,6 +62,7 @@ mod schema {
             M::up(include_str!("../migrations/0016_note_emails.sql")),
             M::up(include_str!("../migrations/0017_task_breadcrumbs.sql")),
             M::up(include_str!("../migrations/0018_note_key_precedence.sql")),
+            M::up(include_str!("../migrations/0019_drop_ai_leftovers.sql")),
         ])
     });
 

@@ -276,8 +276,6 @@ pub fn run() {
             db::note_move_indexed,
             db::index_meta_set,
             db::db_query,
-            db::chat_message_save,
-            db::chat_conversation_delete,
             watcher::watch_start,
             watcher::watch_stop,
             calendar::calendar_authorization_status,

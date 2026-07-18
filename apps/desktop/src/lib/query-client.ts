@@ -77,11 +77,3 @@ export const ICLOUD_STATUS_QUERY_KEY = ['icloud-status'] as const
 export function dropIcloudStatusQuery(): void {
   queryClient.removeQueries({ queryKey: ICLOUD_STATUS_QUERY_KEY })
 }
-
-/** Chat-history queries nest under this key (e.g. `['chat', 'conversations', root]`). */
-export const CHAT_QUERY_SCOPE = 'chat'
-
-/** Refetch chat-history queries; called after a turn save or a delete. */
-export function invalidateChatQueries(): void {
-  void queryClient.invalidateQueries({ queryKey: [CHAT_QUERY_SCOPE] })
-}

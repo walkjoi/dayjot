@@ -253,8 +253,6 @@ pub(super) fn move_note(conn: &Connection, from: &str, to: &str) -> AppResult<()
         .execute(params![from, to])?;
     conn.prepare_cached("UPDATE tasks SET note_path = ?2 WHERE note_path = ?1")?
         .execute(params![from, to])?;
-    conn.prepare_cached("UPDATE embedding_chunks SET note_path = ?2 WHERE note_path = ?1")?
-        .execute(params![from, to])?;
     conn.prepare_cached("UPDATE search_fts SET path = ?2 WHERE path = ?1")?
         .execute(params![from, to])?;
     Ok(())
@@ -264,10 +262,7 @@ pub(super) fn move_note(conn: &Connection, from: &str, to: &str) -> AppResult<()
 /// cascades to every child table; `search_fts` (a virtual table, no FK) is
 /// cleared explicitly. `index_meta` is intentionally preserved across a rebuild.
 pub(super) fn clear_index(conn: &Connection) -> AppResult<()> {
-    conn.execute_batch(
-        "DELETE FROM notes; DELETE FROM search_fts;
-         DELETE FROM embedding_vectors; DELETE FROM embedding_chunks;",
-    )?;
+    conn.execute_batch("DELETE FROM notes; DELETE FROM search_fts;")?;
     Ok(())
 }
 

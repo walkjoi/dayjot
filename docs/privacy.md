@@ -2,10 +2,9 @@
 
 DayJot is local-first: your notes are markdown files in a folder you chose, the search
 index is SQLite in `.dayjot/` beside them, and **no DayJot-hosted server exists in any
-path** — there is no product analytics, no account, and no AI: the app ships no model
-providers and never sends note content to one. Official release builds send scrubbed
-JavaScript exception diagnostics to Sentry. Every network call the app can make is
-listed here, with what it carries.
+path** — there is no product analytics, no crash reporting, no account, and no AI: the
+app ships no model providers and never sends note content to one. Every network call the
+app can make is listed here, with what it carries.
 
 The one hard rule sits above all of it: **a note with `private: true` frontmatter never
 has its content sent to any external service.** The shared guard lives in
@@ -68,24 +67,12 @@ with the flag re-read from disk at call time, and it is covered by tests.
   the meeting being added). Turning it off — in Settings or in the OS privacy pane —
   stops all reads immediately.
 
-## Exception diagnostics (on in official release builds)
+## Exception diagnostics
 
-- **Where:** Sentry, for errors raised in the React/WebView layer. Native process crashes
-  remain covered by the operating system's crash reporting.
-- **What:** an allow-listed diagnostic containing the exception class, redacted exception
-  text, sanitized JavaScript stack locations, the app version, and whether React handled
-  the error. Stack filenames are reduced to bundle basenames. Request data, note content,
-  note titles, graph paths, local filesystem paths, breadcrumbs, console output, session
-  replay, tracing, and user identifiers are not collected. Sentry is also configured not
-  to store the transport IP address with events.
-- **When:** only when an official desktop or iOS release raises an uncaught JavaScript
-  error, an unhandled promise rejection, or a caught/recoverable React error. Development
-  and self-built apps without the release DSN do not initialize Sentry.
-- **Operational safeguards:** Sentry's server-side and default scrubbers are enabled, IP
-  address storage and server-side JavaScript source scraping are disabled, and explicit
-  sensitive-field rules cover notes, graph paths, requests, and user identifiers. Private
-  source maps are uploaded during official builds for readable stacks, then deleted from
-  the app bundle.
+None. DayJot sends no crash or exception reports anywhere — there is no Sentry, no
+error-reporting SDK, and no diagnostics endpoint in any build. A crash is covered only by
+the operating system's own crash reporter (local to your machine), the same as any other
+native app.
 
 ## Housekeeping calls
 
