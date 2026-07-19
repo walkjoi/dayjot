@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.7.0-beta.11](https://github.com/walkjoi/dayjot/compare/v0.7.0-beta.10...v0.7.0-beta.11) (2026-07-19)
+
+
+### Features
+
+* add ⌘⇧T to insert a timestamp at the cursor ([96b35d4](https://github.com/walkjoi/dayjot/commit/96b35d4830a53abaa85f5276bb16c4bddd319b79))
+* configurable timestamp format and shortcut, refreshed welcome note ([d0335fc](https://github.com/walkjoi/dayjot/commit/d0335fc847c9226e60dccb97cf7559eece356146))
+* make GitHub the default sync option ([9afbe27](https://github.com/walkjoi/dayjot/commit/9afbe275bd4f126012883278461c71d8d314ce6b))
+* make the calendar an on-demand date-picker in the daily header ([e565990](https://github.com/walkjoi/dayjot/commit/e565990a25b64bf896158b893d4a9654c15cbd6b))
+* make the left sidebar collapsible on its own ([32d8abf](https://github.com/walkjoi/dayjot/commit/32d8abf7b5b1eda3186ab9e5e436f6bb3001c05e))
+* minimal-elegant UX pass ([a18b55f](https://github.com/walkjoi/dayjot/commit/a18b55fcffaaf8950bfd106d8f30c27691965356))
+* move the day calendar to the left sidebar ([260603f](https://github.com/walkjoi/dayjot/commit/260603f9aa53bf91b35cf4b8c76d9ce9e0e52252))
+* new DayJot logo and app icons ([04d3833](https://github.com/walkjoi/dayjot/commit/04d383388ff7521fb15dc8b56bfaecd2f9f19d6b))
+* rebrand app to DayJot ([#1](https://github.com/walkjoi/dayjot/issues/1)) ([3fc52f8](https://github.com/walkjoi/dayjot/commit/3fc52f8441e3c435d190e4f791633424039c37c4))
+* remove all AI features ([1d72595](https://github.com/walkjoi/dayjot/commit/1d7259562cc4428dd056af55f8b7056fd86ecf7f))
+* remove the audio recording feature ([a86e4a0](https://github.com/walkjoi/dayjot/commit/a86e4a0d42814af3411d87ec3471b6b32d51d56f))
+* replace the Note actions panel with header pin and trash ([58b3a6b](https://github.com/walkjoi/dayjot/commit/58b3a6bc5f44c189787b7c4ac0d4d4169c5af02c))
+* show one day per canvas in Daily notes ([94c7ff9](https://github.com/walkjoi/dayjot/commit/94c7ff92b9c93b2a8ec134e458012d1ef3839922))
+
+
+### Bug Fixes
+
+* drop duplicate keybindingFor import in command tests ([1c4ae2c](https://github.com/walkjoi/dayjot/commit/1c4ae2caeec3da265761b6306ece78aec6b51a5d))
+* keep route headers clear of window chrome while the sidebar is collapsed ([7478d40](https://github.com/walkjoi/dayjot/commit/7478d402768b3dbc311ba863350242291db34910))
+* keep the imposed focus ring off script-focused surface containers ([78c0486](https://github.com/walkjoi/dayjot/commit/78c048636dac80bfafaa0b2c3a6eb274bf191ac6))
+* pin the sidebar toggle to one window position in both states ([e0a506a](https://github.com/walkjoi/dayjot/commit/e0a506afbf4a6fff46024e3991c2f11bb4e50342))
+* trash a never-written note as an idempotent no-op ([72f6b31](https://github.com/walkjoi/dayjot/commit/72f6b31f62fb38424f0379faf46820628bf8f386))
+
 ## [0.7.0-beta.10](https://github.com/team-reflect/reflect-open/compare/v0.7.0-beta.9...v0.7.0-beta.10) (2026-07-17)
 
 
