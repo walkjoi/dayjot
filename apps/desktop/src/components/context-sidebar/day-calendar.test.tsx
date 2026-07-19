@@ -38,13 +38,17 @@ function RouteProbe(): ReactNode {
   return <output data-testid="route">{JSON.stringify(route)}</output>
 }
 
-function renderCalendar(selectedDate: string) {
+function renderCalendar(selectedDate: string, onNavigate?: () => void) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <TooltipProvider>
       <QueryClientProvider client={client}>
         <RouterProvider>
-          <DayCalendar selectedDate={selectedDate} today="2026-06-15" />
+          <DayCalendar
+            selectedDate={selectedDate}
+            today="2026-06-15"
+            {...(onNavigate ? { onNavigate } : {})}
+          />
           <RouteProbe />
         </RouterProvider>
       </QueryClientProvider>
@@ -139,6 +143,23 @@ describe('DayCalendar', () => {
     await userEvent.click(view.getByRole('button', { name: 'Next month' }))
     await userEvent.click(view.getByRole('button', { name: 'Next month' }))
     expect(view.getByText(monthLabel('2026-02'))).toBeDefined()
+    view.unmount()
+  })
+
+  it('fires onNavigate on a day pick and jump-to-today, but not on month paging', async () => {
+    // A popover host closes on this signal: choosing a date dismisses it,
+    // while browsing months keeps it open.
+    const onNavigate = vi.fn()
+    const view = renderCalendar('2026-06-09', onNavigate)
+
+    await userEvent.click(view.getByRole('button', { name: 'Previous month' }))
+    await userEvent.click(view.getByRole('button', { name: 'Next month' }))
+    expect(onNavigate).not.toHaveBeenCalled()
+
+    await userEvent.click(view.getByRole('button', { name: formatDayLabel('2026-06-18', 'mdy') }))
+    expect(onNavigate).toHaveBeenCalledTimes(1)
+    await userEvent.click(view.getByRole('button', { name: 'Jump to today' }))
+    expect(onNavigate).toHaveBeenCalledTimes(2)
     view.unmount()
   })
 

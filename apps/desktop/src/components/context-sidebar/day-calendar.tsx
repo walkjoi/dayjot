@@ -23,10 +23,16 @@ import { useSettings } from '@/providers/settings-provider'
 import { useRouter } from '@/routing/router'
 
 interface DayCalendarProps {
-  /** The day the sidebar describes (highlighted as selected). */
+  /** The day highlighted as selected (the note the host is showing). */
   selectedDate: string
   /** Today's live ISO date. */
   today: string
+  /**
+   * Fired after a navigation that leaves the calendar — a day pick or the
+   * jump-to-today button (but not month paging, which keeps browsing). A
+   * popover host uses it to close itself once a date is chosen.
+   */
+  onNavigate?: () => void
 }
 
 /** Maps the persisted `WeekStartDay` value to date-fns' numeric convention. */
@@ -49,7 +55,11 @@ const HEADER_BUTTON_CLASS =
  * a secondary window. The month view follows the selected day, and the
  * calendar glyph between the month arrows jumps back to today.
  */
-export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactElement {
+export function DayCalendar({
+  selectedDate,
+  today,
+  onNavigate,
+}: DayCalendarProps): ReactElement {
   const { navigate } = useRouter()
   const navigateNoteLink = useNoteLinkNavigation(selectedDate)
   const { graph } = useGraph()
@@ -78,7 +88,7 @@ export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactEle
 
   return (
     <div aria-label="Calendar" className="group min-w-36">
-      <header className="flex items-center justify-between px-4 py-4">
+      <header className="flex items-center justify-between px-4 pb-2 pt-1">
         <div className="cursor-default text-sm font-semibold text-text">
           {monthLabel(month)}
         </div>
@@ -98,7 +108,10 @@ export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactEle
               <button
                 type="button"
                 aria-label="Jump to today"
-                onClick={() => navigate({ kind: 'today' })}
+                onClick={() => {
+                  navigate({ kind: 'today' })
+                  onNavigate?.()
+                }}
                 className={HEADER_BUTTON_CLASS}
               >
                 <CalendarIcon />
@@ -120,15 +133,15 @@ export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactEle
       </header>
 
       <div>
-        <div className="grid grid-cols-7 border-b border-black/5 px-4 text-center dark:border-white/10">
+        <div className="grid grid-cols-7 px-4 text-center">
           {weekdayLabels(weekStartsOn).map((weekday) => (
-            <div key={weekday} className="py-2 text-xs font-medium text-text">
+            <div key={weekday} className="pb-1 text-2xs font-medium uppercase text-text-muted">
               {weekday}
             </div>
           ))}
         </div>
 
-        <div className="px-4 py-2">
+        <div className="px-4 pb-1">
           {grid.weeks.map((week) => (
             <div key={week[0]!.date} className="grid grid-cols-7 text-center">
               {week.map((cell) => {
@@ -141,11 +154,12 @@ export function DayCalendar({ selectedDate, today }: DayCalendarProps): ReactEle
                     aria-label={formatDayLabel(cell.date, settings.dateFormat)}
                     aria-current={isToday ? 'date' : undefined}
                     aria-pressed={isSelected}
-                    onClick={(event) =>
+                    onClick={(event) => {
                       navigateNoteLink({ kind: 'daily', date: cell.date }, event)
-                    }
+                      onNavigate?.()
+                    }}
                     className={cn(
-                      'relative cursor-default py-1.5 text-xs',
+                      'relative cursor-default py-1 text-xs',
                       // Today stays fully visible even as an adjacent-month
                       // padding cell (a fix over V1, which dims it there too).
                       !cell.inMonth && !isSelected && !isToday && 'opacity-20',

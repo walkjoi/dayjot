@@ -1,9 +1,11 @@
 import { useEffect, useState, type ReactElement } from 'react'
 import { dailyPath } from '@dayjot/core'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { DayCalendar } from '@/components/context-sidebar/day-calendar'
 import { NotePane } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
 import { ShortcutKeys } from '@/components/shortcut-keys'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { keybindingFor } from '@/lib/commands/app-commands'
 import { addDaysIso, formatDayLabel, todayIso } from '@/lib/dates'
@@ -77,6 +79,7 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
   const { date, pendingFocus } = arrival
   const isToday = date === today
   const { settings } = useSettings()
+  const [calendarOpen, setCalendarOpen] = useState(false)
 
   // Report the shown day as the focused day, keyed on the arrival so the
   // report re-fires after the workspace's pre-paint reset (a layout effect —
@@ -106,10 +109,36 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
                 Today
               </button>
             ) : null}
-            {/* Reading chrome rests quiet; it sharpens on hover or when
-                focused, so a day you're only reading is a date and prose. */}
-            <div className="flex items-center gap-1 opacity-40 transition-opacity duration-100 focus-within:opacity-100 group-hover:opacity-100">
+            {/* Reading chrome rests quiet; it sharpens on hover, on focus, or
+                while the calendar is open, so a day you're only reading is a
+                date and prose. */}
+            <div
+              className={cn(
+                'flex items-center gap-1 transition-opacity duration-100 focus-within:opacity-100 group-hover:opacity-100',
+                calendarOpen ? 'opacity-100' : 'opacity-40',
+              )}
+            >
               <NotePinButton path={dailyPath(date)} />
+              {/* Jump to any date — the on-demand replacement for the old
+                  always-open month calendar. */}
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Pick a date"
+                    className="flex size-7 items-center justify-center rounded-md text-text-muted transition-colors duration-100 hover:bg-surface-hover hover:text-text-secondary data-[state=open]:bg-surface-hover data-[state=open]:text-text-secondary"
+                  >
+                    <CalendarDays aria-hidden strokeWidth={1.75} className="size-4" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-72 p-1">
+                  <DayCalendar
+                    selectedDate={date}
+                    today={today}
+                    onNavigate={() => setCalendarOpen(false)}
+                  />
+                </PopoverContent>
+              </Popover>
               <DayChevron
                 label="Previous day"
                 binding={keybindingFor('day.previous')}

@@ -23,6 +23,15 @@ vi.mock('@/components/note-pin-button', () => ({
     <button type="button" aria-label={`pin ${path}`} />
   ),
 }))
+vi.mock('@/components/context-sidebar/day-calendar', () => ({
+  DayCalendar: ({ selectedDate, onNavigate }: { selectedDate: string; onNavigate?: () => void }) => (
+    <div data-testid="calendar-probe" data-selected={selectedDate}>
+      <button type="button" onClick={() => onNavigate?.()}>
+        probe pick a day
+      </button>
+    </div>
+  ),
+}))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({ settings: { dateFormat: 'iso' }, updateSettings: () => {} }),
 }))
@@ -158,6 +167,20 @@ describe('DailyView', () => {
     renderView({ kind: 'daily', date: '2026-06-09' })
 
     expect(screen.getByRole('button', { name: 'pin daily/2026-06-09.md' })).toBeDefined()
+  })
+
+  it('opens a date-picker from the header on the shown day, and closes it on a pick', () => {
+    renderView({ kind: 'daily', date: '2026-06-09' })
+
+    // Hidden until asked for — an icon in the header, not an always-open grid.
+    expect(screen.queryByTestId('calendar-probe')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pick a date' }))
+    const probe = screen.getByTestId('calendar-probe')
+    expect(probe.getAttribute('data-selected')).toBe('2026-06-09')
+
+    fireEvent.click(screen.getByRole('button', { name: 'probe pick a day' }))
+    expect(screen.queryByTestId('calendar-probe')).toBeNull()
   })
 
   it('shows a Today pill on other days that takes the canvas home, and hides it on today', () => {
