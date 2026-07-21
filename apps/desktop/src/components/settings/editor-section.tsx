@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { EditorMarkdownSyntax, EditorTextSize } from '@dayjot/core'
+import type { EditorFont, EditorMarkdownSyntax, EditorTextSize } from '@dayjot/core'
 import { cn } from '@/lib/utils'
 import { useSettings } from '@/providers/settings-provider'
 import { SettingsField } from './field'
@@ -54,6 +54,40 @@ const TEXT_SIZE_OPTIONS: TextSizeOption[] = [
     value: 'large',
     label: 'Large',
     description: 'Comfortable',
+  },
+]
+
+interface NoteFontOption {
+  value: EditorFont
+  label: string
+  description: string
+}
+
+const NOTE_FONT_OPTIONS: NoteFontOption[] = [
+  {
+    value: 'wenkai',
+    label: '霞鹜文楷 LXGW WenKai',
+    description: 'Default · handwritten kaiti',
+  },
+  {
+    value: 'source-han-serif',
+    label: '思源宋体 Source Han Serif',
+    description: 'Bookish serif',
+  },
+  {
+    value: 'literata',
+    label: 'Literata',
+    description: 'Reading serif · system Chinese',
+  },
+  {
+    value: 'quattro',
+    label: 'iA Writer Quattro',
+    description: 'Writer’s duospace · system Chinese',
+  },
+  {
+    value: 'inter',
+    label: 'Inter',
+    description: 'Matches the interface',
   },
 ]
 
@@ -137,6 +171,56 @@ export function EditorSection(): ReactElement {
                     value={option.value}
                     checked={selected}
                     onChange={() => updateSettings({ editorTextSize: option.value })}
+                    className="mt-0.5 shrink-0 accent-accent"
+                  />
+                </SettingsOptionCard>
+              )
+            })}
+          </div>
+        </div>
+      </SettingsField>
+
+      <SettingsField
+        legend="Note font"
+        description="The typeface notes are written and read in. Every choice covers Chinese and English."
+      >
+        <div className="mt-3 @container">
+          <div className="grid grid-cols-1 gap-2 @xl:grid-cols-2">
+            {NOTE_FONT_OPTIONS.map((option) => {
+              const selected = settings.editorFont === option.value
+              return (
+                <SettingsOptionCard
+                  key={option.value}
+                  selected={selected}
+                  className="items-start justify-between gap-3 px-3 py-2.5"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={cn(
+                        'block text-sm font-medium',
+                        selected && 'text-accent-soft-text',
+                      )}
+                    >
+                      {option.label}
+                    </span>
+                    {/* The card previews its own face: the sample line reads
+                        through the same stack the editor would switch to. */}
+                    <span
+                      className="mt-1 block truncate text-base"
+                      style={{ fontFamily: `var(--font-reading-${option.value})` }}
+                    >
+                      晨间日记 · Morning notes
+                    </span>
+                    <span className="mt-0.5 block text-xs text-text-muted">
+                      {option.description}
+                    </span>
+                  </span>
+                  <input
+                    type="radio"
+                    name="editor-font"
+                    value={option.value}
+                    checked={selected}
+                    onChange={() => updateSettings({ editorFont: option.value })}
                     className="mt-0.5 shrink-0 accent-accent"
                   />
                 </SettingsOptionCard>

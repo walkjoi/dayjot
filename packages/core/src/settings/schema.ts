@@ -74,6 +74,31 @@ export const editorTextSizeSchema = z.enum(['small', 'medium', 'large']).catch('
 export type EditorTextSize = z.infer<typeof editorTextSizeSchema>
 
 /**
+ * The note canvas's reading typeface. Every choice is bundled with the app
+ * and pairs its Latin face with a CJK chain, so notes mixing English and
+ * Chinese render deliberately (`--font-reading-*` in the design system):
+ *
+ * - `wenkai` (the default) — LXGW WenKai Screen 霞鹜文楷, a screen-tuned
+ *   kaiti whose one voice covers both scripts.
+ * - `source-han-serif` — Source Han Serif 思源宋体 (Google's Noto Serif SC
+ *   build), a bookish songti with a matching Latin.
+ * - `literata` — the Literata reading serif for Latin; CJK falls back to
+ *   the system sans.
+ * - `quattro` — iA Writer Quattro's humanist duospace for Latin; CJK falls
+ *   back to the system sans.
+ * - `inter` — the interface font, for prose that matches the chrome.
+ *
+ * Display-only — it maps to `--font-reading` via `[data-editor-font]` on the
+ * document root (applied by `EditorFontEffect`) and never touches the stored
+ * markdown.
+ */
+export const editorFontSchema = z
+  .enum(['wenkai', 'source-han-serif', 'literata', 'quattro', 'inter'])
+  .catch('wenkai')
+
+export type EditorFont = z.infer<typeof editorFontSchema>
+
+/**
  * Whether note content stretches across the available desktop pane instead
  * of staying in the default centered reading column. Off by default to
  * preserve DayJot Open's existing layout.
@@ -310,6 +335,7 @@ export const settingsSchema = z
     editorBulletAfterHeading: editorBulletAfterHeadingSchema,
     editorSmoothCaretAnimation: editorSmoothCaretAnimationSchema,
     editorTextSize: editorTextSizeSchema,
+    editorFont: editorFontSchema,
     editorFullWidth: editorFullWidthSchema,
     sidebarWidth: sidebarWidthSchema,
     contextSidebarWidth: contextSidebarWidthSchema,

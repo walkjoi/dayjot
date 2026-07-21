@@ -6,6 +6,7 @@ import { registerAppCommands } from '@/lib/commands/app-commands'
 import { installNativeMenu } from '@/lib/native-menu/menu'
 import { installTauriBridge } from '@/lib/tauri-bridge'
 import { PlatformRoot, warmPlatformRoot } from '@/platform-root'
+import { EditorFontEffect } from '@/providers/editor-font'
 import { EditorFullWidthEffect } from '@/providers/editor-full-width'
 import { EditorTextSizeEffect } from '@/providers/editor-text-size'
 import { SettingsProvider } from '@/providers/settings-provider'
@@ -36,6 +37,7 @@ createRoot(rootElement).render(
       <SettingsProvider>
         <EditorFullWidthEffect />
         <EditorTextSizeEffect />
+        <EditorFontEffect />
         <ThemeProvider>
           <PlatformRoot />
         </ThemeProvider>

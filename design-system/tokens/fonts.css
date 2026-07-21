@@ -1,8 +1,10 @@
 /* ============================================================
    DayJot — Webfonts
-   DayJot's entire interface is set in Inter (the variable
-   "Inter 4.0" cut, shipped straight from the codebase).
-   One family, every weight, upright + italic.
+   The interface is set in Inter (the variable "Inter 4.0" cut).
+   The note canvas has its own reading faces — user-selectable
+   via Settings → Editor → "Note font" (see typography.css for
+   the stacks); all are bundled, nothing loads from the network.
+   assets/fonts/README.md records provenance and licenses.
    ============================================================ */
 
 @font-face {
@@ -19,4 +21,75 @@
   font-weight: 100 900;
   font-display: swap;
   src: url('../assets/fonts/InterVariable-Italic.woff2') format('woff2');
+}
+
+/* LXGW WenKai Screen (霞鹜文楷 屏幕阅读版) — the default note font. A
+   screen-tuned kaiti covering Latin + CJK in one voice; single cut, so
+   bold renders synthetically. */
+@font-face {
+  font-family: 'LXGW WenKai Screen';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/LXGWWenKaiScreen.woff2') format('woff2');
+}
+
+/* Noto Serif SC (思源宋体) — Google's variable build of Source Han Serif.
+   Real weights across the range; CJK convention has no italic. */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('../assets/fonts/NotoSerifSC-VF.woff2') format('woff2');
+}
+
+/* Literata — Latin long-form reading serif (variable, optical sizing). */
+@font-face {
+  font-family: 'Literata';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('../assets/fonts/Literata-VF.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Literata';
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('../assets/fonts/Literata-Italic-VF.woff2') format('woff2');
+}
+
+/* iA Writer Quattro S — humanist duospace, four static cuts. */
+@font-face {
+  font-family: 'iA Writer Quattro';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/iAWriterQuattroS-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'iA Writer Quattro';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/iAWriterQuattroS-Italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'iA Writer Quattro';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/iAWriterQuattroS-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'iA Writer Quattro';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/iAWriterQuattroS-BoldItalic.woff2') format('woff2');
 }

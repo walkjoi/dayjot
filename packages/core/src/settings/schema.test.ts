@@ -10,6 +10,7 @@ describe('settingsSchema', () => {
       editorBulletAfterHeading: true,
       editorSmoothCaretAnimation: true,
       editorTextSize: 'small',
+      editorFont: 'wenkai',
       editorFullWidth: false,
       sidebarWidth: 260,
       contextSidebarWidth: 320,
@@ -34,6 +35,7 @@ describe('settingsSchema', () => {
     expect(DEFAULT_SETTINGS.editorBulletAfterHeading).toBe(true)
     expect(DEFAULT_SETTINGS.editorSmoothCaretAnimation).toBe(true)
     expect(DEFAULT_SETTINGS.editorTextSize).toBe('small')
+    expect(DEFAULT_SETTINGS.editorFont).toBe('wenkai')
     expect(DEFAULT_SETTINGS.editorFullWidth).toBe(false)
     expect(DEFAULT_SETTINGS.sidebarWidth).toBe(260)
     expect(DEFAULT_SETTINGS.contextSidebarWidth).toBe(320)
@@ -75,6 +77,13 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ editorTextSize: 'small' }).editorTextSize).toBe('small')
     expect(settingsSchema.parse({ editorTextSize: 'medium' }).editorTextSize).toBe('medium')
     expect(settingsSchema.parse({ editorTextSize: 'large' }).editorTextSize).toBe('large')
+    expect(settingsSchema.parse({ editorFont: 'wenkai' }).editorFont).toBe('wenkai')
+    expect(settingsSchema.parse({ editorFont: 'source-han-serif' }).editorFont).toBe(
+      'source-han-serif',
+    )
+    expect(settingsSchema.parse({ editorFont: 'literata' }).editorFont).toBe('literata')
+    expect(settingsSchema.parse({ editorFont: 'quattro' }).editorFont).toBe('quattro')
+    expect(settingsSchema.parse({ editorFont: 'inter' }).editorFont).toBe('inter')
     expect(settingsSchema.parse({ editorFullWidth: false }).editorFullWidth).toBe(false)
     expect(settingsSchema.parse({ editorFullWidth: true }).editorFullWidth).toBe(true)
     expect(settingsSchema.parse({ sidebarWidth: 300 }).sidebarWidth).toBe(300)
@@ -130,6 +139,8 @@ describe('settingsSchema', () => {
     ).toBe(true)
     expect(settingsSchema.parse({ editorTextSize: 'huge' }).editorTextSize).toBe('small')
     expect(settingsSchema.parse({ editorTextSize: 3 }).editorTextSize).toBe('small')
+    expect(settingsSchema.parse({ editorFont: 'comic-sans' }).editorFont).toBe('wenkai')
+    expect(settingsSchema.parse({ editorFont: 12 }).editorFont).toBe('wenkai')
     expect(settingsSchema.parse({ editorFullWidth: 'yes' }).editorFullWidth).toBe(false)
     expect(settingsSchema.parse({ editorFullWidth: 1 }).editorFullWidth).toBe(false)
     expect(settingsSchema.parse({ sidebarWidth: 'wide' }).sidebarWidth).toBe(260)
@@ -182,6 +193,7 @@ describe('settingsSchema', () => {
       editorBulletAfterHeading: true,
       editorSmoothCaretAnimation: true,
       editorTextSize: 'small',
+      editorFont: 'wenkai',
       editorFullWidth: false,
       sidebarWidth: 260,
       contextSidebarWidth: 320,

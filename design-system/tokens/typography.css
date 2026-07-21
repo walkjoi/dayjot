@@ -1,11 +1,14 @@
 /* ============================================================
    DayJot — Typography tokens
    ------------------------------------------------------------
-   One typeface: Inter (variable). The product leans on a tight,
-   functional type scale — DayJot is a writing tool, so chrome
-   text is small (12–14px) and the user's prose is the hero.
-   The marketing site is the opposite: oversized, tight display
-   headings on the dark canvas.
+   Interface chrome is Inter (variable), small and functional —
+   DayJot is a writing tool, so chrome text is 12–14px and the
+   user's prose is the hero. The note canvas has its own reading
+   faces (the --font-reading-* stacks below), user-selectable in
+   Settings → Editor → "Note font"; every stack pairs its Latin
+   face with a CJK chain so Chinese prose renders deliberately,
+   not by fallback accident. The marketing site is the opposite:
+   oversized, tight display headings on the dark canvas.
    ============================================================ */
 
 :root {
@@ -14,8 +17,30 @@
                'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco,
                Consolas, monospace;
-  /* The note editor / reading surface can swap to a serif */
-  --font-reading: 'InterVariable', Georgia, 'Times New Roman', serif;
+
+  /* ---- Note-canvas reading faces --------------------------
+     One stack per "Note font" choice (settings key `editorFont`).
+     The desktop app maps the chosen stack onto --font-reading via
+     [data-editor-font] on the document root.                  */
+  /* 霞鹜文楷: screen-tuned kaiti, one voice for Latin + CJK.  */
+  --font-reading-wenkai: 'LXGW WenKai Screen', 'Kaiti SC', 'STKaiti', 'KaiTi',
+                         'PingFang SC', 'Microsoft YaHei', serif;
+  /* 思源宋体: bookish songti with a matching Source-Serif Latin. */
+  --font-reading-source-han-serif: 'Noto Serif SC', 'Songti SC', 'SimSun',
+                                   'Noto Serif CJK SC', serif;
+  /* Long-form Latin serif; CJK stays on the system sans.      */
+  --font-reading-literata: 'Literata', 'PingFang SC', 'Hiragino Sans GB',
+                           'Microsoft YaHei', 'Noto Sans CJK SC', serif;
+  /* Writer's duospace; CJK stays on the system sans.          */
+  --font-reading-quattro: 'iA Writer Quattro', 'PingFang SC', 'Hiragino Sans GB',
+                          'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  /* The interface font, for prose that matches the chrome.    */
+  --font-reading-inter: var(--font-sans);
+
+  /* The note editor / reading surface — defaults to the default
+     "Note font" (LXGW WenKai) so the first paint matches the
+     settings default before the effect runs. */
+  --font-reading: var(--font-reading-wenkai);
   /* Keyboard-shortcut glyphs (⌘ ⌥ ⇧) — system-ui renders them cleanly */
   --font-shortcut: system-ui, ui-monospace, SFMono-Regular, Menlo, monospace;
 
