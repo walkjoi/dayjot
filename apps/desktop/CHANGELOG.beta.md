@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0-beta.12](https://github.com/walkjoi/dayjot/compare/v0.7.0-beta.11...v0.7.0-beta.12) (2026-07-21)
+
+
+### Features
+
+* replace the three text-size presets with a 12-24px stepper ([5df1f3c](https://github.com/walkjoi/dayjot/commit/5df1f3caffc1ea1f26678ef2c84dc592561d5d9d))
+
 ## [0.7.0-beta.11](https://github.com/walkjoi/dayjot/compare/v0.7.0-beta.10...v0.7.0-beta.11) (2026-07-19)
 
 
