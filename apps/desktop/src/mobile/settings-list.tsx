@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react'
-import { Check, ChevronRight, type LucideIcon } from 'lucide-react'
+import { Check, ChevronRight, Minus, Plus, type LucideIcon } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -155,6 +155,59 @@ export function SettingsSegmentedRow<Value extends string>({
             </button>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+interface SettingsStepperRowProps {
+  label: string
+  /** The current value, already formatted for display (e.g. `16 px`). */
+  value: string
+  onDecrement: () => void
+  onIncrement: () => void
+  /** The matching button disables at the range edge. */
+  canDecrement: boolean
+  canIncrement: boolean
+}
+
+/** A row with an inline − / + stepper (the iOS Settings stepper idiom). */
+export function SettingsStepperRow({
+  label,
+  value,
+  onDecrement,
+  onIncrement,
+  canDecrement,
+  canIncrement,
+}: SettingsStepperRowProps): ReactElement {
+  return (
+    <div className={cn(ROW_CLASS, 'justify-between')}>
+      <span className="min-w-0 truncate">{label}</span>
+      <div className="flex shrink-0 items-center gap-3">
+        <span aria-live="polite" className="text-text-muted tabular-nums">
+          {value}
+        </span>
+        <div className="flex items-stretch rounded-lg bg-secondary">
+          <button
+            type="button"
+            aria-label={`Decrease ${label.toLowerCase()}`}
+            disabled={!canDecrement}
+            onClick={onDecrement}
+            className="rounded-l-lg px-3 py-1.5 transition-colors active:bg-background disabled:opacity-40"
+          >
+            <Minus aria-hidden className="size-4" strokeWidth={1.75} />
+          </button>
+          <span aria-hidden className="my-1.5 w-px bg-border" />
+          <button
+            type="button"
+            aria-label={`Increase ${label.toLowerCase()}`}
+            disabled={!canIncrement}
+            onClick={onIncrement}
+            className="rounded-r-lg px-3 py-1.5 transition-colors active:bg-background disabled:opacity-40"
+          >
+            <Plus aria-hidden className="size-4" strokeWidth={1.75} />
+          </button>
+        </div>
       </div>
     </div>
   )

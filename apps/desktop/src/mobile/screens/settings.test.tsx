@@ -127,8 +127,11 @@ describe('MobileSettings', () => {
     await user.click(screen.getByRole('radio', { name: 'Dark' }))
     expect(updateSettings).toHaveBeenCalledWith({ theme: 'dark' })
 
-    await user.click(screen.getByRole('radio', { name: 'Large' }))
-    expect(updateSettings).toHaveBeenCalledWith({ editorTextSize: 'large' })
+    await user.click(screen.getByRole('button', { name: 'Increase text size' }))
+    expect(updateSettings).toHaveBeenCalledWith({ editorTextSize: 15 })
+
+    await user.click(screen.getByRole('button', { name: 'Decrease text size' }))
+    expect(updateSettings).toHaveBeenCalledWith({ editorTextSize: 13 })
   })
 
   it('writes the note font choice to the settings document', async () => {

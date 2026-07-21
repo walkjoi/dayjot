@@ -63,13 +63,46 @@ export const editorBulletAfterHeadingSchema = z.boolean().catch(true)
 export const editorSmoothCaretAnimationSchema = z.boolean().catch(true)
 
 /**
- * The editor's reading text size. `small` (the default) is one design-system
- * size down from the prose size (14px); `medium` is the DS prose size (16px)
- * and `large` steps one DS size up (18px). Display-only — it scales the editor
- * body via a CSS variable on the document root (`--editor-font-size`, applied
- * by `EditorTextSizeEffect`) and never touches the stored markdown.
+ * The clamp range for the editor's reading text size, in CSS pixels. Shared
+ * between the schema (so a hand-edited document can't wreck the layout) and
+ * the stepper UI (so its buttons stop where the schema would clamp).
  */
-export const editorTextSizeSchema = z.enum(['small', 'medium', 'large']).catch('small')
+export interface EditorTextSizeRange {
+  readonly min: number
+  readonly max: number
+  /** The size a fresh install starts from. */
+  readonly fallback: number
+}
+
+export const EDITOR_TEXT_SIZE_RANGE: EditorTextSizeRange = { min: 12, max: 24, fallback: 14 }
+
+/** Rounds a text size to whole pixels and clamps it into the allowed range. */
+export function clampEditorTextSize(size: number): number {
+  return Math.min(
+    EDITOR_TEXT_SIZE_RANGE.max,
+    Math.max(EDITOR_TEXT_SIZE_RANGE.min, Math.round(size)),
+  )
+}
+
+/** The sizes the pre-stepper releases persisted, mapped to their pixels. */
+const LEGACY_EDITOR_TEXT_SIZES = { small: 14, medium: 16, large: 18 } as const
+
+/**
+ * The editor's reading text size in CSS pixels (default 14, clamped to
+ * 12–24). Documents written before the stepper existed persisted the names
+ * `small`/`medium`/`large`; those map to their old pixel values (14/16/18)
+ * so an upgrade keeps the user's size. Out-of-range numbers clamp instead of
+ * resetting so a near-miss hand-edit keeps its intent. Display-only — it
+ * scales the editor body via a CSS variable on the document root
+ * (`--editor-font-size`, applied by `EditorTextSizeEffect`) and never
+ * touches the stored markdown.
+ */
+export const editorTextSizeSchema = z
+  .union([z.number(), z.enum(['small', 'medium', 'large'])])
+  .catch(EDITOR_TEXT_SIZE_RANGE.fallback)
+  .transform((size) =>
+    typeof size === 'string' ? LEGACY_EDITOR_TEXT_SIZES[size] : clampEditorTextSize(size),
+  )
 
 export type EditorTextSize = z.infer<typeof editorTextSizeSchema>
 

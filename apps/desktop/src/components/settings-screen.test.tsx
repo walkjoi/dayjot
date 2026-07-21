@@ -206,7 +206,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -232,18 +232,19 @@ describe('SettingsScreen', () => {
     expect(radio(/^hide/i).checked).toBe(false)
   })
 
-  it('reflects the persisted text size', async () => {
+  it('reflects the persisted text size, migrating a legacy preset name', async () => {
+    // Pre-stepper documents persisted 'small'/'medium'/'large'; the schema
+    // maps them to their old pixel values, so the stepper shows 18 px.
     stored = { editorTextSize: 'large' }
     renderScreen()
-    await waitFor(() => expect(radio(/^large/i).checked).toBe(true))
-    expect(radio(/^medium/i).checked).toBe(false)
+    await waitFor(() => expect(screen.getByText('18 px')).toBeTruthy())
   })
 
-  it('selecting Large applies instantly and persists the text size', async () => {
+  it('stepping the text size applies instantly and persists the pixel value', async () => {
     renderScreen()
-    await waitFor(() => expect(radio(/^small/i).checked).toBe(true))
+    await waitFor(() => expect(screen.getByText('14 px')).toBeTruthy())
 
-    fireEvent.click(radio(/^large/i))
+    fireEvent.click(screen.getByRole('button', { name: 'Increase text size' }))
 
     await waitFor(() =>
       expect(saved).toEqual([
@@ -253,7 +254,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'large',
+          editorTextSize: 15,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -275,8 +276,7 @@ describe('SettingsScreen', () => {
         },
       ]),
     )
-    expect(radio(/^large/i).checked).toBe(true)
-    expect(radio(/^medium/i).checked).toBe(false)
+    expect(screen.getByText('15 px')).toBeTruthy()
   })
 
   it('reflects the persisted note font', async () => {
@@ -300,7 +300,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'source-han-serif',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -361,7 +361,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -429,7 +429,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: false,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -476,7 +476,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: false,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -516,7 +516,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -569,7 +569,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -615,7 +615,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -667,7 +667,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -716,7 +716,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -756,7 +756,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
@@ -828,7 +828,7 @@ describe('SettingsScreen', () => {
           editorDefaultBullet: true,
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
-          editorTextSize: 'small',
+          editorTextSize: 14,
           editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,

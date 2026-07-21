@@ -1,5 +1,11 @@
 import type { ReactElement } from 'react'
-import type { EditorFont, EditorMarkdownSyntax, EditorTextSize } from '@dayjot/core'
+import {
+  clampEditorTextSize,
+  EDITOR_TEXT_SIZE_RANGE,
+  type EditorFont,
+  type EditorMarkdownSyntax,
+} from '@dayjot/core'
+import { Minus, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSettings } from '@/providers/settings-provider'
 import { SettingsField } from './field'
@@ -33,29 +39,11 @@ const MARKDOWN_SYNTAX_OPTIONS: MarkdownSyntaxOption[] = [
   },
 ]
 
-interface TextSizeOption {
-  value: EditorTextSize
-  label: string
-  description: string
-}
-
-const TEXT_SIZE_OPTIONS: TextSizeOption[] = [
-  {
-    value: 'small',
-    label: 'Small',
-    description: 'Compact',
-  },
-  {
-    value: 'medium',
-    label: 'Medium',
-    description: 'Default',
-  },
-  {
-    value: 'large',
-    label: 'Large',
-    description: 'Comfortable',
-  },
-]
+const STEPPER_BUTTON_CLASS = cn(
+  'px-2.5 py-2 text-text-muted transition-colors hover:bg-surface-hover hover:text-foreground',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring',
+  'disabled:pointer-events-none disabled:opacity-40',
+)
 
 interface NoteFontOption {
   value: EditorFont
@@ -142,41 +130,52 @@ export function EditorSection(): ReactElement {
         legend="Text size"
         description="The reading size of the note editor."
       >
-        <div className="mt-3 @container">
-          <div className="grid grid-cols-1 gap-2 @xl:grid-cols-3">
-            {TEXT_SIZE_OPTIONS.map((option) => {
-              const selected = settings.editorTextSize === option.value
-              return (
-                <SettingsOptionCard
-                  key={option.value}
-                  selected={selected}
-                  className="items-start justify-between gap-3 px-3 py-2.5"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span
-                      className={cn(
-                        'block text-sm font-medium',
-                        selected && 'text-accent-soft-text',
-                      )}
-                    >
-                      {option.label}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-text-muted">
-                      {option.description}
-                    </span>
-                  </span>
-                  <input
-                    type="radio"
-                    name="editor-text-size"
-                    value={option.value}
-                    checked={selected}
-                    onChange={() => updateSettings({ editorTextSize: option.value })}
-                    className="mt-0.5 shrink-0 accent-accent"
-                  />
-                </SettingsOptionCard>
-              )
-            })}
+        <div className="mt-3 flex items-center gap-4">
+          <div
+            role="group"
+            aria-label="Text size"
+            className="flex items-stretch overflow-hidden rounded-lg border border-border"
+          >
+            <button
+              type="button"
+              aria-label="Decrease text size"
+              disabled={settings.editorTextSize <= EDITOR_TEXT_SIZE_RANGE.min}
+              onClick={() =>
+                updateSettings({ editorTextSize: clampEditorTextSize(settings.editorTextSize - 1) })
+              }
+              className={STEPPER_BUTTON_CLASS}
+            >
+              <Minus aria-hidden className="size-3.5" strokeWidth={1.75} />
+            </button>
+            <span
+              aria-live="polite"
+              className="flex w-14 items-center justify-center border-x border-border text-sm tabular-nums"
+            >
+              {settings.editorTextSize} px
+            </span>
+            <button
+              type="button"
+              aria-label="Increase text size"
+              disabled={settings.editorTextSize >= EDITOR_TEXT_SIZE_RANGE.max}
+              onClick={() =>
+                updateSettings({ editorTextSize: clampEditorTextSize(settings.editorTextSize + 1) })
+              }
+              className={STEPPER_BUTTON_CLASS}
+            >
+              <Plus aria-hidden className="size-3.5" strokeWidth={1.75} />
+            </button>
           </div>
+          {/* The choice previews itself: the sample reads through the active
+              note font at the chosen size, exactly as the editor would. */}
+          <p
+            className="min-w-0 flex-1 truncate leading-normal"
+            style={{
+              fontFamily: 'var(--font-reading)',
+              fontSize: `${settings.editorTextSize}px`,
+            }}
+          >
+            晨间日记 · Morning notes
+          </p>
         </div>
       </SettingsField>
 

@@ -1,11 +1,12 @@
 import { useState, type ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
+  clampEditorTextSize,
+  EDITOR_TEXT_SIZE_RANGE,
   errorMessage,
   hasBridge,
   listNotes,
   type EditorFont,
-  type EditorTextSize,
   type ThemePreference,
 } from '@dayjot/core'
 import { useAppVersion } from '@/hooks/use-app-version'
@@ -19,6 +20,7 @@ import {
   SettingsNavRow,
   SettingsSegmentedRow,
   SettingsSelectRow,
+  SettingsStepperRow,
   SettingsSwitchRow,
   SettingsValueRow,
   type SegmentedOption,
@@ -33,12 +35,6 @@ const THEME_OPTIONS: readonly SegmentedOption<ThemePreference>[] = [
   { value: 'system', label: 'System' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
-]
-
-const TEXT_SIZE_OPTIONS: readonly SegmentedOption<EditorTextSize>[] = [
-  { value: 'small', label: 'Small' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'large', label: 'Large' },
 ]
 
 const NOTE_FONT_OPTIONS: readonly { value: EditorFont; label: string }[] = [
@@ -140,11 +136,17 @@ export function MobileSettings(): ReactElement {
               options={THEME_OPTIONS}
               onChange={(theme) => updateSettings({ theme })}
             />
-            <SettingsSegmentedRow
+            <SettingsStepperRow
               label="Text size"
-              value={settings.editorTextSize}
-              options={TEXT_SIZE_OPTIONS}
-              onChange={(editorTextSize) => updateSettings({ editorTextSize })}
+              value={`${settings.editorTextSize} px`}
+              canDecrement={settings.editorTextSize > EDITOR_TEXT_SIZE_RANGE.min}
+              canIncrement={settings.editorTextSize < EDITOR_TEXT_SIZE_RANGE.max}
+              onDecrement={() =>
+                updateSettings({ editorTextSize: clampEditorTextSize(settings.editorTextSize - 1) })
+              }
+              onIncrement={() =>
+                updateSettings({ editorTextSize: clampEditorTextSize(settings.editorTextSize + 1) })
+              }
             />
           </SettingsGroup>
 

@@ -9,7 +9,7 @@ describe('settingsSchema', () => {
       editorDefaultBullet: true,
       editorBulletAfterHeading: true,
       editorSmoothCaretAnimation: true,
-      editorTextSize: 'small',
+      editorTextSize: 14,
       editorFont: 'wenkai',
       editorFullWidth: false,
       sidebarWidth: 260,
@@ -34,7 +34,7 @@ describe('settingsSchema', () => {
     expect(DEFAULT_SETTINGS.editorDefaultBullet).toBe(true)
     expect(DEFAULT_SETTINGS.editorBulletAfterHeading).toBe(true)
     expect(DEFAULT_SETTINGS.editorSmoothCaretAnimation).toBe(true)
-    expect(DEFAULT_SETTINGS.editorTextSize).toBe('small')
+    expect(DEFAULT_SETTINGS.editorTextSize).toBe(14)
     expect(DEFAULT_SETTINGS.editorFont).toBe('wenkai')
     expect(DEFAULT_SETTINGS.editorFullWidth).toBe(false)
     expect(DEFAULT_SETTINGS.sidebarWidth).toBe(260)
@@ -74,9 +74,13 @@ describe('settingsSchema', () => {
     expect(
       settingsSchema.parse({ editorSmoothCaretAnimation: true }).editorSmoothCaretAnimation,
     ).toBe(true)
-    expect(settingsSchema.parse({ editorTextSize: 'small' }).editorTextSize).toBe('small')
-    expect(settingsSchema.parse({ editorTextSize: 'medium' }).editorTextSize).toBe('medium')
-    expect(settingsSchema.parse({ editorTextSize: 'large' }).editorTextSize).toBe('large')
+    expect(settingsSchema.parse({ editorTextSize: 16 }).editorTextSize).toBe(16)
+    expect(settingsSchema.parse({ editorTextSize: 12 }).editorTextSize).toBe(12)
+    expect(settingsSchema.parse({ editorTextSize: 24 }).editorTextSize).toBe(24)
+    // Legacy pre-stepper names keep the pixel size they used to render at.
+    expect(settingsSchema.parse({ editorTextSize: 'small' }).editorTextSize).toBe(14)
+    expect(settingsSchema.parse({ editorTextSize: 'medium' }).editorTextSize).toBe(16)
+    expect(settingsSchema.parse({ editorTextSize: 'large' }).editorTextSize).toBe(18)
     expect(settingsSchema.parse({ editorFont: 'wenkai' }).editorFont).toBe('wenkai')
     expect(settingsSchema.parse({ editorFont: 'source-han-serif' }).editorFont).toBe(
       'source-han-serif',
@@ -137,8 +141,13 @@ describe('settingsSchema', () => {
     expect(
       settingsSchema.parse({ editorSmoothCaretAnimation: 0 }).editorSmoothCaretAnimation,
     ).toBe(true)
-    expect(settingsSchema.parse({ editorTextSize: 'huge' }).editorTextSize).toBe('small')
-    expect(settingsSchema.parse({ editorTextSize: 3 }).editorTextSize).toBe('small')
+    expect(settingsSchema.parse({ editorTextSize: 'huge' }).editorTextSize).toBe(14)
+    expect(settingsSchema.parse({ editorTextSize: true }).editorTextSize).toBe(14)
+    // Out-of-range numbers clamp instead of resetting (same contract as the
+    // sidebar widths); fractional sizes round to whole pixels.
+    expect(settingsSchema.parse({ editorTextSize: 3 }).editorTextSize).toBe(12)
+    expect(settingsSchema.parse({ editorTextSize: 9000 }).editorTextSize).toBe(24)
+    expect(settingsSchema.parse({ editorTextSize: 15.4 }).editorTextSize).toBe(15)
     expect(settingsSchema.parse({ editorFont: 'comic-sans' }).editorFont).toBe('wenkai')
     expect(settingsSchema.parse({ editorFont: 12 }).editorFont).toBe('wenkai')
     expect(settingsSchema.parse({ editorFullWidth: 'yes' }).editorFullWidth).toBe(false)
@@ -192,7 +201,7 @@ describe('settingsSchema', () => {
       editorDefaultBullet: true,
       editorBulletAfterHeading: true,
       editorSmoothCaretAnimation: true,
-      editorTextSize: 'small',
+      editorTextSize: 14,
       editorFont: 'wenkai',
       editorFullWidth: false,
       sidebarWidth: 260,

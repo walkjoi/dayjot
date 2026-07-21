@@ -67,8 +67,10 @@ Cascade layer order, low to high priority.
   /* 12px chrome text (V1's `text-xs`; the DS `--text-xs` is 13px). */
   --text-2xs: var(--ds-text-2xs);
   --text-2xs--line-height: 1.25;
-  /* Shared subject size for regular-note titles and daily-note dates. */
-  --text-note-subject: var(--text-xl);
+  /* Shared subject size for regular-note titles and daily-note dates.
+     Derived from the editor reading size (5:4 — the DS xl:base ratio) so
+     subjects keep their standing over the body at any "Text size". */
+  --text-note-subject: calc(var(--editor-font-size, var(--text-base)) * 1.25);
   /* Shortcut-glyph font, via the same --ds-* indirection as the shadows. */
   --font-shortcut: var(--ds-font-shortcut);
 
@@ -281,21 +283,13 @@ html:root {
 
 /* Editor reading size (Settings → Editor → "Text size"). The size lives in a
    variable on the document root so the `.dayjot-editor` rules below resolve
-   whatever the user picked; `EditorTextSizeEffect` mirrors the setting onto
-   `[data-editor-text-size]`. Medium is the DS prose default (16px); small and
-   large step one DS size down/up. The `:root` fallback keeps medium before the
-   effect has run (and in tests that never mount it). */
+   whatever the user picked; `EditorTextSizeEffect` writes the pixel value
+   from the `editorTextSize` setting (12–24px, stepper) straight into the
+   root's inline style, so no per-value CSS is needed here. The `:root`
+   fallback keeps the DS prose size before the effect has run (and in tests
+   that never mount it). */
 :root {
   --editor-font-size: var(--text-base);
-}
-:root[data-editor-text-size='small'] {
-  --editor-font-size: var(--text-sm);
-}
-:root[data-editor-text-size='medium'] {
-  --editor-font-size: var(--text-base);
-}
-:root[data-editor-text-size='large'] {
-  --editor-font-size: var(--text-lg);
 }
 
 /* Note font (Settings → Editor → "Note font"). Same shape as the text-size
@@ -384,13 +378,16 @@ html:root {
   margin: 1.25em 0 0.4em;
 }
 /* The leading H1 is the document title: the regular-note subject, matching
-   the daily date subject. H2 and H3 step down the type scale so a section
-   heading reads as subordinate to the title, not a second one: auto-appended
-   sections (`## [[Links]]`, `## [[Audio memos]]`) land at H2, one size below the
-   subject; H3 sits at body size, carried by weight rather than scale. */
-.dayjot-editor h1 { @apply text-note-subject; } /* text-xl, 20px */
-.dayjot-editor h2 { font-size: var(--text-lg, 1.125rem); } /* 18px */
-.dayjot-editor h3 { font-size: var(--text-base, 1rem); } /* 16px */
+   the daily date subject (both through the --text-note-subject calc, so they
+   track the user's "Text size"). H2 and H3 are em-based so they step down
+   from whatever the surrounding body size is — the stepper makes 12–24px all
+   reachable, and fixed px sizes would let a large body overtake its own
+   headings: auto-appended sections (`## [[Links]]`, `## [[Audio memos]]`)
+   land at H2, a step below the subject; H3 sits at body size, carried by
+   weight rather than scale. */
+.dayjot-editor h1 { @apply text-note-subject; } /* 1.25 × body */
+.dayjot-editor h2 { font-size: 1.125em; }
+.dayjot-editor h3 { font-size: 1em; }
 .dayjot-editor h1:first-child { margin-top: 0; }
 .dayjot-editor .dayjot-note-title { @apply text-note-subject; }
 
