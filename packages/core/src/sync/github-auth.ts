@@ -7,16 +7,11 @@ import { apiHeaders, JSON_HEADERS, readJson, type FetchFn } from './github-api'
  * The GitHub App client id used by the device flow. Public by design — the
  * device flow needs no client secret, even for refresh, so there is no
  * DayJot-hosted anything and nothing here is sensitive.
- *
- * NOTE: this is still the upstream Reflect GitHub App (registered
- * 2026-06-11, app id 4032425, owned by team-reflect), so the GitHub consent
- * screen shows Reflect's branding. Register your own GitHub App and replace
- * the client id and slug before distributing DayJot builds.
  */
-export const GITHUB_APP_CLIENT_ID = 'Iv23liURhf4d0EazsLl4'
+export const GITHUB_APP_CLIENT_ID = 'Iv23liV2f4unaicebPuQ'
 
 /** The app's public slug — `github.com/apps/<slug>`. */
-export const GITHUB_APP_SLUG = 'reflect-github-app'
+export const GITHUB_APP_SLUG = 'dayjot'
 
 /**
  * Where the user grants the app access to repositories. Authorization
