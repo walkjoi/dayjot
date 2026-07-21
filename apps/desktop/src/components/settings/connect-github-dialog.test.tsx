@@ -294,9 +294,7 @@ describe('ConnectGithubDialog', () => {
     expect(screen.queryByRole('button', { name: /try again/i })).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Grant access on GitHub…' }))
-    expect(openedUrls).toHaveBeenCalledWith(
-      'https://github.com/apps/reflect-github-app/installations/new',
-    )
+    expect(openedUrls).toHaveBeenCalledWith('https://github.com/apps/dayjot/installations/new')
 
     // Back from the browser with access granted — the poll connects, no click.
     await waitFor(() =>
@@ -334,9 +332,7 @@ describe('ConnectGithubDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
     fireEvent.click(await screen.findByRole('button', { name: /grant the DayJot app access/i }))
-    expect(openedUrls).toHaveBeenCalledWith(
-      'https://github.com/apps/reflect-github-app/installations/new',
-    )
+    expect(openedUrls).toHaveBeenCalledWith('https://github.com/apps/dayjot/installations/new')
     expect(screen.queryByText(/token/i)).toBeNull()
   })
 

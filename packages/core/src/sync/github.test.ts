@@ -345,10 +345,7 @@ describe('newRepoUrl', () => {
 
 describe('githubAppInstallUrl', () => {
   it('points at the registered app’s installation page', () => {
-    // Still the upstream Reflect GitHub App — see GITHUB_APP_CLIENT_ID.
-    expect(githubAppInstallUrl()).toBe(
-      'https://github.com/apps/reflect-github-app/installations/new',
-    )
+    expect(githubAppInstallUrl()).toBe('https://github.com/apps/dayjot/installations/new')
   })
 })
 
