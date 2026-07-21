@@ -207,6 +207,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -253,6 +254,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'large',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -275,6 +277,53 @@ describe('SettingsScreen', () => {
     )
     expect(radio(/^large/i).checked).toBe(true)
     expect(radio(/^medium/i).checked).toBe(false)
+  })
+
+  it('reflects the persisted note font', async () => {
+    stored = { editorFont: 'literata' }
+    renderScreen()
+    await waitFor(() => expect(radio(/literata/i).checked).toBe(true))
+    expect(radio(/wenkai/i).checked).toBe(false)
+  })
+
+  it('selecting a note font applies instantly and persists it', async () => {
+    renderScreen()
+    await waitFor(() => expect(radio(/wenkai/i).checked).toBe(true))
+
+    fireEvent.click(radio(/source han serif/i))
+
+    await waitFor(() =>
+      expect(saved).toEqual([
+        {
+          editorMarkdownSyntax: 'hide',
+          editorSpellCheck: true,
+          editorDefaultBullet: true,
+          editorBulletAfterHeading: true,
+          editorSmoothCaretAnimation: true,
+          editorTextSize: 'small',
+          editorFont: 'source-han-serif',
+          editorFullWidth: false,
+          sidebarWidth: 260,
+          contextSidebarWidth: 320,
+          timestampFormat: '- HH:mm ',
+          timestampKeybinding: 'Mod-Shift-t',
+          contactsEnabled: false,
+          mobileOnboarded: false,
+          mobileStorage: 'local',
+          mobileGraphName: '',
+          theme: 'system',
+          timeFormat: '12h',
+          dateFormat: 'mdy',
+          weekStartDay: 'monday',
+          allNotesFilterTags: ['book', 'link', 'person'],
+          calendarEnabled: false,
+          calendarIds: [],
+          graphColors: {},
+        },
+      ]),
+    )
+    expect(radio(/source han serif/i).checked).toBe(true)
+    expect(radio(/wenkai/i).checked).toBe(false)
   })
 
   it('enables full-width notes instantly and persists the preference', async () => {
@@ -313,6 +362,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -380,6 +430,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -426,6 +477,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: false,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -465,6 +517,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -517,6 +570,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -562,6 +616,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -613,6 +668,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -661,6 +717,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -700,6 +757,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,
@@ -771,6 +829,7 @@ describe('SettingsScreen', () => {
           editorBulletAfterHeading: true,
           editorSmoothCaretAnimation: true,
           editorTextSize: 'small',
+          editorFont: 'wenkai',
           editorFullWidth: false,
           sidebarWidth: 260,
           contextSidebarWidth: 320,

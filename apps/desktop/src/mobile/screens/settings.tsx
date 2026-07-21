@@ -4,6 +4,7 @@ import {
   errorMessage,
   hasBridge,
   listNotes,
+  type EditorFont,
   type EditorTextSize,
   type ThemePreference,
 } from '@dayjot/core'
@@ -17,6 +18,7 @@ import {
   SettingsGroup,
   SettingsNavRow,
   SettingsSegmentedRow,
+  SettingsSelectRow,
   SettingsSwitchRow,
   SettingsValueRow,
   type SegmentedOption,
@@ -37,6 +39,14 @@ const TEXT_SIZE_OPTIONS: readonly SegmentedOption<EditorTextSize>[] = [
   { value: 'small', label: 'Small' },
   { value: 'medium', label: 'Medium' },
   { value: 'large', label: 'Large' },
+]
+
+const NOTE_FONT_OPTIONS: readonly { value: EditorFont; label: string }[] = [
+  { value: 'wenkai', label: '霞鹜文楷 LXGW WenKai' },
+  { value: 'source-han-serif', label: '思源宋体 Source Han Serif' },
+  { value: 'literata', label: 'Literata' },
+  { value: 'quattro', label: 'iA Writer Quattro' },
+  { value: 'inter', label: 'Inter' },
 ]
 
 /**
@@ -136,6 +146,20 @@ export function MobileSettings(): ReactElement {
               options={TEXT_SIZE_OPTIONS}
               onChange={(editorTextSize) => updateSettings({ editorTextSize })}
             />
+          </SettingsGroup>
+
+          <SettingsGroup
+            header="Note font"
+            footer="The typeface notes are written and read in. Every choice covers Chinese and English."
+          >
+            {NOTE_FONT_OPTIONS.map((option) => (
+              <SettingsSelectRow
+                key={option.value}
+                label={option.label}
+                selected={settings.editorFont === option.value}
+                onPress={() => updateSettings({ editorFont: option.value })}
+              />
+            ))}
           </SettingsGroup>
 
           <SettingsGroup header="Editor">

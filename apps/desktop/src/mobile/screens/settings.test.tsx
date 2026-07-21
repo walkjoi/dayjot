@@ -131,6 +131,14 @@ describe('MobileSettings', () => {
     expect(updateSettings).toHaveBeenCalledWith({ editorTextSize: 'large' })
   })
 
+  it('writes the note font choice to the settings document', async () => {
+    const user = userEvent.setup()
+    mount()
+
+    await user.click(screen.getByRole('button', { name: 'Literata' }))
+    expect(updateSettings).toHaveBeenCalledWith({ editorFont: 'literata' })
+  })
+
   it('toggles the editor switches', async () => {
     const user = userEvent.setup()
     mount()

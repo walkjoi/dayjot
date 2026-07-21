@@ -100,10 +100,18 @@ not a marketing department. Sentences are short and declarative. There's dry wit
 
 ## VISUAL FOUNDATIONS
 
-**Typeface.** One family: **Inter** (the variable "Inter 4.0" cut). Nothing else.
-`--weight-medium (500)` is the workhorse for nav, buttons, titles and note titles;
-body/editor prose is 400. Headings use **tight negative tracking** (`-0.02em`);
-default UI uses Inter's slight optical setting (`-0.011em`).
+**Typeface.** Interface chrome is one family: **Inter** (the variable "Inter 4.0"
+cut). `--weight-medium (500)` is the workhorse for nav, buttons, titles and note
+titles; body/editor prose is 400. Headings use **tight negative tracking**
+(`-0.02em`); default UI uses Inter's slight optical setting (`-0.011em`).
+
+**Note-canvas reading faces.** The note editor is the one surface allowed off
+Inter: `--font-reading` resolves to the user's "Note font" choice (settings key
+`editorFont`, Settings → Editor). Bundled stacks, each pairing Latin with a CJK
+chain (`tokens/typography.css`): **LXGW WenKai Screen 霞鹜文楷** (default — screen
+kaiti, one voice for both scripts), **Noto Serif SC 思源宋体** (Source Han Serif),
+**Literata** and **iA Writer Quattro** (Latin faces over the system CJK sans), and
+**Inter** for prose that matches the chrome. Chrome never uses the reading faces.
 
 **Type scale.** The app is a *writing tool*, so chrome text is deliberately **small**
 (12–14px: section headers & shortcut hints at `2xs/12px`, note titles & labels at
@@ -269,14 +277,17 @@ need pixel-exact brand icons. Set `stroke-width: 1.75` to match.
 - `SKILL.md` — Agent-Skill manifest for using this system in Claude Code.
 
 **`tokens/`** — CSS custom properties (all reachable from `styles.css`)
-- `fonts.css` — Inter Variable `@font-face`.
+- `fonts.css` — `@font-face` for Inter Variable and the note-canvas reading faces
+  (LXGW WenKai Screen, Noto Serif SC, Literata, iA Writer Quattro).
 - `colors.css` — indigo & cool-grey ramps, marketing purples, semantic aliases;
   `.dark` and `.dayjot-space` theme scopes.
-- `typography.css` — families, type scale, weights, line-heights, tracking.
+- `typography.css` — families (incl. the `--font-reading-*` stacks), type scale,
+  weights, line-heights, tracking.
 - `spacing.css` — 4px spacing scale, radii, shadows, layout widths, motion.
 
 **`assets/`**
-- `fonts/InterVariable.woff2`, `fonts/InterVariable-Italic.woff2`
+- `fonts/` — every bundled woff2 plus `fonts/README.md` (versions, sources,
+  licenses — all font families are SIL OFL 1.1).
 - `dayjot-app-icon.png` (rounded graph sphere), `dayjot-app-icon-square.png`,
   `dayjot-graph-hero.png` (graph-on-grid hero), `dayjot-logo-mark.png`.
 

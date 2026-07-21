@@ -298,6 +298,27 @@ html:root {
   --editor-font-size: var(--text-lg);
 }
 
+/* Note font (Settings → Editor → "Note font"). Same shape as the text-size
+   mapping above: `EditorFontEffect` mirrors the `editorFont` setting onto
+   `[data-editor-font]`, which picks the design system's matching reading
+   stack. No `:root` fallback needed — typography.css already defaults
+   `--font-reading` to the WenKai stack (the settings default). */
+:root[data-editor-font='wenkai'] {
+  --font-reading: var(--font-reading-wenkai);
+}
+:root[data-editor-font='source-han-serif'] {
+  --font-reading: var(--font-reading-source-han-serif);
+}
+:root[data-editor-font='literata'] {
+  --font-reading: var(--font-reading-literata);
+}
+:root[data-editor-font='quattro'] {
+  --font-reading: var(--font-reading-quattro);
+}
+:root[data-editor-font='inter'] {
+  --font-reading: var(--font-reading-inter);
+}
+
 .dayjot-editor {
   /* The panes own all spacing, so cancel the theme's editor padding (no
      floating UI of ours needs the `--meowdown-gutter`). Font size is left to
