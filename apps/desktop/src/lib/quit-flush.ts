@@ -1,4 +1,4 @@
-import { getCurrentWindow } from '@tauri-apps/api/window'
+import { getCurrentWindow, type Window } from '@tauri-apps/api/window'
 import { confirmQuit, hasBridge, subscribeQuitRequested } from '@dayjot/core'
 import { flushOpenDocuments } from '@/editor/open-documents'
 import { flushBackup } from '@/lib/backup-flush'
@@ -27,6 +27,34 @@ import { isMainWindow } from '@/lib/windows/window-role'
  * Mobile's exit is backgrounding, not quitting — its leg of the same flush
  * sequence lives in `background-flush.ts` (Plan 19, decision 6).
  */
+/** Upper bound on waiting out macOS's exit-fullscreen animation. */
+const FULLSCREEN_EXIT_TIMEOUT_MS = 2000
+const FULLSCREEN_EXIT_POLL_MS = 50
+
+/**
+ * Hiding a window that occupies a macOS fullscreen Space leaves the Space
+ * alive but empty — a black screen — so ⌘W on a fullscreen window must
+ * leave the Space first. `setFullscreen(false)` only starts the transition;
+ * the state `isFullscreen()` reads clears when the exit animation finishes,
+ * so poll it (bounded) before the caller hides. Best-effort: a failed
+ * fullscreen probe must not leave the window refusing to close.
+ */
+async function exitFullscreenBeforeHide(currentWindow: Window): Promise<void> {
+  try {
+    if (!(await currentWindow.isFullscreen())) {
+      return
+    }
+    await currentWindow.setFullscreen(false)
+    const deadline = Date.now() + FULLSCREEN_EXIT_TIMEOUT_MS
+    while ((await currentWindow.isFullscreen()) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, FULLSCREEN_EXIT_POLL_MS))
+    }
+  } catch {
+    // Fall through to the hide; a stuck-open window is worse than a
+    // potentially imperfect transition.
+  }
+}
+
 export function installQuitFlush(): () => void {
   // No bridge → no native shell (plain-browser dev): nothing can quit-flush.
   // getCurrentWindow below is safe to reach only inside a Tauri webview.
@@ -52,6 +80,7 @@ export function installQuitFlush(): () => void {
       await Promise.allSettled([flushOpenDocuments(), flushSettings()])
       await flushBackup()
       if (shouldHide) {
+        await exitFullscreenBeforeHide(currentWindow)
         await currentWindow.hide()
       }
     }),
