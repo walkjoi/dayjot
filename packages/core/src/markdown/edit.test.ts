@@ -150,6 +150,13 @@ describe('toggleTaskMarker', () => {
     expect(result.source).toBe('+ [ ] done\n')
   })
 
+  it('toggles a square-bullet task, changing only the marker', () => {
+    const source = '- [ ] water plants\n* [ ] file taxes\n'
+    const result = toggleTaskMarker(source, indexedTask(source))
+    expect(result.checked).toBe(true)
+    expect(result.source).toBe('- [x] water plants\n* [ ] file taxes\n')
+  })
+
   it('relocates the task by its line when an edit above shifted the offset', () => {
     const source = '+ [ ] buy milk\n'
     const stale = indexedTask(source)

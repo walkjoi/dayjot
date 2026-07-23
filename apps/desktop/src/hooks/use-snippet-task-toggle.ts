@@ -36,11 +36,10 @@ function anchorFor(
  * context. Routes through {@link toggleTask}: the same session-aware,
  * per-note-serialized, staleness-guarded path the Tasks view uses, so an open
  * source note keeps its live buffer and a drifted note refuses instead of
- * toggling the wrong line. Only round `+ [ ]` DayJot tasks toggle (V1's
- * contextHtml checkboxes were DayJot tasks); a square GFM box is plain
- * markdown, outside the tasks projection, and stays read-only. There is no
- * optimistic flip: the write reindexes the source, which refreshes the
- * backlinks query and re-renders the snippet with the new marker.
+ * toggling the wrong line. Every rendered checkbox is a bullet-list task in
+ * the projection, so every one toggles. There is no optimistic flip: the
+ * write reindexes the source, which refreshes the backlinks query and
+ * re-renders the snippet with the new marker.
  */
 export function useSnippetTaskToggle(
   notePath: string,
@@ -68,13 +67,10 @@ export function useSnippetTaskToggle(
         startOperation('Updating task').fail('The note has changed — try again in a moment.')
         return
       }
-      if (!anchor.round) {
-        return
-      }
       mutate({ notePath, task: anchor, generation })
     },
     [notePath, tasks, generation, isPending, mutate],
   )
 
-  return tasks.some((task) => task.round) ? handler : undefined
+  return tasks.length > 0 ? handler : undefined
 }

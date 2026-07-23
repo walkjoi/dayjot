@@ -71,8 +71,11 @@ import { serializeWikiSuggestionAddress } from './suggest'
  * derived linkable aliases for rich titles and rich frontmatter aliases:
  * existing notes must reproject for both the recovery-semantics convergence
  * and the backfilled alias rows.
+ * 17 — `tasks` projection widened back to every bullet-list GFM checkbox
+ * (`- [ ]` / `* [ ]` alongside `+ [ ]`): existing notes carry no square task
+ * rows until reprojected, so the bump backfills them.
  */
-export const PROJECTION_VERSION = 16
+export const PROJECTION_VERSION = 17
 
 export const indexedLinkSchema = z.object({
   kind: z.enum(['wiki', 'md']),

@@ -169,7 +169,7 @@ function insertionLineEnding(source: string, insertionOffset: number): '\r\n' | 
 
 /**
  * Add an empty task to the end of `task`'s nearest parent-list context. The new
- * line reuses the task's exact indentation and round-list prefix, so parsing it
+ * line reuses the task's exact indentation and list-bullet prefix, so parsing it
  * yields the same ancestor breadcrumbs. The indexed marker is relocated through
  * the normal stale guard first; a task that no longer has a parent context is
  * refused rather than silently appended at the note root.

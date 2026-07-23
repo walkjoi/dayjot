@@ -242,8 +242,30 @@ describe('parseNote — tasks', () => {
     ])
   })
 
-  it('ignores square checklist and ordered checkbox items', () => {
-    const note = parse('- [ ] checklist\n* [x] checklist\n1. [ ] ordered\n')
+  it('extracts square-bullet checkboxes as tasks', () => {
+    const note = parse('- [ ] dash item\n* [x] star item\n')
+    expect(note.tasks).toEqual([
+      {
+        text: 'dash item',
+        breadcrumbs: [],
+        raw: '[ ] dash item',
+        checked: false,
+        markerOffset: 2,
+        dueDate: null,
+      },
+      {
+        text: 'star item',
+        breadcrumbs: [],
+        raw: '[x] star item',
+        checked: true,
+        markerOffset: 18,
+        dueDate: null,
+      },
+    ])
+  })
+
+  it('ignores ordered-list checkbox items', () => {
+    const note = parse('1. [ ] ordered\n2. [x] ordered\n')
     expect(note.tasks).toEqual([])
   })
 

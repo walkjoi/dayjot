@@ -181,13 +181,14 @@ function readLink(body: string, from: number, to: number, offset: number): Markd
 }
 
 /**
- * A DayJot task is the round Meowdown checkbox syntax: optional indentation,
- * then `+`, then whitespace, then the GFM marker. Square checklist items
- * (`- [ ]`/`* [ ]`) are intentionally not projected into Tasks.
+ * A DayJot task is a GFM checkbox in a bullet list item: optional indentation,
+ * a `-`/`*`/`+` bullet, whitespace, then the GFM marker — exactly the rows the
+ * editor renders as interactive checkboxes. Checkbox markers in ordered list
+ * items are not rendered as checkboxes and are not projected into Tasks.
  */
-function hasRoundTaskListMarker(body: string, markerStart: number): boolean {
+function hasBulletTaskListMarker(body: string, markerStart: number): boolean {
   const lineStart = body.lastIndexOf('\n', markerStart - 1) + 1
-  return /^[\t ]*\+[\t ]+$/.test(body.slice(lineStart, markerStart))
+  return /^[\t ]*[-*+][\t ]+$/.test(body.slice(lineStart, markerStart))
 }
 
 function lineEndAfter(body: string, from: number): number {
@@ -210,7 +211,7 @@ function readTask(
   wikiLinks: WikiLink[],
 ): ParsedTask | null {
   const { from, to } = taskNode
-  if (!hasRoundTaskListMarker(body, from)) {
+  if (!hasBulletTaskListMarker(body, from)) {
     return null
   }
   const marker = parseTaskMarker(body.slice(from, from + 3))

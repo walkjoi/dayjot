@@ -3,8 +3,8 @@ import { gistBodyHash, parseNote } from '../markdown'
 import { buildIndexedNote, indexedNoteSchema, PROJECTION_VERSION } from './indexed-note'
 
 describe('buildIndexedNote', () => {
-  it('carries the projection version that backfills linkable rich-title aliases', () => {
-    expect(PROJECTION_VERSION).toBe(16)
+  it('carries the projection version that backfills square-bullet task rows', () => {
+    expect(PROJECTION_VERSION).toBe(17)
   })
 
   it('flattens a parsed note into the index payload', () => {
@@ -210,9 +210,9 @@ describe('buildIndexedNote', () => {
     expect(indexed.gistStale).toBe(false)
   })
 
-  it('maps only round task checkboxes into task rows', () => {
+  it('maps every bullet checkbox into task rows, skipping ordered items', () => {
     const source =
-      '# Todo\n\n+ [ ] buy milk\n- [ ] checklist\n* [x] checklist\n1. [ ] ordered\n+ [x] call mum\n'
+      '# Todo\n\n+ [ ] buy milk\n- [ ] water plants\n* [x] file taxes\n1. [ ] ordered\n+ [x] call mum\n'
     const indexed = buildIndexedNote(parseNote({ path: 'notes/n.md', source }), {
       fileHash: 'h',
       mtime: 0,
@@ -228,6 +228,22 @@ describe('buildIndexedNote', () => {
         dueDate: null,
       },
       {
+        markerOffset: source.indexOf('[ ] water'),
+        text: 'water plants',
+        breadcrumbs: [],
+        raw: '[ ] water plants',
+        checked: false,
+        dueDate: null,
+      },
+      {
+        markerOffset: source.indexOf('[x] file'),
+        text: 'file taxes',
+        breadcrumbs: [],
+        raw: '[x] file taxes',
+        checked: true,
+        dueDate: null,
+      },
+      {
         markerOffset: source.indexOf('[x] call'),
         text: 'call mum',
         breadcrumbs: [],
@@ -235,6 +251,20 @@ describe('buildIndexedNote', () => {
         checked: true,
         dueDate: null,
       },
+    ])
+  })
+
+  it('projects square-bullet checkboxes in a daily note as task rows', () => {
+    const source = '- [ ] 30mins gym\n- [x] reply to Bob\n'
+    const indexed = buildIndexedNote(parseNote({ path: 'daily/2026-07-23.md', source }), {
+      fileHash: 'h',
+      mtime: 0,
+      source,
+    })
+    expect(indexed.kind).toBe('daily')
+    expect(indexed.tasks.map((task) => ({ text: task.text, checked: task.checked }))).toEqual([
+      { text: '30mins gym', checked: false },
+      { text: 'reply to Bob', checked: true },
     ])
   })
 
