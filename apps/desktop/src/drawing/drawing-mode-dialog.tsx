@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react'
 import { errorMessage } from '@dayjot/core'
 import { Button } from '@/components/ui/button'
 import { LightboxDialog } from '@/editor/lightbox-dialog'
+import { hasMacosTitleBarOverlay } from '@/lib/window-chrome'
 import { useTheme } from '@/providers/theme-provider'
 import { EXCALIDRAW_ASSET_URL_PATH } from './excalidraw-asset-path'
 import { readDrawingScene, type StoredDrawingScene } from './drawing-files'
@@ -149,6 +150,12 @@ function OpenDrawingMode({
           }
         }}
       >
+        {/* Drawing mode covers the app's WindowDragRegion, so it carries its
+            own stand-in for the overlaid macOS title bar: the strip keeps the
+            header clear of the traffic lights and keeps the window draggable. */}
+        {hasMacosTitleBarOverlay ? (
+          <div aria-hidden data-tauri-drag-region className="h-7 flex-none" />
+        ) : null}
         <header className="flex h-11 flex-none items-center justify-between border-b px-2">
           <Button variant="ghost" size="sm" onClick={exit}>
             <ArrowLeft aria-hidden />
