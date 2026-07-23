@@ -36,11 +36,6 @@ export interface SnippetTask {
   raw: string
   /** `[x]`/`[X]` → true, `[ ]` → false. */
   checked: boolean
-  /**
-   * True for DayJot's round task syntax (a `+` bullet) — the only kind the
-   * Tasks projection covers and the only kind the snippet toggle writes.
-   */
-  round: boolean
   /** The line's content after the marker and one space — the view's click payload `text`. */
   text: string
 }
@@ -119,7 +114,6 @@ export function extractSnippetTasks(
       const lineEnd = lineEndRaw === -1 ? snippet.length : lineEndRaw
       const column = markerFrom - starts[line]!
       const origin = lineOrigins[line]
-      const bullet = snippet.slice(starts[line]!, markerFrom)
       const sourceLine = rawLineFor(snippet, starts, line, lineEnd, column, lineSourceTexts)
       let textStart = markerFrom + 3
       if (snippet[textStart] === ' ') {
@@ -131,7 +125,6 @@ export function extractSnippetTasks(
         // A `Task` node always carries a valid GFM marker; the parse is the
         // defensive read the toggle repeats against the live source.
         checked: marker?.checked === true,
-        round: /^[\t ]*\+[\t ]+$/.test(bullet),
         text: snippet.slice(textStart, lineEnd),
       })
     },

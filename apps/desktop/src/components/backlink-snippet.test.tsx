@@ -18,8 +18,8 @@ vi.mock('@/providers/graph-provider', () => ({
 }))
 
 /**
- * A context with one round task, one square box, and a nested round task —
- * the anchors mirror what `extractSnippetTasks` produces for this markdown
+ * A context with a round task, a square box, and a nested round task — the
+ * anchors mirror what `extractSnippetTasks` produces for this markdown
  * (exercised for real in `@dayjot/core`'s tests; here they are fixtures so
  * the click wiring is what's under test).
  */
@@ -32,9 +32,9 @@ const SNIPPET = [
 
 function anchors(): SnippetTask[] {
   return [
-    { markerOffset: 124, raw: '[ ] prep agenda', checked: false, round: true, text: 'prep agenda' },
-    { markerOffset: 144, raw: '[x] square box', checked: true, round: false, text: 'square box' },
-    { markerOffset: 164, raw: '[x] send invite', checked: true, round: true, text: 'send invite' },
+    { markerOffset: 124, raw: '[ ] prep agenda', checked: false, text: 'prep agenda' },
+    { markerOffset: 144, raw: '[x] square box', checked: true, text: 'square box' },
+    { markerOffset: 164, raw: '[x] send invite', checked: true, text: 'send invite' },
   ]
 }
 
@@ -85,13 +85,16 @@ describe('BacklinkSnippet task checkboxes', () => {
     view.unmount()
   })
 
-  it('leaves a square GFM checkbox read-only', async () => {
+  it('writes a square-checkbox click through like any other task', async () => {
     const view = renderSnippet()
     const boxes = view.container.querySelectorAll('input[type="checkbox"]')
     expect((boxes[1] as HTMLInputElement).checked).toBe(true)
     await userEvent.click(boxes[1]!)
-    expect(toggleTask).not.toHaveBeenCalled()
-    expect(operationFail).not.toHaveBeenCalled()
+    await waitFor(() => expect(toggleTask).toHaveBeenCalledTimes(1))
+    expect(toggleTask).toHaveBeenCalledWith(
+      { notePath: 'notes/meeting.md', markerOffset: 144, raw: '[x] square box' },
+      7,
+    )
     view.unmount()
   })
 
@@ -107,10 +110,7 @@ describe('BacklinkSnippet task checkboxes', () => {
     view.unmount()
   })
 
-  it('renders checkboxes inert when the snippet has no round tasks', async () => {
-    const squareOnly: SnippetTask[] = [
-      { markerOffset: 144, raw: '[x] square box', checked: true, round: false, text: 'square box' },
-    ]
+  it('renders checkboxes inert when the snippet has no task anchors', async () => {
     const view = render(
       <QueryClientProvider
         client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
@@ -118,7 +118,7 @@ describe('BacklinkSnippet task checkboxes', () => {
         <BacklinkSnippet
           text={'- [[Roadmap]] plan\n  - [x] square box'}
           notePath="notes/meeting.md"
-          tasks={squareOnly}
+          tasks={[]}
           onWikilinkClick={() => {}}
           resolveImageUrl={() => undefined}
         />

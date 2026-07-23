@@ -19,7 +19,7 @@ function tasksFor(content: string, link = '[[Target]]'): SnippetTask[] {
 }
 
 describe('extractSnippetTasks', () => {
-  it('anchors a round task child to its source marker offset', () => {
+  it('anchors a task child to its source marker offset', () => {
     const content = '- [[Target]] kickoff\n  + [ ] prep agenda\n  + [x] send invite\n'
     const tasks = tasksFor(content)
     expect(tasks).toEqual([
@@ -27,14 +27,12 @@ describe('extractSnippetTasks', () => {
         markerOffset: content.indexOf('[ ]'),
         raw: '[ ] prep agenda',
         checked: false,
-        round: true,
         text: 'prep agenda',
       },
       {
         markerOffset: content.indexOf('[x]'),
         raw: '[x] send invite',
         checked: true,
-        round: true,
         text: 'send invite',
       },
     ])
@@ -70,16 +68,16 @@ describe('extractSnippetTasks', () => {
       '',
     ].join('\n')
     const [task] = tasksFor(content)
-    expect(task).toMatchObject({ round: true, checked: false, text: 'deep task' })
+    expect(task).toMatchObject({ checked: false, text: 'deep task' })
     expect(content.slice(task!.markerOffset, task!.markerOffset + 3)).toBe('[ ]')
     expect(toggleTaskMarker(content, task!).source).toContain('+ [x] deep task')
   })
 
-  it('marks square GFM checkboxes as not round', () => {
+  it('anchors square GFM checkboxes so they toggle like round ones', () => {
     const content = '- [[Target]] plan\n  - [ ] square box\n  * [x] star box\n'
     const tasks = tasksFor(content)
-    expect(tasks.map((task) => task.round)).toEqual([false, false])
     expect(tasks.map((task) => task.checked)).toEqual([false, true])
+    expect(toggleTaskMarker(content, tasks[0]!).source).toContain('- [x] square box')
   })
 
   it('counts checkboxes in document order, nested after their parent', () => {
@@ -132,7 +130,7 @@ describe('extractSnippetTasks', () => {
   it('anchors a task under a heading-section context', () => {
     const content = '## Plan [[Target]]\n\n+ [ ] section task\n\nafter\n'
     const [task] = tasksFor(content)
-    expect(task).toMatchObject({ raw: '[ ] section task', round: true })
+    expect(task).toMatchObject({ raw: '[ ] section task' })
     expect(toggleTaskMarker(content, task!).source).toContain('+ [x] section task')
   })
 })

@@ -180,9 +180,10 @@ export interface TaskMarker {
 }
 
 /**
- * A DayJot task item (`+ [ ] text` / `+ [x] text`) — the unit the Tasks view
- * (Plan 18) projects across the graph. Square checklist checkboxes stay in the
- * note only and are intentionally excluded from the aggregate Tasks view.
+ * A DayJot task item — a GFM checkbox in a bullet list item (`- [ ] text`,
+ * `* [x] text`, `+ [ ] text`) — the unit the Tasks view (Plan 18) projects
+ * across the graph. Checkbox markers in ordered list items stay in the note
+ * only and are excluded from the aggregate Tasks view.
  */
 export interface ParsedTask extends TaskMarker {
   /** Inline text of the item's marker line, markdown stripped, for display + search. */
@@ -205,8 +206,10 @@ export interface ParsedTask extends TaskMarker {
  * 1 — Plan 03 baseline · 2 — `tasks: ParsedTask[]` (with `dueDate`) added (Plan 18) ·
  * 3 — tasks limited to round Meowdown `+ [ ]` / `+ [x]` syntax; square checklist
  * checkboxes are excluded.
- * 4 — task rows carry parent outline/list breadcrumbs. */
-export const PARSED_NOTE_VERSION = 4
+ * 4 — task rows carry parent outline/list breadcrumbs.
+ * 5 — tasks widened back to every bullet-list GFM checkbox (`-`/`*`/`+`); only
+ * ordered-list checkbox markers stay excluded. */
+export const PARSED_NOTE_VERSION = 5
 
 /** The full parse of one note — the stable contract downstream plans depend on. */
 export interface ParsedNote {
