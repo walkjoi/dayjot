@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0-beta.13](https://github.com/walkjoi/dayjot/compare/v0.7.0-beta.12...v0.7.0-beta.13) (2026-07-23)
+
+
+### Features
+
+* draw sketches in notes with a full-screen Excalidraw canvas ([#10](https://github.com/walkjoi/dayjot/issues/10)) ([99b7397](https://github.com/walkjoi/dayjot/commit/99b739742f8cd35434321c09db3d6a32f8e55101))
+* sign in to GitHub sync with the DayJot GitHub App ([#8](https://github.com/walkjoi/dayjot/issues/8)) ([d2e6550](https://github.com/walkjoi/dayjot/commit/d2e655095b16b473949b4d5bf052ed2f6fbd774b))
+
 ## [0.7.0-beta.12](https://github.com/walkjoi/dayjot/compare/v0.7.0-beta.11...v0.7.0-beta.12) (2026-07-21)
 
 
