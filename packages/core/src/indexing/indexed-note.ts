@@ -163,10 +163,9 @@ export const indexedNoteSchema = z.object({
   mtime: z.number(),
   text: z.string(),
   /**
-   * Description text of the note's referenced assets (Plan 20), folded into the
-   * FTS `body` only — not the preview or the note text AI reads (chat reaches
-   * descriptions solely via the read_assets tool and its live privacy gate).
-   * Empty when the note has no described assets.
+   * Description text of the note's referenced assets (Plan 20), folded into
+   * the FTS `body` only — never the preview. Empty when the note has no
+   * described assets.
    */
   assetText: z.string(),
   /** The All Notes row snippet, derived once here rather than per query. */

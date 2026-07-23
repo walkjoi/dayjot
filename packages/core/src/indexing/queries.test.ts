@@ -8,7 +8,6 @@ import {
   getNoteIdsByPath,
   getOpenTasks,
   getPinnedNotes,
-  listDailyNotes,
   noteTitleOwningEmail,
   resolveWikiTarget,
   suggestWikiTargets,
@@ -171,50 +170,6 @@ describe('findExactWikiTargetMatches', () => {
     const [, args] = mockInvoke.mock.calls[0]!
     expect(String(args['sql'])).toContain('daily_date')
     expect(args['params']).toEqual(['2026-06-09', 'template'])
-  })
-})
-
-describe('listDailyNotes', () => {
-  it('selects public dailies in the inclusive range, most recent first, capped', async () => {
-    mockInvoke.mockResolvedValue([
-      {
-        path: 'daily/2026-06-09.md',
-        title: '2026-06-09',
-        daily_date: '2026-06-09',
-        preview: 'Stand-up notes.',
-        mtime: 2000,
-        is_private: 0,
-      },
-    ])
-
-    const rows = await listDailyNotes({ start: '2026-06-01', end: '2026-06-30', limit: 32 })
-
-    expect(rows).toEqual([
-      {
-        path: 'daily/2026-06-09.md',
-        title: '2026-06-09',
-        dailyDate: '2026-06-09',
-        preview: 'Stand-up notes.',
-        mtime: 2000,
-        isPrivate: false,
-      },
-    ])
-    const [command, args] = mockInvoke.mock.calls[0]!
-    expect(command).toBe('db_query')
-    const sql = String(args['sql'])
-    expect(sql).toContain('daily_date')
-    expect(sql).toContain('is not null')
-    expect(sql).toContain('"is_private"')
-    expect(sql).toContain('order by "daily_date" desc')
-    expect(sql).toContain('limit')
-    expect(args['params']).toEqual(['2026-06-01', '2026-06-30', 0, 32])
-  })
-
-  it('returns an empty list when no daily notes exist in the range', async () => {
-    mockInvoke.mockResolvedValue([])
-    await expect(
-      listDailyNotes({ start: '2025-01-01', end: '2025-01-31', limit: 32 }),
-    ).resolves.toEqual([])
   })
 })
 

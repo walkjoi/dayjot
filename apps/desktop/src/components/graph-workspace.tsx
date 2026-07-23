@@ -13,7 +13,6 @@ import { NoteTemplatesProvider } from '@/providers/note-templates-provider'
 import { ShortcutsProvider } from '@/providers/shortcuts-provider'
 import { SidebarProvider } from '@/providers/sidebar-provider'
 import { SyncProvider } from '@/providers/sync-provider'
-import { V1ImportProvider } from '@/providers/v1-import-provider'
 import { RouterProvider } from '@/routing/router'
 
 interface GraphWorkspaceProps {
@@ -47,19 +46,16 @@ export function GraphWorkspace({ graph }: GraphWorkspaceProps): ReactElement {
                           sidebar describes it, not just the routed day. */}
                       <FocusedDailyProvider>
                         {/* A ⌘-clicked note window is chrome-free: the routed
-                            view only, no sidebar/palette shell. The V1 import
-                            lives above the routed views so closing settings
-                            can't orphan a running import; main window only —
-                            its dialog is the import's single face. */}
+                            view only, no sidebar/palette shell. */}
                         {isMainWindow() ? (
-                          <V1ImportProvider graph={graph}>
+                          <>
                             <WorkspaceContent graph={graph} />
                             {/* First-run handoff: the chooser's GitHub card
                                 marks a one-shot flag and this offers the
                                 Connect-GitHub wizard once the graph is on
                                 screen. */}
                             <PendingGithubSetup graph={graph} />
-                          </V1ImportProvider>
+                          </>
                         ) : (
                           <NoteWindowContent />
                         )}

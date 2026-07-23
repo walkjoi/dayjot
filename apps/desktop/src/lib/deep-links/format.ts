@@ -19,7 +19,7 @@ export function dailyDeepLink(date: string): string {
 
 /**
  * The deep link addressing a route, or null for screens the grammar
- * deliberately doesn't name (all-notes, chat, settings — in-app surfaces, not
+ * deliberately doesn't name (all-notes, settings — in-app surfaces, not
  * addresses). Note routes are path-shaped here; "Copy deep link" prefers the
  * id form via {@link noteDeepLink} so the link survives renames.
  */

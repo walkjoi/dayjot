@@ -24,9 +24,9 @@ import { hapticImpactLight } from '@/mobile/haptics'
  * free because the plugin reports their overlap as 0.
  *
  * Item set and order are V1's toolbar spec (the porting doc's requirements
- * list) minus AI prediction and image capture, which have no v2 substrate
- * yet — plus a dismiss button, which V1 never needed because iOS gives a
- * `contenteditable` no Done key. Renders nothing while no editor is focused:
+ * list) minus V1's AI prediction (DayJot ships no AI) and image capture
+ * (no v2 substrate yet) — plus a dismiss button, which V1 never needed
+ * because iOS gives a `contenteditable` no Done key. Renders nothing while no editor is focused:
  * the All-tab search field raises the keyboard too, and formatting buttons
  * would be dead weight there.
  *

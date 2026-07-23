@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 /**
  * The markdown document model (Plan 03) — the canonical, parser-agnostic shape
- * the indexer (Plan 04), backlinks (Plan 07), and search/AI consume. All
+ * the indexer (Plan 04), backlinks (Plan 07), and search consume. All
  * positions are character offsets into the **original** file (frontmatter
  * included), so they map straight back for splice edits and editor decorations.
  */
@@ -227,6 +227,6 @@ export interface ParsedNote {
   assets: AssetRef[]
   /** DayJot task items in document order — the Tasks projection (Plan 18). */
   tasks: ParsedTask[]
-  /** Plain-text rendering of the body for FTS (Plan 08) + AI context (Plan 10). */
+  /** Plain-text rendering of the body for FTS (Plan 08). */
   text: string
 }

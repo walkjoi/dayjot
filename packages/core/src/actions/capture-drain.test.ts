@@ -291,10 +291,10 @@ describe('drainCaptureInbox', () => {
       }),
     )
     await drain()
-    // Simulate a completed enrichment: H1 and daily link text carry the AI title.
+    // Simulate a completed enrichment: H1 and daily link text carry the scraped title.
     const notePath = 'notes/capture-2026-06-11-093000-000-0000.md'
-    files.set(notePath, (files.get(notePath) ?? '').replace('# An article', '# AI Title'))
-    files.set(DAILY, (files.get(DAILY) ?? '').replace('|An article]]', '|AI Title]]'))
+    files.set(notePath, (files.get(notePath) ?? '').replace('# An article', '# Scraped Title'))
+    files.set(DAILY, (files.get(DAILY) ?? '').replace('|An article]]', '|Scraped Title]]'))
 
     addSpool(envelope()) // same URL re-capture, 15:30
     const outcome = await drain()
@@ -303,7 +303,7 @@ describe('drainCaptureInbox', () => {
     expect(files.get(notePath)).toContain('# An article')
     const daily = files.get(DAILY) ?? ''
     expect(daily).toContain('|An article]]')
-    expect(daily).not.toContain('|AI Title]]')
+    expect(daily).not.toContain('|Scraped Title]]')
   })
 
   it('a dedup refresh leaves a user-edited daily link text alone', async () => {

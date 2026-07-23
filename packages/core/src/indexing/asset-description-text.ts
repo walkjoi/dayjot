@@ -6,13 +6,10 @@ import { splitFrontmatter } from '../markdown/frontmatter'
 /**
  * Folding asset descriptions into a note's search text (Plan 20, search
  * integration). A note's referenced assets each may have a description file
- * (`<asset>.dayjot.md`); their bodies are appended to the note's FTS document
- * so a query matching a description surfaces the note — transparently, as an
- * ordinary hit. The same bodies feed the note's embedding chunks (the semantic
- * leg), so lexical and semantic retrieval see the same asset text. It never
- * enters the All-Notes preview or the note *content* AI reads — chat reaches
- * description text solely through the read_assets tool
- * (`ai/chat/read-assets.ts`), behind its own live privacy gate.
+ * (`<asset>.dayjot.md`, user-written or left by older app versions); their
+ * bodies are appended to the note's FTS document so a query matching a
+ * description surfaces the note — transparently, as an ordinary hit. It
+ * never enters the All-Notes preview.
  */
 
 /** Cap on folded description text per note (chars) — bounds the FTS document. */

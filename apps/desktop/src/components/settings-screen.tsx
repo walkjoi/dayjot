@@ -5,7 +5,6 @@ import { AllNotesSection } from './settings/all-notes-section'
 import { AppearanceSection } from './settings/appearance-section'
 import { DestructiveSection } from './settings/destructive-section'
 import { EditorSection } from './settings/editor-section'
-import { ImportSection } from './settings/import-section'
 import { IntegrationsSection } from './settings/integrations-section'
 import { SyncSection } from './settings/sync-section'
 import { TemplatesSection } from './settings/templates-section'
@@ -27,7 +26,6 @@ export function SettingsScreen(): ReactElement {
         <AgentsSection />
         <IntegrationsSection />
         <SyncSection />
-        <ImportSection />
         <AboutSection />
         <DestructiveSection />
       </div>

@@ -53,7 +53,7 @@ export function MarkdownPreview({
     navigateRef.current = onWikiLinkClick
   })
 
-  // Hosts either always pass the handler (chat) or never do (palette
+  // Hosts either always pass the handler (hover preview) or never do (palette
   // preview), and a passive preview forces links inert either way. An inert
   // preview omits the handler so a chip click is a no-op rather than a dead
   // navigation.

@@ -1,11 +1,11 @@
 import { captureMetaFetch } from '../graph/commands'
 
 /**
- * Meta-tag scraping for link capture (Plan 11) — the no-AI half of
- * enrichment: fetch the captured page (through the hard-capped Rust
- * `capture_meta_fetch` primitive) and pull `<title>`, the meta description,
- * and the OpenGraph basics out of the HTML. Parsing uses `DOMParser`
- * (native in the webview; tests run under jsdom), never regex over HTML.
+ * Meta-tag scraping for link capture (Plan 11) — the enrichment pass: fetch
+ * the captured page (through the hard-capped Rust `capture_meta_fetch`
+ * primitive) and pull `<title>`, the meta description, and the OpenGraph
+ * basics out of the HTML. Parsing uses `DOMParser` (native in the webview;
+ * tests run under jsdom), never regex over HTML.
  */
 
 export interface PageMeta {

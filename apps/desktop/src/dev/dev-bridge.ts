@@ -50,8 +50,8 @@ export function createDevBridge(backend: DevBridgeBackend): IpcBridge {
   const graphInfo = { root: DEV_GRAPH_ROOT, name: 'Dev Graph', generation: 1 }
   let settingsDocument: Record<string, unknown> = { mobileOnboarded: true }
   const assets = new Map<string, string>()
-  // In-memory keychain stand-in so the AI-provider settings flow (and chat,
-  // against a CORS-permissive provider) works end-to-end in the harness.
+  // In-memory keychain stand-in so keychain-backed flows (e.g. GitHub sync
+  // auth) work end-to-end in the harness.
   const secrets = new Map<string, string>()
 
   async function invoke(command: string, args: Record<string, unknown>): Promise<unknown> {

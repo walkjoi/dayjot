@@ -51,17 +51,17 @@ describe('ShortcutsDialog', () => {
     expect(screen.getByText('Keyboard shortcuts', { selector: 'li *' })).toBeTruthy()
   })
 
-  it('lists the AI menu shortcut with the Apple command chord', async () => {
+  it('renders a chorded editor shortcut with Apple keycaps', async () => {
     isApplePlatform.mockReturnValue(true)
     renderDialog()
     await userEvent.click(screen.getByRole('button', { name: 'open' }))
 
-    const row = screen.getByText('Open the AI menu on the selection').closest('li')
+    const row = screen.getByText('Insert a wikilink').closest('li')
 
     if (row === null) {
-      throw new Error('AI menu shortcut row was not rendered')
+      throw new Error('wikilink shortcut row was not rendered')
     }
-    expect([...row.querySelectorAll('kbd')].map((keycap) => keycap.textContent)).toEqual(['⌘', '⇧', 'J'])
+    expect([...row.querySelectorAll('kbd')].map((keycap) => keycap.textContent)).toEqual(['⌘', '⇧', 'K'])
   })
 
   it('keeps the sheet within the viewport and scrolls the shortcut rows', async () => {

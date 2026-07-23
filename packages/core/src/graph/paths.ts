@@ -51,11 +51,9 @@ export function assetPath(name: string): string {
   return `${ASSETS_DIR}/${name}`
 }
 
-/** Graph-relative path to a stored recording under `audio-memos/`. */
-
 /**
- * Suffix of a managed asset-description file (Plan 20): the AI description +
- * OCR for an asset lives beside it as `<asset>.dayjot.md`.
+ * Suffix of a managed asset-description file (Plan 20): descriptive text for
+ * an asset lives beside it as `<asset>.dayjot.md`.
  */
 export const DESCRIPTION_SUFFIX = '.dayjot.md'
 

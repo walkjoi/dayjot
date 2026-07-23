@@ -215,7 +215,6 @@ pub fn run() {
         )
         .manage(fs::GraphState::default())
         .manage(background_task::BackgroundTaskState::default())
-        .manage(fs::ImportCancel::default())
         .manage(fs::assets::AssetUploads::default())
         .manage(db::IndexState::default())
         .manage(watcher::WatcherState::default())
@@ -238,8 +237,6 @@ pub fn run() {
             fs::graph_open,
             fs::graph_create,
             fs::graph_delete,
-            fs::graph_import_reflect_v1_zip,
-            fs::graph_import_cancel,
             fs::note_read,
             fs::note_create,
             fs::note_write,

@@ -21,7 +21,7 @@ connected directly by you.
 
 DayJot is an independent fork of
 [Reflect](https://github.com/team-reflect/reflect-open) (MIT), renamed and
-maintained separately. Importing a Reflect V1 export is still supported.
+maintained separately.
 
 ## Features
 

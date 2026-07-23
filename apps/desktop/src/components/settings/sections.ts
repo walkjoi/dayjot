@@ -13,7 +13,6 @@ export const SETTINGS_SECTIONS = [
   // Only shown where the OS frameworks exist — see use-visible-settings-sections.
   { id: 'integrations', title: 'Integrations' },
   { id: 'sync', title: 'Sync' },
-  { id: 'import', title: 'Import' },
   { id: 'about', title: 'About' },
   { id: 'destructive', title: 'Danger zone' },
 ] as const

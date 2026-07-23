@@ -47,7 +47,7 @@ notes — nothing else.
 ## Lineage
 
 DayJot forked from [Reflect](https://github.com/team-reflect/reflect-open)
-(MIT) in July 2026 and diverged: GitHub-first sync, the AI surface and audio
-memos removed, new branding. Importing a Reflect V1 export is still
-supported. The pre-fork design notes and implementation plans live in git
-history rather than in the tree.
+(MIT) in July 2026 and diverged: GitHub-first sync, the AI surface, audio
+memos, and the Reflect V1 importer removed, new branding. The pre-fork
+design notes and implementation plans live in git history rather than in
+the tree.

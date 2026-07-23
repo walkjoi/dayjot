@@ -12,7 +12,7 @@ import {
 /**
  * The first-run seed (Plan 15 step 1): a brand-new graph gets one short,
  * pinned "How to use DayJot" note. It doubles as the optional-setup surface —
- * backup and AI keys are pointers into Settings, not a wizard — so onboarding
+ * backup setup is a pointer into Settings, not a wizard — so onboarding
  * never gates the editor and "skipping" is just not reading the note.
  */
 

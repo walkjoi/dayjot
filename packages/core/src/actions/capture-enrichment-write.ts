@@ -153,7 +153,7 @@ export async function finishCaptureWrite(
 }
 
 /**
- * Persist a metadata or AI checkpoint. Title changes are prepared in the note
+ * Persist an enrichment checkpoint. Title changes are prepared in the note
  * first and committed only after the Daily alias is updated, making the
  * two-file change recoverable on the next pass.
  */

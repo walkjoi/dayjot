@@ -53,7 +53,7 @@ export const captureEnvelopeSchema = z.object({
    * The page's own meta/OpenGraph description, extracted in-page at capture
    * time (the iOS share extension's Safari preprocessor). The drain writes it
    * into the raw save so an offline capture still lands with a description;
-   * enrichment later replaces it in place with the scraped/AI one.
+   * enrichment later replaces it in place with the scraped one.
    */
   metaDescription: z.string().optional(),
   /** A comment the user typed into the capture UI. */
