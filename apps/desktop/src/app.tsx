@@ -8,7 +8,7 @@ import { useGraph } from '@/providers/graph-provider'
 /**
  * Root component — the Plan 02 loading gate. Routes between the graph chooser
  * and the workspace based on whether a graph is open. Real product surfaces
- * (daily notes, search, AI) hang off the workspace in later plans.
+ * (daily notes, search) hang off the workspace in later plans.
  */
 export function App(): ReactElement {
   const { status, graph, error } = useGraph()

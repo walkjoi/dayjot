@@ -4,7 +4,7 @@ This document helps AI agents and automated systems interact with the DayJot rep
 
 ### What is DayJot
 
-DayJot is a modern note‑taking tool with a TypeScript codebase: offline-first, markdown backed, and open source. DayJot is an independent fork of Reflect V2 (`team-reflect/reflect-open`); "Reflect V1" in docs and code refers to the original commercial Reflect app, which DayJot can still import exports from.
+DayJot is a modern note‑taking tool with a TypeScript codebase: offline-first, markdown backed, and open source. DayJot is an independent fork of Reflect V2 (`team-reflect/reflect-open`); "Reflect V1" in docs and code refers to the original commercial Reflect app.
 
 ### Product Principles
 

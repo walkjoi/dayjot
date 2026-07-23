@@ -14,15 +14,14 @@ import { startOperation } from '@/lib/operations'
 
 /**
  * The link-capture lifecycle for one graph session. Built on
- * {@link createBackgroundReconciler} (shared with transcription and asset
- * descriptions): the single-flight loop, focus/online retries, and teardown live
- * there; this supplies the capture-specific pass and triggers.
+ * {@link createBackgroundReconciler}: the single-flight loop, focus/online
+ * retries, and teardown live there; this supplies the capture-specific pass
+ * and triggers.
  *
  * Every pass runs the two capture phases in order: **drain** the spool inbox
- * (the durable raw save — works without any AI configured), then **enrich**
- * pending captures (meta scrape + BYOK description). The launch pass is the
- * headline behavior: captures spooled while the app was closed land the
- * moment a graph opens.
+ * (the durable raw save), then **enrich** pending captures with scraped page
+ * metadata. The launch pass is the headline behavior: captures spooled while
+ * the app was closed land the moment a graph opens.
  */
 export interface CaptureController {
   /** Attach the triggers (watcher, focus, online) and run the launch pass. */
@@ -70,7 +69,7 @@ export function createCaptureController(options: CaptureControllerOptions): Capt
     startOperation(label).fail(stopped.message)
   }
 
-  /** One pass: drain the spool inbox (no AI needed), then enrich pending captures. */
+  /** One pass: drain the spool inbox, then enrich pending captures. */
   const reconcile = async (isStale: () => boolean): Promise<void> => {
     if (!hasBridge()) {
       return // browser dev: no inbox commands to drain against

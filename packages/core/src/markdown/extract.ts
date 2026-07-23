@@ -144,10 +144,9 @@ function decodeAssetPath(href: string): string {
 /**
  * The canonical on-disk path for an asset href, or `null` when the href is
  * not an asset link at all. The public entry point for callers holding an
- * href copied from raw markdown — e.g. the chat read_assets tool, whose
- * model-supplied paths are the verbatim link targets from note bodies —
- * applying the same {@link decodeAssetPath} rule the index projection uses,
- * so every spelling resolves to the indexed key.
+ * href copied from raw markdown, applying the same {@link decodeAssetPath}
+ * rule the index projection uses, so every spelling resolves to the indexed
+ * key.
  */
 export function canonicalAssetPath(href: string): string | null {
   return isAssetHref(href) ? decodeAssetPath(href) : null

@@ -39,17 +39,6 @@ vi.mock('@/providers/sync-provider', () => ({
     backUpNow: async () => {},
   }),
 }))
-// The Import section only hands the picked zip to the workspace-level V1
-// import controller, which these screen tests don't mount.
-vi.mock('@/providers/v1-import-provider', () => ({
-  useV1Import: () => ({
-    state: { phase: 'idle' },
-    startImport: () => {},
-    cancelImport: () => {},
-    dismiss: () => {},
-  }),
-}))
-
 // jsdom doesn't implement this; Radix Select scrolls the selected option into
 // view when the listbox opens.
 Element.prototype.scrollIntoView ??= () => {}
@@ -888,7 +877,7 @@ describe('SettingsScreen', () => {
     expect(within(dialog).getByText('Go to today')).toBeTruthy()
     expect(within(dialog).getByText('Bold')).toBeTruthy()
     expect(within(dialog).getByText('Heading 1')).toBeTruthy()
-    expect(within(dialog).getByText('Open the AI menu on the selection')).toBeTruthy()
+    expect(within(dialog).getByText('Insert a wikilink')).toBeTruthy()
   })
 
 })

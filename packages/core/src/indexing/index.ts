@@ -78,7 +78,6 @@ export {
   suggestTags,
   getIndexedFileFacts,
   getIndexedFileFactsByPath,
-  listDailyNotes,
   resolveWikiTarget,
   type Backlink,
   type BacklinkContext,
@@ -86,8 +85,6 @@ export {
   type BacklinkContextPageOptions,
   type BacklinkSourceCursor,
   type ConflictedNote,
-  type DailyNoteRow,
-  type DailyNotesRange,
   type DuplicateIdGroup,
   type NoteRow,
   type OpenTask,
@@ -107,12 +104,9 @@ export {
 export {
   listNotes,
   listNoteTags,
-  listRecentNotes,
   type NoteListEntry,
   type NoteListOptions,
   type NoteTagFacet,
-  type RecentNoteRow,
-  type RecentNotesOptions,
 } from './note-list'
 export {
   rankWikiSuggestions,

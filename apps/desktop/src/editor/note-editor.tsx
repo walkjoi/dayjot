@@ -23,7 +23,6 @@ import {
   WikilinkHoverCard,
   type EditorHandle,
   type PendingReplacementResolveHandler,
-  type SelectionMenuSearchHandler,
   type SlashMenuSearchHandler,
   type TagSearchHandler,
   type WikilinkSearchHandler,
@@ -176,11 +175,6 @@ interface NoteEditorProps {
   onWikilinkSearch?: WikilinkSearchHandler
   /** Search tags for the `#` autocomplete menu. */
   onTagSearch?: TagSearchHandler
-  /**
-   * Search prompts for the selection AI menu. Omitting it disables the menu
-   * and its selection affordance entirely (e.g. for `private: true` notes).
-   */
-  onSelectionMenuSearch?: SelectionMenuSearchHandler
   /** Extra controls in the pending-replacement preview footer (e.g. Retry). */
   pendingReplacementActions?: ReactNode
   /** Called when a staged replacement is accepted or discarded. */
@@ -229,7 +223,6 @@ export function NoteEditor({
   onTagClick,
   onWikilinkSearch,
   onTagSearch,
-  onSelectionMenuSearch,
   pendingReplacementActions,
   onPendingReplacementResolve,
   onSlashMenuSearch,
@@ -428,7 +421,6 @@ export function NoteEditor({
         onImageClick={handleImageClick}
         {...(onWikilinkSearch !== undefined ? { onWikilinkSearch } : {})}
         {...(onTagSearch !== undefined ? { onTagSearch } : {})}
-        {...(onSelectionMenuSearch !== undefined ? { onSelectionMenuSearch } : {})}
         {...(pendingReplacementActions !== undefined ? { pendingReplacementActions } : {})}
         {...(onPendingReplacementResolve !== undefined ? { onPendingReplacementResolve } : {})}
         {...(onSlashMenuSearch !== undefined ? { onSlashMenuSearch } : {})}

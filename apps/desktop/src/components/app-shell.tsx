@@ -6,7 +6,7 @@ interface AppShellProps {
   sidebar?: ReactNode
   /** Resize affordance for the workspace aside's inner edge (a separator). */
   sidebarEdge?: ReactNode
-  /** Right context panel (the AI copilot lands here in Plan 10). */
+  /** Right context panel (backlinks and day context). */
   context?: ReactNode
   /** Resize affordance for the context aside's inner edge (a separator). */
   contextEdge?: ReactNode
