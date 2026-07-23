@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1-beta](https://github.com/walkjoi/dayjot/compare/v0.7.0...v0.7.1-beta) (2026-07-23)
+
+
+### Bug Fixes
+
+* show `- [ ]` checkbox items in the Tasks view ([#17](https://github.com/walkjoi/dayjot/issues/17)) ([1ec956b](https://github.com/walkjoi/dayjot/commit/1ec956b5653abb46293060585a7415420f8ecb7f))
+
 ## [0.7.0-beta.14](https://github.com/walkjoi/dayjot/compare/v0.7.0-beta.13...v0.7.0-beta.14) (2026-07-23)
 
 
