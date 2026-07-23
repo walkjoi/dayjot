@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
+import { excalidrawFonts } from './excalidraw-fonts-plugin'
 import { reactWithCompiler } from './react-compiler-plugin'
 // The single version source; tauri.conf.json's `version` also points here.
 import pkg from './package.json'
@@ -10,7 +11,7 @@ const host = process.env.TAURI_DEV_HOST
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [reactWithCompiler(), tailwindcss()],
+  plugins: [reactWithCompiler(), tailwindcss(), excalidrawFonts()],
 
   define: {
     __DAYJOT_VERSION__: JSON.stringify(pkg.version),

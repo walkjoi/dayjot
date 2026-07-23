@@ -1,0 +1,8 @@
+/*
+ * Hide Excalidraw's shape-library trigger: browsing the library reaches an
+ * external catalog (libraries.excalidraw.com), which the no-external-services
+ * principle forbids.
+ */
+.dayjot-drawing-canvas .default-sidebar-trigger {
+  display: none;
+}

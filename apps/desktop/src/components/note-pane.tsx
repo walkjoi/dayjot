@@ -1,10 +1,14 @@
 import { memo, useCallback, useRef, useState, type ReactElement } from 'react'
 import { detectConflictMarkers, isDaily, isTemplatePath, untitledNoteSeed } from '@dayjot/core'
+import type { SlashMenuSearchHandler } from '@meowdown/react'
 import { BacklinksPanel } from '@/components/backlinks-panel'
 import { ConflictNoteView } from '@/components/conflict-note-view'
 import { InlineAlert } from '@/components/inline-alert'
 import { NoteConflictBanner } from '@/components/note-conflict-banner'
 import { ProtectedNoteView } from '@/components/protected-note-view'
+import { DrawingModeDialog } from '@/drawing/drawing-mode-dialog'
+import { useDrawingSlashItems } from '@/drawing/use-drawing-slash-items'
+import { useNoteDrawings } from '@/drawing/use-note-drawings'
 import { SuggestedContactCard } from '@/components/suggested-contact-card'
 import { SyncConflictNotice } from '@/components/sync-conflict-notice'
 import { editorBodyWithDefaultBullet } from '@/editor/default-bullet'
@@ -150,11 +154,45 @@ export function NotePaneComponent({
   // The registry entry this pane made, so unmount removes exactly it (a
   // remount of the same path may already have re-registered).
   const registeredHandle = useRef<{ path: string; handle: NoteEditorHandle } | null>(null)
-  // The `/` menu's template rows insert into this pane's own editor, read
-  // through the registry ref at select time (a late resolve after the pane
-  // unmounted must insert nowhere rather than somewhere stale).
-  const onSlashMenuSearch = useTemplateSlashItems(
-    useCallback(() => registeredHandle.current?.handle ?? null, []),
+  // The `/` menu's rows insert into this pane's own editor, read through the
+  // registry ref at select time (a late resolve after the pane unmounted
+  // must insert nowhere rather than somewhere stale).
+  const getEditor = useCallback(() => registeredHandle.current?.handle ?? null, [])
+  const templateSlashSearch = useTemplateSlashItems(getEditor)
+
+  const onEditorChange = document.onEditorChange
+  const drawings = useNoteDrawings({
+    generation,
+    getEditor,
+    // The preview-source swap after an edit session: `setMarkdown` alone is
+    // silent by contract (it exists for external reloads), so the rewritten
+    // document is pushed through the save pipeline explicitly.
+    applyMarkdown: useCallback(
+      (mutate: (markdown: string) => string) => {
+        const handle = registeredHandle.current?.handle
+        if (handle === undefined || handle === null) {
+          return
+        }
+        const current = handle.getMarkdown()
+        const next = mutate(current)
+        if (next !== current) {
+          handle.setMarkdown(next)
+          onEditorChange(next)
+        }
+      },
+      [onEditorChange],
+    ),
+  })
+  const drawingSlashSearch = useDrawingSlashItems(drawings.openNewDrawing)
+  const onSlashMenuSearch: SlashMenuSearchHandler = useCallback(
+    async (query) => {
+      const [drawingItems, templateItems] = await Promise.all([
+        drawingSlashSearch(query),
+        templateSlashSearch(query),
+      ])
+      return [...drawingItems, ...templateItems]
+    },
+    [drawingSlashSearch, templateSlashSearch],
   )
   const handleRef = useCallback(
     (handle: NoteEditorHandle | null) => {
@@ -296,6 +334,8 @@ export function NotePaneComponent({
         // The grip drag-reorders blocks and the "+" inserts a paragraph below.
         blockHandle={true}
         resolveImageUrl={resolveImageUrl}
+        // A drawing block's click re-enters drawing mode, not the lightbox.
+        claimImageClick={drawings.claimImageClick}
         resolveAssetOpenPath={resolveAssetOpenPath}
         openAsset={openAsset}
         saveFile={saveFile}
@@ -327,6 +367,13 @@ export function NotePaneComponent({
           <BacklinksPanel path={path} />
         </div>
       ) : null}
+
+      <DrawingModeDialog
+        request={drawings.request}
+        generation={generation}
+        onAutosave={drawings.saveSceneDraft}
+        onExit={drawings.exitDrawing}
+      />
     </div>
   )
 }
