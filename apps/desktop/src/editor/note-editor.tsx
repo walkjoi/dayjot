@@ -130,6 +130,12 @@ interface NoteEditorProps {
   /** Resolve an image `![…](…)` source to a displayable URL; unresolved images are skipped. */
   resolveImageUrl?: (src: string) => string | null
   /**
+   * Claim an image click before the lightbox: return true when the host
+   * handled it (e.g. a drawing preview opening drawing mode), false to fall
+   * through to the ordinary image lightbox.
+   */
+  claimImageClick?: (src: string) => boolean
+  /**
    * Vet a source (an image `src` or a link `href`) as a graph-relative asset
    * path for {@link openAsset}. Returns null for remote or unsafe sources.
    */
@@ -212,6 +218,7 @@ export function NoteEditor({
   bulletAfterHeading = false,
   blockHandle = false,
   resolveImageUrl,
+  claimImageClick,
   resolveAssetOpenPath,
   openAsset,
   saveFile,
@@ -241,6 +248,7 @@ export function NoteEditor({
   const onWikiLinkClickRef = useRef(onWikiLinkClick)
   const onTagClickRef = useRef(onTagClick)
   const resolveImageUrlRef = useRef(resolveImageUrl)
+  const claimImageClickRef = useRef(claimImageClick)
   const resolveAssetOpenPathRef = useRef(resolveAssetOpenPath)
   const openAssetRef = useRef(openAsset)
   const saveFileRef = useRef(saveFile)
@@ -250,6 +258,7 @@ export function NoteEditor({
     onWikiLinkClickRef.current = onWikiLinkClick
     onTagClickRef.current = onTagClick
     resolveImageUrlRef.current = resolveImageUrl
+    claimImageClickRef.current = claimImageClick
     resolveAssetOpenPathRef.current = resolveAssetOpenPath
     openAssetRef.current = openAsset
     saveFileRef.current = saveFile
@@ -353,6 +362,11 @@ export function NoteEditor({
     // meowdown cancels it so iOS WebKit can't focus the editor (and raise
     // the keyboard) under the opening lightbox.
     ({ src, alt, event }: { src: string; alt: string; event: MouseEvent | TouchEvent }) => {
+      // A claimed click (a drawing block re-entering its canvas) never
+      // reaches the lightbox.
+      if (claimImageClickRef.current?.(src) === true) {
+        return
+      }
       const displayUrl = resolveImageUrlRef.current?.(src) ?? null
       if (displayUrl === null) {
         return
