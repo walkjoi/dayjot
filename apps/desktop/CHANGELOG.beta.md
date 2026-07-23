@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0-beta.14](https://github.com/walkjoi/dayjot/compare/v0.7.0-beta.13...v0.7.0-beta.14) (2026-07-23)
+
+
+### Bug Fixes
+
+* keep the drawing header clear of the macOS traffic lights ([#12](https://github.com/walkjoi/dayjot/issues/12)) ([52c367b](https://github.com/walkjoi/dayjot/commit/52c367bedf20837caad86d428b8a0edfc5fe424b))
+* leave macOS fullscreen before hiding the window on close ([#11](https://github.com/walkjoi/dayjot/issues/11)) ([7d875c1](https://github.com/walkjoi/dayjot/commit/7d875c11ca04531c135741a81fdb750392b3743e))
+
 ## [0.7.0-beta.13](https://github.com/walkjoi/dayjot/compare/v0.7.0-beta.12...v0.7.0-beta.13) (2026-07-23)
 
 
