@@ -99,7 +99,10 @@ mod platform {
         if installed.is_err() {
             return; // the main thread is unreachable; degrade to a plain hide
         }
-        if tokio::time::timeout(EXIT_DEADLINE, exited_rx).await.is_err() {
+        if tokio::time::timeout(EXIT_DEADLINE, exited_rx)
+            .await
+            .is_err()
+        {
             tracing::warn!("fullscreen exit missed the deadline; hiding anyway");
         }
         // Deregister the observer — dropping a token does not, and a leaked
