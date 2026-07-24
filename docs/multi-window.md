@@ -137,7 +137,13 @@ silently dropped the note window's initial link.
   registered in main. On macOS the main window prevents destruction and hides
   after flushing, so closing the last window leaves DayJot running like a
   native Mac app. Note windows still close normally. Per-window JS state makes
-  both paths correct with no coordination.
+  both paths correct with no coordination. The hide itself is the shell's
+  `window_hide_for_close` command (`src-tauri/src/fullscreen.rs`): hiding a
+  window that owns a macOS fullscreen Space strands the Space as a black
+  screen, so the shell leaves fullscreen first and waits on AppKit's
+  did-exit-full-screen notification — the webview can't sequence this, because
+  tao clears the state `isFullscreen()` reads synchronously inside
+  `setFullscreen(false)`, before the transition starts.
 - **Destroying the main window closes every note window.** This is a fallback
   for shell-driven teardown rather than the macOS user-close path (which hides
   main). Note windows adopt main's graph session and would degrade silently

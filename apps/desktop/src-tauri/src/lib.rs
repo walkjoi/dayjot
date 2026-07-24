@@ -22,6 +22,7 @@ mod db;
 mod devtools;
 mod error;
 mod fs;
+mod fullscreen;
 mod git;
 mod graph_gitignore;
 mod icloud;
@@ -81,8 +82,12 @@ mod app_metadata_tests {
 
 #[cfg(test)]
 mod capability_tests {
+    /// The ⌘W path's remaining core-permission dependency: a note window's
+    /// `onCloseRequested` handler destroys the window after its flush (main
+    /// hides through the app-owned `window_hide_for_close` command instead,
+    /// which no capability gates).
     #[test]
-    fn desktop_capability_allows_main_window_hide() {
+    fn desktop_capability_allows_window_destroy() {
         let capability: serde_json::Value =
             serde_json::from_str(include_str!("../capabilities/default.json"))
                 .expect("valid default capability");
@@ -92,7 +97,7 @@ mod capability_tests {
 
         assert!(permissions
             .iter()
-            .any(|permission| permission.as_str() == Some("core:window:allow-hide")));
+            .any(|permission| permission.as_str() == Some("core:window:allow-destroy")));
     }
 }
 
@@ -304,6 +309,7 @@ pub fn run() {
             windows::open_note_window,
             windows::window_bootstrap,
             windows::close_note_windows,
+            fullscreen::window_hide_for_close,
             devtools::toggle_devtools,
         ])
         .build(tauri::generate_context!())
