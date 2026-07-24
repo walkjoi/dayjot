@@ -28,9 +28,10 @@ tauri-plugin-opener = "2.5.4"
 # Decodes `dayjot-asset://` request paths (`fs/asset_protocol.rs`); the same
 # crate tauri itself uses for its protocol URLs.
 percent-encoding = "2.3.2"
-# `time` backs the bounded wait in `windows::close_note_windows` (tauri
-# already runs on tokio; this only makes the sleep primitive addressable).
-tokio = { version = "1.52.3", features = ["time"] }
+# `time` backs the bounded waits in `windows::close_note_windows` and
+# `fullscreen`, whose exit signal rides a `sync` oneshot (tauri already runs
+# on tokio; this only makes those primitives addressable).
+tokio = { version = "1.52.3", features = ["time", "sync"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 # `hooks` adds the authorizer API used to lock the read-only `db_query` bridge
@@ -69,8 +70,9 @@ reqwest = { version = "0.12.28", default-features = false, features = ["rustls-t
 [target.'cfg(target_os = "macos")'.dependencies]
 xattr = "1.6.1"
 # Apple Calendar read-only bridge (`src/calendar.rs`): EventKit through the
-# objc2 bindings, trimmed to the classes the module touches. objc2-app-kit is
-# only here for EKCalendar's NSColor → hex conversion.
+# objc2 bindings, trimmed to the classes the module touches. objc2-app-kit
+# covers EKCalendar's NSColor → hex conversion plus the NSWindow fullscreen
+# notification the ⌘W hide waits on (`src/fullscreen.rs`).
 objc2 = "0.6.4"
 block2 = "0.6.2"
 objc2-foundation = { version = "0.3.2", default-features = false, features = [
@@ -102,6 +104,7 @@ objc2-app-kit = { version = "0.3.2", default-features = false, features = [
   "std",
   "NSColor",
   "NSColorSpace",
+  "NSWindow",
 ] }
 
 # Apple Contacts integration (`contacts.rs`): live CNContactStore lookups on

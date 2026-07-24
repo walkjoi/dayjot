@@ -27,3 +27,15 @@ export function subscribeQuitRequested(handler: () => void): Promise<Unlisten> {
 export function confirmQuit(): Promise<void> {
   return call('quit_confirm', {}, z.null()).then(() => undefined)
 }
+
+/**
+ * Hide the current window as its ⌘W "close" behavior. On macOS the shell
+ * first leaves the window's fullscreen Space, waiting on AppKit's
+ * did-exit-full-screen notification — hiding a window that still owns a
+ * Space strands it as a black screen. The webview cannot sequence that exit
+ * itself: tao clears the state `isFullscreen()` reads synchronously inside
+ * `setFullscreen(false)`, before the transition even starts.
+ */
+export function hideWindowForClose(): Promise<void> {
+  return call('window_hide_for_close', {}, z.null()).then(() => undefined)
+}

@@ -8,18 +8,13 @@ type CloseRequestedHandler = (event: CloseRequestedEventForTest) => Promise<void
 
 const windowMock = vi.hoisted(() => ({
   closeRequested: null as CloseRequestedHandler | null,
-  hide: vi.fn(async () => {}),
-  fullscreen: false,
-  isFullscreen: vi.fn(async () => windowMock.fullscreen),
-  setFullscreen: vi.fn(async (next: boolean) => {
-    windowMock.fullscreen = next
-  }),
   unlisten: vi.fn(),
 }))
 const platform = vi.hoisted(() => ({ isMacosDesktop: true }))
 const windowRole = vi.hoisted(() => ({ isMainWindow: true }))
 const core = vi.hoisted(() => ({
   confirmQuit: vi.fn(async () => {}),
+  hideWindowForClose: vi.fn(async () => {}),
   quitRequested: null as (() => void) | null,
   unlisten: vi.fn(),
 }))
@@ -29,9 +24,6 @@ const flushBackup = vi.hoisted(() => vi.fn(async () => {}))
 
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({
-    hide: windowMock.hide,
-    isFullscreen: windowMock.isFullscreen,
-    setFullscreen: windowMock.setFullscreen,
     onCloseRequested: async (handler: CloseRequestedHandler) => {
       windowMock.closeRequested = handler
       return windowMock.unlisten
@@ -41,6 +33,7 @@ vi.mock('@tauri-apps/api/window', () => ({
 
 vi.mock('@dayjot/core', () => ({
   confirmQuit: core.confirmQuit,
+  hideWindowForClose: core.hideWindowForClose,
   hasBridge: () => true,
   subscribeQuitRequested: async (handler: () => void) => {
     core.quitRequested = handler
@@ -66,7 +59,6 @@ beforeEach(() => {
   platform.isMacosDesktop = true
   windowRole.isMainWindow = true
   windowMock.closeRequested = null
-  windowMock.fullscreen = false
   core.quitRequested = null
 })
 
@@ -98,44 +90,21 @@ describe('installQuitFlush', () => {
     expect(flushOpenDocuments).toHaveBeenCalledOnce()
     expect(flushSettings).toHaveBeenCalledOnce()
     expect(flushBackup).toHaveBeenCalledOnce()
-    expect(windowMock.hide).toHaveBeenCalledOnce()
+    expect(core.hideWindowForClose).toHaveBeenCalledOnce()
 
     dispose()
   })
 
-  it('leaves the fullscreen Space before hiding, so the screen never goes black', async () => {
-    windowMock.fullscreen = true
+  it('hides through the shell only after the flushes have landed', async () => {
+    // hideWindowForClose is the shell command that also leaves a macOS
+    // fullscreen Space before hiding — the webview must not hide directly.
     const dispose = installQuitFlush()
     const closeRequest = closeCurrentWindow()
 
     await closeRequest.completed
-    expect(windowMock.setFullscreen).toHaveBeenCalledWith(false)
-    expect(windowMock.hide).toHaveBeenCalledOnce()
-    const exitOrder = windowMock.setFullscreen.mock.invocationCallOrder[0]
-    const hideOrder = windowMock.hide.mock.invocationCallOrder[0]
-    expect(exitOrder).toBeLessThan(hideOrder ?? 0)
-
-    dispose()
-  })
-
-  it('does not touch fullscreen state on a windowed close', async () => {
-    const dispose = installQuitFlush()
-    const closeRequest = closeCurrentWindow()
-
-    await closeRequest.completed
-    expect(windowMock.setFullscreen).not.toHaveBeenCalled()
-    expect(windowMock.hide).toHaveBeenCalledOnce()
-
-    dispose()
-  })
-
-  it('still hides when the fullscreen probe fails', async () => {
-    windowMock.isFullscreen.mockRejectedValueOnce(new Error('window gone'))
-    const dispose = installQuitFlush()
-    const closeRequest = closeCurrentWindow()
-
-    await closeRequest.completed
-    expect(windowMock.hide).toHaveBeenCalledOnce()
+    const backupOrder = flushBackup.mock.invocationCallOrder[0]
+    const hideOrder = core.hideWindowForClose.mock.invocationCallOrder[0]
+    expect(backupOrder).toBeLessThan(hideOrder ?? 0)
 
     dispose()
   })
@@ -149,7 +118,7 @@ describe('installQuitFlush', () => {
     await closeRequest.completed
     expect(flushOpenDocuments).toHaveBeenCalledOnce()
     expect(flushBackup).toHaveBeenCalledOnce()
-    expect(windowMock.hide).not.toHaveBeenCalled()
+    expect(core.hideWindowForClose).not.toHaveBeenCalled()
 
     dispose()
   })
@@ -161,7 +130,7 @@ describe('installQuitFlush', () => {
 
     expect(closeRequest.preventDefault).not.toHaveBeenCalled()
     await closeRequest.completed
-    expect(windowMock.hide).not.toHaveBeenCalled()
+    expect(core.hideWindowForClose).not.toHaveBeenCalled()
 
     dispose()
   })

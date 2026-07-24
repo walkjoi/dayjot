@@ -21,7 +21,7 @@ export {
   type MobileStorageInfo,
   type MobileStorageKind,
 } from '../ipc/commands'
-export { confirmQuit, subscribeQuitRequested } from '../app/quit'
+export { confirmQuit, hideWindowForClose, subscribeQuitRequested } from '../app/quit'
 export {
   beginBackgroundTask,
   endBackgroundTask,
