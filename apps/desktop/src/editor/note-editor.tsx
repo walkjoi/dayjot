@@ -27,6 +27,7 @@ import {
   type TagSearchHandler,
   type WikilinkSearchHandler,
 } from '@meowdown/react'
+import { CodeBlockBackspace } from '@/editor/code-block-backspace'
 import { EditorInputTraits } from '@/editor/editor-input-traits'
 import { FormattingToolbarBridge } from '@/editor/formatting-toolbar-bridge'
 import {
@@ -430,6 +431,7 @@ export function NoteEditor({
         resolveFileInfo={handleResolveFileInfo}
         onFileClick={handleFileClick}
       >
+        <CodeBlockBackspace />
         <EditorInputTraits />
         <FormattingToolbarBridge />
         {renderWikilinkHoverCard !== undefined ? (
