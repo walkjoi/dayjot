@@ -22,6 +22,7 @@ function contextFor(notePath: string | null, generation: number | null): Command
     toggleSidebar: vi.fn(),
     toggleContextPanel: vi.fn(),
     toggleFocusMode: vi.fn(),
+    toggleNoteOutline: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => generation,

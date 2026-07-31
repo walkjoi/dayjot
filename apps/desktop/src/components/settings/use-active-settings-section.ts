@@ -1,5 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react'
-import { findScrollContainer, SECTION_JUMP_OFFSET_PX } from './section-scrolling'
+import { findScrollContainer } from '@/lib/scroll-container'
+import { SECTION_JUMP_OFFSET_PX } from './section-scrolling'
 import { SETTINGS_SECTIONS, settingsSectionDomId, type SettingsSectionId } from './sections'
 
 /**

@@ -178,7 +178,7 @@ export function useAppShortcuts(): CommandContext {
     createOpen: templateCreateOpen,
   } = useNoteTemplates()
   const { toggleSidebar, toggleContextPanel, toggleFocusMode } = useSidebar()
-  const { settings } = useSettings()
+  const { settings, updateSettingsWith } = useSettings()
   const timestampFormatRef = useRef(settings.timestampFormat)
   useEffect(() => {
     timestampFormatRef.current = settings.timestampFormat
@@ -245,6 +245,10 @@ export function useAppShortcuts(): CommandContext {
       toggleSidebar,
       toggleContextPanel,
       toggleFocusMode,
+      // A persisted preference, not session panel state: read-modify-write
+      // through the provider so a stale render can't undo a racing update.
+      toggleNoteOutline: () =>
+        updateSettingsWith((current) => ({ editorShowOutline: !current.editorShowOutline })),
       switchGraph: (index) => {
         const recent = recentsRef.current[index]
         if (recent === undefined || recent.root === graphRootRef.current) {
@@ -273,6 +277,7 @@ export function useAppShortcuts(): CommandContext {
       toggleSidebar,
       toggleContextPanel,
       toggleFocusMode,
+      updateSettingsWith,
     ],
   )
 

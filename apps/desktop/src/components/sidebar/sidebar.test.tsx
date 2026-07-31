@@ -126,6 +126,7 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
     toggleSidebar: vi.fn(),
     toggleContextPanel: vi.fn(),
     toggleFocusMode: vi.fn(),
+    toggleNoteOutline: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 1,

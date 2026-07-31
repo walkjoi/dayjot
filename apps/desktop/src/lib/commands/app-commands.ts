@@ -333,6 +333,14 @@ const APP_COMMANDS: AppCommand[] = [
     run: (context) => context.toggleFocusMode(),
   },
   {
+    id: 'view.toggleOutline',
+    title: 'Toggle note outline',
+    keywords: ['headings', 'toc', 'table of contents', 'structure', 'sections', 'map', 'jump'],
+    // ⌘⇧O is taken by open-in-new-window, so the outline gets the alt chord.
+    keybinding: 'Alt-Mod-o',
+    run: (context) => context.toggleNoteOutline(),
+  },
+  {
     id: 'settings.open',
     title: 'Open settings',
     keywords: ['preferences', 'config', 'options'],
