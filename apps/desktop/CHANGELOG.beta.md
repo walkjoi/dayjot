@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0-beta](https://github.com/walkjoi/dayjot/compare/v0.7.1-beta...v0.8.0-beta) (2026-07-31)
+
+
+### Features
+
+* implement CodeBlockBackspace component to handle backspace in code blocks ([8bd5ea2](https://github.com/walkjoi/dayjot/commit/8bd5ea213a3037226ef515e6b0a81dea93ee3572))
+
+
+### Bug Fixes
+
+* closing a fullscreen window with ⌘W no longer turns the screen black ([#19](https://github.com/walkjoi/dayjot/issues/19)) ([774ba2a](https://github.com/walkjoi/dayjot/commit/774ba2a702fa88bff3f344f935e1ad2ca58665f2))
+
 ## [0.7.1-beta](https://github.com/walkjoi/dayjot/compare/v0.7.0...v0.7.1-beta) (2026-07-23)
 
 
