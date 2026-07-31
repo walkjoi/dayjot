@@ -237,6 +237,13 @@ export function EditorSection(): ReactElement {
       />
 
       <SettingsSwitchField
+        legend="Note outline"
+        description="Show a map of the note's headings in the right margin. Hover it to jump between sections."
+        checked={settings.editorShowOutline}
+        onCheckedChange={(checked) => updateSettings({ editorShowOutline: checked })}
+      />
+
+      <SettingsSwitchField
         legend="Spell check"
         description="Underline misspelled words while you type."
         checked={settings.editorSpellCheck}

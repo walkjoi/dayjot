@@ -1,3 +1,4 @@
+import { findScrollContainer } from '@/lib/scroll-container'
 import { settingsSectionDomId, type SettingsSectionId } from './sections'
 
 /**
@@ -6,23 +7,6 @@ import { settingsSectionDomId, type SettingsSectionId } from './sections'
  * where the page's own top padding would put it.
  */
 export const SECTION_JUMP_OFFSET_PX = 32
-
-/**
- * The nearest ancestor that actually scrolls. Used instead of
- * `Element.scrollIntoView`, which walks the whole ancestor chain and can
- * permanently nudge `overflow: hidden` boxes like the workspace frame —
- * scrolling the one container that owns the settings overflow keeps the rest
- * of the layout pinned.
- */
-export function findScrollContainer(node: HTMLElement): HTMLElement | null {
-  for (let parent = node.parentElement; parent !== null; parent = parent.parentElement) {
-    const { overflowY } = getComputedStyle(parent)
-    if (overflowY === 'auto' || overflowY === 'scroll') {
-      return parent
-    }
-  }
-  return null
-}
 
 /**
  * Scrolls the settings page so the given section's heading lands just below

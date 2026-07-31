@@ -98,6 +98,7 @@ function renderPalette(query: string, context?: Partial<CommandContext>) {
     toggleSidebar: vi.fn(),
     toggleContextPanel: vi.fn(),
     toggleFocusMode: vi.fn(),
+    toggleNoteOutline: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 1,

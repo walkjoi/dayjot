@@ -31,6 +31,8 @@ export interface CommandContext {
   toggleContextPanel: () => void
   /** Collapse both panels for a bare canvas; restore both when all hidden. */
   toggleFocusMode: () => void
+  /** Show/hide the note outline rail (flips the persisted `editorShowOutline` setting). */
+  toggleNoteOutline: () => void
   /** Switch to a recent graph by zero-based position in the graph switcher. */
   switchGraph: (index: number) => void
   /** The configured Insert-timestamp format (Settings -> Editor). */

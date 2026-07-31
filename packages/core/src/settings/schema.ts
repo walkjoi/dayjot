@@ -139,6 +139,13 @@ export type EditorFont = z.infer<typeof editorFontSchema>
 export const editorFullWidthSchema = z.boolean().catch(false)
 
 /**
+ * Whether notes show the outline rail — the hoverable heading map in the
+ * note's right margin. On by default; Settings → Editor and the
+ * `view.toggleOutline` command flip it.
+ */
+export const editorShowOutlineSchema = z.boolean().catch(true)
+
+/**
  * The clamp range for a user-adjustable sidebar width, in CSS pixels. Shared
  * between the schema (so a hand-edited document can't wreck the layout) and
  * the drag interaction (so the handle stops where the schema would clamp).
@@ -370,6 +377,7 @@ export const settingsSchema = z
     editorTextSize: editorTextSizeSchema,
     editorFont: editorFontSchema,
     editorFullWidth: editorFullWidthSchema,
+    editorShowOutline: editorShowOutlineSchema,
     sidebarWidth: sidebarWidthSchema,
     contextSidebarWidth: contextSidebarWidthSchema,
     timestampFormat: timestampFormatSchema,

@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react'
+import { NoteOutlineRail } from '@/components/note-outline/note-outline-rail'
 import { NotePane } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
 import { NoteTrashAction } from '@/components/context-sidebar/note-trash-action'
@@ -25,7 +26,9 @@ interface SingleNoteViewProps {
  */
 export function SingleNoteView({ path, heading }: SingleNoteViewProps): ReactElement {
   return (
-    <ScrollRestored className="h-full overflow-auto px-0">
+    // `@container` sizes the outline rail's width gate to the pane, not the
+    // window (the settings route's idiom).
+    <ScrollRestored className="@container h-full overflow-auto px-0">
       <div className="relative mx-auto flex min-h-full w-full max-w-full flex-col py-8">
         {/* The routed note is the focused note, so its actions are always
             on screen: the pin (the old note-actions panel, relocated) and,
@@ -44,6 +47,7 @@ export function SingleNoteView({ path, heading }: SingleNoteViewProps): ReactEle
           gutterClassName="dayjot-content-gutter"
           editorClassName="grow"
         />
+        <NoteOutlineRail />
       </div>
     </ScrollRestored>
   )

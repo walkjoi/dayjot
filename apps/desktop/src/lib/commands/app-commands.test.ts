@@ -75,6 +75,7 @@ function fakeContext(overrides?: Partial<CommandContext>) {
     toggleSidebar: vi.fn(),
     toggleContextPanel: vi.fn(),
     toggleFocusMode: vi.fn(),
+    toggleNoteOutline: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 7,
@@ -143,6 +144,14 @@ describe('app commands', () => {
     await command('shortcuts.show').run(context)
     expect(context.openShortcuts).toHaveBeenCalledTimes(1)
     expect(keybindingFor('shortcuts.show')).toBe('Mod-/')
+  })
+
+  it('view.toggleOutline flips the outline rail through the context capability', async () => {
+    const { context } = fakeContext()
+    await command('view.toggleOutline').run(context)
+    expect(context.toggleNoteOutline).toHaveBeenCalledTimes(1)
+    // ⌘⇧O belongs to open-in-new-window, so the outline rides the alt chord.
+    expect(keybindingFor('view.toggleOutline')).toBe('Alt-Mod-o')
   })
 
   it('template.insert opens the picker only where a note is being edited', async () => {

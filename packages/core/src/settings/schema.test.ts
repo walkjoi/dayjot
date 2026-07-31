@@ -12,6 +12,7 @@ describe('settingsSchema', () => {
       editorTextSize: 14,
       editorFont: 'wenkai',
       editorFullWidth: false,
+      editorShowOutline: true,
       sidebarWidth: 260,
       contextSidebarWidth: 320,
       timestampFormat: '- HH:mm ',
@@ -37,6 +38,7 @@ describe('settingsSchema', () => {
     expect(DEFAULT_SETTINGS.editorTextSize).toBe(14)
     expect(DEFAULT_SETTINGS.editorFont).toBe('wenkai')
     expect(DEFAULT_SETTINGS.editorFullWidth).toBe(false)
+    expect(DEFAULT_SETTINGS.editorShowOutline).toBe(true)
     expect(DEFAULT_SETTINGS.sidebarWidth).toBe(260)
     expect(DEFAULT_SETTINGS.contextSidebarWidth).toBe(320)
     expect(DEFAULT_SETTINGS.timestampFormat).toBe('- HH:mm ')
@@ -90,6 +92,8 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ editorFont: 'inter' }).editorFont).toBe('inter')
     expect(settingsSchema.parse({ editorFullWidth: false }).editorFullWidth).toBe(false)
     expect(settingsSchema.parse({ editorFullWidth: true }).editorFullWidth).toBe(true)
+    expect(settingsSchema.parse({ editorShowOutline: false }).editorShowOutline).toBe(false)
+    expect(settingsSchema.parse({ editorShowOutline: true }).editorShowOutline).toBe(true)
     expect(settingsSchema.parse({ sidebarWidth: 300 }).sidebarWidth).toBe(300)
     expect(settingsSchema.parse({ sidebarWidth: 200 }).sidebarWidth).toBe(200)
     expect(settingsSchema.parse({ sidebarWidth: 480 }).sidebarWidth).toBe(480)
@@ -152,6 +156,8 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ editorFont: 12 }).editorFont).toBe('wenkai')
     expect(settingsSchema.parse({ editorFullWidth: 'yes' }).editorFullWidth).toBe(false)
     expect(settingsSchema.parse({ editorFullWidth: 1 }).editorFullWidth).toBe(false)
+    expect(settingsSchema.parse({ editorShowOutline: 'no' }).editorShowOutline).toBe(true)
+    expect(settingsSchema.parse({ editorShowOutline: 0 }).editorShowOutline).toBe(true)
     expect(settingsSchema.parse({ sidebarWidth: 'wide' }).sidebarWidth).toBe(260)
     // Out-of-range numbers clamp instead of resetting: a near-miss hand-edit
     // keeps its intent.
@@ -204,6 +210,7 @@ describe('settingsSchema', () => {
       editorTextSize: 14,
       editorFont: 'wenkai',
       editorFullWidth: false,
+      editorShowOutline: true,
       sidebarWidth: 260,
       contextSidebarWidth: 320,
       timestampFormat: '- HH:mm ',
