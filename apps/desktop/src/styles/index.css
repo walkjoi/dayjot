@@ -360,6 +360,16 @@ html:root {
   padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
 }
 
+/* The bottom runway (components/note-bottom-runway.tsx): empty scroll room
+   past the end of a note. Sized at or above `caretFloorOffset`
+   (editor/caret-runway.tsx) for every viewport — 32dvh of the window is
+   always at least 28% of the scroll container inside it — so the caret can
+   still reach its resting line while typing the note's very last line. */
+.dayjot-bottom-runway {
+  flex: none;
+  height: clamp(7rem, 32dvh, 22rem);
+}
+
 /* Block spacing comes from the element margins below, not the theme's
    uniform sibling gap. */
 .dayjot-editor > * + * {

@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactElement } from 'react'
 import { dailyPath } from '@dayjot/core'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { DayCalendar } from '@/components/context-sidebar/day-calendar'
+import { NoteBottomRunway } from '@/components/note-bottom-runway'
 import { NotePane } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
 import { ShortcutKeys } from '@/components/shortcut-keys'
@@ -168,6 +169,7 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
           gutterClassName="dayjot-content-gutter"
           editorClassName="grow"
         />
+        <NoteBottomRunway path={dailyPath(date)} />
       </div>
     </ScrollRestored>
   )

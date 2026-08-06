@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react'
+import { NoteBottomRunway } from '@/components/note-bottom-runway'
 import { NoteOutlineRail } from '@/components/note-outline/note-outline-rail'
 import { NotePane } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
@@ -47,6 +48,7 @@ export function SingleNoteView({ path, heading }: SingleNoteViewProps): ReactEle
           gutterClassName="dayjot-content-gutter"
           editorClassName="grow"
         />
+        <NoteBottomRunway path={path} />
         <NoteOutlineRail />
       </div>
     </ScrollRestored>

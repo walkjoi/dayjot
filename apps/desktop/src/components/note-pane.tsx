@@ -11,6 +11,7 @@ import { useDrawingSlashItems } from '@/drawing/use-drawing-slash-items'
 import { useNoteDrawings } from '@/drawing/use-note-drawings'
 import { SuggestedContactCard } from '@/components/suggested-contact-card'
 import { SyncConflictNotice } from '@/components/sync-conflict-notice'
+import { CaretRunway } from '@/editor/caret-runway'
 import { editorBodyWithDefaultBullet } from '@/editor/default-bullet'
 import {
   registerNoteEditorHandle,
@@ -360,7 +361,11 @@ export function NotePaneComponent({
         // also carry `dayjot-editor` keep their own context size.
         className={cn('dayjot-note-surface', gutterClassName, editorClassName)}
         handleRef={handleRef}
-      />
+      >
+        {/* Typing near the bottom of the canvas scrolls the note under the
+            caret instead of letting it hug the bottom edge. */}
+        <CaretRunway />
+      </NoteEditor>
 
       {showBacklinks ? (
         <div className={gutterClassName}>
