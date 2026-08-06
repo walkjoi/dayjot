@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.0-beta](https://github.com/walkjoi/dayjot/compare/v0.7.1-beta...v0.8.0-beta) (2026-08-06)
+
+
+### Features
+
+* add scroll room in notes' bottom area ([912ef83](https://github.com/walkjoi/dayjot/commit/912ef830f0a5896523768426ef15c5c54d526dd2))
+* hoverable heading outline in the note's right margin ([#21](https://github.com/walkjoi/dayjot/issues/21)) ([c893a52](https://github.com/walkjoi/dayjot/commit/c893a524df63d8390042ead09e0952456088f16c))
+* implement CodeBlockBackspace component to handle backspace in code blocks ([8bd5ea2](https://github.com/walkjoi/dayjot/commit/8bd5ea213a3037226ef515e6b0a81dea93ee3572))
+
+
+### Bug Fixes
+
+* closing a fullscreen window with ⌘W no longer turns the screen black ([#19](https://github.com/walkjoi/dayjot/issues/19)) ([774ba2a](https://github.com/walkjoi/dayjot/commit/774ba2a702fa88bff3f344f935e1ad2ca58665f2))
+
 ## [0.7.1-beta](https://github.com/walkjoi/dayjot/compare/v0.7.0...v0.7.1-beta) (2026-07-23)
 
 
