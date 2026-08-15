@@ -2,7 +2,7 @@ import { useMemo, type ReactElement } from 'react'
 import type { DailyWordCount } from '@dayjot/core'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
-import { fillMissingDays, formatDayShort, rangeStartIso } from './series'
+import { fillMissingDays, formatDayShort, rangeStartIso, tooltipDayLabel } from './series'
 
 interface WordsChartProps {
   /** Word counts for the shown window, ascending (missing days are filled here). */
@@ -55,7 +55,7 @@ export function WordsChart({ series, today, days }: WordsChartProps): ReactEleme
             tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
           />
           <ChartTooltip
-            content={<ChartTooltipContent labelFormatter={(label) => formatDayShort(String(label))} />}
+            content={<ChartTooltipContent labelFormatter={(_label, payload) => tooltipDayLabel(payload)} />}
           />
           <Bar
             dataKey="words"

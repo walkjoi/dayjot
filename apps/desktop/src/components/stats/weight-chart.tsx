@@ -5,7 +5,14 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { cn } from '@/lib/utils'
 import { routeForPath } from '@/routing/route'
 import { useRouter } from '@/routing/router'
-import { buildWeightPoints, dayNumberFromIso, formatDayShort, isoFromDayNumber, rangeStartIso } from './series'
+import {
+  buildWeightPoints,
+  dayNumberFromIso,
+  formatDayShort,
+  isoFromDayNumber,
+  rangeStartIso,
+  tooltipDayLabel,
+} from './series'
 
 interface WeightChartProps {
   /** The full per-day series, ascending (the section is not rendered when empty). */
@@ -130,7 +137,7 @@ export function WeightChart({ series, today }: WeightChartProps): ReactElement {
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(label) => formatDayShort(isoFromDayNumber(Number(label)))}
+                  labelFormatter={(_label, payload) => tooltipDayLabel(payload)}
                   formatter={(value, name) => (
                     <div className="flex w-full items-center justify-between gap-4">
                       <span className="text-muted-foreground">

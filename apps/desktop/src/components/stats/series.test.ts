@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildWeightPoints, fillMissingDays, formatDayShort, rangeStartIso } from './series'
+import {
+  buildWeightPoints,
+  fillMissingDays,
+  formatDayShort,
+  isoFromDayNumber,
+  rangeStartIso,
+  tooltipDayLabel,
+} from './series'
 
 describe('buildWeightPoints', () => {
   it('averages over the trailing 7 calendar days, not the last 7 points', () => {
@@ -43,5 +50,31 @@ describe('range and labels', () => {
 
   it('formats a short day label from UTC parts', () => {
     expect(formatDayShort('2026-08-14')).toBe('Aug 14')
+  })
+
+  it('never throws on non-date input — a throwing chart formatter unmounts the app', () => {
+    expect(formatDayShort('')).toBe('')
+    expect(formatDayShort('Weight')).toBe('')
+    expect(isoFromDayNumber(Number.NaN)).toBe('')
+    expect(isoFromDayNumber(Number.POSITIVE_INFINITY)).toBe('')
+  })
+})
+
+describe('tooltipDayLabel', () => {
+  it('reads the hovered point’s own date', () => {
+    const payload = [{ payload: { date: '2026-08-14', kg: 72.5, day: 20_679 } }]
+    expect(tooltipDayLabel(payload)).toBe('Aug 14')
+  })
+
+  it('returns empty for the shapes recharts can hand a label formatter', () => {
+    // The white-screen regression: shadcn's ChartTooltipContent passes the
+    // series' *config label* ('Weight') as the label on numeric axes, so the
+    // date must come from the payload — and any malformed payload must
+    // degrade to an empty label, never a throw.
+    expect(tooltipDayLabel(undefined)).toBe('')
+    expect(tooltipDayLabel([])).toBe('')
+    expect(tooltipDayLabel([{ payload: undefined }])).toBe('')
+    expect(tooltipDayLabel([{ payload: { kg: 72.5 } }])).toBe('')
+    expect(tooltipDayLabel([{ payload: { date: 42 } }])).toBe('')
   })
 })

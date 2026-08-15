@@ -15,15 +15,49 @@ export function dayNumberFromIso(date: string): number {
   return Date.parse(`${date}T00:00:00Z`) / DAY_MS
 }
 
-/** The ISO date for a UTC day number. */
+/**
+ * The ISO date for a UTC day number, or `''` for a non-finite input. Total on
+ * purpose: axis values flow in from the charting library, and a formatter
+ * that can throw (`toISOString` on an invalid date) takes the whole React
+ * tree down with it.
+ */
 export function isoFromDayNumber(day: number): string {
+  if (!Number.isFinite(day)) {
+    return ''
+  }
   return new Date(day * DAY_MS).toISOString().slice(0, 10)
 }
 
-/** A short axis/tooltip label (`Aug 14`), timezone-proof via UTC parts. */
+/**
+ * A short axis/tooltip label (`Aug 14`), timezone-proof via UTC parts, or
+ * `''` when the input isn't a date. Total for the same reason as
+ * {@link isoFromDayNumber}.
+ */
 export function formatDayShort(date: string): string {
   const parsed = new Date(`${date}T00:00:00Z`)
+  if (Number.isNaN(parsed.getTime())) {
+    return ''
+  }
   return `${MONTHS[parsed.getUTCMonth()]} ${parsed.getUTCDate()}`
+}
+
+/**
+ * The tooltip's date label, read from the hovered point itself. The `label`
+ * argument recharts-themed tooltips pass to `labelFormatter` is NOT the axis
+ * value on a numeric axis — shadcn's `ChartTooltipContent` substitutes the
+ * first series' config label (a display string) there, so parsing it as a
+ * number is a crash, not a date. Every Stats data point carries its own ISO
+ * `date`, which is the one source that can't drift.
+ */
+export function tooltipDayLabel(
+  payload: ReadonlyArray<{ payload?: unknown }> | undefined,
+): string {
+  const point = payload?.[0]?.payload
+  if (typeof point !== 'object' || point === null || !('date' in point)) {
+    return ''
+  }
+  const { date } = point as { date?: unknown }
+  return typeof date === 'string' ? formatDayShort(date) : ''
 }
 
 /** The ISO date `days - 1` days before `today` — the first day of an N-day range. */
