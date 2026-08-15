@@ -88,8 +88,8 @@ export async function createDevIndexDb(): Promise<DevIndexDb> {
       removeNote(db, note.path)
       run(
         db,
-        `INSERT INTO notes(path, id, title, title_key, kind, daily_date, is_private, is_pinned, pinned_order, has_conflict, gist_url, gist_stale, file_hash, mtime, updated_at, preview)
-         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO notes(path, id, title, title_key, kind, daily_date, is_private, is_pinned, pinned_order, has_conflict, gist_url, gist_stale, file_hash, mtime, updated_at, preview, word_count)
+         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           note.path,
           note.id,
@@ -107,6 +107,7 @@ export async function createDevIndexDb(): Promise<DevIndexDb> {
           note.mtime,
           note.mtime,
           note.preview,
+          note.wordCount,
         ],
       )
       run(db, 'INSERT INTO note_text(note_path, text) VALUES(?, ?)', [note.path, note.text])
@@ -157,6 +158,13 @@ export async function createDevIndexDb(): Promise<DevIndexDb> {
           ],
         )
       }
+      for (const weight of note.weights) {
+        run(db, 'INSERT INTO weights(note_path, field_offset, kg) VALUES(?, ?, ?)', [
+          note.path,
+          weight.fieldOffset,
+          weight.kg,
+        ])
+      }
       const searchBody = note.assetText === '' ? note.text : `${note.text}\n${note.assetText}`
       run(db, 'INSERT INTO search_fts(path, title, body) VALUES(?, ?, ?)', [
         note.path,
@@ -186,6 +194,7 @@ export async function createDevIndexDb(): Promise<DevIndexDb> {
         run(db, 'UPDATE note_emails SET note_path = ? WHERE note_path = ?', [to, from])
         run(db, 'UPDATE assets SET note_path = ? WHERE note_path = ?', [to, from])
         run(db, 'UPDATE tasks SET note_path = ? WHERE note_path = ?', [to, from])
+        run(db, 'UPDATE weights SET note_path = ? WHERE note_path = ?', [to, from])
         run(db, 'UPDATE search_fts SET path = ? WHERE path = ?', [to, from])
         db.exec('COMMIT')
       } catch (cause) {

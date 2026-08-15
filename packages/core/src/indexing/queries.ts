@@ -20,6 +20,14 @@ export {
 } from './queries-backlinks'
 export { getCompletedTasks, getOpenTasks, type OpenTask } from './queries-tasks'
 export {
+  getDailyNoteDates,
+  getDailyWeights,
+  getDailyWordCounts,
+  getNoteCount,
+  type DailyWeight,
+  type DailyWordCount,
+} from './queries-stats'
+export {
   suggestTags,
   suggestWikiLinkTargets,
   suggestWikiTargets,

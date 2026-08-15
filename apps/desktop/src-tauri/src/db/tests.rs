@@ -11,7 +11,7 @@ use super::query::run_query;
 use super::scan::scan_reconcile;
 use super::write::{
     apply_note, clear_index, move_note, touch_note, IndexedAlias, IndexedEmail, IndexedLink,
-    IndexedNote, IndexedTag, IndexedTask,
+    IndexedNote, IndexedTag, IndexedTask, IndexedWeight,
 };
 
 fn migrated() -> Connection {
@@ -42,12 +42,14 @@ fn note(path: &str, title: &str, links: Vec<IndexedLink>) -> IndexedNote {
         text: format!("{title} body"),
         asset_text: String::new(),
         preview: "body".to_string(),
+        word_count: 2,
         links,
         tags: vec![],
         aliases: vec![],
         emails: vec![],
         assets: vec![],
         tasks: vec![],
+        weights: vec![],
     }
 }
 
@@ -307,17 +309,35 @@ fn backlink_resolution_uses_daily_then_title_then_alias_precedence() {
 
 #[test]
 fn note_key_precedence_migration_preserves_existing_projection_rows() {
+    // Staged with raw v17-shape INSERTs: `apply_note` always writes the current
+    // schema (0020's `word_count` included), which the staged version predates.
+    fn stage_note(conn: &Connection, path: &str, title: &str) {
+        conn.execute(
+            "INSERT INTO notes(path, title, title_key, kind, is_private, is_pinned, has_conflict, gist_stale, file_hash, mtime, updated_at, preview)
+             VALUES(?1, ?2, ?3, 'note', 0, 0, 0, 0, 'h', 0, 0, 'body')",
+            rusqlite::params![path, title, title.to_lowercase()],
+        )
+        .unwrap();
+    }
+
     let mut conn = open_in_memory().expect("open");
     conn.execute_batch("PRAGMA foreign_keys=ON;").unwrap();
     migrate_to(&mut conn, 17).expect("stage v17");
 
-    apply_note(
-        &conn,
-        &aliased_note("notes/tim-maccaw-dad.md", "Tim MacCaw // Dad", "Dad"),
+    stage_note(&conn, "notes/tim-maccaw-dad.md", "Tim MacCaw // Dad");
+    conn.execute(
+        "INSERT INTO aliases(note_path, alias, alias_key) VALUES('notes/tim-maccaw-dad.md', 'Dad', 'dad')",
+        [],
     )
     .unwrap();
-    apply_note(&conn, &note("notes/dad.md", "Dad", vec![])).unwrap();
-    apply_note(&conn, &note("notes/source.md", "Source", vec![wiki("Dad")])).unwrap();
+    stage_note(&conn, "notes/dad.md", "Dad");
+    stage_note(&conn, "notes/source.md", "Source");
+    conn.execute(
+        "INSERT INTO links(source_path, kind, target_raw, target_key, alias, pos_from, pos_to)
+         VALUES('notes/source.md', 'wiki', 'Dad', 'dad', NULL, 0, 0)",
+        [],
+    )
+    .unwrap();
 
     let counts_before: Vec<i64> = ["notes", "links", "aliases"]
         .iter()
@@ -755,6 +775,7 @@ fn clear_cascades_to_child_tables() {
         "aliases",
         "assets",
         "tasks",
+        "weights",
         "search_fts",
     ] {
         let rows = run_query(&conn, &format!("SELECT count(*) AS n FROM {table}"), &[]).unwrap();
@@ -822,6 +843,58 @@ fn apply_note_serializes_task_breadcrumbs() {
         rows[0]["breadcrumbs"],
         Value::from("[\"Project\",\"Phase one\"]")
     );
+}
+
+#[test]
+fn weights_and_word_count_apply_move_and_cascade() {
+    let conn = migrated();
+    let mut day = daily_note("daily/2026-08-14.md", "2026-08-14");
+    day.word_count = 128;
+    day.weights = vec![
+        IndexedWeight {
+            field_offset: 10,
+            kg: 72.5,
+        },
+        IndexedWeight {
+            field_offset: 90,
+            kg: 72.1,
+        },
+    ];
+    apply_note(&conn, &day).unwrap();
+
+    let notes = run_query(
+        &conn,
+        "SELECT word_count FROM notes WHERE path = 'daily/2026-08-14.md'",
+        &[],
+    )
+    .unwrap();
+    assert_eq!(notes[0]["word_count"], Value::from(128));
+
+    let rows = run_query(
+        &conn,
+        "SELECT note_path, field_offset, kg FROM weights ORDER BY field_offset",
+        &[],
+    )
+    .unwrap();
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0]["field_offset"], Value::from(10));
+    assert_eq!(rows[0]["kg"], Value::from(72.5));
+    assert_eq!(rows[1]["kg"], Value::from(72.1));
+
+    // A rename carries the rows to the new path (inside the same deferred-FK
+    // transaction the command layer would open).
+    conn.execute_batch("BEGIN; PRAGMA defer_foreign_keys = ON;")
+        .unwrap();
+    move_note(&conn, "daily/2026-08-14.md", "notes/kept.md").unwrap();
+    conn.execute_batch("COMMIT;").unwrap();
+    let moved = run_query(&conn, "SELECT note_path FROM weights", &[]).unwrap();
+    assert_eq!(moved.len(), 2);
+    assert_eq!(moved[0]["note_path"], Value::from("notes/kept.md"));
+
+    // Re-applying with no weights replaces the rows rather than accreting.
+    apply_note(&conn, &note("notes/kept.md", "Kept", vec![])).unwrap();
+    let cleared = run_query(&conn, "SELECT count(*) AS n FROM weights", &[]).unwrap();
+    assert_eq!(cleared[0]["n"], Value::from(0));
 }
 
 #[test]

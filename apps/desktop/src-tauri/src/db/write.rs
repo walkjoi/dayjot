@@ -41,6 +41,9 @@ pub struct IndexedNote {
     #[serde(default)]
     pub(super) asset_text: String,
     pub(super) preview: String,
+    /// CJK-aware word count of the plain text (Stats page).
+    #[serde(default)]
+    pub(super) word_count: i64,
     pub(super) links: Vec<IndexedLink>,
     pub(super) tags: Vec<IndexedTag>,
     pub(super) aliases: Vec<IndexedAlias>,
@@ -48,6 +51,9 @@ pub struct IndexedNote {
     pub(super) emails: Vec<IndexedEmail>,
     pub(super) assets: Vec<String>,
     pub(super) tasks: Vec<IndexedTask>,
+    /// `weight::` inline-field rows (Stats page).
+    #[serde(default)]
+    pub(super) weights: Vec<IndexedWeight>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,6 +104,16 @@ pub(super) struct IndexedTask {
     pub(super) due_date: Option<String>,
 }
 
+/// One `weight::` inline field (Stats page). `field_offset` is the field's
+/// character offset in the file (UTF-16 units) and, with `note_path`, the
+/// row's primary key.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct IndexedWeight {
+    pub(super) field_offset: i64,
+    pub(super) kg: f64,
+}
+
 /// Replace all rows for `note.path` with its current projection. Caller wraps
 /// this in a transaction; statements are cached so a batch rebuild reuses them.
 ///
@@ -110,8 +126,8 @@ pub(super) fn apply_note(conn: &Connection, note: &IndexedNote) -> AppResult<()>
     remove_note(conn, &note.path)?;
 
     conn.prepare_cached(
-        "INSERT INTO notes(path, id, title, title_key, kind, daily_date, is_private, is_pinned, pinned_order, has_conflict, gist_url, gist_stale, file_hash, mtime, updated_at, preview)
-         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?14, ?15)",
+        "INSERT INTO notes(path, id, title, title_key, kind, daily_date, is_private, is_pinned, pinned_order, has_conflict, gist_url, gist_stale, file_hash, mtime, updated_at, preview, word_count)
+         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?14, ?15, ?16)",
     )?
     .execute(params![
         note.path,
@@ -129,6 +145,7 @@ pub(super) fn apply_note(conn: &Connection, note: &IndexedNote) -> AppResult<()>
         note.file_hash,
         note.mtime,
         note.preview,
+        note.word_count,
     ])?;
     conn.prepare_cached("INSERT INTO note_text(note_path, text) VALUES(?1, ?2)")?
         .execute(params![note.path, note.text])?;
@@ -198,6 +215,14 @@ pub(super) fn apply_note(conn: &Connection, note: &IndexedNote) -> AppResult<()>
             ])?;
         }
     }
+    {
+        let mut stmt = conn.prepare_cached(
+            "INSERT INTO weights(note_path, field_offset, kg) VALUES(?1, ?2, ?3)",
+        )?;
+        for weight in &note.weights {
+            stmt.execute(params![note.path, weight.field_offset, weight.kg])?;
+        }
+    }
     // The FTS body carries the note text plus any referenced assets' description
     // text (Plan 20), so a query matching a description surfaces the note. Only
     // the search index is enriched — `note_text`, `preview`, and AI-reachable
@@ -252,6 +277,8 @@ pub(super) fn move_note(conn: &Connection, from: &str, to: &str) -> AppResult<()
     conn.prepare_cached("UPDATE assets SET note_path = ?2 WHERE note_path = ?1")?
         .execute(params![from, to])?;
     conn.prepare_cached("UPDATE tasks SET note_path = ?2 WHERE note_path = ?1")?
+        .execute(params![from, to])?;
+    conn.prepare_cached("UPDATE weights SET note_path = ?2 WHERE note_path = ?1")?
         .execute(params![from, to])?;
     conn.prepare_cached("UPDATE search_fts SET path = ?2 WHERE path = ?1")?
         .execute(params![from, to])?;

@@ -202,14 +202,31 @@ export interface ParsedTask extends TaskMarker {
   dueDate: string | null
 }
 
+/**
+ * One `weight:: <kg>` inline field (the Stats page's weight log). The value is
+ * always kilograms — the optional `kg` suffix is the only unit the grammar
+ * accepts. Date semantics come from the owning daily note, not the field.
+ */
+export interface ParsedWeight {
+  /**
+   * Character offset of the field's `w` in the **original** file (UTF-16 code
+   * units) — the row key alongside the path, and document order for "last
+   * entry of the day".
+   */
+  fieldOffset: number
+  /** The logged weight in kilograms. */
+  kg: number
+}
+
 /** Version of the extraction contract; bump on breaking shape changes.
  * 1 — Plan 03 baseline · 2 — `tasks: ParsedTask[]` (with `dueDate`) added (Plan 18) ·
  * 3 — tasks limited to round Meowdown `+ [ ]` / `+ [x]` syntax; square checklist
  * checkboxes are excluded.
  * 4 — task rows carry parent outline/list breadcrumbs.
  * 5 — tasks widened back to every bullet-list GFM checkbox (`-`/`*`/`+`); only
- * ordered-list checkbox markers stay excluded. */
-export const PARSED_NOTE_VERSION = 5
+ * ordered-list checkbox markers stay excluded.
+ * 6 — `weights: ParsedWeight[]` added (`weight::` inline fields, Stats page). */
+export const PARSED_NOTE_VERSION = 6
 
 /** The full parse of one note — the stable contract downstream plans depend on. */
 export interface ParsedNote {
@@ -230,6 +247,8 @@ export interface ParsedNote {
   assets: AssetRef[]
   /** DayJot task items in document order — the Tasks projection (Plan 18). */
   tasks: ParsedTask[]
+  /** `weight::` inline fields in document order — the Stats weight projection. */
+  weights: ParsedWeight[]
   /** Plain-text rendering of the body for FTS (Plan 08). */
   text: string
 }

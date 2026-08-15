@@ -30,6 +30,8 @@ export function parseDeepLink(raw: string): DeepLink | null {
       return argument === '' ? { kind: 'navigate', route: { kind: 'today' } } : null
     case 'tasks':
       return argument === '' ? { kind: 'navigate', route: { kind: 'tasks' } } : null
+    case 'stats':
+      return argument === '' ? { kind: 'navigate', route: { kind: 'stats' } } : null
     case 'daily':
       return isIsoDate(argument)
         ? { kind: 'navigate', route: { kind: 'daily', date: argument } }

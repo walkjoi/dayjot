@@ -69,8 +69,8 @@ export function applyProjection(database: DatabaseSync, indexed: IndexedNote): v
     .prepare(
       `INSERT INTO notes(
         path, id, title, title_key, kind, daily_date, is_private, is_pinned,
-        pinned_order, mtime, file_hash, preview, has_conflict, gist_url, gist_stale
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        pinned_order, mtime, file_hash, preview, word_count, has_conflict, gist_url, gist_stale
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       indexed.path,
@@ -85,6 +85,7 @@ export function applyProjection(database: DatabaseSync, indexed: IndexedNote): v
       indexed.mtime,
       indexed.fileHash,
       indexed.preview,
+      indexed.wordCount,
       Number(indexed.hasConflict),
       indexed.gistUrl,
       Number(indexed.gistStale),
@@ -112,6 +113,13 @@ export function applyProjection(database: DatabaseSync, indexed: IndexedNote): v
       link.posFrom,
       link.posTo,
     )
+  }
+
+  const insertWeight = database.prepare(
+    'INSERT INTO weights(note_path, field_offset, kg) VALUES (?, ?, ?)',
+  )
+  for (const weight of indexed.weights) {
+    insertWeight.run(indexed.path, weight.fieldOffset, weight.kg)
   }
 }
 

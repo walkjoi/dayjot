@@ -110,6 +110,12 @@ const APP_COMMANDS: AppCommand[] = [
     run: (context) => context.navigate({ kind: 'tasks' }),
   },
   {
+    id: 'nav.stats',
+    title: 'Stats',
+    keywords: ['statistics', 'streak', 'weight', 'chart', 'words'],
+    run: (context) => context.navigate({ kind: 'stats' }),
+  },
+  {
     id: 'note.new',
     title: 'New note',
     keywords: ['create'],

@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import { lazy, Suspense, type ReactElement } from 'react'
 import { AllNotesScreen } from '@/components/all-notes/all-notes-screen'
 import { DailyView } from '@/components/daily-view'
 import { SearchRoute } from '@/components/search-route'
@@ -8,6 +8,13 @@ import { SettingsScreen } from '@/components/settings-screen'
 import { TasksScreen } from '@/components/tasks/tasks-screen'
 import { useRouter } from '@/routing/router'
 import { ScrollRestored } from '@/routing/scroll-restore'
+
+// Lazy so the charting dependency (recharts) stays out of the startup bundle —
+// the editor never pays for a screen most sessions don't open (the Excalidraw
+// canvas takes the same shape).
+const StatsScreen = lazy(() =>
+  import('@/components/stats/stats-screen').then((module) => ({ default: module.StatsScreen })),
+)
 
 /**
  * The route → view mapping (Plan 06): the single place a {@link Route} kind
@@ -38,6 +45,13 @@ export function RouteContent(): ReactElement {
       // Owns its scroll container (a grouped list with a fixed header), so no
       // ScrollRestored wrapper — same shape as All Notes.
       return <TasksScreen />
+    case 'stats':
+      // Owns its scroll container (header + centered column), like Tasks.
+      return (
+        <Suspense fallback={<div className="h-full" />}>
+          <StatsScreen />
+        </Suspense>
+      )
     case 'search':
       return <SearchRoute query={route.query} />
     case 'graphs':

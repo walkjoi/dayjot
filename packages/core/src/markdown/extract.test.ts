@@ -332,3 +332,47 @@ describe('parseNote — meowdown grammar recovery & new inline nodes', () => {
     expect(note.tags).toEqual(['alpha', 'beta'])
   })
 })
+
+describe('parseNote — weight fields', () => {
+  it('extracts a bare weight field with its file offset', () => {
+    const note = parse('weight:: 72.5\n')
+    expect(note.weights).toEqual([{ fieldOffset: 0, kg: 72.5 }])
+  })
+
+  it('accepts an optional kg suffix, any casing, and no space after ::', () => {
+    expect(parse('weight:: 72kg\n').weights).toEqual([{ fieldOffset: 0, kg: 72 }])
+    expect(parse('Weight:: 80.2KG\n').weights).toEqual([{ fieldOffset: 0, kg: 80.2 }])
+    expect(parse('weight::71.9\n').weights).toEqual([{ fieldOffset: 0, kg: 71.9 }])
+  })
+
+  it('reads a field after a bullet and interstitial timestamp', () => {
+    const note = parse('- 08:12 weight:: 72.5\n')
+    expect(note.weights).toEqual([{ fieldOffset: 8, kg: 72.5 }])
+  })
+
+  it('keeps multiple entries in document order', () => {
+    const note = parse('weight:: 72.5\n\n- notes\n\nweight:: 72.1kg\n')
+    expect(note.weights.map((weight) => weight.kg)).toEqual([72.5, 72.1])
+  })
+
+  it('maps offsets to original-file coordinates past frontmatter', () => {
+    const source = '---\nprivate: true\n---\nweight:: 70\n'
+    const note = parse(source)
+    expect(note.weights).toEqual([{ fieldOffset: source.indexOf('weight::'), kg: 70 }])
+    expect(source.slice(note.weights[0]!.fieldOffset)).toMatch(/^weight::/)
+  })
+
+  it('rejects values that are not plain kilograms', () => {
+    const note = parse('weight:: 72.5lbs\nweight:: 72.\nweight::\nweight:: kg\n')
+    expect(note.weights).toEqual([])
+  })
+
+  it('requires a boundary before the keyword', () => {
+    expect(parse('myweight:: 72\n').weights).toEqual([])
+  })
+
+  it('ignores fields inside code, where the text is literal', () => {
+    const note = parse('```\nweight:: 72.5\n```\n\nUse `weight:: 70` to log.\n')
+    expect(note.weights).toEqual([])
+  })
+})

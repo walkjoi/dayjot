@@ -55,6 +55,7 @@ export {
   pinnedOrder,
   PARSED_NOTE_VERSION,
   parseNote,
+  countWords,
   appendBlock,
   appendUnderHeading,
   appendTaskLine,
@@ -162,6 +163,10 @@ export {
   getNotesByTag,
   getOpenTasks,
   getCompletedTasks,
+  getDailyNoteDates,
+  getDailyWeights,
+  getDailyWordCounts,
+  getNoteCount,
   groupTaskContexts,
   groupTasks,
   taskDateBucket,
@@ -202,6 +207,8 @@ export {
   type DuplicateIdGroup,
   type NoteRow,
   type OpenTask,
+  type DailyWeight,
+  type DailyWordCount,
   type TaskContext,
   type TaskGroup,
   type TaskGroupKind,
@@ -226,3 +233,4 @@ export {
   type TitleRenameRewriteOptions,
   type TitleRenameRewriteResult,
 } from '../indexing'
+export { computeStreaks, type Streaks } from '../stats/streaks'

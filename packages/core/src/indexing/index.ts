@@ -50,6 +50,7 @@ export {
   type IndexedLink,
   type IndexedTag,
   type IndexedAlias,
+  type IndexedWeight,
 } from './indexed-note'
 export {
   indexNote,
@@ -72,6 +73,10 @@ export {
   getNotesByTag,
   getOpenTasks,
   getCompletedTasks,
+  getDailyNoteDates,
+  getDailyWeights,
+  getDailyWordCounts,
+  getNoteCount,
   getPinnedNotes,
   suggestWikiTargets,
   suggestWikiLinkTargets,
@@ -88,6 +93,8 @@ export {
   type DuplicateIdGroup,
   type NoteRow,
   type OpenTask,
+  type DailyWeight,
+  type DailyWordCount,
   type PinnedNote,
   type TagSuggestion,
   type WikiLinkSuggestionResult,

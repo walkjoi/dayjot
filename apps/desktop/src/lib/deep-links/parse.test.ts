@@ -12,6 +12,10 @@ describe('parseDeepLink', () => {
       kind: 'navigate',
       route: { kind: 'tasks' },
     })
+    expect(parseDeepLink('dayjot://stats')).toEqual({
+      kind: 'navigate',
+      route: { kind: 'stats' },
+    })
   })
 
   it('tolerates a trailing slash and the host lower-casing of the parser', () => {
@@ -28,6 +32,7 @@ describe('parseDeepLink', () => {
   it('rejects stray path segments on bare verbs', () => {
     expect(parseDeepLink('dayjot://today/extra')).toBeNull()
     expect(parseDeepLink('dayjot://tasks/2026')).toBeNull()
+    expect(parseDeepLink('dayjot://stats/weight')).toBeNull()
   })
 
   it('parses calendar-valid daily dates and rejects impossible ones', () => {

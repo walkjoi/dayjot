@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { isUntitledNotePath, type GraphInfo } from '@dayjot/core'
-import { ListChecks, SquarePen } from 'lucide-react'
+import { ChartLine, ListChecks, SquarePen } from 'lucide-react'
 import { ListIcon } from '@/components/icons/list-icon'
 import { PencilIcon } from '@/components/icons/pencil-icon'
 import { usePinnedNotes } from '@/hooks/use-pinned-notes'
@@ -116,6 +116,17 @@ export function Sidebar({ graph, context }: SidebarProps): ReactElement {
             binding={keybindingFor('nav.tasks') ?? undefined}
             active={route.kind === 'tasks'}
             onClick={() => void runCommand('nav.tasks', context)}
+          />
+          <SidebarItem
+            icon={
+              <span className={lucideBox}>
+                <ChartLine aria-hidden strokeWidth={1.75} className="size-4" />
+              </span>
+            }
+            label="Stats"
+            binding={keybindingFor('nav.stats') ?? undefined}
+            active={route.kind === 'stats'}
+            onClick={() => void runCommand('nav.stats', context)}
           />
         </nav>
       </div>

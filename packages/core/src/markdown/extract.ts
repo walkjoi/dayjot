@@ -16,6 +16,7 @@ import type {
   MarkdownLink,
   ParsedNote,
   ParsedTask,
+  ParsedWeight,
   Span,
   WikiLink,
 } from './model'
@@ -32,6 +33,11 @@ import type {
 
 // A `#tag`: boundary, a leading letter, then tag chars. Excludes `##`, `#123`, `a#b`.
 const TAG_RE = /(^|\s)#(\p{L}[\p{L}\p{N}/_-]*)/gu
+
+// A `weight::` inline field: boundary, the keyword, then the value token (which
+// `parseWeightValue` validates — the regex stays liberal so `weight:: 72.5lbs`
+// is *seen* and rejected rather than half-matched as `72.5`).
+const WEIGHT_FIELD_RE = /(^|[ \t])weight::[ \t]*(\S+)?/gim
 // The name grammar alone (no `#`, anchored) — the single source for "could
 // this string ever be a tag?" checks (e.g. settings' pinned filter tags).
 const TAG_NAME_RE = /^\p{L}[\p{L}\p{N}/_-]*$/u
@@ -253,6 +259,36 @@ function inAnyRange(index: number, ranges: Span[]): boolean {
   return ranges.some((range) => index >= range.from && index < range.to)
 }
 
+/**
+ * The kilograms a `weight::` value token logs, or `null` when the token isn't
+ * a plain decimal with an optional `kg` suffix. Strict on purpose: `72.5lbs`
+ * or `72.` must be skipped, never misread as kilograms.
+ */
+function parseWeightValue(token: string): number | null {
+  const bare = token.replace(/kg$/i, '')
+  if (!/^\d+(?:\.\d+)?$/.test(bare)) {
+    return null
+  }
+  const kg = Number(bare)
+  return Number.isFinite(kg) ? kg : null
+}
+
+function collectWeights(body: string, excluded: Span[], bodyOffset: number): ParsedWeight[] {
+  const weights: ParsedWeight[] = []
+  for (const match of body.matchAll(WEIGHT_FIELD_RE)) {
+    // The boundary group is mandatory in WEIGHT_FIELD_RE, so a match populates it.
+    const fieldStart = (match.index ?? 0) + match[1]!.length
+    if (inAnyRange(fieldStart, excluded)) {
+      continue // code keeps `weight::` literal; URLs/wiki targets aren't fields
+    }
+    const kg = match[2] === undefined ? null : parseWeightValue(match[2])
+    if (kg !== null) {
+      weights.push({ fieldOffset: fieldStart + bodyOffset, kg })
+    }
+  }
+  return weights
+}
+
 function collectTags(body: string, excluded: Span[], into: Map<string, string>): void {
   for (const match of body.matchAll(TAG_RE)) {
     // Both groups are mandatory in TAG_RE, so a match always populates them.
@@ -396,6 +432,7 @@ export function parseNote(input: { path: string; source: string }): ParsedNote {
     headings,
     assets,
     tasks,
+    weights: collectWeights(body, tagExcluded, bodyOffset),
     text: buildPlainText(body, cuts, literalPlainText),
   }
 }

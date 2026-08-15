@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { dateFromDailyPath, isDaily, isTemplatePath } from '../graph/paths'
 import {
+  countWords,
   detectConflictMarkers,
   extractEmailFields,
   foldEmail,
@@ -74,8 +75,11 @@ import { serializeWikiSuggestionAddress } from './suggest'
  * 17 — `tasks` projection widened back to every bullet-list GFM checkbox
  * (`- [ ]` / `* [ ]` alongside `+ [ ]`): existing notes carry no square task
  * rows until reprojected, so the bump backfills them.
+ * 18 — `weights` projection (`weight::` inline fields) and `notes.word_count`
+ * (Stats page): existing notes carry no weight rows and a zero word count
+ * until reprojected, so the bump backfills both.
  */
-export const PROJECTION_VERSION = 17
+export const PROJECTION_VERSION = 18
 
 export const indexedLinkSchema = z.object({
   kind: z.enum(['wiki', 'md']),
@@ -140,6 +144,14 @@ export const indexedTaskSchema = z.object({
 })
 export type IndexedTask = z.infer<typeof indexedTaskSchema>
 
+export const indexedWeightSchema = z.object({
+  /** Character offset of the field's `w` in the file (UTF-16 units) — the row PK with `path`. */
+  fieldOffset: z.number(),
+  /** The logged weight in kilograms (`weight::` accepts no other unit). */
+  kg: z.number(),
+})
+export type IndexedWeight = z.infer<typeof indexedWeightSchema>
+
 /** What a `notes` row is: part of the graph (daily/note) or a template. */
 export const noteKindSchema = z.enum(['daily', 'note', 'template'])
 export type NoteKind = z.infer<typeof noteKindSchema>
@@ -173,6 +185,8 @@ export const indexedNoteSchema = z.object({
   assetText: z.string(),
   /** The All Notes row snippet, derived once here rather than per query. */
   preview: z.string(),
+  /** CJK-aware word count of the plain text, derived once here (Stats page). */
+  wordCount: z.number(),
   links: z.array(indexedLinkSchema),
   tags: z.array(indexedTagSchema),
   aliases: z.array(indexedAliasSchema),
@@ -181,6 +195,8 @@ export const indexedNoteSchema = z.object({
   assets: z.array(z.string()),
   /** DayJot task rows for the Tasks projection (Plan 18). */
   tasks: z.array(indexedTaskSchema),
+  /** Weight rows for the Stats projection (`weight::` inline fields). */
+  weights: z.array(indexedWeightSchema),
 })
 export type IndexedNote = z.infer<typeof indexedNoteSchema>
 
@@ -274,6 +290,7 @@ export function buildIndexedNote(
     text: parsed.text,
     assetText: meta.assetText ?? '',
     preview: previewSnippet(parsed.text, parsed.title),
+    wordCount: countWords(parsed.text),
     links: [...wikiLinks, ...mdLinks],
     tags: parsed.tags.map((tag) => ({ tag, tagKey: foldTag(tag) })),
     aliases: projectNoteAliases(parsed),
@@ -286,6 +303,10 @@ export function buildIndexedNote(
       raw: task.raw,
       checked: task.checked,
       dueDate: task.dueDate,
+    })),
+    weights: parsed.weights.map((weight) => ({
+      fieldOffset: weight.fieldOffset,
+      kg: weight.kg,
     })),
   }
 }

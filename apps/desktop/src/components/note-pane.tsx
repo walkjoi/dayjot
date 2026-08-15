@@ -24,6 +24,7 @@ import { useEditorAutocomplete } from '@/editor/use-editor-autocomplete'
 import { useNoteDocument } from '@/editor/use-note-document'
 import { useTagNavigation } from '@/editor/use-tag-navigation'
 import { useTemplateSlashItems } from '@/editor/use-template-slash-items'
+import { useWeightSlashItems } from '@/editor/use-weight-slash-items'
 import { useWikiLinkNavigation } from '@/editor/use-wiki-link-navigation'
 import { useWikiLinkHoverPreview } from '@/editor/use-wiki-link-hover-preview'
 import { isTouchEditorSurface } from '@/lib/platform-surface'
@@ -160,6 +161,7 @@ export function NotePaneComponent({
   // must insert nowhere rather than somewhere stale).
   const getEditor = useCallback(() => registeredHandle.current?.handle ?? null, [])
   const templateSlashSearch = useTemplateSlashItems(getEditor)
+  const weightSlashSearch = useWeightSlashItems(getEditor)
 
   const onEditorChange = document.onEditorChange
   const drawings = useNoteDrawings({
@@ -187,13 +189,14 @@ export function NotePaneComponent({
   const drawingSlashSearch = useDrawingSlashItems(drawings.openNewDrawing)
   const onSlashMenuSearch: SlashMenuSearchHandler = useCallback(
     async (query) => {
-      const [drawingItems, templateItems] = await Promise.all([
+      const [drawingItems, templateItems, weightItems] = await Promise.all([
         drawingSlashSearch(query),
         templateSlashSearch(query),
+        weightSlashSearch(query),
       ])
-      return [...drawingItems, ...templateItems]
+      return [...drawingItems, ...templateItems, ...weightItems]
     },
-    [drawingSlashSearch, templateSlashSearch],
+    [drawingSlashSearch, templateSlashSearch, weightSlashSearch],
   )
   const handleRef = useCallback(
     (handle: NoteEditorHandle | null) => {

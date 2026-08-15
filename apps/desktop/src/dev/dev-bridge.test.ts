@@ -29,12 +29,14 @@ function projection(path: string, mtime: number, fileHash: string): IndexedNote 
     text: 'body',
     assetText: '',
     preview: 'body',
+    wordCount: 1,
     links: [],
     tags: [],
     aliases: [],
     emails: [],
     assets: [],
     tasks: [],
+    weights: [],
   }
 }
 

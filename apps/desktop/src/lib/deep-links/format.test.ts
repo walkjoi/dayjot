@@ -8,6 +8,7 @@ describe('deepLinkForRoute', () => {
     const routes: Route[] = [
       { kind: 'today' },
       { kind: 'tasks' },
+      { kind: 'stats' },
       { kind: 'daily', date: '2026-07-01' },
       { kind: 'search', query: 'meeting notes & more' },
     ]

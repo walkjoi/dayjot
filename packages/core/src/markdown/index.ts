@@ -18,6 +18,7 @@ export {
   type AssetRef,
   type TaskMarker,
   type ParsedNote,
+  type ParsedWeight,
 } from './model'
 export {
   splitFrontmatter,
@@ -68,6 +69,7 @@ export { extractEmailFields, foldEmail } from './email-fields'
 export { foldFallbackTitleKey, foldKey, foldTag } from './keys'
 export { gistBodyHash, gistFilename } from './gist'
 export { slugForTitle } from './slug'
+export { countWords } from './word-count'
 export { subjectAliases } from './subject-aliases'
 export {
   normalizeWikiTarget,

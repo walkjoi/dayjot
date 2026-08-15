@@ -37,6 +37,7 @@ function sampleNote(overrides: Partial<IndexedNote> = {}): IndexedNote {
     text: 'Sample Note body about local-first sync',
     assetText: '',
     preview: 'body about local-first sync',
+    wordCount: 7,
     links: [
       {
         kind: 'wiki',
@@ -61,6 +62,7 @@ function sampleNote(overrides: Partial<IndexedNote> = {}): IndexedNote {
         dueDate: null,
       },
     ],
+    weights: [],
     ...overrides,
   }
 }

@@ -174,6 +174,8 @@ describe('Sidebar', () => {
     await userEvent.click(view.getByRole('button', { name: /settings/i }))
     await waitFor(() => expect(navigate).toHaveBeenCalledWith({ kind: 'settings' }))
 
+    await userEvent.click(view.getByRole('button', { name: /stats/i }))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith({ kind: 'stats' }))
   })
 
   it('New note runs its command and shows active while the placeholder note is open', async () => {

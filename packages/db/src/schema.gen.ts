@@ -74,6 +74,7 @@ export interface Notes {
   title: string;
   titleKey: string;
   updatedAt: Generated<number>;
+  wordCount: Generated<number>;
 }
 
 export interface NoteText {
@@ -103,6 +104,12 @@ export interface Tasks {
   text: string;
 }
 
+export interface Weights {
+  fieldOffset: number;
+  kg: number;
+  notePath: string;
+}
+
 export interface DB {
   aliases: Aliases;
   assets: Assets;
@@ -116,4 +123,5 @@ export interface DB {
   searchFts: SearchFts;
   tags: Tags;
   tasks: Tasks;
+  weights: Weights;
 }

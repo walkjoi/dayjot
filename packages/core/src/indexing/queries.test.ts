@@ -4,7 +4,11 @@ import {
   dailyDatesInRange,
   findExactWikiTargetMatches,
   getBacklinksWithContext,
+  getDailyNoteDates,
+  getDailyWeights,
+  getDailyWordCounts,
   getDuplicateNoteIds,
+  getNoteCount,
   getNoteIdsByPath,
   getOpenTasks,
   getPinnedNotes,
@@ -624,5 +628,58 @@ describe('getOpenTasks', () => {
     const [, args] = mockInvoke.mock.calls[0]!
     expect(String(args['sql'])).toContain('"notes"."kind" != ?')
     expect(args['params']).toContain('template')
+  })
+})
+
+describe('getDailyWeights', () => {
+  it("reduces a day's entries to the last one and keys the series by date", async () => {
+    mockInvoke.mockResolvedValue([
+      { daily_date: '2026-08-13', kg: 73.1, note_path: 'daily/2026-08-13.md' },
+      { daily_date: '2026-08-14', kg: 72.5, note_path: 'daily/2026-08-14.md' },
+      { daily_date: '2026-08-14', kg: 72.1, note_path: 'daily/2026-08-14.md' },
+    ])
+
+    await expect(getDailyWeights()).resolves.toEqual([
+      { date: '2026-08-13', kg: 73.1, notePath: 'daily/2026-08-13.md' },
+      { date: '2026-08-14', kg: 72.1, notePath: 'daily/2026-08-14.md' }, // last entry wins
+    ])
+
+    const [, args] = mockInvoke.mock.calls[0]!
+    const sql = String(args['sql'])
+    expect(sql).toContain('"weights"')
+    expect(sql).toContain('"kind" = ?') // only daily notes carry date semantics
+    expect(sql).toContain('"field_offset"') // document order breaks same-day ties
+    expect(args['params']).toContain('daily')
+  })
+})
+
+describe('getDailyNoteDates', () => {
+  it('returns the indexed daily dates ascending', async () => {
+    mockInvoke.mockResolvedValue([{ daily_date: '2026-08-13' }, { daily_date: '2026-08-14' }])
+    await expect(getDailyNoteDates()).resolves.toEqual(['2026-08-13', '2026-08-14'])
+    const [, args] = mockInvoke.mock.calls[0]!
+    expect(String(args['sql'])).toContain('"daily_date" is not null')
+  })
+})
+
+describe('getNoteCount', () => {
+  it('counts every note except templates', async () => {
+    mockInvoke.mockResolvedValue([{ count: 42 }])
+    await expect(getNoteCount()).resolves.toBe(42)
+    const [, args] = mockInvoke.mock.calls[0]!
+    expect(String(args['sql'])).toContain('"kind" != ?')
+    expect(args['params']).toContain('template')
+  })
+})
+
+describe('getDailyWordCounts', () => {
+  it('returns per-day word counts from the stored projection column', async () => {
+    mockInvoke.mockResolvedValue([{ daily_date: '2026-08-14', word_count: 128 }])
+    await expect(getDailyWordCounts('2026-05-17')).resolves.toEqual([
+      { date: '2026-08-14', words: 128 },
+    ])
+    const [, args] = mockInvoke.mock.calls[0]!
+    expect(String(args['sql'])).toContain('"word_count"')
+    expect(args['params']).toContain('2026-05-17')
   })
 })
