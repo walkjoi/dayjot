@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.8.0-beta](https://github.com/walkjoi/dayjot/compare/v0.7.1-beta...v0.8.0-beta) (2026-08-16)
+
+
+### Features
+
+* add daily weight tracking and word counting features ([780004f](https://github.com/walkjoi/dayjot/commit/780004f9a9baf0f30fffaa842cc1a5bee50a955c))
+* add scroll room in notes' bottom area ([912ef83](https://github.com/walkjoi/dayjot/commit/912ef830f0a5896523768426ef15c5c54d526dd2))
+* hoverable heading outline in the note's right margin ([#21](https://github.com/walkjoi/dayjot/issues/21)) ([c893a52](https://github.com/walkjoi/dayjot/commit/c893a524df63d8390042ead09e0952456088f16c))
+* implement CodeBlockBackspace component to handle backspace in code blocks ([8bd5ea2](https://github.com/walkjoi/dayjot/commit/8bd5ea213a3037226ef515e6b0a81dea93ee3572))
+
+
+### Bug Fixes
+
+* closing a fullscreen window with ⌘W no longer turns the screen black ([#19](https://github.com/walkjoi/dayjot/issues/19)) ([774ba2a](https://github.com/walkjoi/dayjot/commit/774ba2a702fa88bff3f344f935e1ad2ca58665f2))
+* render issue ([8d6b7d2](https://github.com/walkjoi/dayjot/commit/8d6b7d2cb141c0979d50ab843b00932510a17516))
+* stats page crashed to white on hovering the weight chart ([8710cd2](https://github.com/walkjoi/dayjot/commit/8710cd23e3d24d14b1ee012da21d536b49b2f57e))
+
 ## [0.7.1-beta](https://github.com/walkjoi/dayjot/compare/v0.7.0...v0.7.1-beta) (2026-07-23)
 
 
