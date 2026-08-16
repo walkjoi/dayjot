@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactElement } from 'react'
 import type { DailyWeight } from '@dayjot/core'
 import { CartesianGrid, ComposedChart, Line, Scatter, XAxis, YAxis } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
+import { ChartContainer, ChartTooltip, type ChartConfig } from '@/components/ui/chart'
 import { cn } from '@/lib/utils'
 import { routeForPath } from '@/routing/route'
 import { useRouter } from '@/routing/router'
@@ -9,10 +9,11 @@ import {
   buildWeightPoints,
   dayNumberFromIso,
   formatDayShort,
+  formatKg,
   isoFromDayNumber,
   rangeStartIso,
-  tooltipDayLabel,
 } from './series'
+import { WeightTooltip } from './weight-tooltip'
 
 interface WeightChartProps {
   /** The full per-day series, ascending (the section is not rendered when empty). */
@@ -36,11 +37,6 @@ const chartConfig = {
   kg: { label: 'Weight', color: 'var(--accent)' },
   average: { label: '7-day avg', color: 'var(--accent)' },
 } satisfies ChartConfig
-
-/** `72.5 kg`, always one decimal — the unit the grammar accepts is the unit shown. */
-function formatKg(value: number): string {
-  return `${value.toFixed(1)} kg`
-}
 
 /**
  * The weight trend: faded raw daily points over a 7-day moving-average line,
@@ -134,21 +130,7 @@ export function WeightChart({ series, today }: WeightChartProps): ReactElement {
               tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
               tickFormatter={(value: number) => value.toFixed(1)}
             />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(_label, payload) => tooltipDayLabel(payload)}
-                  formatter={(value, name) => (
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <span className="text-muted-foreground">
-                        {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
-                      </span>
-                      <span className="font-mono tabular-nums">{formatKg(Number(value))}</span>
-                    </div>
-                  )}
-                />
-              }
-            />
+            <ChartTooltip content={<WeightTooltip />} />
             <Scatter
               dataKey="kg"
               fill="var(--color-kg)"

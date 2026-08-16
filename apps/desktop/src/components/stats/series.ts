@@ -60,6 +60,34 @@ export function tooltipDayLabel(
   return typeof date === 'string' ? formatDayShort(date) : ''
 }
 
+/** `72.5 kg`, always one decimal — the unit the grammar accepts is the unit shown. */
+export function formatKg(value: number): string {
+  return `${value.toFixed(1)} kg`
+}
+
+/**
+ * The hovered {@link WeightPoint}, recovered from a recharts tooltip payload,
+ * or null when the payload doesn't carry one. Every payload entry's `payload`
+ * is the underlying data point — even the x-axis entry a `Scatter` adds — so
+ * the first entry is always safe to read, whatever series it belongs to.
+ */
+export function weightPointFromTooltip(
+  payload: ReadonlyArray<{ payload?: unknown }> | undefined,
+): WeightPoint | null {
+  const point = payload?.[0]?.payload
+  if (typeof point !== 'object' || point === null) {
+    return null
+  }
+  const candidate = point as Partial<WeightPoint>
+  return typeof candidate.date === 'string' &&
+    typeof candidate.kg === 'number' &&
+    typeof candidate.average === 'number' &&
+    typeof candidate.notePath === 'string' &&
+    typeof candidate.day === 'number'
+    ? (candidate as WeightPoint)
+    : null
+}
+
 /** The ISO date `days - 1` days before `today` — the first day of an N-day range. */
 export function rangeStartIso(today: string, days: number): string {
   return isoFromDayNumber(dayNumberFromIso(today) - (days - 1))
