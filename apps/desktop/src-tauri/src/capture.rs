@@ -56,7 +56,6 @@ fn pointer_json(root: &Path) -> String {
     .to_string()
 }
 
-// Also used by `skill.rs` for the agent-skill files under `~/.agents/`.
 pub(crate) fn atomic_write_to(path: &Path, contents: &str) -> AppResult<()> {
     atomic_write_bytes_to(path, contents.as_bytes())
 }

@@ -30,13 +30,6 @@ export {
 export { WINDOW_NAVIGATE_EVENT, subscribeWindowNavigate } from '../app/window-events'
 export { toggleDevtools } from '../app/devtools'
 export {
-  agentSkillStatus,
-  agentSkillInstall,
-  agentSkillUninstall,
-  type AgentSkillInstallState,
-  type AgentSkillStatus,
-} from '../app/agent-skill'
-export {
   appErrorSchema,
   errorMessage,
   isAppError,

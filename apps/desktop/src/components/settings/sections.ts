@@ -8,8 +8,6 @@ export const SETTINGS_SECTIONS = [
   { id: 'editor', title: 'Editor' },
   { id: 'templates', title: 'Note templates' },
   { id: 'all-notes', title: 'All notes' },
-  // macOS only — installs files under ~/.agents for terminal coding agents.
-  { id: 'agents', title: 'Agents' },
   // Only shown where the OS frameworks exist — see use-visible-settings-sections.
   { id: 'integrations', title: 'Integrations' },
   { id: 'sync', title: 'Sync' },
