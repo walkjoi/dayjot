@@ -8,9 +8,8 @@ export type SettingsSectionEntry = (typeof SETTINGS_SECTIONS)[number]
 /**
  * The settings sections this platform actually shows. Integrations
  * only exists where the OS frameworks do (macOS/iOS — the Rust shell answers
- * `unavailable` elsewhere). Agents is macOS-only. The navigator must agree
- * with the page, so both filter through here rather than reading the registry
- * directly.
+ * `unavailable` elsewhere). The navigator must agree with the page, so both
+ * filter through here rather than reading the registry directly.
  */
 export function useVisibleSettingsSections(): readonly SettingsSectionEntry[] {
   const authorization = useContactsAuthorization()
@@ -19,9 +18,6 @@ export function useVisibleSettingsSections(): readonly SettingsSectionEntry[] {
   return SETTINGS_SECTIONS.filter((section) => {
     if (section.id === 'integrations') {
       return hasAppleIntegrations
-    }
-    if (section.id === 'agents') {
-      return isMacosDesktop
     }
     return true
   })

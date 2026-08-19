@@ -7,7 +7,6 @@ import { resetOperations } from '@/lib/operations'
 import { NoteTemplatesProvider } from '@/providers/note-templates-provider'
 import { ShortcutsProvider } from '@/providers/shortcuts-provider'
 import { SettingsProvider } from '@/providers/settings-provider'
-import { UpdateProvider } from '@/providers/update-provider'
 import { RouterProvider } from '@/routing/router'
 import { ShortcutsDialog } from './shortcuts-dialog'
 import { SettingsScreen } from './settings-screen'
@@ -80,18 +79,16 @@ function renderScreen(): void {
   render(
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
-        <UpdateProvider autoCheck={false}>
-          {/* The Note templates section opens files (router) and shares the
-              "New template" dialog state (templates provider). */}
-          <RouterProvider>
-            <ShortcutsProvider>
-              <NoteTemplatesProvider>
-                <SettingsScreen />
-                <ShortcutsDialog />
-              </NoteTemplatesProvider>
-            </ShortcutsProvider>
-          </RouterProvider>
-        </UpdateProvider>
+        {/* The Note templates section opens files (router) and shares the
+            "New template" dialog state (templates provider). */}
+        <RouterProvider>
+          <ShortcutsProvider>
+            <NoteTemplatesProvider>
+              <SettingsScreen />
+              <ShortcutsDialog />
+            </NoteTemplatesProvider>
+          </ShortcutsProvider>
+        </RouterProvider>
       </SettingsProvider>
     </QueryClientProvider>,
   )
@@ -125,13 +122,6 @@ afterEach(() => {
 })
 
 describe('SettingsScreen', () => {
-  it('shows update controls when the native bridge is available', () => {
-    renderScreen()
-    expect(screen.getByRole('button', { name: /check for updates/i })).toBeTruthy()
-  })
-
-
-
   it('confirms before forgetting the open graph from saved graphs', async () => {
     graph.current = { root: '/graphs/work', name: 'Work', generation: 1 }
     renderScreen()
