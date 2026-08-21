@@ -58,8 +58,8 @@ function groupLoadedBacklinks(pages: readonly BacklinkContextPage[]): BacklinkSo
 }
 
 /**
- * The incoming-backlinks data layer, shared by the desktop panel and the
- * mobile section: one paginated indexed query per visible note, kept fresh by
+ * The incoming-backlinks data layer behind the panel:
+ * one paginated indexed query per visible note, kept fresh by
  * the index invalidation hook (no polling), flattened and grouped across loaded
  * source-note pages. The graph root is part of the key: index rows belong to
  * one graph, and a graph switch must never serve the previous graph's cached

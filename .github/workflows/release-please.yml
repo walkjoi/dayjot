@@ -83,25 +83,3 @@ jobs:
       tag: ${{ needs.release-please.outputs.beta_tag }}
       commit: ${{ needs.release-please.outputs.beta_commit }}
     secrets: inherit
-
-  # Every release also ships to TestFlight. iOS needs no version bump of its
-  # own: the marketing version follows apps/desktop/package.json with the
-  # prerelease suffix stripped, so beta and stable builds stack under the same
-  # version, told apart by the UTC-timestamp build number.
-  publish-testflight-stable:
-    name: Upload the stable release to TestFlight
-    needs: release-please
-    if: needs.release-please.outputs.stable_created == 'true'
-    uses: ./.github/workflows/testflight.yml
-    with:
-      commit: ${{ needs.release-please.outputs.stable_commit }}
-    secrets: inherit
-
-  publish-testflight-beta:
-    name: Upload the beta release to TestFlight
-    needs: release-please
-    if: needs.release-please.outputs.beta_created == 'true'
-    uses: ./.github/workflows/testflight.yml
-    with:
-      commit: ${{ needs.release-please.outputs.beta_commit }}
-    secrets: inherit

@@ -7,7 +7,7 @@ renames); this is the orientation layer those plans don't give you.
 ## The layers
 
 ```text
-NotePane / DailyView / MobileNote       components — composition only
+NotePane / DailyView                    components — composition only
   ├─ useNoteDocument()                  React adapter (use-note-document.ts)
   │    ├─ createDocumentBinding()       create/adopt/teardown/hand-off policy
   │    └─ createNoteSession()           pure document state machine (note-session.ts)
@@ -45,10 +45,8 @@ keystroke → session.editorChanged() → debounce (800ms) → atomic write
 ```
 
 Saving never calls the indexer from the session: our own write flows through
-the same file-change pipeline as any external change. On desktop that signal
-comes from the watcher; on mobile, where the app sandbox has no external
-writers, the typed write binding emits an in-process local-write echo after
-the write lands. On every change event the session re-reads the file and
+the same file-change pipeline as any external change — the signal comes from
+the watcher. On every change event the session re-reads the file and
 compares by content: a match against what it last wrote (or a still-settling
 in-flight write) is our own echo and is ignored.
 
@@ -155,8 +153,6 @@ editor work must survive pane teardown. The pieces to understand are:
   `packages/core/src/markdown/`, never the editor: the editor and the indexer
   share one grammar so chips and index links can't drift.
 - **Pane-level wiring** → a focused hook next to the existing ones, composed
-  in `note-pane.tsx`; components stay composition-only. Desktop daily notes
-  mount one pane per day through `daily-view.tsx`; mobile mounts the same
-  `NotePane` through `mobile/day-carousel.tsx` and `mobile/screens/note.tsx`,
-  so keep note semantics shared and put surface-specific chrome outside the
-  pane.
+  in `note-pane.tsx`; components stay composition-only. Daily notes mount one
+  pane per day through `daily-view.tsx`; keep note semantics shared and put
+  surface-specific chrome outside the pane.

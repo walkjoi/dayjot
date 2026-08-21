@@ -49,11 +49,8 @@ function flush(): Promise<void> {
 
 let controller: CaptureController | null = null
 
-function create(relaySharedInbox?: () => Promise<number>): CaptureController {
-  controller = createCaptureController({
-    generation: 3,
-    ...(relaySharedInbox ? { relaySharedInbox } : {}),
-  })
+function create(): CaptureController {
+  controller = createCaptureController({ generation: 3 })
   return controller
 }
 
@@ -69,45 +66,8 @@ afterEach(() => {
   controller = null
 })
 
-describe('createCaptureController (shared-inbox relay)', () => {
-  it('relays the shared inbox BEFORE the drain, every pass', async () => {
-    const order: string[] = []
-    const relay = vi.fn(async () => {
-      order.push('relay')
-      return 1
-    })
-    drainCaptureInbox.mockImplementation(async () => {
-      order.push('drain')
-      return drained()
-    })
-
-    create(relay).start()
-    await flush()
-
-    expect(order).toEqual(['relay', 'drain'])
-
-    controller?.schedule()
-    await flush()
-    expect(order).toEqual(['relay', 'drain', 'relay', 'drain'])
-  })
-
-  it('still drains when the relay fails, surfacing the failure once', async () => {
-    const relay = vi.fn<() => Promise<number>>().mockRejectedValue(new Error('container gone'))
-
-    create(relay).start()
-    await flush()
-
-    expect(drainCaptureInbox).toHaveBeenCalledTimes(1)
-    expect(failOperation).toHaveBeenCalledTimes(1)
-
-    // The same failure on a retry pass must not re-toast.
-    controller?.schedule()
-    await flush()
-    expect(drainCaptureInbox).toHaveBeenCalledTimes(2)
-    expect(failOperation).toHaveBeenCalledTimes(1)
-  })
-
-  it('without a relay, passes run drain-then-enrich only', async () => {
+describe('createCaptureController', () => {
+  it('passes run drain-then-enrich', async () => {
     create().start()
     await flush()
 
@@ -116,34 +76,10 @@ describe('createCaptureController (shared-inbox relay)', () => {
     expect(failOperation).not.toHaveBeenCalled()
   })
 
-  it('schedules a pass when the app becomes visible again (mobile resume)', async () => {
-    const relay = vi.fn(async () => 0)
-    create(relay).start()
-    await flush()
-    expect(drainCaptureInbox).toHaveBeenCalledTimes(1)
-
-    document.dispatchEvent(new Event('visibilitychange'))
-    await flush()
-
-    expect(drainCaptureInbox).toHaveBeenCalledTimes(2)
-  })
-
-  it('does not listen for visibility without a relay (desktop)', async () => {
+  it('does not listen for visibility changes', async () => {
     create().start()
     await flush()
     expect(drainCaptureInbox).toHaveBeenCalledTimes(1)
-
-    document.dispatchEvent(new Event('visibilitychange'))
-    await flush()
-
-    expect(drainCaptureInbox).toHaveBeenCalledTimes(1)
-  })
-
-  it('stops listening for visibility after dispose', async () => {
-    const relay = vi.fn(async () => 0)
-    create(relay).start()
-    await flush()
-    controller?.dispose()
 
     document.dispatchEvent(new Event('visibilitychange'))
     await flush()

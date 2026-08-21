@@ -13,9 +13,7 @@ the base `tauri.conf.json` points its `bundle.icon` here. The `tauri.beta.conf.j
 and `tauri.dev.conf.json` overlays repoint `bundle.icon` at the sibling dirs.
 
 The beta/dev sets are the stable artwork run through `magick -modulate B,S,H`
-(B=lightness, S=saturation, 100=unchanged). The iOS asset catalog
-(`../gen/apple/Assets.xcassets/AppIcon.appiconset/`) uses the stable artwork; iOS is
-not flavored.
+(B=lightness, S=saturation, 100=unchanged).
 
 ## Regenerating a flavor set
 
@@ -25,7 +23,7 @@ ImageMagick on macOS has no ICNS writer, so recolor the rasters in place and reb
 ```bash
 mod="104,100,120"           # the flavor's modulate (see table)
 cp -R icons icons-<flavor>
-find icons-<flavor> -type f \( -iname '*.png' -o -iname '*.ico' \) -print0 \
+find icons-<flavor> -type f -iname '*.png' -print0 \
   | while IFS= read -r -d '' f; do magick "$f" -modulate "$mod" "$f"; done
 
 sips -s format png icons/icon.icns --out /tmp/master.png   # the stable 1024 master

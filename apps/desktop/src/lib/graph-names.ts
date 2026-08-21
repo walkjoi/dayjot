@@ -18,7 +18,7 @@ export function cleanGraphName(raw: string): string | null {
   return trimmed
 }
 
-/** Case-insensitive graph-name collision check for macOS/iOS containers. */
+/** Case-insensitive graph-name collision check for macOS containers. */
 export function isGraphNameTaken(cleanName: string, roots: readonly string[]): boolean {
   return roots.some((root) => graphNameFromRoot(root).toLowerCase() === cleanName.toLowerCase())
 }

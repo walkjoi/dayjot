@@ -47,7 +47,7 @@ function outlineDepth(entry: OutlineEntry, minLevel: number): number {
  * strip so the sticky centering and `findScrollContainer` both resolve
  * against the right scroller. The rail removes itself when it can't earn
  * its place: under two headings, a pane narrower than 50rem (the
- * `@container` gate — never on mobile), or the `editorShowOutline` setting
+ * `@container` gate), or the `editorShowOutline` setting
  * turned off (Settings → Editor, or ⌥⌘O).
  */
 export function NoteOutlineRail(): ReactElement | null {

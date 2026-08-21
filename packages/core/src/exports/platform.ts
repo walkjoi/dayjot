@@ -2,31 +2,18 @@ export { setBridge, hasBridge, type IpcBridge, type Unlisten } from '../ipc/brid
 export { call, callBinary } from '../ipc/invoke'
 export {
   getAppVersion,
-  getAppPlatform,
-  isMobilePlatform,
-  mobileStorage,
-  mobileStorageLocal,
-  icloudDownloadPending,
   icloudPendingCount,
   icloudStatus,
   icloudAdoptGraph,
   icloudConflictsScan,
   icloudWatchStart,
   icloudWatchStop,
-  type AppPlatform,
   type IcloudDownloadScope,
   type IcloudScanOptions,
   type IcloudStatus,
   type IcloudSweepOutcome,
-  type MobileStorageInfo,
-  type MobileStorageKind,
 } from '../ipc/commands'
 export { confirmQuit, hideWindowForClose, subscribeQuitRequested } from '../app/quit'
-export {
-  beginBackgroundTask,
-  endBackgroundTask,
-  type BackgroundTaskToken,
-} from '../app/background-task'
 export { WINDOW_NAVIGATE_EVENT, subscribeWindowNavigate } from '../app/window-events'
 export { toggleDevtools } from '../app/devtools'
 export {
@@ -91,7 +78,6 @@ export {
   captureInboxReject,
   captureInboxRemove,
   captureMetaFetch,
-  captureSharedInboxRelay,
   promoteCaptureScreenshot,
 } from '../graph/commands'
 export { createAsset, importAsset } from '../graph/assets'

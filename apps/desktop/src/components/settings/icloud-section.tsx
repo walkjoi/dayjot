@@ -70,8 +70,7 @@ function reviewLine(conflictCount: number, forkCount: number): string {
  * — exactly as it was; the original folder stays on disk untouched as the
  * recovery copy either way.
  *
- * macOS only — Windows/Linux have no iCloud Drive, and mobile chooses its
- * storage in onboarding.
+ * macOS only — Windows/Linux have no iCloud Drive.
  */
 export function IcloudSettingsField(): ReactElement | null {
   const { graph, openRecent } = useGraph()

@@ -18,7 +18,7 @@ import { throttledInvalidateIndexQueries } from '@/lib/query-client'
 /**
  * Whether a graph root lives under iCloud Drive: the app's container and the
  * user-visible iCloud Drive folder both sit under `…/Library/Mobile
- * Documents/` on macOS and iOS.
+ * Documents/` on macOS.
  */
 export function isICloudRoot(root: string): boolean {
   return root.includes('/Mobile Documents/')
@@ -56,12 +56,6 @@ export interface IcloudControllerOptions {
   graph: GraphInfo
   /** The open index session; sweep results reindex under it. */
   indexGeneration: number | null
-  /**
-   * Emit `index:changed` from the metadata query's snapshot diffs — true on
-   * mobile (the query is the only external-change source there), false on
-   * desktop (the `notify` watcher already reports file events).
-   */
-  emitFileChangesFromWatch: boolean
 }
 
 export interface IcloudController {
@@ -95,7 +89,7 @@ export interface IcloudController {
  * conflict, the same as any external edit.
  */
 export function createIcloudController(options: IcloudControllerOptions): IcloudController {
-  const { graph, indexGeneration, emitFileChangesFromWatch } = options
+  const { graph, indexGeneration } = options
   let disposed = false
   let baselinePending = true
   const disposers: Array<() => void> = []
@@ -117,12 +111,8 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
   let queuedScan: 'prompt' | 'ingest' | null = null
   let lastScanEndedAt = 0
 
-  function scanSuspended(): boolean {
-    return emitFileChangesFromWatch && document.visibilityState === 'hidden'
-  }
-
   function scheduleScan(delayMs: number = SCAN_DEBOUNCE_MS): void {
-    if (disposed || scanSuspended()) {
+    if (disposed) {
       return
     }
     if (scanRunning) {
@@ -152,7 +142,7 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
   }
 
   async function runScan(): Promise<void> {
-    if (disposed || scanSuspended()) {
+    if (disposed) {
       return
     }
     if (scanRunning) {
@@ -228,9 +218,6 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
       void applyIndexChanges(
         indexable,
         indexGeneration,
-        undefined,
-        undefined,
-        () => !emitFileChangesFromWatch || document.visibilityState !== 'hidden',
       ).then((mutations) => {
         if (mutations > 0) {
           throttledInvalidateIndexQueries()
@@ -252,7 +239,7 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
       return
     }
     try {
-      await icloudWatchStart(graph.root, emitFileChangesFromWatch)
+      await icloudWatchStart(graph.root)
     } catch (err) {
       console.error('iCloud watch failed to start:', err)
       // Sweeps still run off file-change batches; carry on.
@@ -336,7 +323,7 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
 
 /**
  * Wire the resume triggers (same shape as the backup controller's): `focus`
- * for a desktop refocus, visibility → visible for mobile resume and desktop
+ * for a refocus, visibility → visible for an
  * unminimize. One transition can fire both events, so `onResume` calls are
  * deduped within {@link RESUME_SCAN_DEDUPE_MS}. Returns the listeners'
  * disposers.

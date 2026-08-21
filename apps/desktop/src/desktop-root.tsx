@@ -15,9 +15,8 @@ import { SidebarWidthEffect } from '@/providers/sidebar-width'
 import { UpdateProvider } from '@/providers/update-provider'
 
 /**
- * The desktop surface tree (split out of `main.tsx` by the Plan 19 platform
- * gate): auto-update checks, the titlebar drag region, and the graph
- * chooser/workspace app — none of which exist on mobile.
+ * The app's surface tree: auto-update checks, the titlebar drag region, and
+ * the graph chooser/workspace app.
  */
 export function DesktopRoot(): ReactElement {
   // Deep-link intake starts with the surface, not the workspace: a

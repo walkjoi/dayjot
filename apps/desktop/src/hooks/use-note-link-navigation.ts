@@ -18,7 +18,7 @@ export type NoteLinkNavigation = (
  * Apply the app-wide note-link convention: a plain click navigates in the
  * current window, while ⌘/Ctrl-click opens the note in a secondary window.
  *
- * A native open can be declined (browser/mobile) or fail. In that case the
+ * A native open can be declined (browser dev) or fail. In that case the
  * click falls back to ordinary in-window navigation, unless the shared link
  * intent went stale ({@link useLinkIntentGuard}) or the host surface changed
  * scope while the open was in flight.

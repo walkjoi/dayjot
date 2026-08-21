@@ -27,7 +27,6 @@ import { useTemplateSlashItems } from '@/editor/use-template-slash-items'
 import { useWeightSlashItems } from '@/editor/use-weight-slash-items'
 import { useWikiLinkNavigation } from '@/editor/use-wiki-link-navigation'
 import { useWikiLinkHoverPreview } from '@/editor/use-wiki-link-hover-preview'
-import { isTouchEditorSurface } from '@/lib/platform-surface'
 import { cn } from '@/lib/utils'
 import { useGraph } from '@/providers/graph-provider'
 import { useSettings } from '@/providers/settings-provider'
@@ -42,8 +41,7 @@ interface NotePaneProps {
   /**
    * Where the caret lands when {@link autoFocus} applies: the document start
    * (default — a seeded new note's empty H1, so typing names the note) or the
-   * end of the note's content (append-style capture, e.g. the mobile daily
-   * double-tap).
+   * end of the note's content (append-style capture).
    */
   autoFocusSelection?: 'start' | 'end'
   /** Called once the autofocus actually happened (the editor mounted). */
@@ -55,11 +53,10 @@ interface NotePaneProps {
    */
   className?: string
   /**
-   * Extra classes for the editable area (e.g. the mobile carousel's
-   * `min-h-*`). Applied to the contenteditable root, so the reserved space
-   * is click-to-focus — and to the loading/error placeholders, so a pane
-   * holds the same space in every state instead of collapsing and
-   * re-expanding while its note arrives.
+   * Extra classes for the editable area. Applied to the contenteditable
+   * root, so the reserved space is click-to-focus — and to the loading/error
+   * placeholders, so a pane holds the same space in every state instead of
+   * collapsing and re-expanding while its note arrives.
    */
   editorClassName?: string
   /**
@@ -69,12 +66,6 @@ interface NotePaneProps {
    * width while the gutter stays part of the editor's click-to-focus area.
    */
   gutterClassName?: string
-  /**
-   * Render the built-in desktop backlinks panel below the note (default).
-   * The mobile surfaces pass `false` and mount their own touch-chrome
-   * `IncomingBacklinks` section over the same data layer.
-   */
-  showBacklinks?: boolean
 }
 
 /**
@@ -83,8 +74,7 @@ interface NotePaneProps {
  * non-destructive conflict prompt when an external change races unsaved edits).
  * Notes the editor can't faithfully round-trip open **protected** (read-only)
  * so a converter gap can never silently rewrite a file. Every editing surface
- * mounts one of these — the daily canvas, the note route, note windows, and
- * the mobile carousel.
+ * mounts one of these — the daily canvas, the note route, and note windows.
  *
  * The pane is composition only: document semantics live in
  * `useNoteDocument`/`note-session.ts`, link-click behavior in
@@ -99,7 +89,6 @@ export function NotePaneComponent({
   className,
   editorClassName,
   gutterClassName,
-  showBacklinks = true,
 }: NotePaneProps): ReactElement {
   const { graph } = useGraph()
   const { settings } = useSettings()
@@ -230,7 +219,7 @@ export function NotePaneComponent({
   if (document.status === 'loading') {
     // `dayjot-note-loading` keeps the hint invisible for the first beat:
     // local reads resolve in milliseconds, and the text flashing on every
-    // pane mount (each daily arrival, each carousel page) reads as flicker.
+    // pane mount (each daily arrival) reads as flicker.
     return (
       <div
         className={cn(
@@ -276,7 +265,7 @@ export function NotePaneComponent({
         ) : (
           <ProtectedNoteView content={document.initialContent} />
         )}
-        {showBacklinks ? <BacklinksPanel path={path} /> : null}
+        <BacklinksPanel path={path} />
       </div>
     )
   }
@@ -349,9 +338,7 @@ export function NotePaneComponent({
         resolveFileLink={resolveAssetFileLink}
         resolveFileInfo={resolveFileInfo}
         onWikiLinkClick={onWikiLinkClick}
-        {...(generation !== null && !isTouchEditorSurface()
-          ? { renderWikilinkHoverCard }
-          : {})}
+        {...(generation !== null ? { renderWikilinkHoverCard } : {})}
         onTagClick={onTagClick}
         onWikilinkSearch={onWikilinkSearch}
         onTagSearch={onTagSearch}
@@ -370,11 +357,9 @@ export function NotePaneComponent({
         <CaretRunway />
       </NoteEditor>
 
-      {showBacklinks ? (
-        <div className={gutterClassName}>
-          <BacklinksPanel path={path} />
-        </div>
-      ) : null}
+      <div className={gutterClassName}>
+        <BacklinksPanel path={path} />
+      </div>
 
       <DrawingModeDialog
         request={drawings.request}

@@ -24,8 +24,7 @@ interface BacklinksPanelProps {
  * surfaces as an alert — a failing query means the index is broken, not that
  * the note is unlinked.
  *
- * Desktop chrome (hover-revealed group chevrons, hover-sized targets); the
- * mobile surfaces render `IncomingBacklinks` over the same data layer.
+ * Desktop chrome: hover-revealed group chevrons, hover-sized targets.
  */
 export function BacklinksPanel({ path }: BacklinksPanelProps): ReactElement | null {
   const {

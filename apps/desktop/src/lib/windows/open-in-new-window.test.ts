@@ -2,14 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const hasBridge = vi.hoisted(() => vi.fn(() => true))
 const openNoteWindow = vi.hoisted(() => vi.fn<(link: string) => Promise<void>>())
-const isMobileSurface = vi.hoisted(() => vi.fn(() => false))
 
 vi.mock('@dayjot/core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge,
   openNoteWindow,
 }))
-vi.mock('@/lib/platform-surface', () => ({ isMobileSurface }))
 
 import {
   isNewWindowClick,
@@ -20,7 +18,6 @@ import {
 beforeEach(() => {
   vi.clearAllMocks()
   hasBridge.mockReturnValue(true)
-  isMobileSurface.mockReturnValue(false)
   openNoteWindow.mockResolvedValue(undefined)
 })
 
@@ -74,11 +71,8 @@ describe('openRouteInNewWindow', () => {
     expect(openNoteWindow).not.toHaveBeenCalled()
   })
 
-  it('declines without a native shell and on mobile', async () => {
+  it('declines without a native shell', async () => {
     hasBridge.mockReturnValue(false)
-    await expect(openRouteInNewWindow({ kind: 'note', path: 'notes/foo.md' })).resolves.toBe(false)
-    hasBridge.mockReturnValue(true)
-    isMobileSurface.mockReturnValue(true)
     await expect(openRouteInNewWindow({ kind: 'note', path: 'notes/foo.md' })).resolves.toBe(false)
     expect(openNoteWindow).not.toHaveBeenCalled()
   })

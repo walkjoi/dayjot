@@ -13,12 +13,6 @@ import { copyFileSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const platform = process.env.TAURI_ENV_PLATFORM ?? ''
-if (platform === 'ios' || platform === 'android') {
-  console.log(`build-sidecar: skipping on ${platform} (sidecars are desktop-only)`)
-  process.exit(0)
-}
-
 const here = dirname(fileURLToPath(import.meta.url))
 const repoRoot = join(here, '..', '..', '..')
 const binariesDir = join(here, '..', 'src-tauri', 'binaries')

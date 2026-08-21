@@ -28,7 +28,6 @@ import {
 import { setBackupFlusher } from '@/lib/backup-flush'
 import { invalidateGithubAuth } from '@/lib/github-auth-state'
 import { startOperation } from '@/lib/operations'
-import { isMobileSurface } from '@/lib/platform-surface'
 import { providerFetch } from '@/lib/provider-fetch'
 import { throttledInvalidateIndexQueries } from '@/lib/query-client'
 
@@ -61,16 +60,6 @@ export type ConnectExistingResult = 'connected' | 'needsPublicConfirm' | 'notFou
  */
 const RESUME_SYNC_DEDUPE_MS = 1500
 
-/**
- * Quiet period after the last edit before a backup commit, on mobile.
- * Desktop keeps the engine's 30s default, but mobile foreground sessions are
- * often shorter than that — with the desktop window most edit-triggered
- * cycles would never fire before backgrounding, deferring every push to the
- * *next* app open. (Capture is still never lost either way: the background
- * flush commits locally.)
- */
-const MOBILE_IDLE_MS = 10_000
-
 export interface BackupControllerOptions {
   graph: GraphInfo
   /** The open index session's generation — index writes are pinned to it. */
@@ -87,8 +76,8 @@ export interface BackupControllerOptions {
  *
  * Owns: the connection probe, the sync engine, the watcher subscription that
  * feeds its debounce, the resume triggers (launch, window focus, visibility →
- * visible for mobile app resume, and back-online pulls), the quit-commit
- * hook, and the connect / disconnect / sign-out / back-up-now actions.
+ * visible, and back-online pulls), the quit-commit hook, and the connect /
+ * disconnect / sign-out / back-up-now actions.
  */
 export interface BackupController {
   /** Probe the graph and start the engine if fully connected. Idempotent. */
@@ -187,13 +176,7 @@ export function createBackupController(options: BackupControllerOptions): Backup
         if (disposed || notificationEpoch !== remoteIndexEpoch) {
           return
         }
-        const mutations = await applyIndexChanges(
-          indexable,
-          indexGeneration,
-          undefined,
-          undefined,
-          () => !isMobileSurface() || document.visibilityState !== 'hidden',
-        )
+        const mutations = await applyIndexChanges(indexable, indexGeneration)
         if (mutations > 0) {
           throttledInvalidateIndexQueries()
         }
@@ -244,9 +227,6 @@ export function createBackupController(options: BackupControllerOptions): Backup
    * repository, history included.
    */
   async function startLocalHistory(initialized: boolean): Promise<void> {
-    if (isMobileSurface()) {
-      return
-    }
     if (!initialized) {
       await gitSetup(null, null, generation)
     }
@@ -314,14 +294,6 @@ export function createBackupController(options: BackupControllerOptions): Backup
       }
       const next = createSyncEngine({
         generation,
-        ...(isMobileSurface() ? { idleMs: MOBILE_IDLE_MS } : {}),
-        // iOS can suspend us at any await. Do not begin a launch, online, or
-        // debounced Git cycle after the document is hidden; the existing
-        // visible/focus trigger below replays a full cycle on foreground.
-        // The background flusher's protected local commit bypasses this
-        // engine deliberately.
-        canStartCycle: () =>
-          !isMobileSurface() || document.visibilityState !== 'hidden',
         // The managed token is for github.com only — a generic host must
         // never receive it. Rust resolves generic credentials locally.
         getToken: repo === null ? async () => null : () => getGithubToken(providerFetch),
@@ -340,9 +312,9 @@ export function createBackupController(options: BackupControllerOptions): Backup
         return
       }
 
-      // Resume triggers: window focus (desktop refocus) and visibility →
-      // visible (mobile app resume; desktop unminimize, which doesn't
-      // reliably fire `focus`). Deduped — see RESUME_SYNC_DEDUPE_MS.
+      // Resume triggers: window focus (refocus) and visibility → visible
+      // (unminimize, which doesn't reliably fire `focus`). Deduped — see
+      // RESUME_SYNC_DEDUPE_MS.
       let lastResumeSyncAt = 0
       const onResume = (): void => {
         const now = Date.now()

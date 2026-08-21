@@ -30,8 +30,8 @@ labels, with a numeric suffix when opening the target requires a distinct
 destination. An app-wide registry remembers the preferred window for each
 target. The frontend reads the role via `isMainWindow()`
 (`src/lib/windows/window-role.ts`), which treats
-bridge-less environments — browser dev, jsdom, the `?platform=ios` harness —
-as main: they are all single-window.
+bridge-less environments — browser dev, jsdom — as main: they are all
+single-window.
 
 | Runs where?          | main window | note window |
 | -------------------- | ----------- | ----------- |

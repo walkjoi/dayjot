@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { echoLocalWrite } from '../indexing/local-write-echo'
+import { notifyOwnWrite } from '../indexing/own-writes'
 import { call } from '../ipc/invoke'
 import {
   fileMetaSchema,
@@ -69,16 +69,10 @@ export async function readNote(path: string, generation?: number): Promise<strin
  * Atomically write a note's markdown by graph-relative path. `generation` (from
  * `GraphInfo`) pins the write to the graph it was issued for — Rust rejects it
  * if the graph switched in between.
- *
- * The echo carries the file's on-disk mtime, which Rust returns from the
- * write: the index row it produces must compare equal to a later `listFiles`
- * mtime, or the reconcile's read-free skip never fires and the note is
- * re-read on every pass. `Date.now()` is a fallback for a platform that
- * can't report one.
  */
 export async function writeNote(path: string, contents: string, generation: number): Promise<void> {
-  const modifiedMs = await call('note_write', { path, contents, generation }, z.number().nullable())
-  echoLocalWrite({ path, kind: 'upsert', modifiedMs: modifiedMs ?? Date.now() })
+  await call('note_write', { path, contents, generation }, z.number().nullable())
+  notifyOwnWrite(path)
 }
 
 /**
@@ -97,7 +91,7 @@ export async function createNoteIfAbsent(
     noteCreateOutcomeSchema,
   )
   if (outcome.kind === 'created') {
-    echoLocalWrite({ path, kind: 'upsert', modifiedMs: outcome.modifiedMs ?? Date.now() })
+    notifyOwnWrite(path)
   }
   return outcome
 }
@@ -112,7 +106,7 @@ export async function writeAsset(
   generation: number,
 ): Promise<void> {
   await call('asset_write', { path, contentsBase64, generation }, voidSchema)
-  echoLocalWrite({ path, kind: 'upsert', modifiedMs: Date.now() })
+  notifyOwnWrite(path)
 }
 
 /**
@@ -155,7 +149,7 @@ export async function noteExists(path: string): Promise<boolean> {
 /** Send a note to the OS trash (recoverable; pinned to `generation`). */
 export async function deleteNote(path: string, generation: number): Promise<void> {
   await call('note_delete', { path, generation }, voidSchema)
-  echoLocalWrite({ path, kind: 'remove' })
+  notifyOwnWrite(path)
 }
 
 /**
@@ -206,16 +200,6 @@ export async function captureInboxSpool(
 /** Remove a spool file by filename. Idempotent — crash re-drains re-remove. */
 export async function captureInboxRemove(name: string, generation: number): Promise<void> {
   await call('capture_inbox_remove', { name, generation }, voidSchema)
-}
-
-/**
- * Relay envelopes the iOS share extension spooled into the App Group inbox
- * into the graph's capture inbox, returning how many moved. iOS-only in
- * effect (elsewhere there is no shared container and the relay is zero);
- * called by the mobile capture controller before every drain pass.
- */
-export async function captureSharedInboxRelay(generation: number): Promise<number> {
-  return call('capture_shared_inbox_relay', { generation }, z.number())
 }
 
 /**

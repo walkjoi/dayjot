@@ -140,9 +140,8 @@ function ChooserShell({ children }: { children: ReactNode }): ReactElement {
 }
 
 /**
- * The icon-chip card header shared by both storage cards — the same visual
- * language as the mobile onboarding screen. A primary-tinted chip marks the
- * recommended path; the neutral chip is the default.
+ * The icon-chip card header shared by both storage cards. A primary-tinted
+ * chip marks the recommended path; the neutral chip is the default.
  */
 function CardHeader({
   icon,

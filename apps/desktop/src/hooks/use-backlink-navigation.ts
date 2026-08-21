@@ -11,11 +11,9 @@ import { routeForPath } from '@/routing/route'
 export interface BacklinkNavigation {
   /**
    * Open an already-resolved source-note path: a daily note opens the daily
-   * view (on mobile that swipes the carousel to the date — the surface stays
-   * mounted), anything else opens the note. The arrival never requests focus
-   * — on mobile that would raise the keyboard through the stack animation;
-   * desktop autofocuses note arrivals anyway. `event` (desktop) lets ⌘-click
-   * open a new window; mobile taps omit it.
+   * view, anything else opens the note. The arrival never requests focus —
+   * note arrivals autofocus anyway. `event` lets ⌘-click
+   * open a new window.
    */
   openSource: (path: string, event?: NewWindowClickEvent) => void
   /**
@@ -29,8 +27,8 @@ export interface BacklinkNavigation {
 }
 
 /**
- * Navigation for an incoming-backlinks surface, shared by the desktop panel
- * and the mobile section. Wiki links and images inside snippets resolve
+ * Navigation for the incoming-backlinks panel. Wiki links and images inside
+ * snippets resolve
  * through the same pipelines as the editor.
  */
 export function useBacklinkNavigation(): BacklinkNavigation {

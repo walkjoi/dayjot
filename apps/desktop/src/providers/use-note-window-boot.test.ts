@@ -38,9 +38,7 @@ const BOOT: WindowBootstrap = {
 function mount() {
   const onAdopted = vi.fn()
   const onFailed = vi.fn()
-  const view = renderHook(() =>
-    useNoteWindowBoot({ platform: 'desktop', onAdopted, onFailed }),
-  )
+  const view = renderHook(() => useNoteWindowBoot({ onAdopted, onFailed }))
   return { onAdopted, onFailed, view }
 }
 

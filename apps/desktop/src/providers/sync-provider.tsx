@@ -16,7 +16,6 @@ import {
 } from '@/lib/backup-controller'
 import { createIcloudController, isICloudRoot } from '@/lib/icloud-controller'
 import { useMainWindowEffect } from '@/hooks/use-main-window-effect'
-import { isMobileSurface } from '@/lib/platform-surface'
 import { useGraph } from '@/providers/graph-provider'
 
 export type { BackupState, ConnectExistingResult } from '@/lib/backup-controller'
@@ -82,7 +81,6 @@ export function SyncProvider({ graph, children }: SyncProviderProps): ReactEleme
     const icloud = createIcloudController({
       graph,
       indexGeneration,
-      emitFileChangesFromWatch: isMobileSurface(),
     })
     void icloud.start()
     return () => {
@@ -126,9 +124,8 @@ export function useSync(): SyncContextValue {
 
 /**
  * Like {@link useSync}, but `null` outside a provider. For surfaces that also
- * render where no backup lifecycle is mounted — the mobile settings sheet in
- * the plain-browser dev harness and in screen tests — and degrade by hiding
- * their sync rows instead of crashing.
+ * render where no backup lifecycle is mounted — in screen tests — and
+ * degrade by hiding their sync rows instead of crashing.
  */
 export function useSyncContext(): SyncContextValue | null {
   return useContext(SyncContext)

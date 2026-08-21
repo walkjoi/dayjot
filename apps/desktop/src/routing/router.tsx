@@ -51,10 +51,10 @@ interface RouterValue {
   /**
    * True when the latest arrival asked the destination to focus its primary
    * input (`navigate(route, { focusEditor: true })`). Only explicit capture
-   * gestures request it — the mobile Daily-, All-, and Tasks-tab
-   * double-taps, desktop's ⌘D and sidebar Daily notes row — while note
-   * navigations (wiki links, backlinks, back/forward) stay calm so the
-   * keyboard never rises mid-arrival.
+   * gestures request it —
+   * ⌘D and the sidebar Daily notes row — while note
+   * navigations (wiki links, backlinks, back/forward) stay calm so
+   * focus never jumps mid-arrival.
    * One-shot by construction: the next navigate overwrites it and history
    * moves clear it, so it can never leak onto a later, unrelated arrival.
    */
@@ -66,8 +66,7 @@ interface RouterValue {
   canForward: boolean
   /**
    * The route `back()` would land on — the entry just below the current one —
-   * or `null` at the bottom of the stack. The mobile stack renders it beneath
-   * a pushed note so the back-swipe gesture reveals a live screen.
+   * or `null` at the bottom of the stack.
    */
   backRoute: Route | null
   /** Record the active view's scroll offset on the current history entry. */
@@ -97,11 +96,10 @@ export interface NavigateOptions {
   restoreSurfaceScroll?: boolean
   /**
    * Ask the destination to focus its primary input on arrival — see
-   * {@link RouterValue.arrivalFocusEditor}. Consumed by the daily surfaces —
-   * the mobile Daily-tab double-tap and desktop's stream (⌘D, the sidebar's
-   * Daily notes row), which land the caret at the end of the day's content
-   * (append-style capture) — and by the mobile All and Tasks tabs,
-   * whose double-taps focus their primary inputs; desktop's note route
+   * {@link RouterValue.arrivalFocusEditor}. Consumed by the daily
+   * stream (⌘D, the sidebar's
+   * Daily notes row), which lands the caret at the end of the day's content
+   * (append-style capture); the note route
    * autofocuses every arrival and ignores it.
    */
   focusEditor?: boolean
@@ -351,9 +349,9 @@ interface RouterFreezeProps {
 }
 
 /**
- * Pin the router value a subtree sees while it is in the background. The
- * mobile stack keeps the screen `back()` would reveal mounted (hidden and
- * inert) beneath a note — without this, that screen would still observe
+ * Pin the router value a subtree sees while it is in the background. A
+ * hidden-but-mounted screen
+ * would otherwise still observe
  * every navigation: a note push bumps `arrivalSeq`, which the daily surface
  * reads as a re-arrival and re-anchors its scroll while nobody is looking.
  * Frozen subtrees resume the live value the moment they surface again; the

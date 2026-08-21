@@ -23,7 +23,6 @@ pub async fn window_hide_for_close(window: tauri::WebviewWindow) -> AppResult<()
         .map_err(|err| AppError::io(format!("failed to hide window: {err}")))
 }
 
-#[cfg(target_os = "macos")]
 mod platform {
     use std::ptr::NonNull;
     use std::sync::{Arc, Mutex};
@@ -120,11 +119,4 @@ mod platform {
             });
         }
     }
-}
-
-#[cfg(not(target_os = "macos"))]
-mod platform {
-    /// Only macOS has fullscreen Spaces to leave; elsewhere the hide needs no
-    /// preamble. Kept `async` so the command's await is platform-uniform.
-    pub async fn leave_fullscreen_space(_window: &tauri::WebviewWindow) {}
 }

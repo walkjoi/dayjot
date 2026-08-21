@@ -12,7 +12,6 @@
 //! [`contacts`] (live Apple Contacts lookups),
 //! [`error`] (the shared error contract).
 
-mod background_task;
 mod calendar;
 mod capture;
 mod conflict;
@@ -31,19 +30,7 @@ mod secrets;
 mod settings;
 mod windows;
 
-// The watcher is a desktop capability (Plan 19): mobile swaps in a stand-in
-// with the identical command surface, so the `invoke_handler` list below
-// needs no platform branches.
-#[cfg(desktop)]
 mod watcher;
-#[cfg(mobile)]
-#[path = "watcher_mobile.rs"]
-mod watcher;
-
-// TEMPORARY (Plan 19 spike A): on-device capability probes; delete with the
-// spike once the runtime gate verdict is recorded in the plan.
-#[cfg(mobile)]
-mod spike_mobile;
 
 use tauri::{Emitter, Manager};
 
@@ -99,38 +86,21 @@ mod capability_tests {
     }
 }
 
-/// Which UI family this build serves. The frontend's root gate (Plan 19)
-/// switches between the desktop and mobile surface trees on this answer.
-#[tauri::command]
-fn app_platform() -> &'static str {
-    if cfg!(target_os = "ios") {
-        "ios"
-    } else if cfg!(target_os = "android") {
-        "android"
-    } else {
-        "desktop"
-    }
-}
-
 /// Route `tracing` output to stderr, honoring `RUST_LOG` (default `info`).
 fn init_tracing() {
     use tracing_subscriber::EnvFilter;
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    // `try_init` so a second call (tests, mobile re-entry) is a no-op, not a panic.
+    // `try_init` so a second call (tests) is a no-op, not a panic.
     let _ = tracing_subscriber::fmt().with_env_filter(filter).try_init();
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     init_tracing();
     let builder = tauri::Builder::default();
 
-    // Single-instance must be the first plugin so a second launch is caught
-    // before any other state spins up: its `deep-link` feature hands the
-    // launching instance's `dayjot://` URL to the deep-link plugin, and the
-    // callback re-focuses the running window. macOS delivers scheme opens to
-    // the running app natively; this is the Windows/Linux equivalent.
-    #[cfg(desktop)]
+    // Single-instance must be the first plugin so a second launch (e.g. the
+    // binary run directly, or `open -n`) is caught before any other state
+    // spins up; the callback re-focuses the running window.
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
         windows::surface_main_window(app);
     }));
@@ -140,36 +110,19 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init());
 
-    // Deep links (`dayjot://`) are desktop-only for now: the scheme is
-    // registered at bundle time (`plugins.deep-link` in tauri.conf.json) and
-    // the frontend consumes URLs through `onOpenUrl`.
-    #[cfg(desktop)]
+    // Deep links (`dayjot://`): the scheme is registered at bundle time
+    // (`plugins.deep-link` in tauri.conf.json, read into CFBundleURLTypes)
+    // and the frontend consumes URLs through `onOpenUrl`.
     let builder = builder.plugin(tauri_plugin_deep_link::init());
 
-    // Where the bundle doesn't register the scheme, do it at runtime: Linux
-    // desktop entries, and Windows dev builds (the installer writes the
-    // registry keys in production; macOS reads CFBundleURLTypes). Best-effort
-    // — a headless Linux box without xdg-mime must not fail the launch.
-    #[cfg(any(target_os = "linux", all(windows, debug_assertions)))]
-    let builder = builder.setup(|app| {
-        use tauri_plugin_deep_link::DeepLinkExt;
-        if let Err(err) = app.deep_link().register_all() {
-            tracing::warn!(error = %err, "deep-link scheme registration failed");
-        }
-        Ok(())
-    });
-
-    // Auto-update is desktop-only: updates verify against the minisign pubkey
-    // in tauri.conf.json (`plugins.updater`), and `process` provides the
-    // post-install relaunch. Mobile updates go through the app stores.
-    // Window-state restore is likewise meaningless on mobile (one fullscreen
-    // webview, no window frames to remember). The main window starts hidden
-    // (`visible: false` in tauri.conf.json) so this plugin can restore its
-    // geometry before first paint — avoiding a visible jump. Visibility is
-    // deliberately not persistent: shutdown and updater relaunches can observe
-    // a transiently hidden window, which must not suppress every later launch.
-    // The Ready event reveals the restored window below.
-    #[cfg(desktop)]
+    // Updates verify against the minisign pubkey in tauri.conf.json
+    // (`plugins.updater`), and `process` provides the post-install relaunch.
+    // The main window starts hidden (`visible: false` in tauri.conf.json) so
+    // the window-state plugin can restore its geometry before first paint —
+    // avoiding a visible jump. Visibility is deliberately not persistent:
+    // shutdown and updater relaunches can observe a transiently hidden
+    // window, which must not suppress every later launch. The Ready event
+    // reveals the restored window below.
     let builder = builder
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
@@ -183,41 +136,18 @@ pub fn run() {
                 .build(),
         );
 
-    // The keyboard bridge (Plan 19, decision 8) is mobile-only: desktop has
-    // no software keyboard to track. (Sharing uses the webview's Web Share
-    // API, so it needs no native plugin; haptics ride this plugin's
-    // `impact_light` command.)
-    #[cfg(mobile)]
-    let builder = builder.plugin(tauri_plugin_keyboard::init());
-
-    // The main window starts hidden (`visible: false`); desktop reveals it on
-    // Ready after restoring geometry, but mobile has no window-state plugin,
-    // so show it here or the UI would never appear.
-    //
-    // (Also runs the TEMPORARY Plan 19 spike-A capability probe — delete that
-    // line with the spike, but keep the window show.)
-    #[cfg(mobile)]
-    let builder = builder.setup(|app| {
-        if let Some(window) = app.get_webview_window(windows::MAIN_WINDOW_LABEL) {
-            window.show()?;
-        }
-        spike_mobile::run_self_check(app.handle());
-        Ok(())
-    });
-
     builder
         // Serves note images (`assets/…`) to the webview. Registered as an
         // *asynchronous* protocol on purpose: WebKit delivers custom-scheme
         // requests on the main thread, and a synchronous handler (like the
         // built-in `asset:` protocol this replaces) freezes the whole app for
-        // the duration of every uncached read — seconds on iOS, where a first
-        // read can wait on an iCloud download.
+        // the duration of every uncached read — which can wait on an iCloud
+        // download.
         .register_asynchronous_uri_scheme_protocol(
             fs::asset_protocol::SCHEME,
             fs::asset_protocol::handle,
         )
         .manage(fs::GraphState::default())
-        .manage(background_task::BackgroundTaskState::default())
         .manage(fs::assets::AssetUploads::default())
         .manage(db::IndexState::default())
         .manage(watcher::WatcherState::default())
@@ -225,12 +155,6 @@ pub fn run() {
         .manage(windows::WindowInit::default())
         .invoke_handler(tauri::generate_handler![
             app_version,
-            app_platform,
-            background_task::background_task_begin,
-            background_task::background_task_end,
-            icloud::storage::mobile_storage,
-            icloud::storage::mobile_storage_local,
-            icloud::storage::icloud_download_pending,
             icloud::storage::icloud_pending_count,
             icloud::storage::icloud_status,
             icloud::storage::icloud_adopt_graph,
@@ -289,7 +213,6 @@ pub fn run() {
             capture::capture_inbox_read,
             capture::capture_inbox_remove,
             capture::capture_inbox_reject,
-            capture::capture_shared_inbox_relay,
             capture::capture_screenshot_promote,
             capture::capture_meta_fetch,
             git::git_status,
@@ -314,7 +237,6 @@ pub fn run() {
             // window-state restore. Reveal the main window only after that
             // geometry is settled, regardless of any stale persisted
             // visibility from an older build.
-            #[cfg(desktop)]
             tauri::RunEvent::Ready => {
                 windows::surface_main_window(app);
             }

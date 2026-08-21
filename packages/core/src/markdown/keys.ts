@@ -17,7 +17,7 @@ export function foldKey(value: string): string {
  * A conservative second-chance title key for unresolved wiki links.
  *
  * Exact {@link foldKey} matching always wins. This fallback only smooths the
- * title spellings a mobile editor can transiently produce around a leading
+ * title spellings an editor can transiently produce around a leading
  * emoji: the emoji prefix is removed, Unicode whitespace is collapsed, and
  * the remainder is case-folded. Punctuation elsewhere stays significant, so
  * titles such as `C` and `C++` do not collapse together.

@@ -6,17 +6,17 @@ import type { ConnectGithubWizard } from '@/hooks/use-connect-github-wizard'
 interface ConnectGithubFinishStepProps {
   wizard: ConnectGithubWizard
   /**
-   * `row`: desktop dialog — small buttons side by side, escape hatches
-   * leading. `stack`: mobile sheet — full-width buttons, primary action
-   * first (the platform's bottom-sheet convention).
+   * `row`: the dialog's layout — small buttons side by side, escape hatches
+   * leading. `stack`: vertical variant — full-width buttons, primary action
+   * first.
    */
   layout: 'row' | 'stack'
 }
 
 /**
- * The connect wizard's finish step, shared by the desktop dialog and the
- * mobile drawer so the view precedence and every user-facing string live
- * once. Renders whatever {@link ConnectGithubWizard.finishView} says —
+ * The connect wizard's finish step, where the view precedence and every
+ * user-facing string live.
+ * Renders whatever {@link ConnectGithubWizard.finishView} says —
  * the public-repo consent gate, the create/grant handoffs (whose polls the
  * hook owns), the in-flight state, or a failure's inline error with its
  * escape back to the repo step. Only button sizing/stacking varies by

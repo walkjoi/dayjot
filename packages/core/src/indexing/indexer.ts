@@ -303,7 +303,7 @@ export function createMtimeTouchBatch(generation: number): MtimeTouchBatch {
  * Full rebuild: wipe derived tables and re-index every markdown file. Used for
  * explicit repair / schema-bump triggers, not the hot graph-switch path (that's
  * {@link reconcileIndex}). An aborted rebuild may leave a partial index after
- * the wipe; that is intentional for mobile suspension. `index_clear` preserves
+ * the wipe; that is intentional — an abort must stop promptly. `index_clear` preserves
  * metadata, so the next foreground sync either rebuilds again for an old stamp
  * or reconciles the missing rows for a current stamp. Both converge without
  * continuing to hold SQLite locks in the background.

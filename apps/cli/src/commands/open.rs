@@ -106,26 +106,9 @@ fn launch(url: &str) -> Result<(), CliError> {
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
 fn launcher(url: &str) -> Command {
     let mut command = Command::new("open");
     command.arg(url);
-    command
-}
-
-#[cfg(target_os = "linux")]
-fn launcher(url: &str) -> Command {
-    let mut command = Command::new("xdg-open");
-    command.arg(url);
-    command
-}
-
-#[cfg(windows)]
-fn launcher(url: &str) -> Command {
-    let mut command = Command::new("cmd");
-    // The empty string is `start`'s window-title slot; without it the URL
-    // itself would be consumed as the title.
-    command.args(["/C", "start", "", url]);
     command
 }
 

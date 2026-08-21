@@ -118,7 +118,6 @@ async fn run_blocking<T: Send + 'static>(
         })?
 }
 
-#[cfg(target_os = "macos")]
 mod platform {
     use std::ptr::NonNull;
     use std::sync::atomic::{AtomicBool, Ordering};
@@ -349,38 +348,4 @@ mod platform {
             status: status.to_string(),
         }
     }
-}
-
-#[cfg(not(target_os = "macos"))]
-mod platform {
-    use super::{CalendarEvent, CalendarInfo};
-    use crate::error::{AppError, AppResult};
-
-    fn unsupported<T>() -> AppResult<T> {
-        Err(AppError::Unknown {
-            message: "calendar integration is only available on macOS".into(),
-        })
-    }
-
-    pub fn authorization_status() -> AppResult<String> {
-        unsupported()
-    }
-
-    pub fn request_access() -> AppResult<bool> {
-        unsupported()
-    }
-
-    pub fn list_calendars() -> AppResult<Vec<CalendarInfo>> {
-        unsupported()
-    }
-
-    pub fn list_events(
-        _start_ms: f64,
-        _end_ms: f64,
-        _calendar_ids: &[String],
-    ) -> AppResult<Vec<CalendarEvent>> {
-        unsupported()
-    }
-
-    pub fn ensure_change_observer(_app: &tauri::AppHandle) {}
 }

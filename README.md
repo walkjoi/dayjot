@@ -51,11 +51,7 @@ maintained separately.
    auto-updated from GitHub Releases (this requires your own Apple Developer
    credentials — see [docs/macos-distribution.md](docs/macos-distribution.md)).
    You can also [view all releases](https://github.com/walkjoi/dayjot/releases).
-2. **Install the iOS beta.** The iOS app uses the same plain-file graph and
-   sync options as the Mac app. Distributing it through TestFlight requires
-   your own App Store Connect setup — see
-   [docs/ios-testflight.md](docs/ios-testflight.md).
-3. **Install the Chrome extension.** Build and load
+2. **Install the Chrome extension.** Build and load
    [the capture extension](apps/extension/README.md) from source to save the
    current page, selected text, screenshots, and optional page text from
    Chrome. (The Chrome Web Store carries the upstream Reflect Capture listing,
@@ -119,7 +115,7 @@ DayJot is a pnpm/Turborepo monorepo:
 
 ```text
 dayjot/
-├── apps/desktop/          # Mac and iOS app
+├── apps/desktop/          # The Mac app
 ├── apps/cli/              # `dayjot` CLI
 ├── apps/extension/        # Chrome capture extension
 ├── apps/native-host/      # Browser capture helper
@@ -149,27 +145,14 @@ pnpm --filter @dayjot/desktop sidecar
 cargo test --workspace
 ```
 
-For iOS simulator development:
-
-```bash
-pnpm tauri:ios:dev "iPhone 17 Pro"
-```
-
-For TestFlight builds:
-
-```bash
-pnpm release:ios preflight --build-number=123
-pnpm release:ios testflight --build-number=123 --wait
-```
-
 ## Status
 
-DayJot is in beta and used daily. The current focus is the Mac app, iOS
-companion, browser capture, local-first data model, and sync reliability.
+DayJot is in beta and used daily. The current focus is the Mac app, browser
+capture, the local-first data model, and sync reliability.
 
-Windows, Android, and a plugin API are out of scope for now. See
-[docs/product.md](docs/product.md) for what DayJot is — and deliberately
-isn't.
+DayJot is macOS-only. Windows, Linux, mobile, and a plugin API are out of
+scope for now. See [docs/product.md](docs/product.md) for what DayJot is —
+and deliberately isn't.
 
 ## License
 

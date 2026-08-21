@@ -1,7 +1,6 @@
 import { errorMessage, hasBridge, openNoteWindow } from '@dayjot/core'
 import { deepLinkForRoute } from '@/lib/deep-links/format'
 import { parseDeepLink } from '@/lib/deep-links/parse'
-import { isMobileSurface } from '@/lib/platform-surface'
 import type { Route } from '@/routing/route'
 
 /**
@@ -37,12 +36,12 @@ export function isNewWindowClick(event: NewWindowClickEvent | undefined): boolea
 
 /**
  * Open `route` in a secondary note window. False — never a throw — when this
- * surface can't (no shell, mobile, a route the deep-link grammar doesn't
+ * surface can't (no shell, a route the deep-link grammar doesn't
  * name, or a failed command). Modifier-click callers then navigate in place,
  * so the gesture degrades to a plain click instead of doing nothing.
  */
 export async function openRouteInNewWindow(route: Route): Promise<boolean> {
-  if (!hasBridge() || isMobileSurface()) {
+  if (!hasBridge()) {
     return false
   }
   const link = deepLinkForRoute(route)
@@ -59,7 +58,7 @@ export async function openRouteInNewWindow(route: Route): Promise<boolean> {
  * Same false-not-throw contract as {@link openRouteInNewWindow}.
  */
 export async function openDeepLinkInNewWindow(href: string): Promise<boolean> {
-  if (!hasBridge() || isMobileSurface()) {
+  if (!hasBridge()) {
     return false
   }
   const link = parseDeepLink(href)

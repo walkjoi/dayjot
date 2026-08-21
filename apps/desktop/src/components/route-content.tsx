@@ -60,8 +60,8 @@ export function RouteContent(): ReactElement {
     case 'search':
       return <SearchRoute query={route.query} />
     case 'graphs':
-    // The graph-switcher route is a mobile settings sub-screen; on desktop
-    // graph switching lives in the sidebar footer, so it renders as settings.
+    // Graph switching lives in the sidebar footer, so the graph-switcher
+    // route renders as settings.
     case 'settings':
       // The section navigator floats in the left gutter — absolutely
       // positioned off the centered column so the column never shifts — and

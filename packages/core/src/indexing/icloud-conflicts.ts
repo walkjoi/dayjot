@@ -37,7 +37,7 @@ const ICLOUD_WATCH_FAILED_EVENT = 'icloud:watch-failed'
  * runs, so a failed `startQuery` can't surface through the command's result
  * — it arrives here instead. Rare by construction (Apple documents failure
  * as "already running" or "no predicate", neither possible for a fresh
- * predicated query), but on iOS the query is the sole live change source,
+ * predicated query), but the query is a live change source,
  * so the subscriber should fall back to sweep-based freshness loudly.
  */
 export function subscribeIcloudWatchFailed(handler: () => void): Promise<Unlisten> {

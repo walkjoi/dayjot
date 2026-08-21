@@ -1,7 +1,7 @@
 /**
  * Event-loop pacing for the long index passes. A pass over thousands of
  * notes parses and hashes on the webview's only thread; without explicit
- * breaks the UI (and on iOS the whole app) reads as frozen even though the
+ * breaks the UI reads as frozen even though the
  * per-file awaits technically yield. A real macrotask break every
  * {@link INDEX_PASS_YIELD_EVERY} files gives rendering and input a slot.
  */

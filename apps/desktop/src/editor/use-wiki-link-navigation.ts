@@ -29,7 +29,7 @@ function reportUnavailableNoteTitle(title: string): void {
  *
  * A ⌘-click (the originating `event`, when the caller passes it) opens the
  * resolved target in a secondary note window instead — falling back to
- * in-window navigation whenever the surface can't (browser dev, mobile), so
+ * in-window navigation whenever the surface can't (browser dev), so
  * the modifier never makes a link do nothing. Keyboard follows (Mod-Enter)
  * deliberately stay in-window: their modifier is held by definition.
  *
@@ -110,9 +110,8 @@ export function useWikiLinkNavigation(
             return
           }
           if (resolution.kind === 'resolved') {
-            // Deliberately no focus request: on mobile, focusing mid-arrival
-            // raises the keyboard through the stack animation. Desktop
-            // autofocuses note arrivals on its own.
+            // Deliberately no focus request: note arrivals
+            // autofocus on their own.
             open(routeForPath(resolution.ref))
           }
         } catch (err) {

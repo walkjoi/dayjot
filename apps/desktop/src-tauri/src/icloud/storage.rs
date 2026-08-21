@@ -1,24 +1,16 @@
-//! iCloud Drive document storage for the mobile graph (Plan 21).
+//! iCloud Drive document storage (Plan 21).
 //!
-//! iCloud document sync is the primary way phone + desktop share a graph:
-//! per Plan 21 contract 1 the graph lives at `<container>/Documents/<name>/`
-//! in the app's iCloud Drive container (visible as "DayJot" in the Files
-//! app and in Finder's iCloud Drive), and the OS moves the markdown between
-//! devices. Rust owns only the storage primitives — resolving the
-//! container, finding an existing graph inside it, and nudging undownloaded
-//! files ("dataless" `.icloud` placeholders) onto the device. Which root
-//! the graph actually opens in is frontend policy (`GraphProvider` + the
-//! onboarding screen).
-//!
-//! Platform shape mirrors `contacts.rs`: real implementations on iOS, an
-//! honest "no iCloud here" answer elsewhere, and the commands registered on
-//! every platform so the IPC surface never branches.
+//! Per Plan 21 contract 1 an iCloud-synced graph lives at
+//! `<container>/Documents/<name>/` in the app's iCloud Drive container
+//! (visible as "DayJot" in Finder's iCloud Drive), and the OS moves the
+//! markdown between devices. Rust owns only the storage primitives —
+//! resolving the container, finding the graphs inside it, and counting
+//! undownloaded ("dataless" `.icloud`) placeholders. Which root the graph
+//! actually opens in is frontend policy.
 
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
-#[cfg(mobile)]
-use tauri::Manager;
 
 use crate::error::{AppError, AppResult};
 
@@ -28,127 +20,13 @@ use crate::error::{AppError, AppResult};
 /// onboarding default lives frontend-side as `DEFAULT_ICLOUD_GRAPH_NAME`.)
 const DEFAULT_ICLOUD_GRAPH_DIR: &str = "Notes";
 
-/// The storage locations available to the mobile graph, as the onboarding
-/// screen and `GraphProvider` consume them.
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct MobileStorage {
-    /// The app-sandbox `Documents/` directory — always available, never
-    /// synced. iOS container paths embed a UUID that changes across
-    /// restore/update, so callers must never persist this absolute path.
-    pub local_root: String,
-    /// The container's `Documents/` directory when iCloud Drive is usable
-    /// (entitled build + signed-in account) — where a new graph directory
-    /// is created. `None` when signed out or the platform has no iCloud.
-    /// Same rule as `local_root`: derive fresh, never persist.
-    pub icloud_documents_root: Option<String>,
-    /// Every existing graph directory inside the container (name-sorted,
-    /// same listing as desktop's `icloud_status`) — onboarding and the
-    /// graph switcher list them. Best-effort: content still syncing down at
-    /// first launch can grow this later. The persisted selector is the
-    /// graph's *name*, never these absolute paths.
-    pub icloud_graph_roots: Vec<String>,
-}
-
-/// Command: resolve the mobile storage locations. Mobile-only; desktop picks
-/// its graph folders through the chooser and has no fixed roots.
-///
-/// Runs on a blocking thread: the first `URLForUbiquityContainerIdentifier`
-/// call may extend the app sandbox and touch the network, and Apple forbids
-/// it on the main thread.
-#[tauri::command]
-pub async fn mobile_storage(app: tauri::AppHandle) -> AppResult<MobileStorage> {
-    #[cfg(mobile)]
-    {
-        let local = app
-            .path()
-            .document_dir()
-            .map_err(|err| AppError::io(format!("no documents directory: {err}")))?;
-        tauri::async_runtime::spawn_blocking(move || {
-            let documents = platform::ubiquity_documents_dir();
-            let icloud_graph_roots = documents
-                .as_deref()
-                .map(find_graph_dirs)
-                .unwrap_or_default()
-                .into_iter()
-                .map(|dir| dir.to_string_lossy().into_owned())
-                .collect();
-            Ok(MobileStorage {
-                local_root: local.to_string_lossy().into_owned(),
-                icloud_documents_root: documents.map(|dir| dir.to_string_lossy().into_owned()),
-                icloud_graph_roots,
-            })
-        })
-        .await
-        .map_err(|err| AppError::io(err.to_string()))?
-    }
-    #[cfg(desktop)]
-    {
-        let _ = app;
-        Err(AppError::Unknown {
-            message: "mobile_storage is mobile-only".into(),
-        })
-    }
-}
-
-/// Command: ask iCloud to download every not-yet-local file under `root`,
-/// returning how many placeholders were found. iCloud does not pull files
-/// down eagerly on iOS, so an edit made on the Mac exists only as a
-/// `.name.md.icloud` stub until something requests it. The frontend calls
-/// this once per open/resume for iCloud graphs; while the count stays above
-/// zero it polls [`icloud_pending_count`], which never re-requests.
-///
-/// `notes_only` restricts the request (and the count) to markdown under the
-/// note directories. A first sync sequences its downloads through this:
-/// requesting everything at once puts thousands of concurrent downloads —
-/// assets are most of the bytes — under the first index pass, and the app
-/// crawls until they drain. Notes first, then one `notes_only: false` call
-/// for the rest once the note count reaches zero.
-#[tauri::command]
-pub async fn icloud_download_pending(root: String, notes_only: bool) -> AppResult<u32> {
-    tauri::async_runtime::spawn_blocking(move || {
-        Ok(platform::pending_walk(Path::new(&root), true, notes_only))
-    })
-    .await
-    .map_err(|err| AppError::io(err.to_string()))?
-}
-
-/// Command: the app-sandbox `Documents/` root alone — the cheap half of
-/// [`mobile_storage`]. Resolving the iCloud container can take a long time on
-/// a fresh install (the first `URLForUbiquityContainerIdentifier` call
-/// provisions it and may touch the network); the local root needs none of
-/// that, and the onboarding screen's on-device fallback only needs this. Same
-/// persistence rule as every container path: derive fresh, never
-/// persist.
-#[tauri::command]
-pub fn mobile_storage_local(app: tauri::AppHandle) -> AppResult<String> {
-    #[cfg(mobile)]
-    {
-        let local = app
-            .path()
-            .document_dir()
-            .map_err(|err| AppError::io(format!("no documents directory: {err}")))?;
-        Ok(local.to_string_lossy().into_owned())
-    }
-    #[cfg(desktop)]
-    {
-        let _ = app;
-        Err(AppError::Unknown {
-            message: "mobile_storage_local is mobile-only".into(),
-        })
-    }
-}
-
 /// Command: count the `.icloud` placeholders under `root` without requesting
-/// anything. The poll loop that waits for a download burst to settle calls
-/// this every second — re-*requesting* thousands of in-flight downloads on
-/// every tick is wasted `NSFileManager` traffic (the open/resume nudge and
-/// the metadata watch already own the requests). `notes_only` matches the
-/// scope the nudge requested, so the poll drains when the *notes* are in.
+/// anything (the metadata watch owns the download requests). `notes_only`
+/// restricts the count to markdown under the note directories.
 #[tauri::command]
 pub async fn icloud_pending_count(root: String, notes_only: bool) -> AppResult<u32> {
     tauri::async_runtime::spawn_blocking(move || {
-        Ok(platform::pending_walk(Path::new(&root), false, notes_only))
+        Ok(platform::pending_walk(Path::new(&root), notes_only))
     })
     .await
     .map_err(|err| AppError::io(err.to_string()))?
@@ -160,12 +38,7 @@ const NOTE_DIRS: [&str; 3] = ["daily", "notes", "templates"];
 
 /// Whether a placeholder found under `rel_dir` (the stub's directory,
 /// graph-relative) standing for `target` falls in the notes-only download
-/// scope: markdown under one of the note directories. Assets, audio memos,
-/// and anything else wait for the follow-up full-scope request.
-///
-/// Compiled off Apple targets only for tests: its sole production caller is
-/// the platform walk, which has no non-Apple twin.
-#[cfg(any(target_os = "ios", target_os = "macos", test))]
+/// scope: markdown under one of the note directories.
 fn placeholder_in_note_scope(rel_dir: &Path, target: &str) -> bool {
     let Some(first) = rel_dir.components().next() else {
         return false; // a stray placeholder at the graph root is not a note
@@ -176,8 +49,7 @@ fn placeholder_in_note_scope(rel_dir: &Path, target: &str) -> bool {
 
 /// Every existing graph among the container `Documents/` subdirectories
 /// (name-sorted, for determinism): a user can keep several graphs in the
-/// container, and both desktop onboarding and the mobile onboarding/switcher
-/// list them all.
+/// container, and onboarding lists them all.
 fn find_graph_dirs(documents: &Path) -> Vec<PathBuf> {
     let Ok(entries) = std::fs::read_dir(documents) else {
         return Vec::new();
@@ -212,17 +84,14 @@ fn dir_has_notes(root: &Path) -> bool {
 }
 
 /// Ask iCloud to (re)download one item, best-effort. The metadata-query
-/// watch calls this for every non-current item a notification reports: iOS
-/// never downloads content on its own, so without a live nudge a Mac edit
-/// stays a dataless placeholder until the next app resume. Requesting an
-/// in-flight download is a no-op for the OS.
-#[cfg(any(target_os = "ios", target_os = "macos"))]
+/// watch calls this for every non-current item a notification reports, so an
+/// evicted file lands back on the device without waiting for Finder.
+/// Requesting an in-flight download is a no-op for the OS.
 pub(crate) fn request_download(abs: &Path) {
     let manager = objc2_foundation::NSFileManager::defaultManager();
     let _ = platform::start_download(&manager, abs);
 }
 
-#[cfg(any(target_os = "ios", target_os = "macos"))]
 mod platform {
     use std::path::{Path, PathBuf};
 
@@ -242,13 +111,10 @@ mod platform {
         Some(documents)
     }
 
-    /// Walk `root` counting `.icloud` placeholders; with `nudge`, request a
-    /// download for each. `notes_only` restricts both the count and the
-    /// requests to markdown under the note directories
-    /// ([`super::placeholder_in_note_scope`]). Individual failures are logged
-    /// and skipped — one undownloadable file must not stop the rest.
-    pub fn pending_walk(root: &Path, nudge: bool, notes_only: bool) -> u32 {
-        let manager = NSFileManager::defaultManager();
+    /// Walk `root` counting `.icloud` placeholders. `notes_only` restricts
+    /// the count to markdown under the note directories
+    /// ([`super::placeholder_in_note_scope`]).
+    pub fn pending_walk(root: &Path, notes_only: bool) -> u32 {
         let mut pending = 0;
         let mut stack = vec![root.to_path_buf()];
         while let Some(dir) = stack.pop() {
@@ -284,10 +150,6 @@ mod platform {
                     }
                 }
                 pending += 1;
-                if nudge && !start_download(&manager, &path) {
-                    // Some iOS releases want the logical URL, not the stub.
-                    start_download(&manager, &dir.join(target));
-                }
             }
         }
         pending
@@ -302,22 +164,6 @@ mod platform {
                 false
             }
         }
-    }
-}
-
-#[cfg(not(any(target_os = "ios", target_os = "macos")))]
-mod platform {
-    use std::path::{Path, PathBuf};
-
-    /// No iCloud Drive container off Apple platforms (Android, and
-    /// Windows/Linux desktop builds).
-    pub fn ubiquity_documents_dir() -> Option<PathBuf> {
-        None
-    }
-
-    /// Nothing to download without a container.
-    pub fn pending_walk(_root: &Path, _nudge: bool, _notes_only: bool) -> u32 {
-        0
     }
 }
 

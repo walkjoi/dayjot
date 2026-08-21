@@ -13,10 +13,7 @@ import { SettingsSection } from './section'
 import { SettingsSwitchField } from './switch-field'
 
 /**
- * macOS System Settings, opened straight to the Contacts privacy pane. This
- * scheme is macOS-only, which holds today: this section lives in the desktop
- * settings surface (mobile has its own settings drawer, which doesn't offer
- * the integration yet). An iOS settings surface would use `app-settings:`.
+ * macOS System Settings, opened straight to the Contacts privacy pane.
  */
 const CONTACTS_PRIVACY_PANE =
   'x-apple.systempreferences:com.apple.preference.security?Privacy_Contacts'
@@ -28,7 +25,7 @@ const CONTACTS_PRIVACY_PANE =
  * there is no sync status to show. Turning it on triggers the OS permission
  * prompt; a denial keeps the switch on and points at System Settings, since
  * the app cannot re-prompt once the user has decided. The section renders
- * only where the framework exists (macOS/iOS) — see
+ * only where the framework exists (macOS) — see
  * {@link useVisibleSettingsSections}.
  */
 export function IntegrationsSection(): ReactElement | null {

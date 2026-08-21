@@ -134,7 +134,6 @@ export {
   subscribeNoteMoved,
   subscribeFileChanges,
   emitFileChanges,
-  setLocalWriteEcho,
   subscribeOwnWrites,
   subscribeIcloudConflicts,
   subscribeIcloudWatchFailed,

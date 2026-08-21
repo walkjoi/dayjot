@@ -23,7 +23,6 @@ use rusqlite::{params, Connection};
 use serde_json::{Map, Value};
 use tauri::State;
 
-use crate::background_task::{self, BackgroundTaskState};
 use crate::error::{AppError, AppResult};
 use crate::fs::GraphState;
 
@@ -101,12 +100,7 @@ fn emit_note_moved<R: tauri::Runtime>(app: &tauri::AppHandle<R>, from: &str, to:
 /// Returns the new generation, which write commands must echo back. The
 /// generation bump and connection rebind happen under one lock, atomically.
 #[tauri::command]
-pub fn index_open(
-    graph: State<GraphState>,
-    index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
-) -> AppResult<u64> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot index open");
+pub fn index_open(graph: State<GraphState>, index: State<IndexState>) -> AppResult<u64> {
     let root = graph
         .0
         .lock()
@@ -133,11 +127,9 @@ pub fn index_open(
 /// Returns whether it committed, so callers only broadcast real writes.
 fn apply_in_txn(
     index: &State<IndexState>,
-    background_tasks: &State<BackgroundTaskState>,
     generation: u64,
     notes: &[IndexedNote],
 ) -> AppResult<bool> {
-    let _background_task = background_task::scoped(background_tasks, "DayJot index update");
     let mut state = lock_state(index)?;
     if state.generation != generation {
         return Ok(false);
@@ -158,14 +150,8 @@ pub fn index_apply<R: tauri::Runtime>(
     generation: u64,
     app: tauri::AppHandle<R>,
     index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    if apply_in_txn(
-        &index,
-        &background_tasks,
-        generation,
-        std::slice::from_ref(&note),
-    )? {
+    if apply_in_txn(&index, generation, std::slice::from_ref(&note))? {
         emit_index_written(&app);
     }
     Ok(())
@@ -178,9 +164,8 @@ pub fn index_apply_batch<R: tauri::Runtime>(
     generation: u64,
     app: tauri::AppHandle<R>,
     index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    if apply_in_txn(&index, &background_tasks, generation, &notes)? {
+    if apply_in_txn(&index, generation, &notes)? {
         emit_index_written(&app);
     }
     Ok(())
@@ -196,9 +181,7 @@ pub fn index_remove<R: tauri::Runtime>(
     generation: u64,
     app: tauri::AppHandle<R>,
     index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot index remove");
     {
         let mut state = lock_state(&index)?;
         if state.generation != generation {
@@ -242,9 +225,7 @@ pub fn note_move_indexed<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,
     graph: State<GraphState>,
     index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot note move");
     let root = crate::fs::root_for_generation(&graph, generation)?;
     {
         let mut state = lock_state(&index)?;
@@ -293,9 +274,7 @@ pub fn index_move<R: tauri::Runtime>(
     generation: u64,
     app: tauri::AppHandle<R>,
     index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot index move");
     {
         let mut state = lock_state(&index)?;
         if state.generation != generation {
@@ -354,9 +333,7 @@ pub fn index_touch(
     entries: Vec<IndexTouch>,
     generation: u64,
     index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot index touch");
     let mut state = lock_state(&index)?;
     if state.generation != generation {
         return Ok(());
@@ -380,9 +357,7 @@ pub fn index_meta_set(
     value: String,
     generation: u64,
     index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot index metadata");
     let state = lock_state(&index)?;
     if state.generation != generation {
         return Ok(());
@@ -404,9 +379,7 @@ pub fn index_clear<R: tauri::Runtime>(
     generation: u64,
     app: tauri::AppHandle<R>,
     index: State<IndexState>,
-    background_tasks: State<BackgroundTaskState>,
 ) -> AppResult<()> {
-    let _background_task = background_task::scoped(&background_tasks, "DayJot index clear");
     {
         let state = lock_state(&index)?;
         if state.generation != generation {

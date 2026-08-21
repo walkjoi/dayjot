@@ -5,9 +5,9 @@ import type { InsertTaskTarget } from '@/lib/tasks/task-insert-target'
 import { insertTargetForTask, todaysDailyTarget } from '@/lib/tasks/task-navigation'
 
 /**
- * The presentation contract a task-group section shares across surfaces —
- * V1's per-bucket styling and add-target rule, one definition for the desktop
- * sections and the mobile groups so the two can't drift on bucket colours or
+ * The presentation contract for task-group sections —
+ * V1's per-bucket styling and add-target rule, one definition
+ * so the sections can't drift on bucket colours or
  * where "+ Add" writes.
  */
 

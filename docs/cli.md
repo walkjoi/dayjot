@@ -15,9 +15,8 @@ dayjot open <note>        # open a note in the app (dayjot:// deep link)
 ```
 
 Built from `apps/cli` (`cargo build -p dayjot-cli`); bundled with the desktop
-app as a Tauri sidecar (macOS: `DayJot.app/Contents/MacOS/dayjot`, Linux
-`.deb`: `/usr/bin/dayjot`). For local development:
-`cargo install --path apps/cli`.
+app as a Tauri sidecar (`DayJot.app/Contents/MacOS/dayjot`). For local
+development: `cargo install --path apps/cli`.
 
 ## Graph resolution
 

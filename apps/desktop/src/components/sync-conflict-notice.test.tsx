@@ -2,7 +2,6 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getNote, readNote, type GraphInfo } from '@dayjot/core'
-import { setPlatformSurface } from '@/lib/platform-surface'
 import { SyncConflictNotice } from './sync-conflict-notice'
 
 vi.mock('@dayjot/core', async (importOriginal) => ({
@@ -49,7 +48,6 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   queryClient.clear()
-  setPlatformSurface({ mobileApp: false })
   vi.clearAllMocks()
 })
 
@@ -84,17 +82,6 @@ describe('SyncConflictNotice', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /keep both/i }))
     expect(resolution.resolve).toHaveBeenCalledWith('both')
-  })
-
-  it('offers the same resolution actions on mobile', async () => {
-    setPlatformSurface({ mobileApp: true })
-    vi.mocked(getNote).mockResolvedValue(NOTE)
-    renderNotice()
-
-    expect(await screen.findByText(/choose what to keep/i)).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: /keep this device’s version/i }))
-    expect(resolution.resolve).toHaveBeenCalledWith('ours')
   })
 
   it('pluralizes the buttons for a stacked three-plus-way conflict', async () => {

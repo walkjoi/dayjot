@@ -28,15 +28,12 @@ import {
   type WikilinkSearchHandler,
 } from '@meowdown/react'
 import { CodeBlockBackspace } from '@/editor/code-block-backspace'
-import { EditorInputTraits } from '@/editor/editor-input-traits'
-import { FormattingToolbarBridge } from '@/editor/formatting-toolbar-bridge'
 import {
   IMAGE_LIGHTBOX_TRANSITION_NAME,
   ImageLightbox,
   type LightboxImage,
 } from '@/editor/image-lightbox'
 import { isOpenableExternalUrl } from '@/editor/open-external-link'
-import { isTouchEditorSurface } from '@/lib/platform-surface'
 import { useLightboxTransition } from '@/editor/use-lightbox-transition'
 import { isDeepLinkUrl } from '@/lib/deep-links/parse'
 import { useFollowDeepLink } from '@/lib/deep-links/use-follow-deep-link'
@@ -80,7 +77,7 @@ export interface NoteEditorHandle {
   focus(): void
   /**
    * Move the caret to a document edge and scroll it into view. Used for
-   * append-style capture arrivals (⌘D, the mobile daily double-tap), which
+   * append-style capture arrivals (⌘D), which
    * land the caret at the end of the day's content.
    */
   setSelection(position: 'start' | 'end'): void
@@ -190,7 +187,7 @@ interface NoteEditorProps {
   /**
    * Extra classes for the editable root. The contenteditable is the editor's
    * root, so e.g. a `min-h-*` here makes the whole reserved area
-   * click-to-focus (the mobile carousel uses this for per-day sizing).
+   * click-to-focus.
    */
   className?: string
   /** Imperative handle (React 19 ref-as-prop). */
@@ -397,22 +394,13 @@ export function NoteEditor({
         handleRef={innerRef}
         mode={markMode}
         initialMarkdown={initialContent}
-        // On the touch surface spellcheck is pinned off regardless of the
-        // setting: iOS derives the keyboard's smart-quotes/smart-dashes traits
-        // from it at focus time, and smart punctuation corrupts markdown
-        // syntax ([[ wiki links, code spans, --- fences) — Plan 19 gate.
-        // Autocorrect is independent and stays on (EditorInputTraits).
-        spellCheck={isTouchEditorSurface() ? false : spellCheck}
+        spellCheck={spellCheck}
         // DayJot's implementation-neutral `12h`/`24h` maps to meowdown's
         // `12`/`24` here at the boundary, like `markModeFromSyntax`.
         timeFormat={timeFormat === '24h' ? '24' : '12'}
         caretGlide={smoothCaretAnimation}
         bulletAfterHeading={bulletAfterHeading}
-        // Pinned off on the touch surface regardless of the caller: the grip is
-        // revealed on hover and drag-reorders blocks with a pointer, neither of
-        // which a touch webview can express. Turning it off also drops the drop
-        // indicator, which meowdown gates on the same prop.
-        blockHandle={isTouchEditorSurface() ? false : blockHandle}
+        blockHandle={blockHandle}
         editorClassName={cn('dayjot-editor', className)}
         {...(titlePlaceholder !== undefined ? { placeholder: titlePlaceholder } : {})}
         onDocChange={handleDocChange}
@@ -432,8 +420,6 @@ export function NoteEditor({
         onFileClick={handleFileClick}
       >
         <CodeBlockBackspace />
-        <EditorInputTraits />
-        <FormattingToolbarBridge />
         {renderWikilinkHoverCard !== undefined ? (
           <WikilinkHoverCard className="dayjot-hover-card">
             {renderWikilinkHoverCard}

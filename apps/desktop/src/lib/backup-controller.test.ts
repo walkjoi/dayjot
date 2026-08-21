@@ -7,7 +7,6 @@ import {
   type GraphInfo,
 } from '@dayjot/core'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { setPlatformSurface } from '@/lib/platform-surface'
 import { createBackupController, type BackupState } from './backup-controller'
 
 // providerFetch routes GitHub API calls through the Tauri HTTP plugin
@@ -305,23 +304,6 @@ describe('createBackupController', () => {
     controller.dispose()
   })
 
-  it('never starts local history on mobile', async () => {
-    setPlatformSurface({ mobileApp: true })
-    try {
-      const { calls } = fakeBridge({ auth: null, initialized: false, remoteUrl: null })
-      const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
-      await controller.start()
-      await new Promise((resolve) => setTimeout(resolve, 20))
-
-      expect(controller.getState()).toEqual({ phase: 'disconnected' })
-      expect(calls).not.toContain('git_setup')
-      expect(calls).not.toContain('git_commit_all')
-      controller.dispose()
-    } finally {
-      setPlatformSurface({ mobileApp: false })
-    }
-  })
-
   it('disconnectGraph drops the remote and lands on disconnected', async () => {
     const { calls } = fakeBridge()
     const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
@@ -490,83 +472,26 @@ describe('createBackupController', () => {
     controller.dispose()
   })
 
-  it('defers mobile launch, online, and debounce cycles until foreground', async () => {
-    setPlatformSurface({ mobileApp: true })
-    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+  it('an edit backs up after 30s idle', async () => {
+    const commitCount = (calls: string[]): number =>
+      calls.filter((command) => command === 'git_commit_all').length
     const { calls } = fakeBridge()
     const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
     try {
       await controller.start()
-      await new Promise((resolve) => setTimeout(resolve, 0))
-
-      // Adoption may probe status/auth while hidden, but the launch cycle must
-      // not acquire the Git index or touch the network.
-      expect(calls).not.toContain('git_commit_all')
-      expect(calls).not.toContain('git_fetch')
-
-      visibility.mockReturnValue('visible')
-      document.dispatchEvent(new Event('visibilitychange'))
       await vi.waitFor(() => {
-        expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(1)
+        expect(commitCount(calls)).toBe(1) // the launch pull's commit
       })
-      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(1)
-
-      visibility.mockReturnValue('hidden')
       vi.useFakeTimers()
       emitFileChanges([{ path: 'notes/edited.md', kind: 'upsert', modifiedMs: 1 }])
-      window.dispatchEvent(new Event('online'))
       await vi.advanceTimersByTimeAsync(10_000)
-
-      // Both the immediate online trigger and the edit's 10s mobile debounce
-      // are dropped while hidden.
-      expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(1)
-      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(1)
-
-      visibility.mockReturnValue('visible')
-      document.dispatchEvent(new Event('visibilitychange'))
-      await vi.runAllTimersAsync()
-      expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(2)
-      // Foreground replay is full, so it fetches rather than merely pushing
-      // the edit that arrived while hidden.
-      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(2)
+      expect(commitCount(calls)).toBe(1) // still inside the 30s idle window
+      await vi.advanceTimersByTimeAsync(20_000)
+      expect(commitCount(calls)).toBe(2)
     } finally {
       vi.useRealTimers()
       controller.dispose()
-      visibility.mockRestore()
-      setPlatformSurface({ mobileApp: false })
     }
-  })
-
-  it('an edit backs up after 30s idle on desktop, 10s on mobile', async () => {
-    const commitCount = (calls: string[]): number =>
-      calls.filter((command) => command === 'git_commit_all').length
-
-    async function debouncedCommitDelay(mobile: boolean): Promise<number> {
-      setPlatformSurface({ mobileApp: mobile })
-      const { calls } = fakeBridge()
-      const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
-      try {
-        await controller.start()
-        await vi.waitFor(() => {
-          expect(commitCount(calls)).toBe(1) // the launch pull's commit
-        })
-        vi.useFakeTimers()
-        emitFileChanges([{ path: 'notes/edited.md', kind: 'upsert', modifiedMs: 1 }])
-        await vi.advanceTimersByTimeAsync(10_000)
-        if (commitCount(calls) > 1) {
-          return 10_000
-        }
-        await vi.advanceTimersByTimeAsync(20_000)
-        return commitCount(calls) > 1 ? 30_000 : Number.POSITIVE_INFINITY
-      } finally {
-        vi.useRealTimers()
-        setPlatformSurface({ mobileApp: false })
-        controller.dispose()
-      }
-    }
-
-    expect(await debouncedCommitDelay(false)).toBe(30_000)
-    expect(await debouncedCommitDelay(true)).toBe(10_000)
   })
 
   it('fans a pull’s writes whole to the local file-changes channel — consumers filter by path', async () => {
@@ -755,29 +680,5 @@ describe('createBackupController', () => {
     expect(consoleError).toHaveBeenCalled()
     consoleError.mockRestore()
     controller.dispose()
-  })
-
-  it('defers a pulled note direct-index apply while the mobile app is hidden', async () => {
-    setPlatformSurface({ mobileApp: true })
-    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
-    try {
-      const { calls } = fakeBridge({
-        mergeOutcome: {
-          kind: 'merged',
-          conflictedPaths: [],
-          changedFiles: [{ path: 'notes/from-remote.md', kind: 'upsert', modifiedMs: 123 }],
-        },
-      })
-      const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
-      await controller.start()
-      await new Promise((resolve) => setTimeout(resolve, 0))
-
-      expect(calls).not.toContain('note_read')
-      expect(calls).not.toContain('index_apply_batch')
-      controller.dispose()
-    } finally {
-      visibility.mockRestore()
-      setPlatformSurface({ mobileApp: false })
-    }
   })
 })

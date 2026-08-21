@@ -23,9 +23,8 @@ notes — nothing else.
   Apple alternative. A graph syncs through one or the other, never both.
 - **Keyboard-native.** Every core workflow is reachable from the keyboard;
   `⌘/` lists everything. This is product identity, not polish.
-- **Capture from anywhere.** The Chrome extension and iOS share sheet spool
-  into the graph's local inbox; captures are enriched from the page's own
-  metadata.
+- **Capture from anywhere.** The Chrome extension spools into the graph's
+  local inbox; captures are enriched from the page's own metadata.
 
 ## What DayJot is not
 
@@ -34,7 +33,8 @@ notes — nothing else.
 - **No accounts, no server.** There is no DayJot backend in any code path
   and no product analytics.
 - **No audio recording.** Notes are written, not dictated.
-- **No plugin API, no Windows/Android** — out of scope for now.
+- **No plugin API, no other platforms.** DayJot is macOS-only; Windows,
+  Linux, and mobile are out of scope for now.
 
 ## Privacy invariants
 
