@@ -5,10 +5,10 @@ const EXPANDED_STORAGE_KEY = 'dayjot.backlinks-expanded'
 
 /**
  * The incoming-backlinks section's expanded state: one flag for the whole
- * session, shared live across every mounted surface — the desktop daily
- * stream shows one panel per day (and the mobile carousel one per mounted
- * slide), and the header toggle must move them together, not just the
- * instance that was tapped.
+ * session, shared live across every mounted surface — the daily
+ * stream shows one panel per day,
+ * and the header toggle must move them together, not just the
+ * instance that was clicked.
  */
 export function useBacklinksExpanded(): [boolean, (next: boolean) => void] {
   return useSessionFlag(EXPANDED_STORAGE_KEY, true)

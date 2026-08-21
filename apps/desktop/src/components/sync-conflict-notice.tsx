@@ -12,7 +12,6 @@ import { CONFLICT_SIDE_DOT } from '@/components/conflict-note-view'
 import { InlineAlert } from '@/components/inline-alert'
 import { Button } from '@/components/ui/button'
 import { useConflictResolution } from '@/hooks/use-conflict-resolution'
-import { isMobileSurface } from '@/lib/platform-surface'
 import { INDEX_QUERY_SCOPE } from '@/lib/query-client'
 import { cn } from '@/lib/utils'
 import { useGraph } from '@/providers/graph-provider'
@@ -39,9 +38,6 @@ interface SyncConflictNoticeProps {
  * is lost — every version remains in the backup history. The flag is a
  * projection of the file content, so the banner clears itself once the
  * resolved file reindexes.
- *
- * Mobile uses the same protected session contract and raw-text resolution
- * actions. The buttons are touch-sized there, but still call the same resolver.
  */
 export function SyncConflictNotice({ path, className }: SyncConflictNoticeProps): ReactElement | null {
   const { graph } = useGraph()
@@ -75,11 +71,6 @@ export function SyncConflictNotice({ path, className }: SyncConflictNoticeProps)
   const labels = markerInfo?.labels ?? null
   const manySided = (markerInfo?.blocks ?? 0) > 1
   const named = labels != null && labels.ours !== 'this device'
-  const mobile = isMobileSurface()
-  // One row when the labels fit (short generic labels, wide panes); a button
-  // whose device name doesn't fit wraps to its own full-width line. Mobile
-  // buttons are touch-sized and stretch to share the row evenly.
-  const actionClassName = mobile ? 'h-9 flex-1 justify-center px-3' : undefined
 
   return (
     <InlineAlert tone="warning" className={className}>
@@ -93,10 +84,9 @@ export function SyncConflictNotice({ path, className }: SyncConflictNoticeProps)
           </p>
         </div>
       </div>
-      <div className={cn('flex flex-wrap gap-2', mobile ? 'mt-3' : 'mt-2.5')}>
+      <div className="mt-2.5 flex flex-wrap gap-2">
         <ResolveButton
           dot="ours"
-          className={actionClassName}
           disabled={busy}
           onClick={() => void resolve('ours')}
         >
@@ -104,7 +94,6 @@ export function SyncConflictNotice({ path, className }: SyncConflictNoticeProps)
         </ResolveButton>
         <ResolveButton
           dot="theirs"
-          className={actionClassName}
           disabled={busy}
           onClick={() => void resolve('theirs')}
         >
@@ -116,7 +105,6 @@ export function SyncConflictNotice({ path, className }: SyncConflictNoticeProps)
         </ResolveButton>
         <ResolveButton
           dot="both"
-          className={actionClassName}
           disabled={busy}
           onClick={() => void resolve('both')}
         >

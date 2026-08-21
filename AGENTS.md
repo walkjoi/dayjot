@@ -104,7 +104,7 @@ Otherwise tauri-build fails with `resource path binaries/<name>-<triple> doesn't
 
 ### Repo layout
 
-DayJot is a **Turborepo + pnpm monorepo** around a **Tauri 2** desktop/mobile app: a
+DayJot is a **Turborepo + pnpm monorepo** around a **Tauri 2** macOS app: a
 React + TypeScript frontend bundled by Vite, embedded in a Rust native shell. The Rust
 crates form a single **Cargo workspace** rooted at the repository root.
 
@@ -117,12 +117,11 @@ dayjot/
 │   │   ├── src-tauri/      # Tauri native shell (Rust crate `dayjot-desktop`)
 │   │   │   ├── src/        # lib.rs (#[tauri::command] handlers, plugins), db/, fs/,
 │   │   │   │               #   watcher.rs, embed.rs, recents.rs, secrets.rs, settings.rs
-│   │   │   ├── tauri.conf.json          # build hooks, windows, bundle targets (incl. iOS)
-│   │   │   ├── tauri.<platform>.conf.json  # desktop overlays: bundle the dayjot CLI sidecar
-│   │   │   ├── capabilities/            # Tauri 2 permission grants (e.g. default.json)
-│   │   │   ├── icons/                   # App icons for desktop/mobile bundles
-│   │   │   ├── gen/                     # Generated schemas + platform projects (no hand-edits)
-│   │   │   └── ios.project.yml          # iOS XcodeGen template
+│   │   │   ├── tauri.conf.json          # build hooks, windows, bundle targets
+│   │   │   ├── tauri.macos.conf.json    # overlay: bundle the dayjot CLI sidecar + entitlements
+│   │   │   ├── capabilities/            # Tauri 2 permission grants (default.json)
+│   │   │   ├── icons/                   # App icons (stable/beta/dev flavor sets)
+│   │   │   └── gen/                     # Generated capability schemas (no hand-edits)
 │   │   ├── scripts/        # build-sidecar.mjs (stages the dayjot CLI for bundling)
 │   │   ├── dist/           # Vite build output (frontendDist in tauri.conf.json)
 │   │   └── public/         # Static assets served by Vite
@@ -148,8 +147,7 @@ dayjot/
   first-party hybrid/live-preview Markdown editor that DayJot uses through
   `@meowdown/core` and `@meowdown/react`. When investigating editor behavior,
   markdown round-tripping, keybindings, slash menus, wiki links, task checkboxes,
-  paste/drop handling, or mobile editor quirks, check that repo as well as this
-  one. If the root cause is in Meowdown, fix it there and open the PR against the
+  or paste/drop handling, check that repo as well as this one. If the root cause is in Meowdown, fix it there and open the PR against the
   Meowdown project rather than papering over it in DayJot.
 
 **Design system**
@@ -171,45 +169,13 @@ All UI work should follow the DayJot design system documented in [`design-system
 
 ```bash
 pnpm dev              # turbo dev across packages (Vite on http://localhost:1420)
-                      #   add ?platform=ios to the URL to preview the MOBILE tree in a
-                      #   plain browser (dev-only in-memory bridge + seeded demo graph)
 pnpm tauri dev        # Full Tauri app with hot reload (stages the CLI sidecar first)
 pnpm tauri:dev        # `pnpm tauri dev` with the dev overlay → the "DayJot Dev" flavor (green icon, own identifier; coexists with DayJot / DayJot Beta)
 pnpm build            # turbo build pipeline → apps/desktop/dist/
 pnpm tauri build      # Native app bundle, incl. the dayjot CLI sidecar
 pnpm release:macos    # Signed + notarized macOS build for distribution (docs/macos-distribution.md)
 pnpm release:macos publish  # The above, then fill and undraft the release-please draft release
-pnpm tauri:ios:dev "iPhone 17 Pro"  # Run the Tauri iOS target in the simulator (docs/contributing/mobile-simulator.md)
-pnpm release:ios preflight --build-number=123  # Check iOS/TestFlight signing, App Store Connect app record, and upload auth
-pnpm release:ios testflight --build-number=123 --wait  # Build and upload the iOS app to TestFlight
 ```
-
-**iOS simulator**
-
-The mobile app is the Tauri iOS target of `apps/desktop`, not a separate
-package. Use `pnpm tauri:ios:dev "iPhone 17 Pro"` from the repo root (or
-`pnpm tauri:ios:dev --host` for a physical device); debug builds are the dev
-flavor (`app.dayjot.ios.dev`, shown as `DayJot Dev`) and need that script's
-config overlay, so do not run plain `tauri ios dev`. List
-available simulator names with `xcrun simctl list devices available`. The first
-run can be quiet while Xcode compiles Rust, Swift plugin code, and native
-dependencies. See `docs/contributing/mobile-simulator.md` before committing
-changes under `apps/desktop/src-tauri/gen/apple/`, because Tauri/Xcode may
-normalize generated project and plist files.
-
-**iOS TestFlight**
-
-Use `pnpm release:ios` for TestFlight work; do not hand-roll `tauri ios build`
-and `altool` unless debugging the helper itself. Start with
-`pnpm release:ios preflight --build-number=<number>`, then run
-`pnpm release:ios testflight --build-number=<number> --wait` or upload an
-existing IPA with `pnpm release:ios upload --ipa=<path> --wait`.
-
-The iOS bundle identifier is `app.dayjot.ios`, intentionally separate from the
-old Capacitor TestFlight app (`app.reflect.ReflectMobile`). The release helper
-verifies the IPA bundle identifier and `ITSAppUsesNonExemptEncryption=false`
-before upload. See `docs/ios-testflight.md` for App Store Connect setup, local
-keychain fallback (`dayjot-notary`), API key CI secrets, and troubleshooting.
 
 # Code Conventions
 

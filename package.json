@@ -13,11 +13,8 @@
     "lint:fix": "oxlint --fix apps packages",
     "check": "pnpm typecheck && pnpm lint",
     "tauri": "pnpm --filter @dayjot/desktop tauri",
-    "release:ios": "pnpm --filter @dayjot/desktop release:ios",
     "release:macos": "pnpm --filter @dayjot/desktop release:macos",
-    "release:testflight": "pnpm --filter @dayjot/desktop release:ios testflight",
     "tauri:dev": "pnpm --filter @dayjot/desktop tauri:dev",
-    "tauri:ios:dev": "pnpm --filter @dayjot/desktop tauri:ios:dev",
     "tauri:build:dev": "pnpm --filter @dayjot/desktop tauri:build:dev",
     "tauri:build:beta": "pnpm --filter @dayjot/desktop tauri:build:beta"
   },

@@ -8,8 +8,8 @@ interface LightboxDialogProps {
   children: ReactNode
   onClose: () => void
   /**
-   * Strip the dark scrim so the lightbox owns its background — mobile
-   * drag-to-dismiss fades that background to reveal the note behind.
+   * Strip the dark scrim so the lightbox owns its background (the
+   * drawing dialog paints its own).
    */
   immersive?: boolean
 }

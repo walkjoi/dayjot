@@ -67,7 +67,6 @@ const WINDOW_NAVIGATE_EVENT: &str = "window:navigate";
 /// Visibility is intentionally absent. The main window starts hidden while
 /// geometry restores, and shutdown or updater relaunches can otherwise persist
 /// that temporary state and leave every subsequent launch hidden.
-#[cfg(desktop)]
 pub(crate) fn restorable_window_state_flags() -> tauri_plugin_window_state::StateFlags {
     use tauri_plugin_window_state::StateFlags;
 
@@ -78,7 +77,6 @@ pub(crate) fn restorable_window_state_flags() -> tauri_plugin_window_state::Stat
         | StateFlags::FULLSCREEN
 }
 
-#[cfg(desktop)]
 fn surface_window<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
     if let Err(err) = window.unminimize() {
         tracing::warn!(error = %err, label = window.label(), "failed to unminimize window");
@@ -95,7 +93,6 @@ fn surface_window<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
 ///
 /// Returns whether the window exists, so macOS Dock reopen handling can create
 /// a replacement after the user has closed the original window.
-#[cfg(desktop)]
 pub(crate) fn surface_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> bool {
     let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
         return false;
@@ -106,7 +103,6 @@ pub(crate) fn surface_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) 
 
 /// Recover the main window when macOS asks an app with no visible windows to
 /// reopen (normally a Dock click).
-#[cfg(target_os = "macos")]
 pub(crate) fn reopen_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
     if app.state::<QuitState>().armed() {
         return;
@@ -315,7 +311,6 @@ pub async fn open_note_window(
         // Match the main window: HTML5 drops must reach the webview (chat and
         // editor file drops), so the native drag-drop handler stays off.
         .disable_drag_drop_handler();
-    #[cfg(target_os = "macos")]
     {
         builder = builder
             .title_bar_style(tauri::TitleBarStyle::Overlay)
@@ -419,7 +414,6 @@ pub fn window_bootstrap(
 mod tests {
     use super::*;
 
-    #[cfg(desktop)]
     #[test]
     fn restart_state_restores_geometry_but_never_visibility() {
         use tauri_plugin_window_state::StateFlags;
@@ -437,7 +431,6 @@ mod tests {
         assert!(!flags.contains(StateFlags::VISIBLE));
     }
 
-    #[cfg(desktop)]
     #[test]
     fn surfacing_main_window_distinguishes_missing_and_existing_windows() {
         let app = tauri::test::mock_builder()

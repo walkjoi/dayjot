@@ -20,8 +20,7 @@
       "icons-beta/32x32.png",
       "icons-beta/128x128.png",
       "icons-beta/128x128@2x.png",
-      "icons-beta/icon.icns",
-      "icons-beta/icon.ico"
+      "icons-beta/icon.icns"
     ]
   },
   "plugins": {

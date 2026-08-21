@@ -19,12 +19,10 @@ use super::FileMeta;
 pub(super) const DAYJOT_DIR: &str = ".dayjot";
 const META_SCHEMA_VERSION: u32 = 1;
 pub(super) const TOP_LEVEL_DIRS: [&str; 4] = ["daily", "notes", "assets", DAYJOT_DIR];
-#[cfg(any(target_os = "macos", target_os = "ios"))]
 const APPLE_EXCLUSION_KEYS: [&str; 2] = [
     "NSURLUbiquitousItemIsExcludedFromSyncKey",
     "NSURLIsExcludedFromBackupKey",
 ];
-#[cfg(target_os = "macos")]
 const LOCAL_ONLY_XATTRS: [(&str, &[u8]); 2] = [
     ("com.apple.fileprovider.ignore#P", b"1"),
     ("com.dropbox.ignored", b"1"),
@@ -78,16 +76,12 @@ fn sweep_upload_staging(root: &Path) {
 
 /// Keep `dir` out of every file-sync pipeline (best-effort, idempotent).
 ///
-/// On Apple targets the `NSURL` resource keys exclude the directory from
-/// iCloud Drive sync and device backups — load-bearing once the graph lives in
-/// the iCloud container (Plan 21), where `.dayjot/` (live SQLite + WAL) and
-/// `.git/` syncing would mean corruption. macOS additionally sets the
-/// provider-ignore xattrs that third-party sync clients (Dropbox, File
-/// Provider extensions) honor for graphs kept in such folders.
-#[cfg(not(any(target_os = "macos", target_os = "ios")))]
-pub(crate) fn mark_dir_local_only(_dir: &Path) {}
-
-#[cfg(any(target_os = "macos", target_os = "ios"))]
+/// The `NSURL` resource keys exclude the directory from iCloud Drive sync
+/// and device backups — load-bearing once the graph lives in the iCloud
+/// container (Plan 21), where `.dayjot/` (live SQLite + WAL) and `.git/`
+/// syncing would mean corruption. Additionally sets the provider-ignore
+/// xattrs that third-party sync clients (Dropbox, File Provider extensions)
+/// honor for graphs kept in such folders.
 pub(crate) fn mark_dir_local_only(dir: &Path) {
     for err in set_apple_sync_exclusions(dir) {
         tracing::warn!(
@@ -96,7 +90,6 @@ pub(crate) fn mark_dir_local_only(dir: &Path) {
             "failed to mark directory as excluded from Apple sync"
         );
     }
-    #[cfg(target_os = "macos")]
     for err in set_local_only_xattrs(dir) {
         tracing::warn!(
             path = %dir.display(),
@@ -106,7 +99,6 @@ pub(crate) fn mark_dir_local_only(dir: &Path) {
     }
 }
 
-#[cfg(any(target_os = "macos", target_os = "ios"))]
 fn set_apple_sync_exclusions(dir: &Path) -> Vec<String> {
     use core_foundation::base::TCFType;
     use core_foundation::{number, string, url};
@@ -138,7 +130,6 @@ fn set_apple_sync_exclusions(dir: &Path) -> Vec<String> {
     errors
 }
 
-#[cfg(target_os = "macos")]
 fn set_local_only_xattrs(dir: &Path) -> Vec<String> {
     let mut errors = Vec::new();
 
@@ -359,7 +350,6 @@ mod tests {
         assert!(dir.path().join(".dayjot/meta.json").exists());
     }
 
-    #[cfg(target_os = "macos")]
     #[test]
     fn bootstrap_marks_dayjot_dir_with_provider_ignore_xattrs() {
         let dir = tempdir().unwrap();
@@ -375,7 +365,6 @@ mod tests {
         );
     }
 
-    #[cfg(target_os = "macos")]
     #[test]
     fn bootstrap_marks_a_present_git_dir_local_only() {
         let dir = tempdir().unwrap();
@@ -387,7 +376,6 @@ mod tests {
         );
     }
 
-    #[cfg(target_os = "macos")]
     #[test]
     fn apple_sync_exclusion_accepts_dayjot_dir() {
         let dir = tempdir().unwrap();

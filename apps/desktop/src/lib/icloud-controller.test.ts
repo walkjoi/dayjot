@@ -97,11 +97,10 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function controller(overrides: { emit?: boolean } = {}) {
+function controller() {
   active = createIcloudController({
     graph: GRAPH,
     indexGeneration: 3,
-    emitFileChangesFromWatch: overrides.emit ?? false,
   })
   return active
 }
@@ -136,12 +135,12 @@ describe('isICloudRoot', () => {
 
 describe('createIcloudController', () => {
   it('starts the watch and runs one baseline sweep', async () => {
-    const icloud = controller({ emit: true })
+    const icloud = controller()
     await icloud.start()
     await settleScan()
 
     const watchStart = invoked.find(([command]) => command === 'icloud_watch_start')
-    expect(watchStart?.[1]).toMatchObject({ root: GRAPH.root, emitFileChanges: true })
+    expect(watchStart?.[1]).toEqual({ root: GRAPH.root })
     expect(scanCalls).toHaveLength(1)
     expect(scanCalls[0]).toMatchObject({ recordBaseline: true, ingestedPaths: [] })
 
@@ -198,37 +197,10 @@ describe('createIcloudController', () => {
     expect(scanCalls[1]?.ingestedPaths).toEqual(['notes/other.md'])
   })
 
-  it('defers mobile baseline, conflict, and ingest scans until foreground', async () => {
+  it('keeps baseline scanning while the document is hidden', async () => {
     const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
     try {
-      const icloud = controller({ emit: true })
-      await icloud.start()
-      await settleScan()
-      expect(scanCalls).toHaveLength(0)
-
-      emitFileChanges([{ path: 'notes/external.md', kind: 'upsert', modifiedMs: 5 }])
-      listeners.get('icloud:conflicts')?.(['notes/conflicted.md'])
-      await settleScan(INGEST_SETTLE_MS)
-      expect(scanCalls).toHaveLength(0)
-
-      visibility.mockReturnValue('visible')
-      document.dispatchEvent(new Event('visibilitychange'))
-      await settleScan()
-
-      expect(scanCalls).toHaveLength(1)
-      expect(scanCalls[0]).toMatchObject({
-        recordBaseline: true,
-        ingestedPaths: ['notes/external.md'],
-      })
-    } finally {
-      visibility.mockRestore()
-    }
-  })
-
-  it('preserves desktop baseline scanning while the document is hidden', async () => {
-    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
-    try {
-      const icloud = controller({ emit: false })
+      const icloud = controller()
       await icloud.start()
       await settleScan()
 

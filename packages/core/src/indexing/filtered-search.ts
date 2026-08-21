@@ -20,8 +20,6 @@ import { highlightTitle } from './title-highlight'
  * pinned, and recency. Filters may be empty — plain text search is the
  * degenerate case, so there is exactly one search path to keep correct.
  * Without text, results order by recency — a (possibly filtered) recall feed.
- * The mobile All tab reuses that recall feed as its filtered list via
- * {@link FilteredSearchOptions}.
  */
 
 export interface FilteredSearchHit {

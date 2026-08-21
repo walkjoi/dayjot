@@ -90,7 +90,6 @@ pub async fn contacts_lookup_by_name(name: String) -> AppResult<Vec<ContactMatch
     run_blocking(move || platform::lookup_by_name(&name)).await
 }
 
-#[cfg(any(target_os = "macos", target_os = "ios"))]
 mod platform {
     use block2::RcBlock;
     use objc2::rc::Retained;
@@ -204,34 +203,6 @@ mod platform {
             emails,
             phones,
         }
-    }
-}
-
-#[cfg(not(any(target_os = "macos", target_os = "ios")))]
-mod platform {
-    use super::{ContactMatch, ContactsAuthorization};
-    use crate::error::{AppError, AppResult};
-
-    fn unavailable<T>() -> AppResult<T> {
-        Err(AppError::Unknown {
-            message: "Apple Contacts is only available on macOS and iOS".into(),
-        })
-    }
-
-    pub fn authorization_status() -> ContactsAuthorization {
-        ContactsAuthorization::Unavailable
-    }
-
-    pub fn request_access() -> AppResult<bool> {
-        unavailable()
-    }
-
-    pub fn lookup_by_email(_email: &str) -> AppResult<Vec<ContactMatch>> {
-        unavailable()
-    }
-
-    pub fn lookup_by_name(_name: &str) -> AppResult<Vec<ContactMatch>> {
-        unavailable()
     }
 }
 

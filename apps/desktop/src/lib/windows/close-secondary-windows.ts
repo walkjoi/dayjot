@@ -1,10 +1,4 @@
-import {
-  closeNoteWindows,
-  errorMessage,
-  hasBridge,
-  isMobilePlatform,
-  type AppPlatform,
-} from '@dayjot/core'
+import { closeNoteWindows, errorMessage, hasBridge } from '@dayjot/core'
 
 /**
  * Close every note window before a graph switch or delete replaces the
@@ -12,11 +6,11 @@ import {
  * generations: each child's close-requested flush lands against the
  * still-valid session, and bump-first ordering would reject their final
  * saves as stale. Best-effort — a wedged child must not block the switch
- * (it dies with the old session either way) — and a no-op on mobile and in
- * browser dev, where secondary windows don't exist.
+ * (it dies with the old session either way) — and a no-op in browser dev,
+ * where secondary windows don't exist.
  */
-export async function closeSecondaryWindows(platform: AppPlatform): Promise<void> {
-  if (isMobilePlatform(platform) || !hasBridge()) {
+export async function closeSecondaryWindows(): Promise<void> {
+  if (!hasBridge()) {
     return
   }
   try {

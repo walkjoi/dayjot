@@ -23,7 +23,7 @@ ideas are:
 - **A native AI assistant** — GPT-4 + Whisper for transcription, outlining, rewriting,
   and acting as a "thought partner."
 - **Privacy** — end-to-end encrypted. "No one else can read them (not even us)."
-- **Everywhere** — Mac, Windows, iOS, web; online or offline; real-time synced.
+- **Everywhere** — wherever the Mac app runs; online or offline.
 
 Pricing is famously simple: **one plan, one price — $10/month** (billed annually),
 with a 14-day free trial.
@@ -157,7 +157,7 @@ glow** (`inset 0 0 12px rgba(191,151,255,.24)`) rather than a drop shadow.
   label tints brand indigo instead.
 - *Primary button:* hover **lightens** indigo-600 → indigo-500; focus = 2px indigo ring
   with offset; disabled = grey + `not-allowed`.
-- *Touchable (mobile/list):* `active:opacity-70` — a quick opacity dip on press.
+- *Touchable (list):* `active:opacity-70` — a quick opacity dip on press.
 - *Site links:* color fade over `300ms` with the house easing.
 - *White button:* hover shifts text → purple-500.
 

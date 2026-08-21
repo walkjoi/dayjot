@@ -8,8 +8,7 @@ use serde::Serialize;
 
 // The enum mirrors the full TS `AppError` contract. `Parse` is only produced
 // on the TypeScript boundary, so Rust never constructs it — kept for contract
-// parity. `Unknown` is also the fail-loud answer from the mobile embedding
-// stand-in (semantic search is desktop-only).
+// parity.
 #[allow(dead_code)]
 #[derive(Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]

@@ -1,25 +1,15 @@
 import { type ReactElement, type ReactNode } from 'react'
-import {
-  captureHostRegister,
-  captureSharedInboxRelay,
-  hasBridge,
-  type GraphInfo,
-} from '@dayjot/core'
+import { captureHostRegister, hasBridge, type GraphInfo } from '@dayjot/core'
 import { useMainWindowEffect } from '@/hooks/use-main-window-effect'
 import { createCaptureController } from '@/lib/capture-controller'
-import { isMobileSurface } from '@/lib/platform-surface'
 
 /**
  * Mounts the link-capture lifecycle for the open graph (Plan 11): registers
  * the native-messaging host (pointer file + browser manifests, rewritten on
  * every graph open so app moves self-heal) and runs the
  * {@link createCaptureController} drain/enrich loop. No UI — capture has no
- * in-app surface; the capture front end is the Chrome extension on desktop
- * and the share extension on iOS, and the daily note is the output.
- *
- * On the mobile surface there is no native-messaging host to register;
- * instead every pass first relays the App Group inbox the iOS share
- * extension spools into, and the controller re-runs on app resume.
+ * in-app surface; the capture front end is the Chrome extension, and the
+ * daily note is the output.
  */
 
 interface CaptureProviderProps {
@@ -28,17 +18,11 @@ interface CaptureProviderProps {
 }
 
 export function CaptureProvider({ graph, children }: CaptureProviderProps): ReactElement {
-
-
   // One drain per app: a secondary note window running its own would race
   // the main window's over the same spooled envelopes.
   useMainWindowEffect(() => {
-    const mobile = isMobileSurface()
     const controller = createCaptureController({
       generation: graph.generation,
-      ...(mobile
-        ? { relaySharedInbox: () => captureSharedInboxRelay(graph.generation) }
-        : {}),
     })
     // Registration (the pointer-file rewrite) completes BEFORE the first
     // drain: on a graph switch this repoints the host at the new graph as
@@ -48,9 +32,8 @@ export function CaptureProvider({ graph, children }: CaptureProviderProps): Reac
     // previous graph's inbox — it drains when that graph next opens.)
     // Best-effort: a failed registration must not block the drain — captures
     // already spooled must land regardless, and the extension surfaces
-    // "host not found" with install guidance on its side. Mobile has no host
-    // process at all: the share extension finds the App Group inbox itself.
-    const registered = hasBridge() && !mobile
+    // "host not found" with install guidance on its side.
+    const registered = hasBridge()
       ? captureHostRegister().catch((cause: unknown) => {
           console.error('capture host registration failed:', cause)
         })

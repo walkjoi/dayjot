@@ -1,7 +1,7 @@
 import { act, render, waitFor } from '@testing-library/react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement } from 'react'
 import { setBridge } from '@dayjot/core'
 import { PaletteProvider, usePalette } from '@/components/command-palette/palette-provider'
@@ -10,7 +10,6 @@ import type { NoteEditorHandle } from '@/editor/note-editor'
 import { FocusedDailyProvider } from '@/providers/focused-daily-provider'
 import { RouterProvider } from '@/routing/router'
 import type { Route } from '@/routing/route'
-import { setPlatformSurface } from '@/lib/platform-surface'
 import { RouteContent } from './route-content'
 
 /**
@@ -154,10 +153,6 @@ beforeEach(() => {
   })
 })
 
-afterEach(() => {
-  setPlatformSurface({ touchEditor: false, mobileApp: false })
-})
-
 function PaletteProbe(): ReactElement {
   const { open, query } = usePalette()
   return <output data-testid="palette">{JSON.stringify({ open, query })}</output>
@@ -204,16 +199,6 @@ describe('RouteContent', () => {
 
     // The navigated-to note takes focus on mount.
     await waitFor(() => expect(editorProbe.focusCalls).toContain('focus'))
-    view.unmount()
-  })
-
-  it('omits the wiki-link hover renderer on a touch editor surface', async () => {
-    setPlatformSurface({ touchEditor: true })
-    files['notes/exist.md'] = '# Hello\n'
-    const view = renderRoute({ kind: 'note', path: 'notes/exist.md' })
-
-    await view.findByLabelText('Editing notes/exist.md')
-    expect(editorProbe.hoverRenderer).toBe(false)
     view.unmount()
   })
 

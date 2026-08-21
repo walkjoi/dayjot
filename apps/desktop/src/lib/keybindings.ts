@@ -37,7 +37,7 @@ const KEY_SYMBOLS: Record<string, string> = {
   tab: '⇥',
 }
 
-/** True on macOS/iOS — where Mod renders as ⌘ rather than Ctrl. */
+/** True on macOS — where Mod renders as ⌘ rather than Ctrl. */
 export function isApplePlatform(): boolean {
   if (typeof navigator === 'undefined') {
     return false

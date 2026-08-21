@@ -9,8 +9,7 @@ import { useSettings } from '@/providers/settings-provider'
  * note-subject sizing in `styles/index.css` read. This is a side-effect-only
  * component (it renders nothing): like the theme's `.dark` toggle, the
  * preference lives in the settings document, so a choice made anywhere
- * persists across launches and applies to every editor surface (desktop and
- * mobile) at once.
+ * persists across launches and applies to every editor surface at once.
  */
 export function EditorTextSizeEffect(): ReactElement | null {
   const { settings } = useSettings()

@@ -3,7 +3,7 @@ import { hasBridge } from '@dayjot/core'
 
 /**
  * Which window this webview is: the main window (the config-declared `main`
- * label — also what plain-browser dev and mobile report) or a secondary
+ * label — also what plain-browser dev reports) or a secondary
  * `note-*` window opened by a modifier click or command.
  *
  * Secondary windows *adopt* the main window's graph session and run none of
@@ -19,8 +19,8 @@ export function isMainWindow(): boolean {
   try {
     return getCurrentWindow().label === 'main'
   } catch (cause) {
-    // A bridge without Tauri window metadata: the jsdom test harness and the
-    // ?platform=ios browser harness. Both are single-window — main. In a real
+    // A bridge without Tauri window metadata: the jsdom test harness. It is
+    // single-window — main. In a real
     // Tauri webview the internals are injected before any script runs, so
     // this can't fire there; warn loudly in case that assumption ever breaks
     // (a misclassified note window would boot the main-window singletons).

@@ -19,8 +19,8 @@ export type Route =
   | { kind: 'tasks' }
   | { kind: 'stats' }
   | { kind: 'settings' }
-  // The graph-switcher screen — a mobile settings sub-screen; desktop renders
-  // it as the settings screen (its switcher lives in the sidebar footer).
+  // The graph-switcher screen — rendered
+  // as the settings screen (the switcher lives in the sidebar footer).
   | { kind: 'graphs' }
 
 /** A route that addresses one concrete note, including a dated daily note. */

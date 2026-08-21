@@ -13,86 +13,17 @@ export async function getAppVersion(): Promise<string> {
   return call('app_version', {}, appVersionSchema)
 }
 
-const appPlatformSchema = z.enum(['desktop', 'ios', 'android'])
-
-/** Which UI family the shell was built for (Plan 19's root gate). */
-export type AppPlatform = z.infer<typeof appPlatformSchema>
+const icloudPendingCountSchema = z.number().int().nonnegative()
 
 /**
- * Returns the platform the Rust shell was compiled for. The frontend's root
- * gate switches between the desktop and mobile surface trees on this answer;
- * it is a build-time constant, so callers may cache it freely.
- */
-export async function getAppPlatform(): Promise<AppPlatform> {
-  return call('app_platform', {}, appPlatformSchema)
-}
-
-/** Narrows {@link AppPlatform} to the mobile family. */
-export function isMobilePlatform(platform: AppPlatform): boolean {
-  return platform !== 'desktop'
-}
-
-const mobileStorageInfoSchema = z.object({
-  localRoot: z.string(),
-  /** The container's `Documents/` dir when iCloud is usable — new graphs are created inside it. */
-  icloudDocumentsRoot: z.string().nullable(),
-  /** Every graph already in the container (name-sorted) — onboarding and the switcher list them. */
-  icloudGraphRoots: z.array(z.string()),
-})
-
-/**
- * Where the mobile graph can live (Plan 21): the app-sandbox `Documents/`
- * directory (always present, never synced) and the app's iCloud Drive
- * container when iCloud is usable — plus every graph the container already
- * holds (a user can keep several).
- */
-export type MobileStorageInfo = z.infer<typeof mobileStorageInfoSchema>
-
-/** Which of the {@link MobileStorageInfo} roots the graph lives in. */
-export type MobileStorageKind = 'icloud' | 'local'
-
-/**
- * Resolves the mobile storage roots (Plan 21). Mobile-only — the desktop
- * shell rejects it (graphs are user-picked there). iOS container paths change
- * across restore/update; resolve this fresh every launch and never persist
- * the returned paths.
- */
-export async function mobileStorage(): Promise<MobileStorageInfo> {
-  return call('mobile_storage', {}, mobileStorageInfoSchema)
-}
-
-const icloudDownloadPendingSchema = z.number().int().nonnegative()
-
-/**
- * Which placeholders a pending-download call covers: `'notes'` is markdown
- * under the note directories — what an open/resume requests first, so a
- * first sync isn't crushed under thousands of concurrent asset downloads —
- * and `'all'` is everything, requested once the notes have drained.
+ * Which placeholders a pending count covers: `'notes'` is markdown under the
+ * note directories, `'all'` is everything.
  */
 export type IcloudDownloadScope = 'notes' | 'all'
 
 /**
- * Asks iCloud to download every not-yet-local file in `scope` under `root`,
- * returning how many placeholders were found. iOS does not pull container
- * files down eagerly; call this once per open/resume for iCloud graphs, then
- * poll {@link icloudPendingCount} while the count stays above zero.
- */
-export async function icloudDownloadPending(
-  root: string,
-  scope: IcloudDownloadScope,
-): Promise<number> {
-  return call(
-    'icloud_download_pending',
-    { root, notesOnly: scope === 'notes' },
-    icloudDownloadPendingSchema,
-  )
-}
-
-/**
  * Counts the not-yet-local placeholders in `scope` under `root` without
- * requesting anything — the poll half of {@link icloudDownloadPending}:
- * re-requesting thousands of in-flight downloads every tick is wasted
- * traffic.
+ * requesting anything (the iCloud settings section surfaces it).
  */
 export async function icloudPendingCount(
   root: string,
@@ -101,18 +32,8 @@ export async function icloudPendingCount(
   return call(
     'icloud_pending_count',
     { root, notesOnly: scope === 'notes' },
-    icloudDownloadPendingSchema,
+    icloudPendingCountSchema,
   )
-}
-
-/**
- * The app-sandbox `Documents/` root alone — the cheap half of
- * {@link mobileStorage}, available before the iCloud container resolves (the
- * first container lookup can take a long time on a fresh install). Mobile
- * only; derive fresh every launch and never persist.
- */
-export async function mobileStorageLocal(): Promise<string> {
-  return call('mobile_storage_local', {}, z.string())
 }
 
 const icloudStatusSchema = z.object({
@@ -202,12 +123,10 @@ const voidResponseSchema = z.null()
 
 /**
  * Start the iCloud metadata-query watch over `root` (Plan 21 Phase 2).
- * `emitFileChanges` turns its snapshot diffs into `index:changed` events —
- * pass true on mobile (no file watcher there), false on desktop. Conflict
- * paths always emit as `icloud:conflicts`.
+ * Conflict paths emit as `icloud:conflicts`.
  */
-export async function icloudWatchStart(root: string, emitFileChanges: boolean): Promise<void> {
-  await call('icloud_watch_start', { root, emitFileChanges }, voidResponseSchema)
+export async function icloudWatchStart(root: string): Promise<void> {
+  await call('icloud_watch_start', { root }, voidResponseSchema)
 }
 
 /** Stop the active iCloud watch (graph switch). Idempotent. */

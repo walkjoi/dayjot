@@ -75,8 +75,8 @@ export interface ConnectGithubWizard {
  * The "Connect GitHub" wizard state machine: repository first (creating one
  * needs no credential), then the sign-in (whose instructions can name that
  * exact repository), then the connection — built from the verified sign-in,
- * so the owner is never asked for. Extracted from rendering so desktop's
- * dialog and mobile's drawer drive the identical flow.
+ * so the owner is never asked for. Extracted from rendering so the
+ * dialog stays a thin shell over the flow.
  *
  * Tokens that can create repositories (classic PATs, app tokens) connect in
  * one step: the finish step API-creates silently. Tokens that can't are

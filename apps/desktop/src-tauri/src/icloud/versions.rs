@@ -41,7 +41,6 @@ impl VersionScan {
 
 pub use platform::{current_version_modified_ms, mark_resolved, unresolved_versions};
 
-#[cfg(any(target_os = "macos", target_os = "ios"))]
 mod platform {
     use super::{VersionRef, VersionScan};
     use objc2_foundation::{NSDate, NSFileVersion, NSString, NSURL};
@@ -135,24 +134,4 @@ mod platform {
     fn file_url(abs: &Path) -> objc2::rc::Retained<NSURL> {
         NSURL::fileURLWithPath(&NSString::from_str(&abs.to_string_lossy()))
     }
-}
-
-#[cfg(not(any(target_os = "macos", target_os = "ios")))]
-mod platform {
-    use super::VersionScan;
-    use std::path::Path;
-
-    /// No version store off Apple platforms.
-    pub fn unresolved_versions(_abs: &Path) -> VersionScan {
-        VersionScan {
-            versions: Vec::new(),
-            complete: true,
-        }
-    }
-
-    pub fn current_version_modified_ms(_abs: &Path) -> Option<u64> {
-        None
-    }
-
-    pub fn mark_resolved(_abs: &Path) {}
 }

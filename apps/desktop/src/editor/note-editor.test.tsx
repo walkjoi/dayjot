@@ -1,12 +1,11 @@
 import { type ReactNode } from 'react'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { dispatchDeepLink } from '@/lib/deep-links/intake'
 import { NoteEditor } from './note-editor'
-import { setPlatformSurface } from '@/lib/platform-surface'
 
 /** Props the mocked `<MeowdownEditor>` captures so the test can drive its callbacks. */
 interface CapturedEditorProps {
@@ -123,14 +122,6 @@ function installViewTransitionMock(): ReturnType<typeof vi.fn> {
   return startViewTransition
 }
 
-function firePointer(element: Element, type: string, init: Record<string, unknown>): void {
-  const event = new Event(type, { bubbles: true, cancelable: true })
-  Object.assign(event, init)
-  act(() => {
-    element.dispatchEvent(event)
-  })
-}
-
 beforeEach(() => {
   captured.props = null
   captured.hoverRenderer = null
@@ -158,7 +149,6 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
-  setPlatformSurface({ touchEditor: false, mobileApp: false })
   vi.clearAllMocks()
 })
 
@@ -213,58 +203,15 @@ describe('NoteEditor smooth caret animation', () => {
   })
 })
 
-describe('NoteEditor touch-surface input hygiene', () => {
-  afterEach(() => {
-    setPlatformSurface({ touchEditor: false })
-    editorStub.mounted = true
-    editorStub.view.dom = document.createElement('div')
-  })
-
-  it('passes the spellcheck setting through on desktop', () => {
+describe('NoteEditor input passthrough', () => {
+  it('passes the spellcheck setting through', () => {
     render(<NoteEditor initialContent="" spellCheck={true} />)
     expect(captured.props?.spellCheck).toBe(true)
   })
 
-  it('pins spellcheck off on the touch surface (iOS smart-punctuation gate)', () => {
-    setPlatformSurface({ touchEditor: true })
-    render(<NoteEditor initialContent="" spellCheck={true} />)
-    expect(captured.props?.spellCheck).toBe(false)
-  })
-
-  it('passes the block handle through on desktop', () => {
+  it('passes the block handle through', () => {
     render(<NoteEditor initialContent="" blockHandle={true} />)
     expect(captured.props?.blockHandle).toBe(true)
-  })
-
-  it('pins the block handle off on the touch surface', () => {
-    setPlatformSurface({ touchEditor: true })
-    render(<NoteEditor initialContent="" blockHandle={true} />)
-    expect(captured.props?.blockHandle).toBe(false)
-  })
-
-  it('sets explicit input traits on the contenteditable on the touch surface', () => {
-    setPlatformSurface({ touchEditor: true })
-    render(<NoteEditor initialContent="" />)
-    expect(editorStub.view.dom.getAttribute('autocapitalize')).toBe('sentences')
-    expect(editorStub.view.dom.getAttribute('autocorrect')).toBe('on')
-  })
-
-  it('retries until the editor view mounts (traits are never silently skipped)', async () => {
-    setPlatformSurface({ touchEditor: true })
-    editorStub.mounted = false
-    render(<NoteEditor initialContent="" />)
-    expect(editorStub.view.dom.hasAttribute('autocapitalize')).toBe(false)
-
-    editorStub.mounted = true
-    await waitFor(() => {
-      expect(editorStub.view.dom.getAttribute('autocapitalize')).toBe('sentences')
-    })
-  })
-
-  it('leaves the contenteditable untouched on desktop', () => {
-    render(<NoteEditor initialContent="" />)
-    expect(editorStub.view.dom.hasAttribute('autocapitalize')).toBe(false)
-    expect(editorStub.view.dom.hasAttribute('autocorrect')).toBe(false)
   })
 })
 
@@ -328,63 +275,6 @@ describe('NoteEditor image lightbox', () => {
     expect(opener.parentElement?.className).toContain(
       'right-[max(env(safe-area-inset-right),1rem)]',
     )
-  })
-
-  it('shows mobile close chrome inside iOS safe-area bounds', async () => {
-    setPlatformSurface({ mobileApp: true })
-    renderEditor()
-
-    act(() => captured.props?.onImageClick?.(imageClick('assets/cat.png', 'Cat')))
-
-    const close = await screen.findByRole('button', { name: 'Close' })
-    expect(close.parentElement?.className).toContain(
-      'top-[max(env(safe-area-inset-top),1rem)]',
-    )
-    expect(close.parentElement?.className).toContain(
-      'left-[max(env(safe-area-inset-left),1rem)]',
-    )
-    const dialog = screen.getByRole('dialog', { name: 'Image preview' })
-    expect(dialog.querySelector('.bg-black')).not.toBeNull()
-  })
-
-  it('dismisses the mobile image lightbox with a downward drag', async () => {
-    setPlatformSurface({ mobileApp: true })
-    renderEditor()
-
-    act(() => captured.props?.onImageClick?.(imageClick('assets/cat.png', 'Cat')))
-
-    const preview = await screen.findByRole('button', { name: 'Close image preview' })
-    const image = preview.querySelector('img')
-    expect(image).toBeInstanceOf(HTMLImageElement)
-
-    firePointer(preview, 'pointerdown', {
-      pointerId: 1,
-      isPrimary: true,
-      pointerType: 'touch',
-      clientX: 180,
-      clientY: 120,
-    })
-    firePointer(preview, 'pointermove', {
-      pointerId: 1,
-      clientX: 182,
-      clientY: 180,
-    })
-    expect(image?.style.transform).toContain('translate3d(0px, 0px, 0)')
-
-    firePointer(preview, 'pointermove', {
-      pointerId: 1,
-      clientX: 184,
-      clientY: 360,
-    })
-    firePointer(preview, 'pointerup', {
-      pointerId: 1,
-      clientX: 184,
-      clientY: 360,
-    })
-
-    expect(image?.style.transform).toContain(`, ${window.innerHeight}px, 0)`)
-    fireEvent.transitionEnd(image!)
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   })
 
   it('uses the opener captured when the lightbox opens', async () => {

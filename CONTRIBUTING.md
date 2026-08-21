@@ -37,7 +37,7 @@ commit message and, for `feat`/`fix`, the user-facing changelog entry.
   one-time `release-as` in the release-please configs so the Release PRs offer
   `1.0.0-beta.N` and `1.0.0`, then drop it once both have merged.
 - Write the title as user-visible behavior (`fix: keep the daily caret in view
-  on long iOS notes`), not implementation detail.
+  on long notes`), not implementation detail.
 - The changelog is scoped to `apps/desktop/`: a change that should appear in it
   must touch that directory. Core changes usually ship alongside their
   desktop-side counterpart; a pure `packages/core` fix that lands alone still

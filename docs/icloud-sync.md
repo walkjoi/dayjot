@@ -7,14 +7,12 @@ edit the same note while apart.
 ## The user contract
 
 - **Where the graph lives.** In the app's iCloud Drive container — visible as
-  **iCloud Drive → DayJot** in Files (iOS) and Finder (macOS). Notes stay
-  plain markdown files; iCloud moves them between devices.
-- **Turning it on.** Both platforms offer iCloud first during onboarding and
-  list every graph already in the container (it can hold several): macOS's
-  recommended card opens one or names-and-creates a new one, with a
-  self-managed choose-your-own-folder alternative; iOS's first-run screen
-  opens one (or stores fresh notes in iCloud), and its settings sheet
-  switches between graphs later. An existing
+  **iCloud Drive → DayJot** in Finder. Notes stay plain markdown files;
+  iCloud moves them between devices.
+- **Turning it on.** Onboarding offers iCloud first and lists every graph
+  already in the container (it can hold several): the recommended card opens
+  one or names-and-creates a new one, with a self-managed
+  choose-your-own-folder alternative. An existing
   local graph moves later via Settings → **iCloud sync** → *Move graph to
   iCloud…*, which copies it into the container (verified file-by-file) and
   reopens it there; the original folder stays on disk, untouched, as a
@@ -56,10 +54,7 @@ the other device's copy lands alongside as `name (conflict).ext`.
 Dev builds report iCloud as unavailable unless the build is entitled and
 provisioned:
 
-- **iOS**: the entitlements + `NSUbiquitousContainers` declaration are in
-  `ios.project.yml` / `gen/apple`; Xcode automatic signing registers the
-  container (`iCloud.app.dayjot`) on the first entitled build.
-- **macOS**: the entitlements live in
+- The entitlements live in
   `apps/desktop/src-tauri/Entitlements.plist`, granted by the committed
   Developer ID provisioning profiles (`DayJot.provisionprofile` /
   `DayJot-beta.provisionprofile`, embedded pre-signing via

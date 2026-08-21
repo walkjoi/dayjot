@@ -9,16 +9,13 @@ const controller = vi.hoisted(() => ({
   dispose: vi.fn(),
 }))
 const createCaptureController = vi.hoisted(() =>
-  vi.fn((_options: { relaySharedInbox?: () => Promise<number> }) => controller),
+  vi.fn((_options: { generation: number }) => controller),
 )
 const captureHostRegister = vi.hoisted(() => vi.fn<() => Promise<void>>())
-const captureSharedInboxRelay = vi.hoisted(() => vi.fn<() => Promise<number>>())
 const hasBridge = vi.hoisted(() => vi.fn(() => true))
-const isMobileSurface = vi.hoisted(() => vi.fn(() => false))
 
 vi.mock('@/lib/capture-controller', () => ({ createCaptureController }))
-vi.mock('@dayjot/core', () => ({ captureHostRegister, captureSharedInboxRelay, hasBridge }))
-vi.mock('@/lib/platform-surface', () => ({ isMobileSurface }))
+vi.mock('@dayjot/core', () => ({ captureHostRegister, hasBridge }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({
     settings: {},
@@ -36,9 +33,7 @@ function mount(children: ReactNode = null) {
 beforeEach(() => {
   vi.clearAllMocks()
   hasBridge.mockReturnValue(true)
-  isMobileSurface.mockReturnValue(false)
   captureHostRegister.mockResolvedValue(undefined)
-  captureSharedInboxRelay.mockResolvedValue(0)
 })
 
 afterEach(cleanup)
@@ -90,22 +85,9 @@ describe('CaptureProvider', () => {
     expect(controller.dispose).toHaveBeenCalledTimes(1)
   })
 
-  it('on mobile, skips host registration and wires the shared-inbox relay', async () => {
-    isMobileSurface.mockReturnValue(true)
-
-    mount()
-
-    await waitFor(() => expect(controller.start).toHaveBeenCalledTimes(1))
-    expect(captureHostRegister).not.toHaveBeenCalled()
-    const options = createCaptureController.mock.calls[0]?.[0]
-    expect(options?.relaySharedInbox).toBeDefined()
-    await options?.relaySharedInbox?.()
-    expect(captureSharedInboxRelay).toHaveBeenCalledWith(GRAPH.generation)
-  })
-
-  it('on desktop, passes no shared-inbox relay', async () => {
+  it('passes the open graph generation to the controller', async () => {
     mount()
     await waitFor(() => expect(controller.start).toHaveBeenCalledTimes(1))
-    expect(createCaptureController.mock.calls[0]?.[0]?.relaySharedInbox).toBeUndefined()
+    expect(createCaptureController).toHaveBeenCalledWith({ generation: GRAPH.generation })
   })
 })

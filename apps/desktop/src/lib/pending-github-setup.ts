@@ -2,7 +2,7 @@ const PENDING_KEY = 'dayjot.pending-github-setup'
 
 /**
  * One-shot handoff between the first-run screens and the open workspace: the
- * graph chooser (desktop) or onboarding screen (mobile) marks the flag right
+ * graph chooser marks the flag right
  * before creating a GitHub-backed graph, and the workspace offers the
  * Connect-GitHub wizard once the graph is open. The flag lives in
  * sessionStorage so an abandoned setup never nags on a later launch, and

@@ -9,8 +9,8 @@ interface PendingGithubSetupProps {
 }
 
 /**
- * Offers the Connect-GitHub wizard right after the first-run chooser (or the
- * mobile onboarding screen) created a GitHub-backed graph — the
+ * Offers the Connect-GitHub wizard right after the first-run chooser created
+ * a GitHub-backed graph — the
  * `pending-github-setup` sessionStorage handoff. The flag is cleared when the
  * wizard closes, connected or dismissed, so it never re-prompts; reading it
  * at mount is non-destructive so a dev-mode remount can't swallow the prompt.

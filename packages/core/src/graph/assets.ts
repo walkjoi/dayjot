@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { echoLocalWrite } from '../indexing/local-write-echo'
+import { notifyOwnWrite } from '../indexing/own-writes'
 import { call, callBinary } from '../ipc/invoke'
 
 /** Commands that return `()` from Rust serialize as `null` over IPC. */
@@ -41,7 +41,7 @@ export async function createAsset(
       await callBinary('asset_upload_append', chunk, { [UPLOAD_ID_HEADER]: id }, voidSchema)
     }
     const path = await call('asset_upload_commit', { id, desiredName, generation }, z.string())
-    echoLocalWrite({ path, kind: 'upsert', modifiedMs: Date.now() })
+    notifyOwnWrite(path)
     return path
   } catch (error) {
     // Best-effort cleanup of the staged temp file; the original error is the
@@ -63,6 +63,6 @@ export async function importAsset(
   generation: number,
 ): Promise<string> {
   const path = await call('asset_import', { sourcePath, desiredName, generation }, z.string())
-  echoLocalWrite({ path, kind: 'upsert', modifiedMs: Date.now() })
+  notifyOwnWrite(path)
   return path
 }

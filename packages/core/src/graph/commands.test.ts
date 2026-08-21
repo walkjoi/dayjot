@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { subscribeOwnWrites } from '../indexing/local-write-echo'
+import { subscribeOwnWrites } from '../indexing/own-writes'
 import { setBridge } from '../ipc/bridge'
 import { createNoteIfAbsent, openAsset } from './commands'
 

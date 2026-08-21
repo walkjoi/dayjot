@@ -70,8 +70,6 @@ drain re-runs cleanly.
   snippet) dispatches straight into the same in-app handler — no OS
   round-trip, so it works in dev builds and can never land on a different
   installed flavor.
-- iOS registers the scheme too (`CFBundleURLTypes` in `ios.project.yml`),
-  but the route-shaped navigation grammar is not a mobile surface yet.
 
 ## Relationship to the CLI
 

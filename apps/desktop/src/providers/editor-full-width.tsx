@@ -6,8 +6,8 @@ import { useSettings } from '@/providers/settings-provider'
  *
  * The shared `.dayjot-content-gutter` class is used by daily notes,
  * standalone notes, and secondary note windows. Mirroring the setting onto
- * the document root lets one CSS variable update all of those surfaces while
- * leaving the mobile-specific gutter unchanged.
+ * the document root lets one CSS variable update all of those surfaces at
+ * once.
  */
 export function EditorFullWidthEffect(): ReactElement | null {
   const { settings } = useSettings()

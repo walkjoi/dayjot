@@ -120,8 +120,8 @@ runs can always anchor on the previous release) and hands the tag name to the Re
 workflow, which builds, signs, notarizes, uploads the assets, and undrafts the
 release. Nothing is visible to users (and `releases/latest` does not move) until
 every asset is in place. The workflow resolves the release tag to its immutable
-commit once; the macOS, TestFlight, and feed sync jobs all check out that SHA rather
-than resolving a tag name independently.
+commit once; the macOS and feed sync jobs all check out that SHA rather than
+resolving a tag name independently.
 
 PRs created with `GITHUB_TOKEN` do not start `pull_request` workflows, so checks do
 not appear automatically on the bot-created Release PRs. Use the run-checks button
@@ -133,8 +133,8 @@ before merging one.
 2. When it's time to ship, open the beta Release PR (`chore: release X.Y.Z-beta.N`),
    polish the changelog if needed (edit the PR branch — release-please regenerates the
    PR when new commits land, so polish last), and **merge it**.
-3. Everything else is automatic, ending with the `updater-beta` feed refresh and the
-   TestFlight upload. Installed DayJot Beta apps pick up the update.
+3. Everything else is automatic, ending with the `updater-beta` feed refresh.
+   Installed DayJot Beta apps pick up the update.
 4. The stable Release PR stays open and is rebased by the next push; merge it whenever
    the channel is ready to graduate.
 
@@ -154,10 +154,9 @@ The stable release builds `master` as of the stable Release PR's merge, which ma
 include commits that never shipped in a beta. To ship a beta-tested snapshot, merge
 the stable Release PR right after a healthy beta, before landing new work.
 
-If macOS publishing or TestFlight fails after a Release PR merged, the tag and GitHub
+If macOS publishing fails after a Release PR merged, the tag and GitHub
 release record already exist (the release may still be a draft): rerun
-**Actions → Release** or **Actions → TestFlight** on the release commit as
-appropriate.
+**Actions → Release** on the release commit.
 
 ### Hotfix
 
@@ -384,6 +383,3 @@ on the runner keychain setup.
   time; check status with `xcrun notarytool history --apple-id <id> --team-id <team>`.
 
 ## Current limitations
-
-- iOS/TestFlight distribution is handled separately by `pnpm release:ios`; see
-  [iOS TestFlight Builds](ios-testflight.md).

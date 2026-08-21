@@ -10,8 +10,8 @@ import { call } from '../ipc/invoke'
  */
 
 /**
- * The Contacts permission state. `unavailable` is the answer on platforms
- * without the Contacts framework (Windows, Linux, Android) so the settings UI
+ * The Contacts permission state. `unavailable` is the answer wherever the
+ * Contacts framework doesn't exist so the settings UI
  * can hide the integration instead of branching on error kinds.
  */
 export const contactsAuthorizationSchema = z.enum([

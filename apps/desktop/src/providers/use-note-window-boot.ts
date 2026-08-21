@@ -1,11 +1,9 @@
 import { useEffect } from 'react'
 import {
   errorMessage,
-  isMobilePlatform,
   subscribeIndexWritten,
   subscribeWindowNavigate,
   windowBootstrap,
-  type AppPlatform,
   type WindowBootstrap,
 } from '@dayjot/core'
 import { dispatchDeepLink } from '@/lib/deep-links/intake'
@@ -19,7 +17,6 @@ import { isMainWindow } from '@/lib/windows/window-role'
 
 /** The graph provider's channels for the note-window boot leg. */
 export interface NoteWindowBootOptions {
-  platform: AppPlatform
   /** Commit the adopted sessions (graph + index generations) as ready. */
   onAdopted: (boot: WindowBootstrap) => void
   /** Park the window on the error screen (never the chooser). */
@@ -40,11 +37,11 @@ export interface NoteWindowBootOptions {
  * note. Only a target that needs the index (an id/title-shaped link) rides
  * the ordinary intake, buffering until DeepLinkProvider attaches.
  *
- * A no-op everywhere else (main window, mobile, browser dev).
+ * A no-op everywhere else (main window, browser dev).
  */
-export function useNoteWindowBoot({ platform, onAdopted, onFailed }: NoteWindowBootOptions): void {
+export function useNoteWindowBoot({ onAdopted, onFailed }: NoteWindowBootOptions): void {
   useEffect(() => {
-    if (isMobilePlatform(platform) || isMainWindow()) {
+    if (isMainWindow()) {
       return
     }
     let active = true
@@ -82,5 +79,5 @@ export function useNoteWindowBoot({ platform, onAdopted, onFailed }: NoteWindowB
       active = false
       subscriptions.disposeAll()
     }
-  }, [platform, onAdopted, onFailed])
+  }, [onAdopted, onFailed])
 }

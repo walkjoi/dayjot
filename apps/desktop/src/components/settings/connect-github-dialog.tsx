@@ -32,8 +32,7 @@ const STEP_DESCRIPTIONS: Record<ConnectWizardStep, string> = {
  * The desktop "Connect GitHub" dialog — a Dialog shell over
  * {@link useConnectGithubWizard}, which owns the whole flow (repo → sign-in →
  * connect, with the create-handoff/grant-access polls and the public-repo
- * consent gate). The mobile drawer renders the same hook; flow changes belong
- * there, not here.
+ * consent gate). Flow changes belong in the hook, not here.
  */
 export function ConnectGithubDialog({
   suggestedRepoName,

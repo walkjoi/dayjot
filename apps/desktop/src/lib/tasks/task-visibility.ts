@@ -39,10 +39,9 @@ function taskMatchesNeedle(task: OpenTask, needle: string): boolean {
 }
 
 /**
- * The Tasks list every surface renders (Plan 18): open rows merged with the
+ * The Tasks list the Tasks screen renders (Plan 18): open rows merged with the
  * struck "completed" rows, searched, grouped ({@link groupTasks}) and narrowed to
- * the buckets the filters allow. Shared by the desktop screen and the mobile
- * Tasks tab so the two can't drift on the merge rules:
+ * the buckets the filters allow. The merge rules:
  *
  * - With archived on, the completed query is the full history — but a
  *   just-completed task may not be in it until the reindex refetches (and the

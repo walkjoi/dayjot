@@ -27,18 +27,6 @@ import {
  */
 export interface GraphIndex {
   /**
-   * Suspend index writes for a backgrounded mobile app: abort the bulk pass
-   * and drop the live subscription synchronously. A later {@link resume}
-   * reconciles the whole graph, so file events missed while suspended converge.
-   */
-  suspend: () => void
-  /**
-   * Resume after {@link suspend} and run one coalesced full sync for anything
-   * that changed while the live subscription was absent. A null generation
-   * clears suspension without starting work (foreground can precede graph open).
-   */
-  resume: (generation: number | null, isStale: () => boolean) => void
-  /**
    * Abort the in-flight reconcile (if any) and wait for the sync pass to fully
    * settle, so a stale pass can't keep running into the next graph's open.
    */
@@ -69,7 +57,7 @@ export interface GraphIndex {
    */
   sync: (generation: number, isStale: () => boolean) => void
   /**
-   * Re-run the sync pass, coalescing concurrent triggers (resume, poll-end,
+   * Re-run the sync pass, coalescing concurrent triggers (poll-end and
    * watch-failed can fire together): while one refresh is settling, further
    * calls fold into a single queued rerun instead of stacking abort/restart
    * cycles — on a large graph each stacked cycle was a full pass.
@@ -112,12 +100,6 @@ export interface GraphIndexOptions {
    * skip-everything pass never surfaces. Superseded passes stop reporting.
    */
   onFileProgress?: (done: number, total: number, worked: number) => void
-  /**
-   * Dynamic guard for platforms that must not start index work while the app
-   * is suspended. Checked at every lifecycle boundary in addition to the
-   * explicit {@link GraphIndex.suspend} transition.
-   */
-  shouldSuspend?: () => boolean
 }
 
 /**
@@ -126,36 +108,13 @@ export interface GraphIndexOptions {
  * keeps one instance (e.g. in a ref) across graph switches.
  */
 export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
-  const { onError, onProgress, onApplied, onMoved, onFileProgress, shouldSuspend } = options
+  const { onError, onProgress, onApplied, onMoved, onFileProgress } = options
   let abort: AbortController | null = null
   let done: Promise<void> = Promise.resolve()
-  let suspended = false
   // Boxed so the async sync pass can read/replace the active subscription without
   // TS narrowing the closure-captured binding (the same reason the provider
   // previously held this in a ref's `.current`).
   const live: { unlisten: (() => void) | null } = { unlisten: null }
-
-  function isSuspended(): boolean {
-    return suspended || shouldSuspend?.() === true
-  }
-
-  function suspend(): void {
-    suspended = true
-    abort?.abort()
-    live.unlisten?.()
-    live.unlisten = null
-    onProgress?.('idle')
-  }
-
-  function resume(generation: number | null, isStale: () => boolean): void {
-    suspended = false
-    if (generation !== null && !isStale()) {
-      // Events intentionally dropped while suspended are recovered by the
-      // full reconcile. `refresh` also folds a rapid resume/poll burst into a
-      // single queued rerun when a prior pass is still settling.
-      refresh(generation, isStale)
-    }
-  }
 
   async function stop(): Promise<void> {
     abort?.abort()
@@ -170,7 +129,6 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
     await stop()
     live.unlisten?.()
     live.unlisten = null
-    suspended = false
     onProgress?.('idle')
     await watchStop().catch(() => {})
   }
@@ -190,10 +148,6 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
     live.unlisten?.()
     live.unlisten = null
 
-    if (isSuspended()) {
-      return
-    }
-
     onProgress?.('reconciling')
     const controller = new AbortController()
     abort = controller
@@ -202,9 +156,6 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
       // later step threw) is torn down in `finally` so listeners can't leak.
       let pending: (() => void) | null = null
       try {
-        if (isSuspended()) {
-          return
-        }
         await syncIndex({
           generation,
           signal: controller.signal,
@@ -219,7 +170,7 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
               }
             : {}),
         })
-        if (isStale() || isSuspended()) {
+        if (isStale()) {
           return
         }
         onApplied?.()
@@ -227,13 +178,13 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
           generation,
           onApplied,
           onMoved,
-          () => !controller.signal.aborted && !isStale() && !isSuspended(),
+          () => !controller.signal.aborted && !isStale(),
         )
-        if (isStale() || isSuspended()) {
+        if (isStale()) {
           return
         }
         await watchStart()
-        if (isStale() || isSuspended()) {
+        if (isStale()) {
           return
         }
         live.unlisten?.()
@@ -255,9 +206,6 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
   let refreshQueued = false
 
   function refresh(generation: number, isStale: () => boolean): void {
-    if (isSuspended()) {
-      return
-    }
     if (refreshRunning) {
       refreshQueued = true
       return
@@ -270,7 +218,7 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
           // Settle (abort) any in-flight pass first so two passes never write
           // concurrently, then bail if a newer open superseded this graph.
           await stop()
-          if (isStale() || isSuspended()) {
+          if (isStale()) {
             return
           }
           sync(generation, isStale)
@@ -282,5 +230,5 @@ export function createGraphIndex(options: GraphIndexOptions = {}): GraphIndex {
     })()
   }
 
-  return { suspend, resume, stop, settled, close, open, sync, refresh }
+  return { stop, settled, close, open, sync, refresh }
 }

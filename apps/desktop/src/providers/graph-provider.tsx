@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -15,11 +14,9 @@ import {
   errorMessage,
   forgetRecent,
   hasBridge,
-  isMobilePlatform,
   createGraph,
   openGraph,
   recentGraphs,
-  type AppPlatform,
   type GraphInfo,
   type RecentGraph,
 } from '@dayjot/core'
@@ -32,18 +29,13 @@ import { closeSecondaryWindows } from '@/lib/windows/close-secondary-windows'
 import { isMainWindow, requireMainWindow } from '@/lib/windows/window-role'
 import { createGraphIndex } from './graph-index'
 import { useDesktopGraphBoot } from './use-desktop-graph-boot'
-import { useMobileGraphBoot, type MobileGraphBoot } from './use-mobile-graph-boot'
 import { useNoteWindowBoot } from './use-note-window-boot'
 
 /** Lifecycle of the active graph (Plan 02 loading gate). */
 export type GraphStatus = 'loading' | 'choosing' | 'opening' | 'ready'
 
-/**
- * The graph context surface. The mobile-only slice (`needsOnboarding`,
- * storage roots, `completeOnboarding`) is documented on
- * {@link MobileGraphBoot}, whose hook owns it.
- */
-interface GraphContextValue extends MobileGraphBoot {
+/** The graph context surface. */
+interface GraphContextValue {
   status: GraphStatus
   graph: GraphInfo | null
   recents: RecentGraph[]
@@ -80,7 +72,7 @@ interface GraphContextValue extends MobileGraphBoot {
   deleteGraph: () => Promise<void>
   /**
    * Re-run the open graph's background index reconcile. External writers the
-   * watcher can't see (mobile has none; iCloud lands files behind the app's
+   * watcher can't see (iCloud lands files behind the app's
    * back) call this after nudging downloads so arrived files get indexed.
    * No-op while no index is open.
    */
@@ -114,23 +106,8 @@ async function pickerDefaultPath(hasRecents: boolean): Promise<{ defaultPath: st
  * Owns the active graph and the open/choose flow. On mount it auto-opens the
  * most-recent graph (so the app reopens where you left off) and otherwise shows
  * the chooser. All durable file access goes through `@dayjot/core` commands.
- *
- * On mobile (Plans 19/21) there is no chooser and no recents-driven reopen:
- * the graph lives in one of two fixed roots — the app sandbox `Documents/`
- * (the default; GitHub sync connects on top of it) or the app's iCloud Drive
- * container (syncs through iCloud instead) — and only the *kind* is persisted. Absolute paths are
- * **derived fresh every launch** because iOS container paths change across
- * restore/update, so a persisted recent would point at a dead path.
- * `platform` selects the bootstrap; everything downstream of the open is
- * shared.
  */
-export function GraphProvider({
-  children,
-  platform = 'desktop',
-}: {
-  children: ReactNode
-  platform?: AppPlatform
-}) {
+export function GraphProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<GraphStatus>('loading')
   const [graph, setGraph] = useState<GraphInfo | null>(null)
   const [recents, setRecents] = useState<RecentGraph[]>([])
@@ -162,43 +139,8 @@ export function GraphProvider({
       // External renames healed by id follow through to sessions and routes,
       // exactly as for an in-app rename (Plan 17).
       onMoved: followHealedMove,
-      // `visibilitychange` below performs the active teardown; this dynamic
-      // guard also closes the launch race where the first sync is scheduled
-      // after iOS has already hidden the webview.
-      shouldSuspend: () =>
-        isMobilePlatform(platform) && document.visibilityState === 'hidden',
     }),
   )
-
-  useEffect(() => {
-    if (!isMobilePlatform(platform) || !isMainWindow()) {
-      return
-    }
-
-    const index = indexRef.current
-    const onVisibilityChange = (): void => {
-      if (document.visibilityState === 'hidden') {
-        // Synchronous teardown prevents a locally emitted or metadata-watcher
-        // batch from entering the index queue after iOS begins suspension.
-        index.suspend()
-        return
-      }
-      const seq = openSeq.current
-      // A null generation still clears suspension: mobile can foreground
-      // before onboarding/open has produced an index session. With a session,
-      // the full pass recovers every event missed while hidden; stacked
-      // resume/iCloud triggers fold into the lifecycle's queued rerun.
-      index.resume(indexGeneration, () => seq !== openSeq.current)
-    }
-
-    if (document.visibilityState === 'hidden') {
-      index.suspend()
-    }
-    document.addEventListener('visibilitychange', onVisibilityChange)
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange)
-    }
-  }, [indexGeneration, platform])
 
   const loadRecents = useCallback(
     async (options?: { surfaceErrors?: boolean }): Promise<RecentGraph[]> => {
@@ -232,12 +174,12 @@ export function GraphProvider({
       setStatus('opening')
       setError(null)
       // Resolves true only when this open actually reached 'ready' — callers
-      // (mobile onboarding) gate side effects like persisting the onboarded
-      // flag on a confirmed open, never on a clone that failed to open.
+      // gate side effects on a confirmed open, never on a clone that failed
+      // to open.
       const run = async (): Promise<boolean> => {
         let opened = false
         try {
-          await closeSecondaryWindows(platform) // before openGraph bumps the session
+          await closeSecondaryWindows() // before openGraph bumps the session
           const info = await openGraph(root)
           if (seq !== openSeq.current) {
             return false // superseded by a newer open
@@ -308,26 +250,11 @@ export function GraphProvider({
       openChain.current = next
       return next
     },
-    [loadRecents, platform],
+    [loadRecents],
   )
-
-  // The mobile bootstrap + onboarding slice (Plans 19/21) lives in its own
-  // hook; `onParked` is its channel back onto this provider's status/error.
-  const onParked = useCallback((parkError: string | null): void => {
-    setError(parkError)
-    setStatus('choosing')
-  }, [])
-  const {
-    needsOnboarding,
-    mobileStorageInfo,
-    mobileStorageResolving,
-    mobileStorageKind,
-    completeOnboarding,
-  } = useMobileGraphBoot({ platform, openRecent, onParked })
 
   // Secondary note windows never open a graph: they adopt the main window's.
   useNoteWindowBoot({
-    platform,
     onAdopted: useCallback((boot) => {
       setGraph(boot.graph)
       setIndexGeneration(boot.indexGeneration)
@@ -341,10 +268,9 @@ export function GraphProvider({
     }, []),
   })
 
-  // Desktop main-window boot: reopen the most recent graph, or show the
-  // chooser. Mobile and note windows boot through their hooks above.
+  // Main-window boot: reopen the most recent graph, or show the chooser.
+  // Note windows boot through their hook above.
   useDesktopGraphBoot({
-    platform,
     loadRecents,
     openRecent,
     onChoose: useCallback(() => setStatus('choosing'), []),
@@ -409,10 +335,10 @@ export function GraphProvider({
     if (!requireMainWindow('switching graphs')) {
       return
     }
-    await closeSecondaryWindows(platform) // the session they adopted is ending
+    await closeSecondaryWindows() // the session they adopted is ending
     await closeActiveGraph()
     await loadRecents({ surfaceErrors: true })
-  }, [closeActiveGraph, loadRecents, platform])
+  }, [closeActiveGraph, loadRecents])
 
   const forget = useCallback(
     async (root: string): Promise<void> => {
@@ -422,14 +348,14 @@ export function GraphProvider({
         if (graph?.root === root) {
           // Forgetting the ACTIVE graph ends the session its note windows
           // adopted — same close-first rule as switch/delete.
-          await closeSecondaryWindows(platform)
+          await closeSecondaryWindows()
           await closeActiveGraph()
         }
       } catch {
         // best-effort
       }
     },
-    [closeActiveGraph, graph, loadRecents, platform],
+    [closeActiveGraph, graph, loadRecents],
   )
 
   const deleteGraph = useCallback(async (): Promise<void> => {
@@ -445,7 +371,7 @@ export function GraphProvider({
     // re-open the graph the user switched to.
     const seq = openSeq.current
     try {
-      await closeSecondaryWindows(platform) // before the delete invalidates the session
+      await closeSecondaryWindows() // before the delete invalidates the session
       await deleteGraphCommand(generation)
     } catch (err) {
       // The command invalidates the Rust session before touching the
@@ -465,7 +391,7 @@ export function GraphProvider({
       await closeActiveGraph()
     }
     await loadRecents()
-  }, [closeActiveGraph, graph, loadRecents, openRecent, platform])
+  }, [closeActiveGraph, graph, loadRecents, openRecent])
 
   const refreshIndex = useCallback((): void => {
     // Off-main, a refresh would start a second concurrent index writer.
@@ -492,11 +418,6 @@ export function GraphProvider({
       openRecent,
       forget,
       deleteGraph,
-      needsOnboarding,
-      mobileStorageInfo,
-      mobileStorageResolving,
-      mobileStorageKind,
-      completeOnboarding,
       refreshIndex,
     }),
     [
@@ -512,11 +433,6 @@ export function GraphProvider({
       openRecent,
       forget,
       deleteGraph,
-      needsOnboarding,
-      mobileStorageInfo,
-      mobileStorageResolving,
-      mobileStorageKind,
-      completeOnboarding,
       refreshIndex,
     ],
   )

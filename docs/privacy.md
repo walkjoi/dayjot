@@ -54,7 +54,7 @@ with the flag re-read from disk at call time, and it is covered by tests.
 ## Apple Contacts (off by default)
 
 - **Where:** nowhere on the network. Enabling the Contacts integration reads the
-  **macOS/iOS contacts store on-device** (the same store System Settings governs),
+  **macOS contacts store on-device** (the same store System Settings governs),
   behind the standard OS permission prompt. There is no DayJot copy of your address
   book: lookups are live queries, nothing is mirrored into `.dayjot/`, and DayJot
   never writes back to Contacts.

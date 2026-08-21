@@ -9,7 +9,7 @@ import { useSettings } from '@/providers/settings-provider'
  * (and the daily-note date heading) reads. This is a side-effect-only
  * component (it renders nothing): like `EditorTextSizeEffect`, the preference
  * lives in the settings document, so a choice made anywhere persists across
- * launches and applies to every editor surface (desktop and mobile) at once.
+ * launches and applies to every editor surface at once.
  */
 export function EditorFontEffect(): ReactElement | null {
   const { settings } = useSettings()

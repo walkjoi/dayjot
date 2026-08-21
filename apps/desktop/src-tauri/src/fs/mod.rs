@@ -32,10 +32,7 @@ use self::resolve::resolve;
 pub(crate) use self::io::atomic_write_bytes;
 
 /// iCloud eviction-placeholder name mapping, shared with the watcher (which
-/// must treat an evicted note as present, not deleted — Plan 21). Desktop-only
-/// like the watcher itself; mobile's change source is the Plan 21 Phase 2
-/// metadata query, which maps placeholders on its own side.
-#[cfg(desktop)]
+/// must treat an evicted note as present, not deleted — Plan 21).
 pub(crate) use self::io::eviction_placeholder;
 /// "Occupied" probe (real file OR eviction placeholder), shared with the
 /// iCloud sweep's collision folding — an evicted canonical note must not be
@@ -334,29 +331,10 @@ pub fn asset_open(
     open_asset_path(&app, &abs)
 }
 
-#[cfg(target_os = "ios")]
-fn open_asset_path(app: &tauri::AppHandle, path: &Path) -> AppResult<()> {
-    let url = asset_file_url(path)?;
-    app.opener()
-        .open_url(url.as_str(), None::<&str>)
-        .map_err(|err| AppError::io(err.to_string()))
-}
-
-#[cfg(not(target_os = "ios"))]
 fn open_asset_path(app: &tauri::AppHandle, path: &Path) -> AppResult<()> {
     app.opener()
         .open_path(path.to_string_lossy().into_owned(), None::<&str>)
         .map_err(|err| AppError::io(err.to_string()))
-}
-
-#[cfg(any(target_os = "ios", test))]
-fn asset_file_url(path: &Path) -> AppResult<tauri::Url> {
-    tauri::Url::from_file_path(path).map_err(|()| {
-        AppError::io(format!(
-            "failed to convert asset path to file URL: {}",
-            path.display()
-        ))
-    })
 }
 
 /// List every file (any extension) under a graph-relative directory, e.g.
@@ -432,10 +410,7 @@ pub fn note_delete(path: String, generation: u64, state: State<GraphState>) -> A
         crate::conflict::shadow::ShadowStore::new(&root).forget(&path);
         return Ok(());
     };
-    #[cfg(desktop)]
     os_trash_delete(&target)?;
-    #[cfg(mobile)]
-    move_to_graph_trash(&root, &target)?;
     // A deleted note's sync ancestor is meaningless — drop it (Plan 21).
     crate::conflict::shadow::ShadowStore::new(&root).forget(&path);
     Ok(())
@@ -461,102 +436,44 @@ fn delete_target(abs: &Path) -> Option<PathBuf> {
 /// the trash move itself then fails, the session stays invalidated and the
 /// frontend re-opens the intact directory to restore a writable session.
 /// Pinned to `generation` — a delete enqueued before a graph switch must
-/// never trash the newly opened graph. Desktop-only: mobile's fixed roots
-/// have no OS trash and no delete UI.
+/// never trash the newly opened graph.
 #[tauri::command]
 pub fn graph_delete(generation: u64, state: State<GraphState>) -> AppResult<()> {
-    #[cfg(desktop)]
-    {
-        // Check-and-invalidate under one lock hold — `root_for_generation`
-        // followed by a separate invalidation would leave a window where a
-        // pinned write still resolves the doomed root.
-        let root = {
-            let mut inner = lock_graph(&state)?;
-            if inner.generation != generation {
-                return Err(AppError::io(
-                    "the graph changed since this command was issued; dropping it",
-                ));
-            }
-            let root = inner.root.take().ok_or_else(AppError::no_graph)?;
-            inner.generation += 1;
-            root
-        };
-        os_trash_delete(&root)?;
-        // Recents is a convenience cache (same stance as `activate`): the
-        // directory is already in the trash, so a failure to persist must not
-        // report the delete as failed. A stale entry fails loudly on open.
-        if let Err(err) = crate::recents::forget(&root.to_string_lossy()) {
-            tracing::warn!(?err, "failed to forget deleted graph");
+    // Check-and-invalidate under one lock hold — `root_for_generation`
+    // followed by a separate invalidation would leave a window where a
+    // pinned write still resolves the doomed root.
+    let root = {
+        let mut inner = lock_graph(&state)?;
+        if inner.generation != generation {
+            return Err(AppError::io(
+                "the graph changed since this command was issued; dropping it",
+            ));
         }
-        Ok(())
+        let root = inner.root.take().ok_or_else(AppError::no_graph)?;
+        inner.generation += 1;
+        root
+    };
+    os_trash_delete(&root)?;
+    // Recents is a convenience cache (same stance as `activate`): the
+    // directory is already in the trash, so a failure to persist must not
+    // report the delete as failed. A stale entry fails loudly on open.
+    if let Err(err) = crate::recents::forget(&root.to_string_lossy()) {
+        tracing::warn!(?err, "failed to forget deleted graph");
     }
-    #[cfg(mobile)]
-    {
-        let _ = (generation, &state);
-        Err(AppError::io(
-            "deleting a graph is not supported on this platform",
-        ))
-    }
+    Ok(())
 }
 
-/// Send a file to the OS trash. On macOS, use `NSFileManager.trashItemAtURL`
+/// Send a file to the OS trash, using `NSFileManager.trashItemAtURL`
 /// (`DeleteMethod::NsFileManager`) instead of the `trash` crate default, which
 /// drives Finder over AppleScript and fails with `-10010` ("Handler can't
 /// handle objects of this class") when the graph lives on a cloud-synced or
 /// network volume. The NsFileManager path needs no Automation permission, makes
 /// no sound, and still lands the file in the system Trash for recovery.
-#[cfg(desktop)]
 fn os_trash_delete(abs: &Path) -> AppResult<()> {
-    #[cfg(target_os = "macos")]
-    let ctx = {
-        use trash::macos::{DeleteMethod, TrashContextExtMacos};
-        let mut ctx = trash::TrashContext::default();
-        ctx.set_delete_method(DeleteMethod::NsFileManager);
-        ctx
-    };
-    #[cfg(not(target_os = "macos"))]
-    let ctx = trash::TrashContext::default();
-
+    use trash::macos::{DeleteMethod, TrashContextExtMacos};
+    let mut ctx = trash::TrashContext::default();
+    ctx.set_delete_method(DeleteMethod::NsFileManager);
     ctx.delete(abs).map_err(|err| AppError::io(err.to_string()))
-}
-
-/// Move a deleted file under `<graph>/.dayjot/trash/`, stamping the name
-/// with epoch millis — and a counter beyond that — until the name is free
-/// (repeat deletes of `a.md`, even within one millisecond).
-#[cfg(mobile)]
-fn move_to_graph_trash(root: &Path, abs: &Path) -> AppResult<()> {
-    let trash_dir = root.join(".dayjot").join("trash");
-    fs::create_dir_all(&trash_dir)?;
-    let name = abs
-        .file_name()
-        .ok_or_else(|| AppError::io("delete target has no file name"))?;
-    let name = Path::new(name);
-    let stem = name
-        .file_stem()
-        .and_then(|value| value.to_str())
-        .unwrap_or("note");
-    let ext = name.extension().and_then(|value| value.to_str());
-    let with_suffix = |suffix: &str| match ext {
-        Some(ext) => format!("{stem}{suffix}.{ext}"),
-        None => format!("{stem}{suffix}"),
-    };
-    let millis = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|err| AppError::io(err.to_string()))?
-        .as_millis();
-    let mut target = trash_dir.join(with_suffix(""));
-    let mut attempt: u32 = 0;
-    while target.exists() {
-        attempt += 1;
-        let suffix = if attempt == 1 {
-            format!("-{millis}")
-        } else {
-            format!("-{millis}-{attempt}")
-        };
-        target = trash_dir.join(with_suffix(&suffix));
-    }
-    fs::rename(abs, target)?;
-    Ok(())
 }
 
 /// List markdown notes under `daily/` and `notes/`. `generation`, when given,
@@ -633,7 +550,7 @@ mod note_create_tests {
 
 #[cfg(test)]
 mod move_tests {
-    use super::{asset_file_url, ensure_asset_path, move_note_file};
+    use super::{ensure_asset_path, move_note_file};
     use std::fs;
 
     fn graph() -> tempfile::TempDir {
@@ -690,14 +607,5 @@ mod move_tests {
         assert!(ensure_asset_path("notes/cat.png").is_err());
         assert!(ensure_asset_path("assets/").is_err());
         assert!(ensure_asset_path("assets").is_err());
-    }
-
-    #[test]
-    fn asset_file_url_percent_encodes_local_paths() {
-        let path = std::env::temp_dir().join("DayJot Cat Photo.png");
-        let url = asset_file_url(&path).unwrap();
-
-        assert_eq!(url.scheme(), "file");
-        assert!(url.as_str().contains("DayJot%20Cat%20Photo.png"));
     }
 }

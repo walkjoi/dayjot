@@ -18,9 +18,7 @@ import {
 interface UpdateContextValue {
   state: UpdateState
   /**
-   * False outside a desktop native shell (browser dev, iOS/Android) — hide
-   * update UI entirely. Mobile ships through the app stores, and the updater
-   * plugins are only registered under `#[cfg(desktop)]`.
+   * False outside the native shell (browser dev) — hide update UI entirely.
    */
   supported: boolean
   checkNow: () => Promise<void>
