@@ -376,3 +376,63 @@ describe('parseNote — weight fields', () => {
     expect(note.weights).toEqual([])
   })
 })
+
+describe('parseNote — keepsakes', () => {
+  it('keeps the marker line as a bare fragment, without bullet or marker', () => {
+    const note = parse('- 10:02 妈妈在电话里说：「日子是过给自己看的。」 #keep')
+    expect(note.keepsakes).toEqual([
+      {
+        markerOffset: '- 10:02 妈妈在电话里说：「日子是过给自己看的。」 '.length,
+        text: '10:02 妈妈在电话里说：「日子是过给自己看的。」',
+        links: [],
+      },
+    ])
+  })
+
+  it('keeps only the marker line, not the nested children under it', () => {
+    const note = parse('- the fragment #keep\n  - a child that is not kept\n- another line')
+    expect(note.keepsakes.map((keepsake) => keepsake.text)).toEqual(['the fragment'])
+  })
+
+  it('collects the wiki links written on the kept line, in document order', () => {
+    const note = parse('- that Sancerre was Domaine Vacheron — [[Wine]] [[2026-09-09]] #keep')
+    expect(note.keepsakes[0]?.links).toEqual(['Wine', '2026-09-09'])
+  })
+
+  it('ignores links on other lines', () => {
+    const note = parse('- kept line #keep\n- [[Elsewhere]] unkept')
+    expect(note.keepsakes[0]?.links).toEqual([])
+  })
+
+  it('renders the fragment through the same plain text as the body', () => {
+    const note = parse('- a *bright* line with `code` and [[Wine|a link]] #keep')
+    expect(note.keepsakes[0]?.text).toBe('a bright line with code and Wine a link')
+  })
+
+  it('does not treat a marker inside code or a URL as a keep', () => {
+    const note = parse('- `#keep` is the marker #keep\n- see https://example.com/x#keep')
+    expect(note.keepsakes.map((keepsake) => keepsake.text)).toEqual(['#keep is the marker'])
+  })
+
+  it('keeps ordinary paragraphs and task lines too', () => {
+    const note = parse('A plain paragraph worth keeping. #keep\n\n- [ ] a kept task #keep')
+    expect(note.keepsakes.map((keepsake) => keepsake.text)).toEqual([
+      'A plain paragraph worth keeping.',
+      'a kept task',
+    ])
+  })
+
+  it('skips a line that holds nothing but the marker', () => {
+    expect(parse('- #keep').keepsakes).toEqual([])
+  })
+
+  it('reports offsets in original-file coordinates, past the frontmatter', () => {
+    const source = '---\ntitle: Log\n---\n\n- kept #keep\n'
+    const note = parse(source)
+    expect(source.slice(note.keepsakes[0]!.markerOffset)).toBe('#keep\n')
+  })
+
+  it('records the marker as an ordinary tag as well', () => {
+    expect(parse('- kept #keep').tags).toEqual(['keep'])
+  })
+})

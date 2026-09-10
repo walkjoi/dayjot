@@ -17,6 +17,7 @@ export type Route =
   | { kind: 'allNotes'; tag: string | null }
   | { kind: 'search'; query: string }
   | { kind: 'tasks' }
+  | { kind: 'keepsakes' }
   | { kind: 'stats' }
   | { kind: 'settings' }
   // The graph-switcher screen — rendered
@@ -34,6 +35,7 @@ export function routesEqual(a: Route, b: Route): boolean {
   switch (a.kind) {
     case 'today':
     case 'tasks':
+    case 'keepsakes':
     case 'stats':
     case 'settings':
     case 'graphs':

@@ -19,7 +19,17 @@ export {
   type TaskMarker,
   type ParsedNote,
   type ParsedWeight,
+  type ParsedKeepsake,
 } from './model'
+export {
+  KEEP_TAG,
+  KEEP_MARKER,
+  KEEP_MARKER_SUFFIX,
+  RESERVED_TAG_KEYS,
+  isReservedTag,
+  findKeepMarkers,
+  lastKeepMarker,
+} from './keep-marker'
 export {
   splitFrontmatter,
   parseFrontmatter,

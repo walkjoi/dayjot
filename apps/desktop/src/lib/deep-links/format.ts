@@ -31,6 +31,8 @@ export function deepLinkForRoute(route: Route): string | null {
       return `${DEEP_LINK_SCHEME}://tasks`
     case 'stats':
       return `${DEEP_LINK_SCHEME}://stats`
+    case 'keepsakes':
+      return `${DEEP_LINK_SCHEME}://keepsakes`
     case 'daily':
       return dailyDeepLink(route.date)
     case 'search':

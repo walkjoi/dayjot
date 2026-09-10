@@ -110,6 +110,14 @@ const APP_COMMANDS: AppCommand[] = [
     run: (context) => context.navigate({ kind: 'tasks' }),
   },
   {
+    id: 'nav.keepsakes',
+    title: 'Keepsakes',
+    keywords: ['keep', 'kept', 'fragments', 'collection', 'box', 'bookmarks'],
+    // No keybinding: the box is a place you open when you want to, and a
+    // shortcut for it would imply it wants regular attention. ⌘K reaches it.
+    run: (context) => context.navigate({ kind: 'keepsakes' }),
+  },
+  {
     id: 'nav.stats',
     title: 'Stats',
     keywords: ['statistics', 'streak', 'weight', 'chart', 'words'],

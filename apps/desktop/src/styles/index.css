@@ -746,3 +746,11 @@ html:root {
     @apply font-sans;
   }
 }
+
+/* A kept fragment in the Keepsakes view. The fragments are what the box is
+   for, so they are set in the reader's own note font rather than the UI face —
+   the same words, in the same voice, as the day they were written in. */
+.dayjot-keepsake-text {
+  font-family: var(--font-reading, var(--font-sans));
+  line-height: 1.7;
+}

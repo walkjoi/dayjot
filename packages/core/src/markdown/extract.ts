@@ -2,6 +2,7 @@ import type { SyntaxNode } from '@meowdown/markdown'
 import { dateFromDailyPath, isDaily } from '../graph/paths'
 import { parseFrontmatter, splitFrontmatter } from './frontmatter'
 import { parseBody } from './grammar'
+import { findKeepMarkers } from './keep-marker'
 import { foldTag } from './keys'
 import { parseInlineLink } from './link-syntax'
 import { buildPlainText, plainTextOfRange, unescapeMarkdownText } from './plain-text'
@@ -14,6 +15,7 @@ import type {
   Frontmatter,
   Heading,
   MarkdownLink,
+  ParsedKeepsake,
   ParsedNote,
   ParsedTask,
   ParsedWeight,
@@ -304,6 +306,56 @@ function collectTags(body: string, excluded: Span[], into: Map<string, string>):
   }
 }
 
+/** Start of the physical line containing `index`. */
+function lineStartAt(body: string, index: number): number {
+  return body.lastIndexOf('\n', index - 1) + 1
+}
+
+/**
+ * The kept lines of `body` — one per `#keep` token that the tag grammar would
+ * honour (markers inside code spans or URLs are literal text, so `excluded`
+ * drops them exactly as it does for tags).
+ *
+ * A keepsake is the marker's **physical line**, not its whole block: the
+ * gesture keeps a line, and a list item's nested children belong to their own
+ * lines. The line renders through the same {@link plainTextOfRange} the note's
+ * body and its tasks use — the `- ` list marker is already a cut, and the
+ * marker's own span joins the cuts so the fragment reads as written minus its
+ * bookkeeping. A line holding nothing but the marker yields no keepsake.
+ */
+function collectKeepsakes(
+  body: string,
+  bodyOffset: number,
+  excluded: Span[],
+  cuts: Span[],
+  literalRanges: Span[],
+  wikiLinks: WikiLink[],
+): ParsedKeepsake[] {
+  const keepsakes: ParsedKeepsake[] = []
+  for (const marker of findKeepMarkers(body)) {
+    if (inAnyRange(marker.from, excluded)) {
+      continue
+    }
+    const lineStart = lineStartAt(body, marker.from)
+    const lineEnd = lineEndAfter(body, marker.from)
+    const text = plainTextOfRange(body, lineStart, lineEnd, [...cuts, marker], literalRanges).trim()
+    if (text === '') {
+      continue
+    }
+    keepsakes.push({
+      markerOffset: marker.from + bodyOffset,
+      text,
+      links: linkTargetsWithin(wikiLinks, lineStart + bodyOffset, lineEnd + bodyOffset),
+    })
+  }
+  return keepsakes
+}
+
+/** The `[[target]]`s written inside `[from, to)` (file coords), in document order. */
+function linkTargetsWithin(wikiLinks: WikiLink[], from: number, to: number): string[] {
+  return wikiLinks.filter((link) => link.from >= from && link.from < to).map((link) => link.target)
+}
+
 /**
  * The title the note's *content* authors — explicit frontmatter `title:`,
  * else the first non-empty H1 — or `null` when {@link deriveTitle} would fall
@@ -433,6 +485,7 @@ export function parseNote(input: { path: string; source: string }): ParsedNote {
     assets,
     tasks,
     weights: collectWeights(body, tagExcluded, bodyOffset),
+    keepsakes: collectKeepsakes(body, bodyOffset, tagExcluded, cuts, literalPlainText, wikiLinks),
     text: buildPlainText(body, cuts, literalPlainText),
   }
 }

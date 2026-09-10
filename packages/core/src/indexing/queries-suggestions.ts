@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { foldTag, normalizeWikiTarget } from '../markdown'
+import { foldTag, normalizeWikiTarget, RESERVED_TAG_KEYS } from '../markdown'
 import { generateDateSuggestions, type DateSuggestionContext } from './date-suggestions'
 import { db } from './db'
 import { inClauseChunks, likeContains } from './query-utils'
@@ -40,6 +40,10 @@ interface WikiTargetCandidateResult {
 /**
  * `#` autocomplete candidates for `query` (Plan 18): tags whose folded key
  * contains the query, most-used first, deduped on the stored `tag_key`.
+ *
+ * Reserved tags are never offered — `#keep` is a marker the Keep gesture
+ * writes, not a tag to file notes under, and it would otherwise sit at the top
+ * of this list as the most-used tag in the graph.
  */
 export async function suggestTags(query: string, limit = 8): Promise<TagSuggestion[]> {
   const key = foldTag(query.trim())
@@ -47,6 +51,7 @@ export async function suggestTags(query: string, limit = 8): Promise<TagSuggesti
     .selectFrom('tags')
     .innerJoin('notes', 'notes.path', 'tags.notePath')
     .where('notes.kind', '!=', 'template')
+    .where('tags.tagKey', 'not in', RESERVED_TAG_KEYS)
     .select([sql<string>`min(tags.tag)`.as('tag'), sql<number>`count(*)`.as('count')])
     .groupBy('tags.tagKey')
     .orderBy(sql`count(*)`, 'desc')

@@ -5,6 +5,7 @@ import { SearchRoute } from '@/components/search-route'
 import { SingleNoteView } from '@/components/single-note-view'
 import { SettingsNavigator } from '@/components/settings/settings-navigator'
 import { SettingsScreen } from '@/components/settings-screen'
+import { KeepsakesScreen } from '@/components/keepsakes/keepsakes-screen'
 import { TasksScreen } from '@/components/tasks/tasks-screen'
 import { StatsErrorBoundary } from '@/components/stats/stats-error-boundary'
 import { useRouter } from '@/routing/router'
@@ -46,6 +47,8 @@ export function RouteContent(): ReactElement {
       // Owns its scroll container (a grouped list with a fixed header), so no
       // ScrollRestored wrapper — same shape as All Notes.
       return <TasksScreen />
+    case 'keepsakes':
+      return <KeepsakesScreen />
     case 'stats':
       // Owns its scroll container (header + centered column), like Tasks. The
       // boundary keeps a chart crash on this screen instead of white-screening

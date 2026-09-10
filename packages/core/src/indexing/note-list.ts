@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { foldTag } from '../markdown'
+import { foldTag, RESERVED_TAG_KEYS } from '../markdown'
 import { db } from './db'
 import { recallOrder } from './filtered-search'
 
@@ -129,13 +129,15 @@ export interface NoteTagFacet {
  * Every tag carried by at least one non-daily note, with how many such notes
  * carry it, alphabetical. Grouped on the stored `tag_key`, matching the tag
  * filter (and the `#tag` search token): `#Book` and `#book` are one facet,
- * displayed with one deterministic casing.
+ * displayed with one deterministic casing. Reserved tags (`#keep`) are markers
+ * rather than facets, so they are never offered as a filter.
  */
 export async function listNoteTags(): Promise<NoteTagFacet[]> {
   return db
     .selectFrom('tags')
     .innerJoin('notes', 'notes.path', 'tags.notePath')
     .where('notes.kind', '=', 'note')
+    .where('tags.tagKey', 'not in', RESERVED_TAG_KEYS)
     .select([sql<string>`min(tags.tag)`.as('tag'), sql<number>`count(*)`.as('count')])
     .groupBy('tags.tagKey')
     .orderBy('tags.tagKey')

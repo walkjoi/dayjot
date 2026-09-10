@@ -11,6 +11,7 @@ import { useDrawingSlashItems } from '@/drawing/use-drawing-slash-items'
 import { useNoteDrawings } from '@/drawing/use-note-drawings'
 import { SuggestedContactCard } from '@/components/suggested-contact-card'
 import { SyncConflictNotice } from '@/components/sync-conflict-notice'
+import { KeepMark } from '@/editor/keep-mark'
 import { CaretRunway } from '@/editor/caret-runway'
 import { editorBodyWithDefaultBullet } from '@/editor/default-bullet'
 import {
@@ -355,6 +356,10 @@ export function NotePaneComponent({
         {/* Typing near the bottom of the canvas scrolls the note under the
             caret instead of letting it hug the bottom edge. */}
         <CaretRunway />
+        {/* ⌘⇧B keeps the line at the caret. Mounted here, not in the editor
+            itself, so the inline task editor's one-line surface never grows a
+            keep gesture. */}
+        <KeepMark />
       </NoteEditor>
 
       <div className={gutterClassName}>

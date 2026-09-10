@@ -1,4 +1,5 @@
 import { EDITOR_KEY_BINDINGS } from '@meowdown/core'
+import { KEEP_MARK_BINDING, KEEP_MARK_DESCRIPTION } from '@/editor/keep-mark'
 
 /**
  * The central keymap registry (Plan 05 step 9). Every shortcut the app binds —
@@ -59,7 +60,16 @@ const EDITOR_BINDINGS = Object.fromEntries(
   Object.entries(EDITOR_KEY_BINDINGS).filter(([key]) => !SHARED_WITH_APP.has(key)),
 )
 
-export const EDITOR_BINDING_DESCRIPTIONS: Record<string, string> = registerKeymap(
-  'editor',
-  EDITOR_BINDINGS,
-)
+/**
+ * DayJot's own editor-scope bindings — features the app adds to meowdown's
+ * surface through a keymap extension rather than an app command, because they
+ * act on the caret's block and so need the editor's own state.
+ */
+const DAYJOT_EDITOR_BINDINGS: Record<string, string> = {
+  [KEEP_MARK_BINDING]: KEEP_MARK_DESCRIPTION,
+}
+
+export const EDITOR_BINDING_DESCRIPTIONS: Record<string, string> = registerKeymap('editor', {
+  ...EDITOR_BINDINGS,
+  ...DAYJOT_EDITOR_BINDINGS,
+})

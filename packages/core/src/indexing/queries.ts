@@ -19,6 +19,7 @@ export {
   type BacklinkSourceCursor,
 } from './queries-backlinks'
 export { getCompletedTasks, getOpenTasks, type OpenTask } from './queries-tasks'
+export { getKeepsakes, keepsakeDate, type Keepsake } from './queries-keepsakes'
 export {
   getDailyNoteDates,
   getDailyWeights,
