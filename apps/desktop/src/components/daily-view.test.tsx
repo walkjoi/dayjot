@@ -1,4 +1,11 @@
-import { cleanup, fireEvent, render, screen, type RenderResult } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  type RenderResult,
+} from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement } from 'react'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -32,6 +39,8 @@ vi.mock('@/components/context-sidebar/day-calendar', () => ({
     </div>
   ),
 }))
+const toast = vi.hoisted(() => ({ warning: vi.fn(), dismiss: vi.fn() }))
+vi.mock('sonner', () => ({ toast }))
 vi.mock('@/providers/settings-provider', () => ({
   useSettings: () => ({ settings: { dateFormat: 'iso' }, updateSettings: () => {} }),
 }))
@@ -83,12 +92,27 @@ function renderView(route: Route): RenderResult {
   )
 }
 
+/** Text input reaching the canvas from the day's editor, as the browser reports it. */
+function inputIntoNote(inputType = 'insertText'): void {
+  fireEvent(
+    screen.getAllByTestId('pane-probe')[0]!,
+    new InputEvent('beforeinput', { inputType, data: 'x', bubbles: true }),
+  )
+}
+
+function routed(): unknown {
+  return JSON.parse(screen.getByTestId('route').textContent!)
+}
+
 beforeEach(() => {
   paneProps.calls.length = 0
+  toast.warning.mockClear()
+  toast.dismiss.mockClear()
 })
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
 })
 
 describe('DailyView', () => {
@@ -191,5 +215,83 @@ describe('DailyView', () => {
     expect(shownDay()).toBe(todayIso())
     // Home again — nothing to escape from, so the pill withdraws.
     expect(screen.queryByRole('button', { name: 'Today' })).toBeNull()
+  })
+
+  it('warns above the note on any day but today, with the way home', () => {
+    renderView({ kind: 'daily', date: '2026-06-09' })
+
+    const banner = screen.getByRole('alert')
+    expect(banner.textContent).toContain('This isn’t today’s note.')
+    // Pinned to the top of the canvas's scroll, so it stays in view when scrolled.
+    expect(banner.parentElement?.classList).toContain('sticky')
+    expect(banner.parentElement?.classList).toContain('top-0')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Go to today' }))
+    expect(routed()).toEqual({ kind: 'today' })
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it("shows no warning on today's note", () => {
+    renderView({ kind: 'today' })
+
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('pops a warning naming the day the first time the user writes in it — once per visit', () => {
+    renderView({ kind: 'daily', date: '2026-06-09' })
+
+    inputIntoNote()
+    inputIntoNote('insertFromPaste')
+    expect(toast.warning).toHaveBeenCalledOnce()
+    expect(toast.warning).toHaveBeenCalledWith(
+      'This isn’t today’s note',
+      expect.objectContaining({ description: 'You’re writing in 2026-06-09.' }),
+    )
+
+    // A new visit (another day) can warn again.
+    fireEvent.click(screen.getByRole('button', { name: 'Next day' }))
+    inputIntoNote('insertCompositionText')
+    expect(toast.warning).toHaveBeenCalledTimes(2)
+  })
+
+  it("the warning's action goes to today", () => {
+    renderView({ kind: 'daily', date: '2026-06-09' })
+    inputIntoNote()
+
+    const [, options] = toast.warning.mock.calls[0]!
+    act(() => {
+      options.action.onClick()
+    })
+    expect(routed()).toEqual({ kind: 'today' })
+    expect(toast.dismiss).toHaveBeenCalled()
+  })
+
+  it("never warns for deleting, or for writing in today's note", () => {
+    renderView({ kind: 'daily', date: '2026-06-09' })
+    inputIntoNote('deleteContentBackward')
+    cleanup()
+
+    renderView({ kind: 'today' })
+    inputIntoNote()
+
+    expect(toast.warning).not.toHaveBeenCalled()
+  })
+
+  it('flags a day left on screen overnight as soon as the window comes back', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 8, 22, 22, 0, 0))
+    renderView({ kind: 'today' })
+    expect(screen.queryByRole('alert')).toBeNull()
+
+    vi.setSystemTime(new Date(2026, 8, 23, 9, 0, 0))
+    act(() => {
+      window.dispatchEvent(new Event('focus'))
+    })
+
+    // Still the same day on screen — flagged, not switched.
+    expect(shownDay()).toBe('2026-09-22')
+    expect(screen.getByRole('alert').textContent).toContain('This isn’t today’s note.')
+    inputIntoNote()
+    expect(toast.warning).toHaveBeenCalledOnce()
   })
 })

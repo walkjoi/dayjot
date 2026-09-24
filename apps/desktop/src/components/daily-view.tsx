@@ -1,13 +1,15 @@
-import { useEffect, useState, type ReactElement } from 'react'
+import { useEffect, useRef, useState, type ReactElement } from 'react'
 import { dailyPath } from '@dayjot/core'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { DayCalendar } from '@/components/context-sidebar/day-calendar'
+import { NotTodayBanner } from '@/components/not-today-banner'
 import { NoteBottomRunway } from '@/components/note-bottom-runway'
 import { NotePane } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
 import { ShortcutKeys } from '@/components/shortcut-keys'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { useNotTodayTypingAlert } from '@/hooks/use-not-today-typing-alert'
 import { keybindingFor } from '@/lib/commands/app-commands'
 import { addDaysIso, formatDayLabel, todayIso } from '@/lib/dates'
 import { useToday } from '@/lib/use-today'
@@ -38,6 +40,11 @@ interface DailyViewProps {
  * moves restore scroll, not the caret. The `today` target reads the live
  * clock at arrival time — midnight alone is not a navigation; the next ⌘D
  * lands on the new day.
+ *
+ * A day that isn't today is flagged, never silently switched: a warning banner
+ * sits above its note for as long as it's shown, and the first time the user
+ * writes into it on a visit a toast names the day (see
+ * {@link useNotTodayTypingAlert}). Both offer the way to today.
  */
 export function DailyView({ target }: DailyViewProps): ReactElement {
   const { arrivalSeq, entryId, arrivalFocusEditor, navigate } = useRouter()
@@ -82,6 +89,16 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
   const { settings } = useSettings()
   const [calendarOpen, setCalendarOpen] = useState(false)
 
+  // Going home from a warning is a capture arrival, like ⌘D: caret at the end.
+  const goToday = (): void => navigate({ kind: 'today' }, { focusEditor: true })
+  const canvasRef = useRef<HTMLDivElement>(null)
+  useNotTodayTypingAlert(canvasRef, {
+    notToday: !isToday,
+    visitKey: arrivalKey,
+    dayLabel: formatDayLabel(date, settings.dateFormat),
+    onGoToday: goToday,
+  })
+
   // Report the shown day as the focused day, keyed on the arrival so the
   // report re-fires after the workspace's pre-paint reset (a layout effect —
   // this passive effect runs later in the same commit and wins).
@@ -92,7 +109,7 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
 
   return (
     <ScrollRestored className="h-full overflow-auto px-0">
-      <div className="mx-auto flex min-h-full w-full max-w-full flex-col py-8">
+      <div ref={canvasRef} className="mx-auto flex min-h-full w-full max-w-full flex-col py-8">
         <div className="dayjot-content-gutter group mb-3 flex items-center justify-between gap-2">
           <h2 className={cn('dayjot-daily-subject', isToday && 'text-accent')}>
             {formatDayLabel(date, settings.dateFormat)}
@@ -157,6 +174,16 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
             </div>
           </div>
         </div>
+        {!isToday ? (
+          // Pinned to the top of the canvas's scroll, so the warning stays in
+          // view however far down the day is read or written. The opaque
+          // band behind it keeps text scrolling underneath from showing
+          // through the translucent alert; the negative margin keeps the
+          // unscrolled spacing what it was.
+          <div className="dayjot-content-gutter sticky top-0 z-10 -mt-2 mb-1 bg-surface py-2">
+            <NotTodayBanner onGoToday={goToday} />
+          </div>
+        ) : null}
         <NotePane
           path={dailyPath(date)}
           lazy
