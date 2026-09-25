@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react'
 import { NoteBottomRunway } from '@/components/note-bottom-runway'
 import { NoteOutlineRail } from '@/components/note-outline/note-outline-rail'
-import { NotePane } from '@/components/note-pane'
+import { NotePane, type ArrivalCaret } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
 import { NoteTrashAction } from '@/components/context-sidebar/note-trash-action'
 import { ScrollRestored } from '@/routing/scroll-restore'
@@ -14,6 +14,8 @@ interface SingleNoteViewProps {
    * window's day label, standing in for the title a daily doesn't carry.
    */
   heading?: ReactNode
+  /** Where the caret lands on arrival (default: the note's start). Pass a stable value. */
+  caret?: ArrivalCaret
 }
 
 /**
@@ -25,7 +27,11 @@ interface SingleNoteViewProps {
  * padding, so clicking anywhere in the note body (blank side margins
  * included) focuses it.
  */
-export function SingleNoteView({ path, heading }: SingleNoteViewProps): ReactElement {
+export function SingleNoteView({
+  path,
+  heading,
+  caret = 'start',
+}: SingleNoteViewProps): ReactElement {
   return (
     // `@container` sizes the outline rail's width gate to the pane, not the
     // window (the settings route's idiom).
@@ -44,6 +50,7 @@ export function SingleNoteView({ path, heading }: SingleNoteViewProps): ReactEle
           path={path}
           lazy
           autoFocus
+          autoFocusSelection={caret}
           className="flex grow flex-col"
           gutterClassName="dayjot-content-gutter"
           editorClassName="grow"

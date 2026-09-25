@@ -1,7 +1,8 @@
-import { lazy, Suspense, type ReactElement } from 'react'
+import { lazy, Suspense, useMemo, type ReactElement } from 'react'
 import { AllNotesScreen } from '@/components/all-notes/all-notes-screen'
 import { DailyView } from '@/components/daily-view'
 import { SearchRoute } from '@/components/search-route'
+import type { ArrivalCaret } from '@/components/note-pane'
 import { SingleNoteView } from '@/components/single-note-view'
 import { SettingsNavigator } from '@/components/settings/settings-navigator'
 import { SettingsScreen } from '@/components/settings-screen'
@@ -29,7 +30,12 @@ const StatsScreen = lazy(() =>
  * same clock.
  */
 export function RouteContent(): ReactElement {
-  const { route } = useRouter()
+  const { route, arrivalKeepsake } = useRouter()
+  // Memoized on the index so a re-render never re-applies the arrival.
+  const noteCaret = useMemo<ArrivalCaret>(
+    () => (arrivalKeepsake === null ? 'start' : { keepsake: arrivalKeepsake }),
+    [arrivalKeepsake],
+  )
   switch (route.kind) {
     case 'today':
       return <DailyView target={{ kind: 'today' }} />
@@ -38,7 +44,7 @@ export function RouteContent(): ReactElement {
       // is a real calendar day by the time it reaches a view.
       return <DailyView target={{ kind: 'date', date: route.date }} />
     case 'note':
-      return <SingleNoteView path={route.path} />
+      return <SingleNoteView path={route.path} caret={noteCaret} />
     case 'allNotes':
       // Owns its scroll container (virtualized table + fixed header), so no
       // ScrollRestored wrapper.

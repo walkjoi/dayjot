@@ -28,12 +28,10 @@ export function keepsakeDayLabel(keepsake: Keepsake): string {
 }
 
 /**
- * Group `keepsakes` (already newest first) into months.
- *
- * Months are the only division in the box. They come free from the dates the
- * fragments already carry and say something true — how long ago this was —
- * where a subject grouping would impose a taxonomy that keeping deliberately
- * asks nothing about.
+ * Group `keepsakes` (already newest first) into months — the box's default
+ * division. It comes free from the dates the fragments already carry and says
+ * something true of every one of them: how long ago this was. (The other
+ * division, by subject, reads only what the writer chose to link.)
  */
 export function groupKeepsakesByMonth(keepsakes: readonly Keepsake[]): KeepsakeMonth[] {
   const months: KeepsakeMonth[] = []

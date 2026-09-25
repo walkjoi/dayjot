@@ -96,6 +96,7 @@ export {
   type NoteRow,
   type OpenTask,
   type Keepsake,
+  type KeepsakeSubject,
   type DailyWeight,
   type DailyWordCount,
   type PinnedNote,

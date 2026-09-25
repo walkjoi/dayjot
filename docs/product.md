@@ -12,12 +12,16 @@ notes — nothing else.
   timestamp at the cursor — the interstitial-journaling gesture.
 - **Association over hierarchy.** `[[Wiki Links]]` connect notes; backlinks
   make the connections navigable. There are no folders to file into.
-- **Keepsakes.** `⌘⇧B` marks the line at the caret with a reserved `#keep`
-  tag; the Keepsakes view collects every kept line across the graph, newest
-  first. A box of fragments worth more than the day they were written on —
-  never a to-do list: nothing there completes, expires, or carries a count.
-  Unkeeping removes the tag and nothing else, so the sentence stays in its
-  day.
+- **Keepsakes.** `⌘⇧B` keeps the line at the caret by writing a reserved
+  `#keep` tag at its start; with several lines selected it keeps them as one
+  section, `#keep` on the first and `#keep-end` after the last. The
+  Keepsakes view collects every keepsake across the graph, newest first,
+  rendered as the Markdown it was written in — divided by month, or by the
+  subject a keepsake's first line links (`#keep [[SD]] …`). Clicking one opens
+  its note with the caret on it. A box of fragments worth more than the day
+  they were written on — never a to-do list: nothing there completes,
+  expires, or carries a count. Unkeeping removes the markers and nothing
+  else, so the words stay in their day.
 - **Markdown is the source of truth.** Notes are `.md` files
   (`daily/YYYY-MM-DD.md`, `notes/<title>.md`, attachments under `assets/`).
   The SQLite index in `.dayjot/` is a rebuildable projection — deleting it

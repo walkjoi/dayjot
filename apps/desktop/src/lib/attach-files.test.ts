@@ -43,6 +43,7 @@ function editorHandle(): NoteEditorHandle & {
     insertMarkdown: vi.fn<(markdown: string) => void>(),
     focus: () => {},
     setSelection: () => {},
+    revealKeepsake: () => true,
     getSelectedText: () => '',
     openSelectionMenu: () => {},
     startPendingReplacement: () => false,

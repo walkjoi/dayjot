@@ -28,6 +28,7 @@
     "@excalidraw/excalidraw": "^0.18.1",
     "@meowdown/core": "^0.59.1",
     "@meowdown/react": "^0.59.1",
+    "@prosekit/pm": "0.1.19-beta.4",
     "@shadcn/react": "^0.1.0",
     "@tanstack/react-query": "^5.101.1",
     "@tauri-apps/api": "^2.11.1",

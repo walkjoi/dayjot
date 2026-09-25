@@ -13,10 +13,23 @@ afterEach(() => {
   setBridge(null)
 })
 
-/** Answer `db_query` with `rows` and `note_read` from `notes`. */
-function bridge(rows: Record<string, unknown>[], notes: Record<string, string>): void {
+/**
+ * Answer the kept-notes `db_query` with `rows`, the `note_keys` lookup from
+ * `keys` (folded key → note path), and `note_read` from `notes`.
+ */
+function bridge(
+  rows: Record<string, unknown>[],
+  notes: Record<string, string>,
+  keys: Record<string, string> = {},
+): void {
   mockInvoke.mockImplementation(async (command, args) => {
     if (command === 'db_query') {
+      if (String(args['sql']).includes('note_keys')) {
+        const params = (args['params'] as unknown[]).map(String)
+        return params
+          .filter((key) => keys[key] !== undefined)
+          .map((key) => ({ key, note_path: keys[key] }))
+      }
       return rows
     }
     if (command === 'note_read') {
@@ -69,6 +82,7 @@ describe('getKeepsakes', () => {
       dailyDate: '2026-09-09',
       text: '10:02 妈妈说的那句话',
       links: [],
+      subjects: [],
     })
   })
 
@@ -118,5 +132,46 @@ describe('getKeepsakes', () => {
     const [keepsake] = await getKeepsakes()
 
     expect(keepsake?.links).toEqual(['Wine'])
+  })
+
+  it('resolves subjects to their notes, so spellings and aliases group as one', async () => {
+    bridge(
+      [noteRow('daily/2026-09-23.md', { daily_date: '2026-09-23' })],
+      {
+        'daily/2026-09-23.md': [
+          '#keep [[DSA]] GCD 最大公约数',
+          '',
+          '#keep [[dsa]] two pointers',
+          '',
+          '#keep [[SD]] CDC',
+          '',
+          '#keep [[Someday]] nothing by that name yet',
+        ].join('\n'),
+      },
+      { dsa: 'notes/dsa-记忆点.md', sd: 'notes/sd.md' },
+    )
+
+    const keepsakes = await getKeepsakes()
+
+    expect(keepsakes.map((keepsake) => keepsake.subjects)).toEqual([
+      [{ target: 'DSA', notePath: 'notes/dsa-记忆点.md', key: 'notes/dsa-记忆点.md' }],
+      [{ target: 'dsa', notePath: 'notes/dsa-记忆点.md', key: 'notes/dsa-记忆点.md' }],
+      [{ target: 'SD', notePath: 'notes/sd.md', key: 'notes/sd.md' }],
+      [{ target: 'Someday', notePath: null, key: 'link:someday' }],
+    ])
+  })
+
+  it('never makes a date link a subject, and names each subject once', async () => {
+    bridge(
+      [noteRow('daily/2026-09-09.md', { daily_date: '2026-09-09' })],
+      { 'daily/2026-09-09.md': '- [[Wine]] and [[wine]] on [[2026-09-09]] #keep\n' },
+      { wine: 'notes/wine.md' },
+    )
+
+    const [keepsake] = await getKeepsakes()
+
+    expect(keepsake?.subjects).toEqual([
+      { target: 'Wine', notePath: 'notes/wine.md', key: 'notes/wine.md' },
+    ])
   })
 })

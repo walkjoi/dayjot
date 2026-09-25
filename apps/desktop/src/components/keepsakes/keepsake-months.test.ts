@@ -9,8 +9,14 @@ function keepsake(text: string, dailyDate: string | null, updatedAt = 0): Keepsa
     dailyDate,
     updatedAt,
     markerOffset: 0,
+    markerIndex: 0,
+    kind: 'line',
     text,
+    markdown: text,
     links: [],
+    leadLink: null,
+    markdownAfterLead: text,
+    subjects: [],
   }
 }
 

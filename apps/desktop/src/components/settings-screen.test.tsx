@@ -202,6 +202,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -248,6 +249,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -292,6 +294,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -351,6 +354,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -417,6 +421,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -462,6 +467,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -500,6 +506,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -551,6 +558,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -595,6 +603,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -645,6 +654,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -692,6 +702,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -730,6 +741,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -800,6 +812,7 @@ describe('SettingsScreen', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )

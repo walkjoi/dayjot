@@ -150,6 +150,7 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -215,6 +216,7 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
           futureKey: true,
         },
       ]),
@@ -265,6 +267,7 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
           futureKey: true,
         },
       ]),
@@ -309,6 +312,7 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -459,6 +463,7 @@ describe('SettingsProvider', () => {
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
+          keepsakesGrouping: 'month',
         },
       ]),
     )
@@ -506,6 +511,7 @@ describe('SettingsProvider', () => {
         calendarEnabled: false,
         calendarIds: [],
         graphColors: {},
+        keepsakesGrouping: 'month',
       },
     ])
   })

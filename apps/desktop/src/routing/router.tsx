@@ -59,6 +59,13 @@ interface RouterValue {
    * moves clear it, so it can never leak onto a later, unrelated arrival.
    */
   arrivalFocusEditor: boolean
+  /**
+   * The keepsake the latest arrival asked the destination note to land on —
+   * its marker index in that note (`navigate(route, { revealKeepsake })`), or
+   * null. Set only by the Keepsakes view's jump; one-shot exactly like
+   * {@link arrivalFocusEditor}.
+   */
+  arrivalKeepsake: number | null
   navigate: (route: Route, options?: NavigateOptions) => void
   back: () => void
   forward: () => void
@@ -103,6 +110,11 @@ export interface NavigateOptions {
    * autofocuses every arrival and ignores it.
    */
   focusEditor?: boolean
+  /**
+   * Land the destination note's caret on a keepsake — its marker index in the
+   * note — and scroll it into view. See {@link RouterValue.arrivalKeepsake}.
+   */
+  revealKeepsake?: number
 }
 
 /**
@@ -147,6 +159,7 @@ export function RouterProvider({
   })
   const [arrivalSeq, setArrivalSeq] = useState(0)
   const [arrivalFocusEditor, setArrivalFocusEditor] = useState(false)
+  const [arrivalKeepsake, setArrivalKeepsake] = useState<number | null>(null)
   const nextId = useRef(1)
   const navigationRevisionRef = useRef(0)
   /** Scroll offsets by entry id — a ref so scroll reporting never re-renders. */
@@ -219,6 +232,7 @@ export function RouterProvider({
     })
     setArrivalSeq((seq) => seq + 1)
     setArrivalFocusEditor(options?.focusEditor === true)
+    setArrivalKeepsake(options?.revealKeepsake ?? null)
   }, [])
 
   const back = useCallback(() => {
@@ -227,6 +241,7 @@ export function RouterProvider({
     }
     navigationRevisionRef.current += 1
     setArrivalFocusEditor(false) // history moves are never focus arrivals
+    setArrivalKeepsake(null)
     setHistory((current) =>
       current.index > 0 ? { ...current, index: current.index - 1 } : current,
     )
@@ -238,6 +253,7 @@ export function RouterProvider({
     }
     navigationRevisionRef.current += 1
     setArrivalFocusEditor(false)
+    setArrivalKeepsake(null)
     setHistory((current) =>
       current.index < current.stack.length - 1 ? { ...current, index: current.index + 1 } : current,
     )
@@ -298,6 +314,7 @@ export function RouterProvider({
       arrivalSeq,
       navigationRevision,
       arrivalFocusEditor,
+      arrivalKeepsake,
       navigate,
       back,
       forward,
@@ -313,6 +330,7 @@ export function RouterProvider({
     arrivalSeq,
     navigationRevision,
     arrivalFocusEditor,
+    arrivalKeepsake,
     navigate,
     back,
     forward,

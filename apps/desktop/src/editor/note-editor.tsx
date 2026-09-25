@@ -34,6 +34,7 @@ import {
   type LightboxImage,
 } from '@/editor/image-lightbox'
 import { isOpenableExternalUrl } from '@/editor/open-external-link'
+import { revealKeepsake } from '@/editor/reveal-keepsake'
 import { useLightboxTransition } from '@/editor/use-lightbox-transition'
 import { isDeepLinkUrl } from '@/lib/deep-links/parse'
 import { useFollowDeepLink } from '@/lib/deep-links/use-follow-deep-link'
@@ -81,6 +82,12 @@ export interface NoteEditorHandle {
    * land the caret at the end of the day's content.
    */
   setSelection(position: 'start' | 'end'): void
+  /**
+   * Focus the note with the caret on its `markerIndex`-th keepsake, scrolled
+   * into the middle of the view — the Keepsakes view's jump. False when the
+   * note no longer holds that keepsake.
+   */
+  revealKeepsake(markerIndex: number): boolean
   /** The current selection's text (blocks separated by blank lines). */
   getSelectedText(): string
   /** Open the selection menu (no-op on an empty selection). */
@@ -272,6 +279,10 @@ export function NoteEditor({
       insertMarkdown: (markdown) => innerRef.current?.insertMarkdown(markdown),
       focus: () => innerRef.current?.focus(),
       setSelection: (position) => innerRef.current?.setSelection(position),
+      revealKeepsake: (markerIndex) => {
+        const editor = innerRef.current?.editor
+        return editor?.mounted === true && revealKeepsake(editor.view, markerIndex)
+      },
       getSelectedText: () => innerRef.current?.getSelectedText() ?? '',
       openSelectionMenu: () => innerRef.current?.openSelectionMenu(),
       startPendingReplacement: (options) =>

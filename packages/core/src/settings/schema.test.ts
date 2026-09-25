@@ -26,6 +26,7 @@ describe('settingsSchema', () => {
       calendarEnabled: false,
       calendarIds: [],
       graphColors: {},
+      keepsakesGrouping: 'month',
     })
     expect(DEFAULT_SETTINGS.editorMarkdownSyntax).toBe('hide')
     expect(DEFAULT_SETTINGS.editorSpellCheck).toBe(true)
@@ -46,6 +47,7 @@ describe('settingsSchema', () => {
     expect(DEFAULT_SETTINGS.dateFormat).toBe('mdy')
     expect(DEFAULT_SETTINGS.weekStartDay).toBe('monday')
     expect(DEFAULT_SETTINGS.allNotesFilterTags).toEqual(['book', 'link', 'person'])
+    expect(DEFAULT_SETTINGS.keepsakesGrouping).toBe('month')
     expect(DEFAULT_SETTINGS.calendarEnabled).toBe(false)
     expect(DEFAULT_SETTINGS.calendarIds).toEqual([])
     expect(DEFAULT_SETTINGS.graphColors).toEqual({})
@@ -108,6 +110,8 @@ describe('settingsSchema', () => {
     expect(settingsSchema.parse({ timestampKeybinding: 'Alt-Mod-t' }).timestampKeybinding).toBe('Alt-Mod-t')
     expect(settingsSchema.parse({ contactsEnabled: true }).contactsEnabled).toBe(true)
     expect(settingsSchema.parse({ contactsEnabled: false }).contactsEnabled).toBe(false)
+    expect(settingsSchema.parse({ keepsakesGrouping: 'subject' }).keepsakesGrouping).toBe('subject')
+    expect(settingsSchema.parse({ keepsakesGrouping: 'tag' }).keepsakesGrouping).toBe('month')
     expect(
       settingsSchema.parse({ allNotesFilterTags: ['meeting'] }).allNotesFilterTags,
     ).toEqual(['meeting'])
@@ -215,6 +219,7 @@ describe('settingsSchema', () => {
       calendarEnabled: false,
       calendarIds: [],
       graphColors: {},
+      keepsakesGrouping: 'month',
       futureKey: true,
     })
   })

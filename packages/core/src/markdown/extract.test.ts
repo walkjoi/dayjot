@@ -383,10 +383,24 @@ describe('parseNote — keepsakes', () => {
     expect(note.keepsakes).toEqual([
       {
         markerOffset: '- 10:02 妈妈在电话里说：「日子是过给自己看的。」 '.length,
+        markerIndex: 0,
+        kind: 'line',
         text: '10:02 妈妈在电话里说：「日子是过给自己看的。」',
+        markdown: '10:02 妈妈在电话里说：「日子是过给自己看的。」',
         links: [],
+        leadLink: null,
+        markdownAfterLead: '10:02 妈妈在电话里说：「日子是过给自己看的。」',
       },
     ])
+  })
+
+  it('reads a leading marker the same as a trailing one', () => {
+    const note = parse('#keep 使用 unique constraint 来避免数据重复')
+    expect(note.keepsakes[0]).toMatchObject({
+      markerOffset: 0,
+      text: '使用 unique constraint 来避免数据重复',
+      markdown: '使用 unique constraint 来避免数据重复',
+    })
   })
 
   it('keeps only the marker line, not the nested children under it', () => {
@@ -407,6 +421,30 @@ describe('parseNote — keepsakes', () => {
   it('renders the fragment through the same plain text as the body', () => {
     const note = parse('- a *bright* line with `code` and [[Wine|a link]] #keep')
     expect(note.keepsakes[0]?.text).toBe('a bright line with code and Wine a link')
+  })
+
+  it('keeps the fragment Markdown minus its block syntax', () => {
+    const note = parse('- [ ] a *bright* task with [[Wine|a link]] #keep\n\n## heading line #keep')
+    expect(note.keepsakes.map((keepsake) => keepsake.markdown)).toEqual([
+      'a *bright* task with [[Wine|a link]]',
+      'heading line',
+    ])
+  })
+
+  it('reads the link a keepsake opens with as its lead', () => {
+    const note = parse('#keep  [[DSA]] Update the pointer inside while loop.')
+    expect(note.keepsakes[0]).toMatchObject({
+      links: ['DSA'],
+      leadLink: 'DSA',
+      markdown: '[[DSA]] Update the pointer inside while loop.',
+      markdownAfterLead: 'Update the pointer inside while loop.',
+    })
+  })
+
+  it('has no lead when the line opens with words', () => {
+    const note = parse('- Ridge Lytton Springs — [[Wine]] #keep')
+    expect(note.keepsakes[0]?.leadLink).toBeNull()
+    expect(note.keepsakes[0]?.markdownAfterLead).toBe('Ridge Lytton Springs — [[Wine]]')
   })
 
   it('does not treat a marker inside code or a URL as a keep', () => {
@@ -434,5 +472,106 @@ describe('parseNote — keepsakes', () => {
 
   it('records the marker as an ordinary tag as well', () => {
     expect(parse('- kept #keep').tags).toEqual(['keep'])
+  })
+})
+
+describe('parseNote — kept sections', () => {
+  const section = [
+    'before',
+    '',
+    '#keep [[SD]] local delivery service 做完了, 几个有意思的点：',
+    '',
+    '1. 用 geohash 的前缀做 cache key',
+    '1. 单机的乐观锁 #keep-end',
+    '',
+    '接下来得练练英语。',
+  ].join('\n')
+
+  it('keeps every line from the opener through the closer, markers removed', () => {
+    const [keepsake] = parse(section).keepsakes
+    expect(keepsake).toMatchObject({
+      kind: 'section',
+      markerIndex: 0,
+      markdown: [
+        '[[SD]] local delivery service 做完了, 几个有意思的点：',
+        '',
+        '1. 用 geohash 的前缀做 cache key',
+        '1. 单机的乐观锁',
+      ].join('\n'),
+      text: 'SD local delivery service 做完了, 几个有意思的点： 用 geohash 的前缀做 cache key 单机的乐观锁',
+      links: ['SD'],
+      leadLink: 'SD',
+    })
+    expect(keepsake?.markdownAfterLead.split('\n')[0]).toBe('local delivery service 做完了, 几个有意思的点：')
+  })
+
+  it('keeps a code block whole, and a closer on its own line after it', () => {
+    const source = [
+      '#keep [[DSA]] GCD 最大公约数',
+      '',
+      '```python',
+      'def gcd(a, b):  # keep it short',
+      '  return a if b == 0 else gcd(b, a % b)',
+      '```',
+      '',
+      '#keep-end',
+      '',
+      '**04:58 PM**',
+    ].join('\n')
+    const [keepsake] = parse(source).keepsakes
+    expect(keepsake?.markdown).toBe(
+      [
+        '[[DSA]] GCD 最大公约数',
+        '',
+        '```python',
+        'def gcd(a, b):  # keep it short',
+        '  return a if b == 0 else gcd(b, a % b)',
+        '```',
+      ].join('\n'),
+    )
+  })
+
+  it('reads a section opened on a bare marker line before its words', () => {
+    const source = '#keep\n\n```sh\nls -la\n```\n\nWhat it lists. #keep-end'
+    const [keepsake] = parse(source).keepsakes
+    expect(keepsake?.markdown).toBe('```sh\nls -la\n```\n\nWhat it lists.')
+    expect(keepsake?.links).toEqual([])
+  })
+
+  it('dedents a section cut from inside a nested list', () => {
+    const source = '- parent\n  - #keep first\n    - child\n  - second #keep-end\n- after'
+    expect(parse(source).keepsakes[0]?.markdown).toBe('- first\n  - child\n- second')
+  })
+
+  it('reads subjects from the first line only', () => {
+    const source = '#keep [[SD]] opener\n\nlater mentions [[Kafka]] #keep-end'
+    expect(parse(source).keepsakes[0]?.links).toEqual(['SD'])
+  })
+
+  it('pairs markers so single lines and sections sit side by side', () => {
+    const source = [
+      '#keep [[SD]] Debezium 读取 DB 的 log',
+      '',
+      '#keep [[SD]] CDC',
+      '',
+      'second line of the section #keep-end',
+      '',
+      'loose closer #keep-end',
+      '',
+      '#keep one more',
+    ].join('\n')
+    const keepsakes = parse(source).keepsakes
+    expect(keepsakes.map((keepsake) => [keepsake.kind, keepsake.markerIndex, keepsake.text])).toEqual([
+      ['line', 0, 'SD Debezium 读取 DB 的 log'],
+      ['section', 1, 'SD CDC second line of the section'],
+      ['line', 2, 'one more'],
+    ])
+  })
+
+  it('ignores markers inside code when pairing', () => {
+    const source = '#keep opener\n\n```\n#keep-end\n```\n\nreal end #keep-end'
+    const [keepsake] = parse(source).keepsakes
+    expect(keepsake?.kind).toBe('section')
+    expect(keepsake?.markdown.endsWith('real end')).toBe(true)
   })
 })

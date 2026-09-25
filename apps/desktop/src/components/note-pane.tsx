@@ -32,6 +32,15 @@ import { cn } from '@/lib/utils'
 import { useGraph } from '@/providers/graph-provider'
 import { useSettings } from '@/providers/settings-provider'
 
+/** An arrival onto one keepsake — the Keepsakes view's jump. */
+export interface KeepsakeCaret {
+  /** The keepsake's marker index in the note (`ParsedKeepsake.markerIndex`). */
+  readonly keepsake: number
+}
+
+/** Where an arriving caret lands: a document edge, or a keepsake. */
+export type ArrivalCaret = 'start' | 'end' | KeepsakeCaret
+
 interface NotePaneProps {
   /** Graph-relative path of the note to edit. */
   path: string
@@ -41,10 +50,12 @@ interface NotePaneProps {
   autoFocus?: boolean
   /**
    * Where the caret lands when {@link autoFocus} applies: the document start
-   * (default — a seeded new note's empty H1, so typing names the note) or the
-   * end of the note's content (append-style capture).
+   * (default — a seeded new note's empty H1, so typing names the note), the
+   * end of the note's content (append-style capture), or a keepsake (falling
+   * back to the start when the note no longer holds it). Pass a stable value:
+   * a new one re-applies the arrival.
    */
-  autoFocusSelection?: 'start' | 'end'
+  autoFocusSelection?: ArrivalCaret
   /** Called once the autofocus actually happened (the editor mounted). */
   onAutoFocused?: () => void
   /**
@@ -206,10 +217,13 @@ export function NotePaneComponent({
       if (handle && autoFocus) {
         // By default the caret lands at the document start — for a seeded
         // new note that is the empty H1, so typing names the note. An `end`
-        // selection moves it (and the scroll) to the note's content end.
+        // selection moves it (and the scroll) to the note's content end; a
+        // keepsake moves it to that kept line.
         handle.focus()
         if (autoFocusSelection === 'end') {
           handle.setSelection('end')
+        } else if (typeof autoFocusSelection === 'object') {
+          handle.revealKeepsake(autoFocusSelection.keepsake)
         }
         onAutoFocused?.()
       }

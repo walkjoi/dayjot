@@ -245,6 +245,16 @@ export type WeekStartDay = z.infer<typeof weekStartDaySchema>
  */
 export const allNotesFilterTagsSchema = z.array(z.string()).catch(['book', 'link', 'person'])
 
+/**
+ * How the Keepsakes view divides its fragments: by the `month` they were kept
+ * in (the default — a date is something every keepsake carries), or by the
+ * `subject` their first line links to (`#keep [[SD]] …`). Flipped from the
+ * view's own header, and remembered so the box opens the way it was left.
+ */
+export const keepsakesGroupingSchema = z.enum(['month', 'subject']).catch('month')
+
+export type KeepsakesGrouping = z.infer<typeof keepsakesGroupingSchema>
+
 export type AllNotesFilterTags = z.infer<typeof allNotesFilterTagsSchema>
 
 /**
@@ -357,6 +367,7 @@ export const settingsSchema = z
     dateFormat: dateFormatSchema,
     weekStartDay: weekStartDaySchema,
     allNotesFilterTags: allNotesFilterTagsSchema,
+    keepsakesGrouping: keepsakesGroupingSchema,
     calendarEnabled: calendarEnabledSchema,
     calendarIds: calendarIdsSchema,
     graphColors: graphColorsSchema,

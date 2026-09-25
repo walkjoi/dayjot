@@ -1,6 +1,7 @@
 import { readNote } from '../graph/commands'
-import { KEEP_TAG, parseNote, type ParsedKeepsake } from '../markdown'
+import { KEEP_TAG, normalizeWikiTarget, parseNote, type ParsedKeepsake } from '../markdown'
 import { db } from './db'
+import { inClauseChunks } from './query-utils'
 
 /**
  * The Keepsakes projection — read at query time, with no table behind it.
@@ -15,7 +16,24 @@ import { db } from './db'
  * Tasks view.
  */
 
-/** One kept line, with the note context the Keepsakes view renders. */
+/**
+ * A subject a keepsake names with a `[[wiki link]]` on its first line — what
+ * the Keepsakes view groups by. Date links (`[[2026-09-09]]`) are days, not
+ * subjects, so they never become one.
+ */
+export interface KeepsakeSubject {
+  /** The link target as written, e.g. `DSA` — how the subject reads. */
+  target: string
+  /** The note the link resolves to, or null for a link to no note yet. */
+  notePath: string | null
+  /**
+   * Group identity: the resolved note, so `[[DSA]]`, `[[dsa]]`, and an alias
+   * of the same note are one subject — else the folded target.
+   */
+  key: string
+}
+
+/** One keepsake, with the note context the Keepsakes view renders. */
 export interface Keepsake extends ParsedKeepsake {
   notePath: string
   noteTitle: string
@@ -23,6 +41,8 @@ export interface Keepsake extends ParsedKeepsake {
   dailyDate: string | null
   /** Note mtime, epoch ms — the recency key for keepsakes outside a daily note. */
   updatedAt: number
+  /** The distinct subjects of {@link ParsedKeepsake.links}, in document order. */
+  subjects: readonly KeepsakeSubject[]
 }
 
 /** The notes carrying the reserved marker, newest first. */
@@ -54,9 +74,57 @@ function keepsakeDay(note: { dailyDate: string | null; updatedAt: number }): str
   return `${at.getFullYear()}-${month}-${day}`
 }
 
+/** The folded, non-date link keys a subject can be read from; null for a date or blank link. */
+function subjectKey(target: string): string | null {
+  const normalized = normalizeWikiTarget(target)
+  return normalized.date !== undefined || normalized.key === '' ? null : normalized.key
+}
+
 /**
- * Every kept line across the graph, newest day first and in document order
- * within a note — the Keepsakes view's whole read.
+ * The note each folded link key resolves to, through `note_keys` — the same
+ * canonical address map wiki-link navigation uses, so a subject opens the note
+ * a click on its link would.
+ */
+async function resolveSubjectKeys(keys: readonly string[]): Promise<Map<string, string>> {
+  const resolved = new Map<string, string>()
+  for (const chunk of inClauseChunks(keys)) {
+    const rows = await db
+      .selectFrom('noteKeys')
+      .where('key', 'in', chunk)
+      .select(['key', 'notePath'])
+      .execute()
+    for (const row of rows) {
+      if (row.key !== null && row.notePath !== null) {
+        resolved.set(row.key, row.notePath)
+      }
+    }
+  }
+  return resolved
+}
+
+/** A keepsake's links as distinct subjects, dates and blanks dropped. */
+function subjectsOf(
+  links: readonly string[],
+  resolved: ReadonlyMap<string, string>,
+): KeepsakeSubject[] {
+  const subjects: KeepsakeSubject[] = []
+  for (const target of links) {
+    const key = subjectKey(target)
+    if (key === null) {
+      continue
+    }
+    const notePath = resolved.get(key) ?? null
+    const subject = { target: target.trim(), notePath, key: notePath ?? `link:${key}` }
+    if (!subjects.some((existing) => existing.key === subject.key)) {
+      subjects.push(subject)
+    }
+  }
+  return subjects
+}
+
+/**
+ * Every keepsake across the graph, newest day first and in document order
+ * within a note — the Keepsakes view's whole read, subjects resolved.
  *
  * A note the index still lists but the disk no longer holds (a deletion racing
  * this read) contributes nothing rather than failing the view.
@@ -64,7 +132,7 @@ function keepsakeDay(note: { dailyDate: string | null; updatedAt: number }): str
 export async function getKeepsakes(): Promise<Keepsake[]> {
   const notes = await keptNotes()
   const perNote = await Promise.all(
-    notes.map(async (note): Promise<Keepsake[]> => {
+    notes.map(async (note): Promise<Omit<Keepsake, 'subjects'>[]> => {
       let source: string
       try {
         source = await readNote(note.path)
@@ -81,8 +149,24 @@ export async function getKeepsakes(): Promise<Keepsake[]> {
     }),
   )
 
+  const parsed = perNote.flat()
+  const keys = new Set<string>()
+  for (const keepsake of parsed) {
+    for (const target of keepsake.links) {
+      const key = subjectKey(target)
+      if (key !== null) {
+        keys.add(key)
+      }
+    }
+  }
+  const resolved = await resolveSubjectKeys([...keys])
+
   const days = new Map(notes.map((note) => [note.path, keepsakeDay(note)]))
-  return perNote.flat().sort((left, right) => {
+  const keepsakes = parsed.map((keepsake) => ({
+    ...keepsake,
+    subjects: subjectsOf(keepsake.links, resolved),
+  }))
+  return keepsakes.sort((left, right) => {
     const leftDay = days.get(left.notePath) ?? ''
     const rightDay = days.get(right.notePath) ?? ''
     if (leftDay !== rightDay) {

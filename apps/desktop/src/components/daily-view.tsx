@@ -4,7 +4,7 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { DayCalendar } from '@/components/context-sidebar/day-calendar'
 import { NotTodayBanner } from '@/components/not-today-banner'
 import { NoteBottomRunway } from '@/components/note-bottom-runway'
-import { NotePane } from '@/components/note-pane'
+import { NotePane, type ArrivalCaret } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
 import { ShortcutKeys } from '@/components/shortcut-keys'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -47,7 +47,7 @@ interface DailyViewProps {
  * {@link useNotTodayTypingAlert}). Both offer the way to today.
  */
 export function DailyView({ target }: DailyViewProps): ReactElement {
-  const { arrivalSeq, entryId, arrivalFocusEditor, navigate } = useRouter()
+  const { arrivalSeq, entryId, arrivalFocusEditor, arrivalKeepsake, navigate } = useRouter()
   // Live today drives the heading tint and where the chevrons route; the
   // *shown* day is pinned per arrival below, so midnight can't swap the
   // canvas under an open editor.
@@ -62,26 +62,27 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
   // `entryId`-only change is back/forward: re-pin the day but request no
   // focus — history moves restore scroll, not the caret. The focus request
   // is consumed when the editor actually mounts and focuses (not at render
-  // time), so a lazy load can't drop it.
+  // time), so a lazy load can't drop it. A Keepsakes jump lands on its line.
   const arrivalKey = `${arrivalSeq}:${entryId}`
+  const arrivalCaret = (): ArrivalCaret =>
+    arrivalKeepsake !== null ? { keepsake: arrivalKeepsake } : arrivalFocusEditor ? 'end' : 'start'
   const [arrival, setArrival] = useState<{
     key: string
     seq: number
     date: string
-    pendingFocus: 'start' | 'end' | null
+    pendingFocus: ArrivalCaret | null
   }>(() => ({
     key: arrivalKey,
     seq: arrivalSeq,
     date: targetDate ?? todayIso(),
-    pendingFocus: arrivalFocusEditor ? 'end' : 'start',
+    pendingFocus: arrivalCaret(),
   }))
   if (arrival.key !== arrivalKey) {
     setArrival({
       key: arrivalKey,
       seq: arrivalSeq,
       date: targetDate ?? todayIso(),
-      pendingFocus:
-        arrival.seq === arrivalSeq ? null : arrivalFocusEditor ? 'end' : 'start',
+      pendingFocus: arrival.seq === arrivalSeq ? null : arrivalCaret(),
     })
   }
   const { date, pendingFocus } = arrival

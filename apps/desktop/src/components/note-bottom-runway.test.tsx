@@ -14,6 +14,7 @@ function stubHandle(): NoteEditorHandle {
     insertMarkdown: vi.fn(),
     focus: vi.fn(),
     setSelection: vi.fn(),
+    revealKeepsake: vi.fn(() => true),
     getSelectedText: () => '',
     openSelectionMenu: vi.fn(),
     startPendingReplacement: () => false,

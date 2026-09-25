@@ -203,15 +203,10 @@ export interface ParsedTask extends TaskMarker {
 }
 
 /**
- * One `weight:: <kg>` inline field (the Stats page's weight log). The value is
- * always kilograms — the optional `kg` suffix is the only unit the grammar
- * accepts. Date semantics come from the owning daily note, not the field.
- */
-/**
- * One kept line — a *keepsake*. The Keepsakes view collects these across the
- * graph, so the display text is the fragment on its own: the list marker, the
- * `#keep` token, and any surrounding Markdown syntax are all stripped, leaving
- * what the writer would read back.
+ * One *keepsake*: words worth more than the day they were written on. A lone
+ * `#keep` keeps its line; a `#keep` answered by a later `#keep-end` keeps the
+ * whole contiguous section between them (see `pairKeepMarkers`). The
+ * Keepsakes view collects these across the graph.
  *
  * There is no projection table behind this. Keepsakes are deliberate and few,
  * so the view finds the handful of notes carrying the tag through the existing
@@ -219,20 +214,48 @@ export interface ParsedTask extends TaskMarker {
  */
 export interface ParsedKeepsake {
   /**
-   * Character offset of the marker's `#` in the **original** file (UTF-16 code
-   * units) — the row key alongside the path, and document order within a note.
+   * Character offset of the opening marker's `#` in the **original** file
+   * (UTF-16 code units) — the row key alongside the path, and document order
+   * within a note.
    */
   markerOffset: number
-  /** The kept line minus its list marker and its `#keep` token, Markdown stripped. */
+  /**
+   * The opener's ordinal among every `#keep` in the note's body, in document
+   * order (openers that keep nothing included) — how the editor finds this
+   * keepsake again when the view jumps to it.
+   */
+  markerIndex: number
+  /** A single kept line, or a section closed by `#keep-end`. */
+  kind: 'line' | 'section'
+  /** The kept words as plain text: markers, list markers, and Markdown syntax stripped. */
   text: string
   /**
-   * `[[wiki link]]` targets on the kept line, as written, in document order.
-   * These are what the view offers as subjects to narrow by — the fragment is
-   * complete without them, and nothing has to be linked for it to be kept.
+   * The kept words as Markdown, markers removed. A line drops its block prefix
+   * (list marker, checkbox, heading hashes, quote marker) so it reads as the
+   * words themselves; a section keeps its structure — lists, code blocks —
+   * dedented to its own left edge.
+   */
+  markdown: string
+  /**
+   * `[[wiki link]]` targets on the keepsake's first line, as written, in
+   * document order — its subjects. Entirely optional: a fragment that links
+   * to nothing is a complete keepsake.
    */
   links: readonly string[]
+  /**
+   * The target of the `[[wiki link]]` the keepsake opens with (`#keep [[SD]] …`),
+   * or null. Under that subject's heading the link would only repeat it.
+   */
+  leadLink: string | null
+  /** {@link markdown} without its leading link; equal to it when there is none. */
+  markdownAfterLead: string
 }
 
+/**
+ * One `weight:: <kg>` inline field (the Stats page's weight log). The value is
+ * always kilograms — the optional `kg` suffix is the only unit the grammar
+ * accepts. Date semantics come from the owning daily note, not the field.
+ */
 export interface ParsedWeight {
   /**
    * Character offset of the field's `w` in the **original** file (UTF-16 code
@@ -252,8 +275,9 @@ export interface ParsedWeight {
  * 5 — tasks widened back to every bullet-list GFM checkbox (`-`/`*`/`+`); only
  * ordered-list checkbox markers stay excluded.
  * 6 — `weights: ParsedWeight[]` added (`weight::` inline fields, Stats page).
- * 7 — `keepsakes: ParsedKeepsake[]` added (the reserved `#keep` marker, Keepsakes view). */
-export const PARSED_NOTE_VERSION = 7
+ * 7 — `keepsakes: ParsedKeepsake[]` added (the reserved `#keep` marker, Keepsakes view).
+ * 8 — keepsakes carry sections (`#keep` … `#keep-end`), Markdown, and a lead link. */
+export const PARSED_NOTE_VERSION = 8
 
 /** The full parse of one note — the stable contract downstream plans depend on. */
 export interface ParsedNote {
@@ -276,7 +300,7 @@ export interface ParsedNote {
   tasks: ParsedTask[]
   /** `weight::` inline fields in document order — the Stats weight projection. */
   weights: ParsedWeight[]
-  /** Lines carrying the reserved `#keep` marker, in document order. */
+  /** Keepsakes (`#keep` lines and `#keep` … `#keep-end` sections), in document order. */
   keepsakes: ParsedKeepsake[]
   /** Plain-text rendering of the body for FTS (Plan 08). */
   text: string

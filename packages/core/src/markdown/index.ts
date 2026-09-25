@@ -24,11 +24,16 @@ export {
 export {
   KEEP_TAG,
   KEEP_MARKER,
-  KEEP_MARKER_SUFFIX,
+  KEEP_END_TAG,
+  KEEP_END_MARKER,
   RESERVED_TAG_KEYS,
   isReservedTag,
   findKeepMarkers,
-  lastKeepMarker,
+  findKeepMarkerTokens,
+  pairKeepMarkers,
+  type KeepMarkerKind,
+  type KeepMarkerToken,
+  type KeepPair,
 } from './keep-marker'
 export {
   splitFrontmatter,

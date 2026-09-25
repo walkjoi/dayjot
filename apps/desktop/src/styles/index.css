@@ -747,10 +747,33 @@ html:root {
   }
 }
 
-/* A kept fragment in the Keepsakes view. The fragments are what the box is
-   for, so they are set in the reader's own note font rather than the UI face —
-   the same words, in the same voice, as the day they were written in. */
-.dayjot-keepsake-text {
-  font-family: var(--font-reading, var(--font-sans));
+/* A keepsake's words (KeepsakeRow), rendered as rich text through MarkdownView
+   in the note font. A kept section keeps its lists and code, spaced tighter
+   than a note so fragments read as fragments. Long ones rest clamped, fading
+   out where the clamp cuts, until "Show all". */
+.dayjot-keepsake-body .dayjot-editor {
   line-height: 1.7;
+}
+.dayjot-keepsake-body .dayjot-editor :is(p, ul, ol, blockquote, pre) {
+  margin: 0;
+}
+.dayjot-keepsake-body .dayjot-editor > * + * {
+  margin-top: 0.35em;
+}
+.dayjot-keepsake-body .dayjot-editor :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: 0;
+}
+/* A keepsake is read, not worked: its checkboxes never toggle. */
+.dayjot-keepsake-body .prosemirror-flat-list[data-list-kind='task'] > .list-marker {
+  pointer-events: none;
+}
+.dayjot-keepsake-body-clamped {
+  max-height: 14rem;
+  overflow: hidden;
+}
+.dayjot-keepsake-body-faded {
+  mask-image: linear-gradient(to bottom, black 75%, transparent);
 }

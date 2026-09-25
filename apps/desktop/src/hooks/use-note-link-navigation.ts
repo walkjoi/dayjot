@@ -6,12 +6,16 @@ import {
 } from '@/lib/windows/open-in-new-window'
 import { useLinkIntentGuard } from '@/lib/windows/use-link-intent-guard'
 import type { NoteRoute } from '@/routing/route'
-import { useRouter } from '@/routing/router'
+import { useRouter, type NavigateOptions } from '@/routing/router'
 
-/** Open one concrete note from a link-like UI control. */
+/**
+ * Open one concrete note from a link-like UI control. `options` shape the
+ * in-window arrival (a new window opens the note plainly).
+ */
 export type NoteLinkNavigation = (
   route: NoteRoute,
   event?: NewWindowClickEvent,
+  options?: NavigateOptions,
 ) => void
 
 /**
@@ -37,10 +41,10 @@ export function useNoteLinkNavigation(scopeKey?: string | number | null): NoteLi
   }, [scopeKey])
 
   return useCallback(
-    (target, event) => {
+    (target, event, options) => {
       const isStale = beginLinkIntent()
       if (!isNewWindowClick(event)) {
-        navigate(target)
+        navigate(target, options)
         return
       }
 
@@ -55,7 +59,7 @@ export function useNoteLinkNavigation(scopeKey?: string | number | null): NoteLi
         if (opened || isStale() || !Object.is(scopeKeyRef.current, startedInScope)) {
           return
         }
-        navigate(target)
+        navigate(target, options)
       })()
     },
     [beginLinkIntent, navigate],
