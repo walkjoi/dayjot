@@ -18,6 +18,10 @@
 //! Pure text in, text out: no iCloud types here. The platform half (version
 //! discovery, archiving, applying results) lives in [`crate::icloud`] and the
 //! sweep.
+//!
+//! [`unsaved`] reuses the same primitives for a different meeting: an open
+//! note's unsaved edits and an external change to its file, merged by the
+//! editor so neither side is dropped.
 
 pub mod archive;
 mod frontmatter;
@@ -26,6 +30,7 @@ pub mod markers;
 mod merge3;
 pub mod shadow;
 mod union;
+pub mod unsaved;
 
 /// One side of a two-way note conflict: full markdown plus the provenance
 /// that drives ordering and marker labels.

@@ -4,7 +4,6 @@ import type { SlashMenuSearchHandler } from '@meowdown/react'
 import { BacklinksPanel } from '@/components/backlinks-panel'
 import { ConflictNoteView } from '@/components/conflict-note-view'
 import { InlineAlert } from '@/components/inline-alert'
-import { NoteConflictBanner } from '@/components/note-conflict-banner'
 import { ProtectedNoteView } from '@/components/protected-note-view'
 import { DrawingModeDialog } from '@/drawing/drawing-mode-dialog'
 import { useDrawingSlashItems } from '@/drawing/use-drawing-slash-items'
@@ -309,13 +308,6 @@ export function NotePaneComponent({
             Couldn’t save the {saveError.kind === 'image' ? 'pasted image' : 'file'}:{' '}
             {saveError.message}. It was not added to the note.
           </InlineAlert>
-        ) : null}
-
-        {document.conflict !== null ? (
-          <NoteConflictBanner
-            onKeepMine={document.keepMine}
-            onLoadTheirs={document.loadTheirs}
-          />
         ) : null}
 
         <SyncConflictNotice path={path} className="mb-4" />

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { readNote, writeNote, type FileChange } from '@dayjot/core'
+import { mergeUnsavedEdits, readNote, writeNote, type FileChange } from '@dayjot/core'
 import { useFileChanges } from '@/lib/use-file-changes'
 import { createDocumentBinding, type DocumentBinding } from './document-binding'
 import type { NoteEditorHandle } from './note-editor'
@@ -24,12 +24,8 @@ import { checkRoundTrip } from './roundtrip'
 export interface NoteDocument extends NoteSessionSnapshot {
   /** Wire to the editor: every document change enters the pipeline here. */
   onEditorChange: (markdown: string) => void
-  /** Wire to the editor's imperative handle (reload/conflict application). */
+  /** Wire to the editor's imperative handle (reload / merged-content application). */
   bindEditor: (handle: NoteEditorHandle | null) => void
-  /** Resolve a conflict by keeping the buffer (rewrites the file). */
-  keepMine: () => void
-  /** Resolve a conflict by loading the external content (discards the buffer). */
-  loadTheirs: () => void
   /**
    * Stable identity of the underlying session: increments when a session is
    * *created*, not when a rename retargets one (Plan 17). Key the editor on
@@ -76,8 +72,6 @@ export function useNoteDocument(
   const missingSeed = options?.missingSeed
   const [snapshot, setSnapshot] = useState<NoteSessionSnapshot>(INITIAL_NOTE_SNAPSHOT)
   const editorRef = useRef<NoteEditorHandle | null>(null)
-  /** Mirrors the snapshot's conflict for non-reactive checks (rename gating). */
-  const conflictRef = useRef<string | null>(null)
   /** The pane's lifecycle policy object — one per hook instance. */
   const [binding] = useState<DocumentBinding>(() => createDocumentBinding())
 
@@ -110,7 +104,7 @@ export function useNoteDocument(
           ? createRenameCoordinator({
               path,
               generation: () => generationRef.current,
-              canFire: () => conflictRef.current === null,
+              canFire: () => !(binding.session()?.hasUnmergedChange() ?? false),
             })
           : null,
       session: (coordinator) =>
@@ -127,12 +121,10 @@ export function useNoteDocument(
                   return writeNote(forPath, contents, current)
                 }
               : null,
+            merge: mergeUnsavedEdits,
           },
           classify: checkRoundTrip,
-          onSnapshot: (next) => {
-            conflictRef.current = next.conflict
-            setSnapshot(next)
-          },
+          onSnapshot: setSnapshot,
           applyContent: (markdown) => editorRef.current?.setMarkdown(markdown),
           reconcilePendingEditorInput: () => {
             // Meowdown 0.43.1 synchronously emits onDocChange only when this
@@ -214,20 +206,10 @@ export function useNoteDocument(
     editorRef.current = handle
   }, [])
 
-  const keepMine = useCallback(() => {
-    binding.session()?.keepMine()
-  }, [binding])
-
-  const loadTheirs = useCallback(() => {
-    binding.session()?.loadTheirs()
-  }, [binding])
-
   return {
     ...snapshot,
     onEditorChange,
     bindEditor,
-    keepMine,
-    loadTheirs,
     sessionEpoch: binding.epoch(),
   }
 }

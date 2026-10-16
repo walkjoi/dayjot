@@ -49,6 +49,17 @@ export const noteCreateOutcomeSchema = z.discriminatedUnion('kind', [
 export type NoteCreateOutcome = z.infer<typeof noteCreateOutcomeSchema>
 
 /**
+ * An open note's unsaved edits merged with an external change to its file
+ * (mirrors the Rust `UnsavedMerge`). `conflicted` content carries conflict
+ * markers: it is written for the review view, never loaded into an editor.
+ */
+export const unsavedMergeSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('merged'), content: z.string() }),
+  z.object({ kind: z.literal('conflicted'), content: z.string() }),
+])
+export type UnsavedMerge = z.infer<typeof unsavedMergeSchema>
+
+/**
  * What a secondary note window needs to boot (mirrors the Rust
  * `WindowBootstrap`): the open graph's identity with both session generations
  * **unbumped** — adoption is a read, never a re-open — plus the one-shot deep

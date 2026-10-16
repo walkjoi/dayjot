@@ -31,9 +31,11 @@ use crate::error::AppResult;
 use super::repo::{current_branch, ensure_clean_state, open_existing, signature};
 
 /// Conflict-marker labels. "this device" is the local side, "other device"
-/// the remote one — product language, not branch names.
-const OUR_LABEL: &str = "this device";
-const THEIR_LABEL: &str = "other device";
+/// the remote one — product language, not branch names. Shared with the open
+/// editor's merge of unsaved edits (`conflict::unsaved`), so every conflict
+/// this device writes is labeled the same way.
+pub(crate) const OUR_LABEL: &str = "this device";
+pub(crate) const THEIR_LABEL: &str = "other device";
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

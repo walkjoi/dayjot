@@ -45,11 +45,13 @@ export {
   recentGraphSchema,
   fileMetaSchema,
   noteCreateOutcomeSchema,
+  unsavedMergeSchema,
   windowBootstrapSchema,
   type GraphInfo,
   type RecentGraph,
   type FileMeta,
   type NoteCreateOutcome,
+  type UnsavedMerge,
   type WindowBootstrap,
 } from '../graph/schemas'
 export {
@@ -60,6 +62,7 @@ export {
   createGraph,
   readNote,
   writeNote,
+  mergeUnsavedEdits,
   createNoteIfAbsent,
   writeAsset,
   readAsset,

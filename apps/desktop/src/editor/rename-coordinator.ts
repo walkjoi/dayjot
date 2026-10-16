@@ -51,8 +51,8 @@ export interface RenameCoordinatorOptions {
   /** Read the graph generation at rewrite time — never captured early. */
   generation: () => number | null
   /**
-   * Gate: no rename fires while false (a parked conflict contests the very
-   * content the title came from; "keep mine" re-arms, "load theirs" cancels).
+   * Gate: no rename fires while false (an external change still being merged
+   * into the buffer may be about to change the very title it would act on).
    */
   canFire: () => boolean
 }

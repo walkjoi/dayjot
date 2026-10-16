@@ -23,6 +23,26 @@ setBridge({
 let disk: string
 let writes: string[]
 
+/**
+ * Answers `note_merge_unsaved` (the Rust merge, tested there): two appends to
+ * the base union theirs-first; anything else comes back conflicted.
+ */
+function fakeMergeReply(args: Record<string, unknown>): { kind: string; content: string } {
+  const { base, ours, theirs } = args as { base: string; ours: string; theirs: string }
+  if (ours.startsWith(base) && theirs.startsWith(base)) {
+    return { kind: 'merged', content: theirs + ours.slice(base.length) }
+  }
+  return {
+    kind: 'conflicted',
+    content: `<<<<<<< this device\n${ours}=======\n${theirs}>>>>>>> other device\n`,
+  }
+}
+
+/** Whether the session ever asked for a merge (an external change met unsaved edits). */
+function mergeRequested(): boolean {
+  return mockInvoke.mock.calls.some(([command]) => command === 'note_merge_unsaved')
+}
+
 function fakeEditor(): NoteEditorHandle & { applied: string[] } {
   const applied: string[] = []
   return {
@@ -58,6 +78,9 @@ beforeEach(() => {
       disk = contents
       writes.push(contents)
       return null
+    }
+    if (command === 'note_merge_unsaved') {
+      return fakeMergeReply(args)
     }
     return null
   })
@@ -547,10 +570,10 @@ describe('useNoteDocument', () => {
       act(() => paneA2.result.current.onEditorChange('# New Title\n\nfresh edit\n'))
       await act(() => vi.runAllTimersAsync())
 
-      // The alias went through the live session — no conflict from our own
-      // background write, and the user's edit and the alias both persist
-      // (carried to the slug path by the move).
-      expect(paneA2.result.current.conflict).toBeNull()
+      // The alias went through the live session — our own background write
+      // never surfaced as an external change to merge, and the user's edit
+      // and the alias both persist (carried to the slug path by the move).
+      expect(mergeRequested()).toBe(false)
       expect(files['notes/new-title.md']).toContain('aliases:')
       expect(files['notes/new-title.md']).toContain('Old Title')
       expect(files['notes/new-title.md']).toContain('fresh edit')
@@ -594,7 +617,7 @@ describe('useNoteDocument', () => {
     act(() => emitChange?.([{ path: 'notes/a.md', kind: 'upsert' }]))
     await act(async () => {})
     expect(editor.applied).toEqual([])
-    expect(result.current.conflict).toBeNull()
+    expect(mergeRequested()).toBe(false)
   })
 
   it('reloads a clean buffer on a real external change', async () => {
@@ -605,11 +628,25 @@ describe('useNoteDocument', () => {
     disk = '# Changed outside\n'
     act(() => emitChange?.([{ path: 'notes/a.md', kind: 'upsert' }]))
     await waitFor(() => expect(editor.applied).toEqual(['# Changed outside\n']))
-    expect(result.current.conflict).toBeNull()
+    expect(mergeRequested()).toBe(false)
     expect(result.current.dirty).toBe(false)
   })
 
-  it('parks an external change as a conflict when the buffer is dirty', async () => {
+  it('merges an external change into a dirty buffer, keeping both sides', async () => {
+    const { result } = await readyHook()
+    const editor = fakeEditor()
+    act(() => result.current.bindEditor(editor))
+
+    act(() => result.current.onEditorChange('# Hello\nmine\n'))
+    disk = '# Hello\ntheirs\n'
+    act(() => emitChange?.([{ path: 'notes/a.md', kind: 'upsert' }]))
+
+    await waitFor(() => expect(writes).toEqual(['# Hello\ntheirs\nmine\n']))
+    expect(editor.applied).toEqual(['# Hello\ntheirs\nmine\n'])
+    expect(result.current.dirty).toBe(false)
+  })
+
+  it('overlapping edits become conflict markers and the note opens protected', async () => {
     const { result } = await readyHook()
     const editor = fakeEditor()
     act(() => result.current.bindEditor(editor))
@@ -617,14 +654,12 @@ describe('useNoteDocument', () => {
     act(() => result.current.onEditorChange('# My unsaved edit\n'))
     disk = '# Theirs\n'
     act(() => emitChange?.([{ path: 'notes/a.md', kind: 'upsert' }]))
-    await waitFor(() => expect(result.current.conflict).toBe('# Theirs\n'))
-    expect(editor.applied).toEqual([]) // never clobbered
 
-    // Load theirs: applies the external content and clears the conflict.
-    act(() => result.current.loadTheirs())
-    expect(editor.applied).toEqual(['# Theirs\n'])
-    expect(result.current.conflict).toBeNull()
-    expect(result.current.dirty).toBe(false)
+    await waitFor(() => expect(result.current.protected).toBe(true))
+    expect(disk).toContain('<<<<<<< this device\n# My unsaved edit\n')
+    expect(disk).toContain('# Theirs\n>>>>>>> other device')
+    expect(result.current.initialContent).toBe(disk)
+    expect(editor.applied).toEqual([]) // markers never enter the live editor
   })
 
   it('opens a note the editor would corrupt in protected mode and never saves it', async () => {
@@ -690,35 +725,52 @@ describe('useNoteDocument', () => {
     }
   })
 
-  it('pauses saves while a conflict is parked (no clobbering theirs)', async () => {
+  it('holds saves until the external change is merged (no clobbering theirs)', async () => {
     vi.useFakeTimers()
     try {
+      let releaseMerge: (() => void) | null = null
+      mockInvoke.mockImplementation(async (command, args) => {
+        if (command === 'note_read') {
+          return disk
+        }
+        if (command === 'note_write') {
+          disk = (args as { contents: string }).contents
+          writes.push(disk)
+          return null
+        }
+        if (command === 'note_merge_unsaved') {
+          await new Promise<void>((resolve) => {
+            releaseMerge = resolve
+          })
+          return fakeMergeReply(args)
+        }
+        return null
+      })
       const hook = renderHook(() => useNoteDocument('notes/a.md', 1))
       await act(() => vi.advanceTimersByTimeAsync(0))
 
-      // An edit schedules a save, then an external change parks a conflict
-      // before the debounce fires.
-      act(() => hook.result.current.onEditorChange('# Mine\n'))
-      disk = '# Theirs\n'
+      // An edit schedules a save, then an external change lands before the
+      // debounce fires.
+      act(() => hook.result.current.onEditorChange('# Hello\nmine\n'))
+      disk = '# Hello\ntheirs\n'
       act(() => emitChange?.([{ path: 'notes/a.md', kind: 'upsert' }]))
       await act(() => vi.advanceTimersByTimeAsync(0))
-      expect(hook.result.current.conflict).toBe('# Theirs\n')
 
-      // Neither the pending debounce nor an explicit flush may write now.
-      act(() => hook.result.current.onEditorChange('# Mine v2\n'))
+      // Neither the pending debounce nor later typing may write over it.
       await act(() => vi.advanceTimersByTimeAsync(5000))
       expect(writes).toEqual([])
 
-      // Resolution unblocks: keepMine rewrites with the buffer.
-      act(() => hook.result.current.keepMine())
+      act(() => {
+        releaseMerge?.()
+      })
       await act(() => vi.advanceTimersByTimeAsync(0))
-      expect(writes).toEqual(['# Mine v2\n'])
+      expect(writes).toEqual(['# Hello\ntheirs\nmine\n'])
     } finally {
       vi.useRealTimers()
     }
   })
 
-  it('treats a watcher event for an in-flight save as an echo, not a conflict', async () => {
+  it('treats a watcher event for an in-flight save as an echo, not an external change', async () => {
     vi.useFakeTimers()
     try {
       // Make note_write update the fake disk synchronously but resolve later,
@@ -749,7 +801,7 @@ describe('useNoteDocument', () => {
       act(() => hook.result.current.onEditorChange('# Saved and more\n'))
       act(() => emitChange?.([{ path: 'notes/a.md', kind: 'upsert' }]))
       await act(() => vi.advanceTimersByTimeAsync(0))
-      expect(hook.result.current.conflict).toBeNull() // echo, not a conflict
+      expect(mergeRequested()).toBe(false) // echo, not an external change
 
       act(() => {
         resolveWrite?.()
@@ -991,17 +1043,5 @@ describe('useNoteDocument', () => {
     } finally {
       vi.useRealTimers()
     }
-  })
-
-  it('keepMine rewrites the file with the buffer', async () => {
-    const { result } = await readyHook()
-    act(() => result.current.onEditorChange('# My unsaved edit\n'))
-    disk = '# Theirs\n'
-    act(() => emitChange?.([{ path: 'notes/a.md', kind: 'upsert' }]))
-    await waitFor(() => expect(result.current.conflict).toBe('# Theirs\n'))
-
-    act(() => result.current.keepMine())
-    await waitFor(() => expect(writes).toContain('# My unsaved edit\n'))
-    expect(result.current.conflict).toBeNull()
   })
 })

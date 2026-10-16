@@ -167,6 +167,7 @@ pub fn run() {
             fs::note_read,
             fs::note_create,
             fs::note_write,
+            conflict::unsaved::note_merge_unsaved,
             fs::asset_write,
             fs::asset_read,
             fs::asset_open,

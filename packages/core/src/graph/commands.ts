@@ -6,11 +6,13 @@ import {
   graphInfoSchema,
   noteCreateOutcomeSchema,
   recentGraphSchema,
+  unsavedMergeSchema,
   windowBootstrapSchema,
   type FileMeta,
   type GraphInfo,
   type NoteCreateOutcome,
   type RecentGraph,
+  type UnsavedMerge,
   type WindowBootstrap,
 } from './schemas'
 
@@ -73,6 +75,21 @@ export async function readNote(path: string, generation?: number): Promise<strin
 export async function writeNote(path: string, contents: string, generation: number): Promise<void> {
   await call('note_write', { path, contents, generation }, z.number().nullable())
   notifyOwnWrite(path)
+}
+
+/**
+ * Merge an open note's unsaved edits (`ours`) with an external change to its
+ * file (`theirs`) over `base`, the content the editor last read or wrote.
+ * Disjoint edits merge cleanly, both sides' additions are kept (theirs first),
+ * and overlapping edits come back `conflicted`, marked for the review view.
+ * Pure text — no graph access, nothing written.
+ */
+export async function mergeUnsavedEdits(
+  base: string,
+  ours: string,
+  theirs: string,
+): Promise<UnsavedMerge> {
+  return call('note_merge_unsaved', { base, ours, theirs }, unsavedMergeSchema)
 }
 
 /**
