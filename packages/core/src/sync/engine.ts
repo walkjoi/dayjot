@@ -5,6 +5,7 @@ import {
   gitMergeRemote,
   gitPush,
   type ChangedFile,
+  type MergeOutcome,
   type SkippedFile,
 } from './commands'
 
@@ -19,6 +20,9 @@ import {
  * - **No write loops, no idle network.** Pull-applied file changes re-enter
  *   `noteChanged` via the watcher, but the next cycle finds nothing committed
  *   and nothing ahead and ends without touching the network.
+ * - **Pulls never overwrite uncommitted notes.** Every merge is preceded
+ *   by a commit; a save that still slips in between makes Rust refuse the
+ *   pull, and the next cycle commits it and merges.
  * - **Single flight.** One cycle at a time; work requested mid-cycle runs as
  *   one follow-up afterwards, keeping the strongest mode requested.
  * - **Stop is immediate.** `stop()` aborts the engine's signal: no further
@@ -314,7 +318,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       // Launch/focus: pick up other devices' changes even with nothing to push.
       const delta = await step(gitFetch(token, options.generation))
       const merged = await merge(remoteChanges)
-      const localOnly = commit.committed || delta.ahead > 0
+      const localOnly = commit.committed || merged.committed || delta.ahead > 0
       if (!localOnly && (merged.kind === 'upToDate' || merged.kind === 'fastForward')) {
         return // pulled cleanly and have nothing of our own — no push needed
       }
@@ -337,15 +341,26 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     )
   }
 
-  /** Merge fetched changes and start any changed-file notification. */
-  async function merge(remoteChanges: (changes: ChangedFile[]) => void): Promise<{ kind: string }> {
-    return step(gitMergeRemote(options.generation), (outcome) => {
+  /**
+   * Commit what was saved while the preceding network call was out, then
+   * merge fetched changes and start any changed-file notification. The editor
+   * keeps saving during a fetch, and Rust refuses to pull over an uncommitted
+   * note, so this commit is what lets the pull go through. Files it withholds
+   * for size aren't reported here: they stay pending, and the next cycle's
+   * opening commit reports them.
+   */
+  async function merge(
+    remoteChanges: (changes: ChangedFile[]) => void,
+  ): Promise<{ kind: MergeOutcome['kind']; committed: boolean }> {
+    const pending = await step(gitCommitAll('Update notes', options.generation))
+    const outcome = await step(gitMergeRemote(options.generation), (result) => {
       // The command may already have rewritten files before suspension. Fan
       // those changes out before the boundary gate stops subsequent Git work.
-      if (outcome.changedFiles.length > 0) {
-        remoteChanges(outcome.changedFiles)
+      if (result.changedFiles.length > 0) {
+        remoteChanges(result.changedFiles)
       }
     }) // upToDate is a no-op
+    return { kind: outcome.kind, committed: pending.committed }
   }
 
   function syncNow(): Promise<void> {

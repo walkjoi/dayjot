@@ -132,6 +132,7 @@ describe('createSyncEngine', () => {
       'git_commit_all',
       'git_push',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -290,6 +291,7 @@ describe('createSyncEngine', () => {
       'git_push',
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -359,6 +361,7 @@ describe('createSyncEngine', () => {
     expect(commandsOf(calls)).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -414,9 +417,11 @@ describe('createSyncEngine', () => {
     expect(commandsOf(calls)).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -461,6 +466,7 @@ describe('createSyncEngine', () => {
     expect(commandsOf(calls)).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -473,6 +479,7 @@ describe('createSyncEngine', () => {
     expect(commandsOf(calls)).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -515,6 +522,7 @@ describe('createSyncEngine', () => {
     expect(commandsOf(calls)).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -552,7 +560,7 @@ describe('createSyncEngine', () => {
 
     const syncing = engine.syncNow()
     await vi.advanceTimersByTimeAsync(0)
-    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_merge_remote'])
+    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_commit_all', 'git_merge_remote'])
 
     engine.stop()
     mergeGate.resolve?.({
@@ -562,7 +570,7 @@ describe('createSyncEngine', () => {
     })
     await syncing
 
-    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_merge_remote'])
+    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_commit_all', 'git_merge_remote'])
     expect(remoteChanges).not.toHaveBeenCalled()
     expect(statuses.map((status) => status.state)).toEqual(['syncing'])
   })
@@ -595,6 +603,7 @@ describe('createSyncEngine', () => {
     expect(commandsBeforeStop).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -629,7 +638,7 @@ describe('createSyncEngine', () => {
 
     await engine.syncNow()
 
-    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_merge_remote'])
+    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_commit_all', 'git_merge_remote'])
     expect(statuses.map((status) => status.state)).toEqual(['syncing'])
   })
 
@@ -644,6 +653,7 @@ describe('createSyncEngine', () => {
     expect(commandsOf(calls)).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -673,6 +683,25 @@ describe('createSyncEngine', () => {
     await vi.runAllTimersAsync()
 
     expect(skipped).toEqual([[{ path: 'assets/movie.mp4', size: 200_000_000 }]])
+    engine.stop()
+  })
+
+  it('reports withheld files once per cycle, not again from the pre-merge commit', async () => {
+    fakeGit((command) =>
+      command === 'git_commit_all'
+        ? { ...CLEAN_COMMIT, skippedLargeFiles: [{ path: 'assets/movie.mp4', size: 200_000_000 }] }
+        : defaultResponses(command),
+    )
+    const skipped: Array<{ path: string }[]> = []
+    const engine = createSyncEngine({
+      generation: 1,
+      getToken: async () => 'tok',
+      onLargeFilesSkipped: (files) => skipped.push(files),
+    })
+
+    await engine.syncNow()
+
+    expect(skipped).toHaveLength(1)
     engine.stop()
   })
 
@@ -744,7 +773,40 @@ describe('createSyncEngine', () => {
 
     await engine.syncNow()
 
-    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_merge_remote'])
+    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_commit_all', 'git_merge_remote'])
+    engine.stop()
+  })
+
+  it('commits a save that landed during the fetch before merging, and pushes it', async () => {
+    // Launch/focus on an in-step device: nothing to commit up front, but the
+    // editor saves while the fetch is out. That save must be committed before
+    // the merge touches the working tree — and pushed, even though the pull
+    // itself brought nothing.
+    let commits = 0
+    const calls = fakeGit((command) => {
+      if (command === 'git_commit_all') {
+        commits += 1
+        return commits === 1 ? CLEAN_COMMIT : COMMITTED
+      }
+      if (command === 'git_fetch') {
+        return { ahead: 0, behind: 0 }
+      }
+      if (command === 'git_merge_remote') {
+        return { kind: 'upToDate', conflictedPaths: [], changedFiles: [] }
+      }
+      return defaultResponses(command)
+    })
+    const engine = createSyncEngine({ generation: 1, getToken: async () => 'tok' })
+
+    await engine.syncNow()
+
+    expect(commandsOf(calls)).toEqual([
+      'git_commit_all',
+      'git_fetch',
+      'git_commit_all',
+      'git_merge_remote',
+      'git_push',
+    ])
     engine.stop()
   })
 
@@ -763,6 +825,7 @@ describe('createSyncEngine', () => {
     expect(commandsOf(calls)).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])
@@ -860,7 +923,7 @@ describe('createSyncEngine', () => {
     const third = engine.syncNow()
     await vi.runAllTimersAsync()
     // Only the first cycle has started; the others coalesced, not interleaved.
-    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_merge_remote', 'git_push'])
+    expect(commandsOf(calls)).toEqual(['git_commit_all', 'git_fetch', 'git_commit_all', 'git_merge_remote', 'git_push'])
 
     pushGates.shift()?.(PUSHED)
     await vi.runAllTimersAsync()
@@ -872,10 +935,12 @@ describe('createSyncEngine', () => {
     expect(commandsOf(calls)).toEqual([
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
       'git_commit_all',
       'git_fetch',
+      'git_commit_all',
       'git_merge_remote',
       'git_push',
     ])

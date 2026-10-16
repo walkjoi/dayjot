@@ -572,6 +572,184 @@ fn conflicting_edits_are_committed_with_labeled_markers() {
     assert_eq!(read(&root_b, "notes/shared.md"), content);
 }
 
+/// Device A plus a clone B, both at one pushed commit holding today's note —
+/// so A's next pull of anything B pushes is a fast-forward.
+fn synced_devices(fixture: &Fixture) -> PathBuf {
+    write(
+        &fixture.graph_a,
+        "daily/2026-10-16.md",
+        "# Today\n\nmorning on a\n",
+    );
+    commit_all(&fixture.graph_a, "base", MAX_FILE_BYTES).unwrap();
+    assert!(push(&fixture.graph_a, None).unwrap().pushed);
+    second_device(fixture)
+}
+
+/// The engine's launch/focus cycle up to the merge, on a device with nothing
+/// of its own to commit: the commit is a no-op, then the fetch goes out.
+fn clean_commit_then_fetch(root: &Path) {
+    assert!(
+        !commit_all(root, "Update notes", MAX_FILE_BYTES)
+            .unwrap()
+            .committed
+    );
+    fetch(root, None).unwrap();
+}
+
+/// A pull refused because a note was saved after the cycle's commit.
+fn assert_blocked_by_local_edit(result: crate::error::AppResult<super::merge::MergeOutcome>) {
+    match result {
+        Err(crate::error::AppError::Io { message }) => {
+            assert!(message.contains("next sync"), "{message}");
+        }
+        other => panic!("expected the pull to be refused, got {other:?}"),
+    }
+}
+
+#[test]
+fn fast_forward_keeps_a_note_saved_after_the_cycle_commit() {
+    let fixture = fixture();
+    let root_a = &fixture.graph_a;
+    let root_b = synced_devices(&fixture);
+    write(&root_b, "notes/groceries.md", "# Groceries\n\nmilk\n");
+    commit_all(&root_b, "b", MAX_FILE_BYTES).unwrap();
+    assert!(push(&root_b, None).unwrap().pushed);
+
+    clean_commit_then_fetch(root_a);
+    // The editor's debounced save lands while the fetch is on the wire.
+    let edited = "# Today\n\nmorning on a\ntyped during the fetch\n";
+    write(root_a, "daily/2026-10-16.md", edited);
+
+    let merged = merge_remote(root_a).unwrap();
+    assert!(matches!(merged.kind, MergeKind::FastForward), "{merged:?}");
+    assert_eq!(read(root_a, "daily/2026-10-16.md"), edited);
+    assert_eq!(read(root_a, "notes/groceries.md"), "# Groceries\n\nmilk\n");
+    assert_eq!(
+        merged
+            .changed_files
+            .iter()
+            .map(|change| change.path.as_str())
+            .collect::<Vec<_>>(),
+        vec!["notes/groceries.md"],
+    );
+
+    // The surviving edit is ordinary pending work for the next commit.
+    assert!(
+        commit_all(root_a, "Update notes", MAX_FILE_BYTES)
+            .unwrap()
+            .committed
+    );
+    assert!(push(root_a, None).unwrap().pushed);
+}
+
+#[test]
+fn fast_forward_refuses_to_overwrite_a_note_the_remote_also_changed() {
+    let fixture = fixture();
+    let root_a = &fixture.graph_a;
+    let root_b = synced_devices(&fixture);
+    write(
+        &root_b,
+        "daily/2026-10-16.md",
+        "# Today\n\nmorning on a\nafternoon on b\n",
+    );
+    write(&root_b, "notes/groceries.md", "# Groceries\n\nmilk\n");
+    commit_all(&root_b, "b", MAX_FILE_BYTES).unwrap();
+    assert!(push(&root_b, None).unwrap().pushed);
+
+    clean_commit_then_fetch(root_a);
+    let edited = "# Today\n\nmorning on a\nevening on a\n";
+    write(root_a, "daily/2026-10-16.md", edited);
+
+    assert_blocked_by_local_edit(merge_remote(root_a));
+    // Refused whole, before anything was written: the edit is intact, the
+    // remote's other note hasn't landed, HEAD hasn't moved, and nothing is
+    // left mid-operation.
+    assert_eq!(read(root_a, "daily/2026-10-16.md"), edited);
+    assert!(!root_a.join("notes/groceries.md").exists());
+    assert_eq!(status(root_a).unwrap().behind, 1);
+    let repo = Repository::open(root_a).unwrap();
+    assert_eq!(repo.state(), git2::RepositoryState::Clean);
+    drop(repo);
+
+    // The next cycle commits the edit and merges it with b's for real.
+    assert!(
+        commit_all(root_a, "Update notes", MAX_FILE_BYTES)
+            .unwrap()
+            .committed
+    );
+    let merged = merge_remote(root_a).unwrap();
+    assert!(
+        matches!(
+            merged.kind,
+            MergeKind::Merged | MergeKind::MergedWithConflicts
+        ),
+        "{merged:?}"
+    );
+    let daily = read(root_a, "daily/2026-10-16.md");
+    assert!(daily.contains("evening on a"), "{daily}");
+    assert!(daily.contains("afternoon on b"), "{daily}");
+    assert_eq!(read(root_a, "notes/groceries.md"), "# Groceries\n\nmilk\n");
+    assert!(push(root_a, None).unwrap().pushed);
+}
+
+#[test]
+fn fast_forward_refuses_to_overwrite_a_note_created_after_the_cycle_commit() {
+    let fixture = fixture();
+    let root_a = &fixture.graph_a;
+    let root_b = synced_devices(&fixture);
+    write(
+        &root_b,
+        "daily/2026-10-17.md",
+        "# Tomorrow\n\nwritten on b\n",
+    );
+    commit_all(&root_b, "b", MAX_FILE_BYTES).unwrap();
+    assert!(push(&root_b, None).unwrap().pushed);
+
+    clean_commit_then_fetch(root_a);
+    // The first keystrokes create the lazy daily note mid-fetch.
+    let created = "# Tomorrow\n\nwritten on a\n";
+    write(root_a, "daily/2026-10-17.md", created);
+
+    assert_blocked_by_local_edit(merge_remote(root_a));
+    assert_eq!(read(root_a, "daily/2026-10-17.md"), created);
+
+    assert!(
+        commit_all(root_a, "Update notes", MAX_FILE_BYTES)
+            .unwrap()
+            .committed
+    );
+    merge_remote(root_a).unwrap();
+    let daily = read(root_a, "daily/2026-10-17.md");
+    assert!(daily.contains("written on a"), "{daily}");
+    assert!(daily.contains("written on b"), "{daily}");
+}
+
+#[test]
+fn merge_refuses_to_overwrite_a_note_saved_after_the_cycle_commit() {
+    let fixture = fixture();
+    let root_a = &fixture.graph_a;
+    let root_b = synced_devices(&fixture);
+    write(
+        &root_b,
+        "daily/2026-10-16.md",
+        "# Today\n\nmorning on a\nafternoon on b\n",
+    );
+    commit_all(&root_b, "b", MAX_FILE_BYTES).unwrap();
+    assert!(push(&root_b, None).unwrap().pushed);
+
+    // A has unpushed work of its own, so this pull is a true merge.
+    write(root_a, "notes/other.md", "# Other\n");
+    assert!(commit_all(root_a, "a", MAX_FILE_BYTES).unwrap().committed);
+    fetch(root_a, None).unwrap();
+    let edited = "# Today\n\nmorning on a\nevening on a\n";
+    write(root_a, "daily/2026-10-16.md", edited);
+
+    assert_blocked_by_local_edit(merge_remote(root_a));
+    assert_eq!(read(root_a, "daily/2026-10-16.md"), edited);
+    let repo = Repository::open(root_a).unwrap();
+    assert_eq!(repo.state(), git2::RepositoryState::Clean);
+}
+
 #[test]
 fn edit_vs_delete_keeps_the_edit() {
     let fixture = fixture();
@@ -665,12 +843,24 @@ fn merging_into_an_unborn_repo_adopts_the_remote_history() {
     commit_all(root_a, "seed", MAX_FILE_BYTES).unwrap();
     push(root_a, None).unwrap();
 
-    // A fresh graph with no commits yet (unborn HEAD) connects to an existing
+    // A graph with no commits yet (unborn HEAD) connects to an existing
     // backup; the merge must adopt the remote history, not error on the
-    // missing local branch.
+    // missing local branch. The engine commits before every merge, so HEAD
+    // is still unborn there only when nothing in the folder is committable —
+    // an empty folder (`setup` writes a `.gitignore`, which that commit would
+    // pick up).
     let root = fixture._dir.path().join("fresh");
-    scaffold_graph(&root);
-    setup(&root, Some(fixture.remote_url.clone()), None).unwrap();
+    fs::create_dir_all(&root).unwrap();
+    let mut opts = RepositoryInitOptions::new();
+    opts.initial_head("main");
+    let repo = Repository::init_opts(&root, &opts).unwrap();
+    repo.remote("origin", &fixture.remote_url).unwrap();
+    drop(repo);
+    assert!(
+        !commit_all(&root, "Update notes", MAX_FILE_BYTES)
+            .unwrap()
+            .committed
+    );
     fetch(&root, None).unwrap();
 
     let merged = merge_remote(&root).unwrap();
