@@ -33,6 +33,7 @@ use crate::fs::GraphState;
 
 use self::commit::CommitOutcome;
 use self::merge::MergeOutcome;
+pub(crate) use self::merge::{OUR_LABEL, THEIR_LABEL};
 use self::remote::{PushOutcome, RemoteDelta};
 
 /// GitHub rejects files over 100 MB, failing the whole push; stop just under.

@@ -1,4 +1,4 @@
-import type { TaskMarker } from '@dayjot/core'
+import type { TaskMarker, UnsavedMerge } from '@dayjot/core'
 import type { FrontmatterPatch } from './note-session-frontmatter'
 import type { RoundTripFidelity } from './roundtrip'
 
@@ -27,8 +27,6 @@ export interface NoteSessionSnapshot {
    * note exists only as this buffer until the first save lands.
    */
   missing: boolean
-  /** External content waiting on the user's choice (set only when dirty). */
-  conflict: string | null
   error: string | null
 }
 
@@ -39,7 +37,6 @@ export const INITIAL_NOTE_SNAPSHOT: NoteSessionSnapshot = {
   protected: false,
   dirty: false,
   missing: false,
-  conflict: null,
   error: null,
 }
 
@@ -52,6 +49,12 @@ export interface NoteSessionIo {
    * writes.
    */
   write: ((path: string, contents: string) => Promise<void>) | null
+  /**
+   * Three-way merge of the unsaved buffer (`ours`) with an external change
+   * (`theirs`) over `base`, the content last read or written — the host binds
+   * `mergeUnsavedEdits` from `@dayjot/core`.
+   */
+  merge: (base: string, ours: string, theirs: string) => Promise<UnsavedMerge>
 }
 
 /** Why {@link NoteSessionOptions.onContent} fired. */
@@ -68,12 +71,13 @@ export interface NoteSessionOptions {
   /**
    * Receives the full document (frontmatter + body) whenever it transitions
    * to a known-on-disk state: the initial load, an adopted external change
-   * (including "load theirs"), or a landed save. `saved` is the only
+   * (including the other side of a merge with unsaved edits), or a landed
+   * save. `saved` is the only
    * user-driven origin — the title-rename tracker (Plan 07b) keys off it.
    */
   onContent?: ((content: string, origin: NoteContentOrigin) => void) | undefined
   /**
-   * Push content into the live editor (external reload / "load theirs"). The
+   * Push content into the live editor (external reload / merged edits). The
    * editor's change handler may fire synchronously during this call; the
    * session recognizes the re-entry and won't treat it as a user edit.
    */
@@ -111,8 +115,8 @@ export interface NoteSession {
   readonly path: string
   /**
    * Rebind the session to a renamed path (Plan 17). The *file* moved; the
-   * document didn't — buffer, header, dirtiness, and conflict state are all
-   * untouched, and every subsequent read/write uses `to`. Call after flushing,
+   * document didn't — buffer, header, dirtiness, and any merge in progress
+   * are all untouched, and every subsequent read/write uses `to`. Call after flushing,
    * right before the file move lands, so a racing save can never resurrect
    * the old path.
    */
@@ -129,10 +133,6 @@ export interface NoteSession {
    * can't die before the bytes land.
    */
   flush: () => Promise<void>
-  /** Resolve a conflict by keeping the buffer (rewrites the file). */
-  keepMine: () => void
-  /** Resolve a conflict by loading the external content (discards the buffer). */
-  loadTheirs: () => void
   /** The full current document (frontmatter + buffer), as a save would write it. */
   content: () => string
   /**
@@ -151,6 +151,12 @@ export interface NoteSession {
    */
   isDirty: () => boolean
   /**
+   * Whether an external change that raced unsaved edits is still being merged
+   * into the buffer. Saves wait for that merge (they would overwrite the
+   * change), and so do title renames (the title may be about to change).
+   */
+  hasUnmergedChange: () => boolean
+  /**
    * Patch frontmatter keys (e.g. `aliases`, Plan 07b) without touching the
    * editor: the header is updated in place and saved through the normal
    * pipeline. Returns false (and does nothing) when the session can't take
@@ -161,14 +167,10 @@ export interface NoteSession {
    */
   updateFrontmatter: (patch: FrontmatterPatch) => boolean
   /**
-   * {@link NoteSession.updateFrontmatter}, but the patch **lands on disk now**
-   * regardless of session state. Normally that's a flush; under a parked
-   * conflict — where saves are paused and a flush is a deliberate no-op — the
-   * contested content is patched and written through too, so the index sees
-   * the change immediately and *both* resolutions keep it ("keep mine" writes
-   * the patched header, "load theirs" adopts the patched park). Same gating
-   * and false-return as `updateFrontmatter`. For patches that should ride the
-   * resolution instead (the rename alias), use `updateFrontmatter`.
+   * {@link NoteSession.updateFrontmatter}, but the patch **lands on disk now**:
+   * a flush, which first merges any external change still pending, so the
+   * patch rides the merged content. Same gating and false-return as
+   * `updateFrontmatter`.
    */
   commitFrontmatter: (patch: FrontmatterPatch) => Promise<boolean>
   /**
@@ -176,7 +178,8 @@ export interface NoteSession {
    * the live buffer so unsaved edits survive, then flushed now. The caller routes
    * here whenever the note is open — the buffer is read synchronously, so there
    * is no read/write race with the editor. Returns false when the session can't
-   * take it (loading, protected, disposed, or a parked conflict) so the caller
+   * take it (loading, protected, disposed, or an external change still being
+   * merged) so the caller
    * refuses rather than clobber the buffer, and propagates `TaskStaleError` when
    * the marker can't be located, like the disk path. An open note's toggle rides
    * the editor, so a normalizing-fidelity note normalizes like any edit (an

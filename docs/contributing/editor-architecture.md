@@ -52,9 +52,13 @@ in-flight write) is our own echo and is ignored.
 
 Invariants the loop maintains:
 
-- **External changes never clobber a dirty buffer.** A clean buffer reloads
-  imperatively; a dirty one parks the external content as a `conflict` for the
-  user ("keep mine" rewrites the file, "load theirs" discards the buffer).
+- **External changes never clobber a dirty buffer, and are never dropped.** A
+  clean buffer reloads imperatively. A dirty one is three-way merged with the
+  external content over what the session last read or wrote
+  (`note_merge_unsaved`): disjoint edits and two-sided appends (the daily-note
+  case) land in the editor and are saved; overlapping edits are written as
+  conflict markers, which opens the note in the review view. Until the merge
+  lands, no save writes the buffer — it would overwrite the external change.
 - **Writes are generation-pinned.** Every write carries the open graph's
   generation, read at write time rather than captured at session creation.
   Rust rejects stale ones, so a flush racing a graph switch fails loudly

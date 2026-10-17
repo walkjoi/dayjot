@@ -12,9 +12,8 @@ function fakeSession(path: string, log: string[]): NoteSession {
     flush: async () => {
       log.push(`flush:${path}`)
     },
-    keepMine: () => {},
     isDirty: () => false,
-    loadTheirs: () => {},
+    hasUnmergedChange: () => false,
     commitFrontmatter: async () => true,
     content: () => '',
     liveContent: () => '',
