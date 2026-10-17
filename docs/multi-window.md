@@ -111,7 +111,7 @@ asymmetry is what each broadcast below exists to bridge.
 | `index:written` | index write commands after a **committed** write (`db/mod.rs`) | note windows only | Refetch index-backed queries (backlinks, lists). The main window invalidates in-process via its indexer and must not subscribe — it would refetch twice. |
 | `note:moved` | `note_move_indexed` / `index_move` after rows commit | **every** window (`desktop-root.tsx`) | Retarget open sessions + router history after a rename. Renames can originate in any window (a title edit), and a window left behind would resurrect the dead path on its next save. The origin window's in-process handling makes the echo idempotent. |
 | `window:navigate` | `open_note_window` on a preferred-destination hit (targeted `emit_to`) | that note window | Reopening a target focuses its window *and* re-navigates it there — it may have browsed elsewhere since opening. The invoking window is excluded, so modifier-open never redirects its source. |
-| `app:quit-requested` | the run loop on a deferred ⌘Q (`lib.rs`) | every window | Each window flushes its own dirty buffers, then confirms. |
+| `app:quit-requested` | the deferred-quit hook (`quit.rs`) | every window | Each window flushes its own dirty buffers, then confirms. |
 
 The write path that ties it together: a note window saves via the ordinary
 generation-pinned `note_write` → the watcher reports the file → the main
@@ -158,15 +158,18 @@ silently dropped the note window's initial link.
   webview implies its flush landed (close-requested defers destruction until
   the handler resolves). Bump-first ordering would reject their final saves
   as stale. The wait is bounded — a wedged child can't block the switch.
-- **App quit (⌘Q):** the run loop defers the exit, arms `QuitState` with the
-  **labels** of every live webview, and emits `app:quit-requested`. Every
-  window flushes and calls `quit_confirm`; settling the *last owed label*
-  exits. Labels, not a counter: a window that confirms and is then
-  destroyed — or re-confirms after a second ⌘Q — must count once, never
-  spending another window's obligation while it is still mid-flush. A window
-  destroyed mid-handshake settles its own label so survivors can't hang, and
-  `open_note_window` refuses while armed so no webview is born outside the
-  pending set.
+- **App quit (⌘Q, Dock → Quit, logout):** every macOS quit goes through
+  `-[NSApplication terminate:]`, which closes no windows, so no
+  close-requested flush runs. `quit.rs` adds `applicationShouldTerminate:` to
+  tao's app delegate (tao doesn't implement it): it returns `NSTerminateLater`,
+  arms `QuitState` with the **labels** of every live webview, and emits
+  `app:quit-requested`. Every window flushes and calls `quit_confirm`;
+  settling the *last owed label* replies to AppKit and the quit proceeds.
+  Labels, not a counter: a window that confirms and is then destroyed, or
+  confirms again after a second ⌘Q, must count once. A window destroyed
+  mid-handshake settles its own label, `open_note_window` refuses while
+  armed, and after 5 seconds the quit proceeds anyway so a wedged webview
+  can't block it.
 
 ## SQLite & contention
 

@@ -123,6 +123,20 @@ describe('installQuitFlush', () => {
     dispose()
   })
 
+  it('confirms an app quit only after the flushes, even when one rejects', async () => {
+    flushOpenDocuments.mockRejectedValueOnce(new Error('note flush failed'))
+    const dispose = installQuitFlush()
+    await vi.waitFor(() => expect(core.quitRequested).not.toBeNull())
+
+    core.quitRequested?.()
+    await vi.waitFor(() => expect(core.confirmQuit).toHaveBeenCalledOnce())
+    const backupOrder = flushBackup.mock.invocationCallOrder[0]
+    const confirmOrder = core.confirmQuit.mock.invocationCallOrder[0]
+    expect(backupOrder).toBeLessThan(confirmOrder ?? 0)
+
+    dispose()
+  })
+
   it('allows the main window to close normally outside macOS', async () => {
     platform.isMacosDesktop = false
     const dispose = installQuitFlush()

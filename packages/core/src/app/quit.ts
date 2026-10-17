@@ -3,14 +3,13 @@ import { getBridge, type Unlisten } from '../ipc/bridge'
 import { call } from '../ipc/invoke'
 
 /**
- * The quit-time flush handshake. macOS ⌘Q requests app exit without closing
- * the window first, so the window's close-requested flush never runs; the Rust
- * shell defers that exit once and emits {@link QUIT_REQUESTED_EVENT}, the
- * frontend flushes dirty note buffers, then confirms — and the confirm exits
- * for real.
+ * The quit-time flush handshake. A macOS quit closes no windows, so their
+ * close-requested flush never runs: the shell defers termination and emits
+ * {@link QUIT_REQUESTED_EVENT}, each window flushes and confirms, and the last
+ * confirmation lets the quit proceed.
  */
 
-/** Event name the Rust shell emits when it deferred an exit for flushing. */
+/** Emitted by the shell when it deferred a quit for flushing. */
 export const QUIT_REQUESTED_EVENT = 'app:quit-requested'
 
 /** Subscribe to the shell's deferred-quit notification. */
@@ -21,20 +20,17 @@ export function subscribeQuitRequested(handler: () => void): Promise<Unlisten> {
 }
 
 /**
- * Confirm a deferred quit after flushing. The app exits inside this call, so
- * the returned promise may never settle — fire and forget.
+ * Confirm a deferred quit after flushing. The last confirmation quits the app,
+ * so the returned promise may never settle.
  */
 export function confirmQuit(): Promise<void> {
   return call('quit_confirm', {}, z.null()).then(() => undefined)
 }
 
 /**
- * Hide the current window as its ⌘W "close" behavior. On macOS the shell
- * first leaves the window's fullscreen Space, waiting on AppKit's
- * did-exit-full-screen notification — hiding a window that still owns a
- * Space strands it as a black screen. The webview cannot sequence that exit
- * itself: tao clears the state `isFullscreen()` reads synchronously inside
- * `setFullscreen(false)`, before the transition even starts.
+ * Hide the current window as its ⌘W "close" behavior. The shell first leaves
+ * fullscreen and waits for AppKit to finish: hiding a window that still owns
+ * its Space leaves a black screen, and only the shell can see the exit end.
  */
 export function hideWindowForClose(): Promise<void> {
   return call('window_hide_for_close', {}, z.null()).then(() => undefined)

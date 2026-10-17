@@ -32,7 +32,7 @@ mod windows;
 
 mod watcher;
 
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 
 /// Returns the application version from Tauri's resolved package metadata.
 ///
@@ -239,6 +239,7 @@ pub fn run() {
             // geometry is settled, regardless of any stale persisted
             // visibility from an older build.
             tauri::RunEvent::Ready => {
+                quit::install(app);
                 windows::surface_main_window(app);
             }
             // Clicking the Dock icon is macOS's recovery path when an app has
@@ -255,40 +256,15 @@ pub fn run() {
                     windows::reopen_main_window(app);
                 }
             }
-            tauri::RunEvent::ExitRequested { code, api, .. } => {
-                // A user/OS-initiated quit (⌘Q — no exit code) with live
-                // webviews defers so the frontend can flush dirty note
-                // buffers (`app:quit-requested` → `quit_confirm`). The
-                // handshake is armed with the webview count: every window
-                // flushes its own buffers, and only the last confirmation
-                // exits (quit.rs). An exit carrying a code is that final
-                // confirm itself; with no webview left the window-close path
-                // has already flushed.
-                let quit = app.state::<quit::QuitState>();
-                let windows: Vec<String> = app.webview_windows().keys().cloned().collect();
-                if code.is_none() && !windows.is_empty() {
-                    api.prevent_exit();
-                    quit.arm(windows);
-                    let _ = app.emit("app:quit-requested", ());
-                }
-            }
             tauri::RunEvent::WindowEvent {
                 label,
                 event: tauri::WindowEvent::Destroyed,
                 ..
             } => {
-                // A window destroyed mid-handshake (user closed it while the
-                // quit flush ran) can no longer confirm — settle its label or
-                // the surviving windows' quit would hang forever.
-                let quit = app.state::<quit::QuitState>();
-                if quit.settle(label) {
-                    app.exit(0);
-                }
-                // Note windows adopt the main window's graph session and
-                // degrade silently without it (no indexing, sync, or rename
-                // propagation) — they close with their owner. `close()`, not
-                // `destroy()`: each child's close-requested flush still runs,
-                // exactly like ⌘W (docs/multi-window.md).
+                quit::window_destroyed(app, label);
+                // Note windows depend on the main window's graph session, so
+                // they close with it. `close()`, not `destroy()`, so each
+                // one's close-requested flush still runs (docs/multi-window.md).
                 if label == windows::MAIN_WINDOW_LABEL {
                     for (child_label, child) in app.webview_windows() {
                         if child_label.starts_with(windows::NOTE_WINDOW_PREFIX) {
