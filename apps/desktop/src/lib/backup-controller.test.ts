@@ -413,22 +413,22 @@ describe('createBackupController', () => {
     const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
     await controller.start()
     await vi.waitFor(() => {
-      expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(1)
+      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(1)
     })
 
     window.dispatchEvent(new Event('focus'))
     await vi.waitFor(() => {
-      expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(2)
+      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(2)
     })
     window.dispatchEvent(new Event('online'))
     await vi.waitFor(() => {
-      expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(3)
+      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(3)
     })
 
     controller.dispose()
     window.dispatchEvent(new Event('focus'))
     await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(3)
+    expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(3)
   })
 
   it('a resume firing both visibility and focus runs one deduped cycle', async () => {
@@ -439,17 +439,17 @@ describe('createBackupController', () => {
     const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
     await controller.start()
     await vi.waitFor(() => {
-      expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(1)
+      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(1)
     })
 
     document.dispatchEvent(new Event('visibilitychange'))
     window.dispatchEvent(new Event('focus'))
     await vi.waitFor(() => {
-      expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(2)
+      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(2)
     })
     // Let any wrongly-queued follow-up cycle surface before asserting.
     await new Promise((resolve) => setTimeout(resolve, 20))
-    expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(2)
+    expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(2)
     controller.dispose()
   })
 
@@ -461,33 +461,35 @@ describe('createBackupController', () => {
     const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
     await controller.start()
     await vi.waitFor(() => {
-      expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(1)
+      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(1)
     })
 
     document.dispatchEvent(new Event('visibilitychange'))
     await new Promise((resolve) => setTimeout(resolve, 20))
-    expect(calls.filter((command) => command === 'git_commit_all')).toHaveLength(1)
+    expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(1)
 
     visibility.mockRestore()
     controller.dispose()
   })
 
   it('an edit backs up after 30s idle', async () => {
-    const commitCount = (calls: string[]): number =>
-      calls.filter((command) => command === 'git_commit_all').length
+    const countOf = (calls: string[], name: string): number =>
+      calls.filter((command) => command === name).length
     const { calls } = fakeBridge()
     const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
     try {
       await controller.start()
       await vi.waitFor(() => {
-        expect(commitCount(calls)).toBe(1) // the launch pull's commit
+        expect(countOf(calls, 'git_merge_remote')).toBe(1) // the launch pull
       })
+      const launchCommits = countOf(calls, 'git_commit_all')
       vi.useFakeTimers()
       emitFileChanges([{ path: 'notes/edited.md', kind: 'upsert', modifiedMs: 1 }])
       await vi.advanceTimersByTimeAsync(10_000)
-      expect(commitCount(calls)).toBe(1) // still inside the 30s idle window
+      // still inside the 30s idle window
+      expect(countOf(calls, 'git_commit_all')).toBe(launchCommits)
       await vi.advanceTimersByTimeAsync(20_000)
-      expect(commitCount(calls)).toBe(2)
+      expect(countOf(calls, 'git_commit_all')).toBe(launchCommits + 1)
     } finally {
       vi.useRealTimers()
       controller.dispose()

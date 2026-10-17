@@ -26,7 +26,7 @@ use git2::build::CheckoutBuilder;
 use git2::{Index, IndexEntry, MergeOptions, Repository};
 use serde::Serialize;
 
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 
 use super::repo::{current_branch, ensure_clean_state, open_existing, signature};
 
@@ -94,8 +94,10 @@ fn side_of(entry: Option<IndexEntry>) -> Option<ConflictSide> {
     })
 }
 
-/// Merge the fetched `origin/<branch>` into the local branch. Pre-condition
-/// (the sync engine guarantees it): local changes are already committed.
+/// Merge the fetched `origin/<branch>` into the local branch. The sync engine
+/// commits right before calling, but a note can still be saved in between —
+/// so neither path ever overwrites uncommitted work: both refuse instead, and
+/// the repository is left exactly as it was.
 pub(super) fn merge_remote(root: &Path) -> AppResult<MergeOutcome> {
     let repo = open_existing(root)?;
     ensure_clean_state(&repo)?;
@@ -127,12 +129,17 @@ pub(super) fn merge_remote(root: &Path) -> AppResult<MergeOutcome> {
         let old_tree = repo.head().ok().and_then(|head| head.peel_to_tree().ok());
         let new_tree = repo.find_commit(remote_oid)?.tree()?;
         let mut changed_files = changed_between(&repo, old_tree.as_ref(), &new_tree)?;
+        // Safe, and while HEAD still names the old commit (the checkout's
+        // baseline): the editor keeps saving after the engine's commit, so the
+        // working tree can hold uncommitted notes here. A note the remote
+        // didn't touch keeps its edit; one it did touch (or a new note at a
+        // path the remote also created) refuses the whole checkout before any
+        // file is written, and the next cycle commits it and merges for real.
+        repo.checkout_tree(new_tree.as_object(), Some(CheckoutBuilder::new().safe()))
+            .map_err(local_edit_blocks_pull)?;
         let refname = format!("refs/heads/{branch}");
         repo.reference(&refname, remote_oid, true, "dayjot sync: fast-forward")?;
         repo.set_head(&refname)?;
-        // Force is safe here: the pre-merge invariant is a committed working
-        // tree, so there is nothing uncommitted to clobber.
-        repo.checkout_head(Some(CheckoutBuilder::new().force()))?;
         // Stamp mtimes only now — the checkout above is what wrote the files.
         stamp_modified_times(root, &mut changed_files);
         return Ok(MergeOutcome {
@@ -149,7 +156,8 @@ pub(super) fn merge_remote(root: &Path) -> AppResult<MergeOutcome> {
         .conflict_style_merge(true)
         .our_label(OUR_LABEL)
         .their_label(THEIR_LABEL);
-    repo.merge(&[&annotated], Some(&mut merge_opts), Some(&mut checkout))?;
+    repo.merge(&[&annotated], Some(&mut merge_opts), Some(&mut checkout))
+        .map_err(local_edit_blocks_pull)?;
 
     // From here the repo carries MERGE_* state; a failure that leaves it
     // behind would trip `ensure_clean_state` on every later cycle and wedge
@@ -171,6 +179,17 @@ pub(super) fn merge_remote(root: &Path) -> AppResult<MergeOutcome> {
         conflicted_paths,
         changed_files,
     })
+}
+
+/// Both pull paths fail with `GIT_ECONFLICT` rather than overwrite a note
+/// saved after the engine's commit. That state is transient — the next cycle
+/// commits the save and merges it — so report it in product language instead
+/// of libgit2's "1 conflict prevents checkout".
+fn local_edit_blocks_pull(err: git2::Error) -> AppError {
+    if err.code() == git2::ErrorCode::Conflict {
+        return AppError::io("a note changed while syncing — it will back up on the next sync");
+    }
+    AppError::from(err)
 }
 
 /// The post-`repo.merge` half: materialize conflicts, commit the merge with
