@@ -26,6 +26,7 @@ import { isMainWindow } from '@/lib/windows/window-role'
 import { useGraph } from '@/providers/graph-provider'
 import { useSync, type BackupState } from '@/providers/sync-provider'
 import { useRouter } from '@/routing/router'
+import { SyncNowButton } from './sync-now-button'
 
 const MENU_ITEM_CLASS = 'gap-2 px-2 py-1.5 text-[13px] text-text-secondary'
 const SETTINGS_BINDING = keybindingFor('settings.open')
@@ -59,7 +60,8 @@ function backupDot(backup: BackupState): { className: string; label: string } | 
  * dropdown menu for switching to a recent graph, recoloring this graph, or
  * the OS folder picker. The swatch pulses while the graph indexes; a small
  * dot reports backup state. The menu content matches the trigger width, so
- * it stays inset from the sidebar edges.
+ * it stays inset from the sidebar edges. Sync-now and Settings icons sit on
+ * the right.
  */
 interface GraphFooterProps {
   graph: GraphInfo
@@ -195,6 +197,7 @@ export function GraphFooter({ graph, context }: GraphFooterProps): ReactElement 
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <SyncNowButton />
       <Tooltip>
         <TooltipTrigger asChild>
           <Button

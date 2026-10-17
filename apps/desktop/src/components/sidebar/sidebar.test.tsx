@@ -9,6 +9,7 @@ import {
   type PinnedNote,
   type Settings,
 } from '@dayjot/core'
+import type { BackupState } from '@/lib/backup-controller'
 import type { CommandContext } from '@/lib/commands/types'
 import type { NoteRoute, Route } from '@/routing/route'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -78,14 +79,16 @@ vi.mock('@/providers/settings-provider', () => ({
     updateSettingsWith,
   }),
 }))
+const syncState = vi.hoisted(() => ({ backup: { phase: 'disconnected' } as BackupState }))
+const backUpNow = vi.hoisted(() => vi.fn(async () => {}))
 vi.mock('@/providers/sync-provider', () => ({
   useSync: () => ({
-    backup: { phase: 'disconnected' },
+    backup: syncState.backup,
     connectNewRepo: async () => {},
     connectExistingRepo: async () => 'connected',
     disconnectGraph: async () => {},
     signOut: async () => {},
-    backUpNow: async () => {},
+    backUpNow,
   }),
 }))
 
@@ -108,6 +111,8 @@ beforeEach(() => {
   chooseGraph.mockClear()
   openNativeContextMenu.mockClear()
   unpinNote.mockClear()
+  syncState.backup = { phase: 'disconnected' }
+  backUpNow.mockClear()
 })
 
 afterEach(cleanup) // `globals: false` disables testing-library's automatic cleanup
@@ -406,5 +411,25 @@ describe('Sidebar', () => {
     // updater a document and check the record it builds.
     const updater = updateSettingsWith.mock.lastCall?.[0]
     expect(updater?.(DEFAULT_SETTINGS)).toEqual({ graphColors: { '/notes': 'teal' } })
+  })
+
+  it('the graph footer hides sync now when the graph has no backup', () => {
+    const { view } = renderSidebar()
+
+    expect(view.queryByRole('button', { name: 'Sync now' })).toBeNull()
+  })
+
+  it('the graph footer runs a full sync from its sync now icon', async () => {
+    syncState.backup = {
+      phase: 'connected',
+      remoteUrl: 'https://github.com/joi/notes.git',
+      repo: { owner: 'joi', name: 'notes' },
+      status: { state: 'idle' },
+    }
+    const { view } = renderSidebar()
+
+    await userEvent.click(view.getByRole('button', { name: 'Sync now' }))
+
+    expect(backUpNow).toHaveBeenCalledTimes(1)
   })
 })
