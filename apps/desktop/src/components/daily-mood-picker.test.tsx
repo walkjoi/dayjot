@@ -1,4 +1,4 @@
-import { act, cleanup, render, waitFor } from '@testing-library/react'
+import { act, cleanup, render, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -10,13 +10,19 @@ const getDailyMoods = vi.hoisted(() => vi.fn<() => Promise<DailyMood[]>>())
 const rateDailyNote = vi.hoisted(() =>
   vi.fn<(path: string, rating: number | null, generation: number) => Promise<void>>(),
 )
+const getPeriodDays = vi.hoisted(() => vi.fn<() => Promise<string[]>>())
+const markPeriodDay = vi.hoisted(() =>
+  vi.fn<(path: string, isPeriodDay: boolean, generation: number) => Promise<void>>(),
+)
 const failOperation = vi.hoisted(() => vi.fn<(message: string) => void>())
 vi.mock('@/lib/note-mood', () => ({ rateDailyNote }))
+vi.mock('@/lib/note-period', () => ({ markPeriodDay }))
 vi.mock('@/lib/operations', () => ({ startOperation: () => ({ fail: failOperation }) }))
 vi.mock('@dayjot/core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@dayjot/core')>()),
   hasBridge: () => true,
   getDailyMoods,
+  getPeriodDays,
 }))
 vi.mock('@/providers/graph-provider', () => ({
   useGraph: () => ({ graph: { root: '/g', name: 'g', generation: 1 } }),
@@ -34,7 +40,7 @@ function renderPicker(date: string) {
 }
 
 function pressed(view: ReturnType<typeof render>): string[] {
-  return view
+  return within(view.getByRole('group', { name: 'Mood' }))
     .getAllByRole('button')
     .filter((button) => button.getAttribute('aria-pressed') === 'true')
     .map((button) => button.textContent ?? '')
@@ -43,6 +49,8 @@ function pressed(view: ReturnType<typeof render>): string[] {
 beforeEach(() => {
   getDailyMoods.mockReset().mockResolvedValue([])
   rateDailyNote.mockReset().mockResolvedValue(undefined)
+  getPeriodDays.mockReset().mockResolvedValue([])
+  markPeriodDay.mockReset().mockResolvedValue(undefined)
   failOperation.mockReset()
 })
 
@@ -54,7 +62,8 @@ describe('DailyMoodPicker', () => {
     const { view } = renderPicker('2026-10-26')
 
     expect(view.getByText('How was today?')).toBeTruthy()
-    expect(view.getAllByRole('button').map((button) => button.textContent)).toEqual([
+    const moodButtons = within(view.getByRole('group', { name: 'Mood' })).getAllByRole('button')
+    expect(moodButtons.map((button) => button.textContent)).toEqual([
       'Awful',
       'Bad',
       'Okay',
@@ -107,6 +116,31 @@ describe('DailyMoodPicker', () => {
     await waitFor(() => expect(pressed(view)).toEqual(['Awful']))
   })
 
+  it('shows the period toggle pressed on a marked day and flips it in one click', async () => {
+    getPeriodDays.mockResolvedValue(['2026-10-26'])
+    const { view } = renderPicker('2026-10-26')
+    const toggle = view.getByRole('button', { name: 'Period' })
+    await waitFor(() => expect(toggle.getAttribute('aria-pressed')).toBe('true'))
+
+    await userEvent.click(toggle)
+
+    expect(markPeriodDay).toHaveBeenCalledWith('daily/2026-10-26.md', false, 1)
+    expect(toggle.getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('marks an unmarked day, and drops the flip when the write fails', async () => {
+    const { view } = renderPicker('2026-10-20')
+    const toggle = view.getByRole('button', { name: 'Period' })
+
+    await userEvent.click(toggle)
+    expect(markPeriodDay).toHaveBeenCalledWith('daily/2026-10-20.md', true, 1)
+    expect(toggle.getAttribute('aria-pressed')).toBe('true')
+
+    markPeriodDay.mockRejectedValue(new Error('disk full'))
+    await userEvent.click(toggle)
+    await waitFor(() => expect(failOperation).toHaveBeenCalledWith('disk full'))
+  })
+
   it('asks about the day, not today, on a past note', () => {
     const { view } = renderPicker('2026-10-20')
     expect(view.getByText('How was this day?')).toBeTruthy()
@@ -115,5 +149,6 @@ describe('DailyMoodPicker', () => {
   it('shows nothing on a day still ahead', () => {
     const { view } = renderPicker('2026-10-27')
     expect(view.queryByRole('group', { name: 'Mood' })).toBeNull()
+    expect(view.queryByRole('button', { name: 'Period' })).toBeNull()
   })
 })

@@ -3,8 +3,22 @@ import { gistBodyHash, parseNote } from '../markdown'
 import { buildIndexedNote, indexedNoteSchema, PROJECTION_VERSION } from './indexed-note'
 
 describe('buildIndexedNote', () => {
-  it('carries the projection version that backfills the mood column', () => {
-    expect(PROJECTION_VERSION).toBe(19)
+  it('carries the projection version that backfills the period column', () => {
+    expect(PROJECTION_VERSION).toBe(20)
+  })
+
+  it('projects the frontmatter period flag', () => {
+    function periodOf(source: string): boolean {
+      const indexed = buildIndexedNote(parseNote({ path: 'daily/2026-10-26.md', source }), {
+        fileHash: 'h',
+        mtime: 0,
+        source,
+      })
+      return indexedNoteSchema.parse(indexed).isPeriodDay
+    }
+    expect(periodOf('---\nperiod: true\n---\n- cramps\n')).toBe(true)
+    expect(periodOf('---\nmood: 2\n---\n')).toBe(false)
+    expect(periodOf('period: true\n')).toBe(false) // body text, not frontmatter
   })
 
   it('projects weight fields and a CJK-aware word count', () => {

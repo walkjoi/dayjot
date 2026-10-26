@@ -31,6 +31,7 @@ export {
   getDailyWeights,
   getDailyWordCounts,
   getNoteCount,
+  getPeriodDays,
   type DailyMood,
   type DailyWeight,
   type DailyWordCount,

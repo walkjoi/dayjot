@@ -8,6 +8,7 @@ import { StatsScreen } from './stats-screen'
 const getDailyNoteDates = vi.hoisted(() => vi.fn())
 const getDailyWeights = vi.hoisted(() => vi.fn())
 const getDailyMoods = vi.hoisted(() => vi.fn())
+const getPeriodDays = vi.hoisted(() => vi.fn())
 const getDailyWordCounts = vi.hoisted(() => vi.fn())
 const getNoteCount = vi.hoisted(() => vi.fn())
 vi.mock('@dayjot/core', async (importOriginal) => ({
@@ -16,6 +17,7 @@ vi.mock('@dayjot/core', async (importOriginal) => ({
   getDailyNoteDates,
   getDailyWeights,
   getDailyMoods,
+  getPeriodDays,
   getDailyWordCounts,
   getNoteCount,
 }))
@@ -50,6 +52,7 @@ function renderScreen(): ReturnType<typeof render> {
 
 beforeEach(() => {
   getDailyMoods.mockResolvedValue([])
+  getPeriodDays.mockResolvedValue([])
 })
 
 afterEach(() => {
@@ -84,6 +87,22 @@ describe('StatsScreen', () => {
     expect(view.queryByTestId('weight-chart')).toBeNull()
     expect(view.queryByTestId('words-chart')).toBeNull()
     expect(view.queryByTestId('year-in-pixels')).toBeNull()
+    expect(view.queryByLabelText('Cycle')).toBeNull()
+  })
+
+  it('shows the cycle and the Year in Pixels once a period day is logged', async () => {
+    getDailyNoteDates.mockResolvedValue(['2026-08-14'])
+    getDailyWeights.mockResolvedValue([])
+    getPeriodDays.mockResolvedValue(['2026-08-12', '2026-08-13'])
+    getDailyWordCounts.mockResolvedValue([])
+    getNoteCount.mockResolvedValue(1)
+
+    const view = renderScreen()
+
+    await waitFor(() => expect(view.getByLabelText('Cycle')).toBeTruthy())
+    expect(view.getByText('Cycle day').nextSibling?.textContent).toBe('3')
+    expect(view.getByText('Last period').nextSibling?.textContent).toBe('2')
+    expect(view.getByTestId('year-in-pixels')).toBeTruthy()
   })
 
   it('shows the Year in Pixels once a day is rated', async () => {

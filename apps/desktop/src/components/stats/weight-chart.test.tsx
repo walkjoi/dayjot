@@ -36,10 +36,10 @@ function entry(date: string, kg: number): DailyWeight {
   return { date, kg, notePath: `daily/${date}.md` }
 }
 
-function renderChart(series: DailyWeight[]): ReturnType<typeof render> {
+function renderChart(series: DailyWeight[], periodDays: string[] = []): ReturnType<typeof render> {
   return render(
     <RouterProvider initialRoute={{ kind: 'stats' }}>
-      <WeightChart series={series} today={TODAY} />
+      <WeightChart series={series} today={TODAY} periodDays={periodDays} />
     </RouterProvider>,
   )
 }
@@ -57,6 +57,13 @@ describe('WeightChart', () => {
   it('renders a single-point series without crashing', () => {
     const view = renderChart([entry('2026-08-14', 72.5)])
     expect(view.getByText('Weight')).toBeTruthy()
+  })
+
+  it('names the period shading only when a period overlaps the plotted range', () => {
+    const series = [entry('2026-08-10', 73.2), entry('2026-08-12', 72.8), entry('2026-08-14', 72.5)]
+    expect(renderChart(series, ['2026-08-11', '2026-08-12']).getByText('Period')).toBeTruthy()
+    cleanup()
+    expect(renderChart(series, ['2026-03-01']).queryByText('Period')).toBeNull()
   })
 
   it('survives hovering the plot (the tooltip must never throw)', () => {

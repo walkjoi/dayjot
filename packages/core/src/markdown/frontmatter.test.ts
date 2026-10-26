@@ -50,6 +50,7 @@ describe('parseFrontmatter', () => {
       pinned: false,
       ignoredContacts: [],
       mood: null,
+      period: false,
     })
   })
 
@@ -75,6 +76,14 @@ describe('parseFrontmatter', () => {
     expect(parseFrontmatter('mood: 3.5').data.mood).toBeNull()
     expect(parseFrontmatter('mood: good').data.mood).toBeNull()
     expect(parseFrontmatter('id: x').data.mood).toBeNull()
+  })
+
+  it('reads the period flag like private (true/yes; anything else or absent → false)', () => {
+    expect(parseFrontmatter('period: true').data.period).toBe(true)
+    expect(parseFrontmatter('period: yes').data.period).toBe(true)
+    expect(parseFrontmatter('period: no').data.period).toBe(false)
+    expect(parseFrontmatter('period: banana').data.period).toBe(false)
+    expect(parseFrontmatter('id: x').data.period).toBe(false)
   })
 
   it('coerces the pinned value: booleans, truthy words, numbers as explicit order', () => {

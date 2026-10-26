@@ -80,8 +80,10 @@ import { serializeWikiSuggestionAddress } from './suggest'
  * until reprojected, so the bump backfills both.
  * 19 — `notes.mood` (the frontmatter `mood:` rating, Stats page): existing
  * notes carry a null mood until reprojected, so the bump backfills it.
+ * 20 — `notes.is_period_day` (the frontmatter `period:` flag, Stats page):
+ * existing notes read unmarked until reprojected, so the bump backfills it.
  */
-export const PROJECTION_VERSION = 19
+export const PROJECTION_VERSION = 20
 
 export const indexedLinkSchema = z.object({
   kind: z.enum(['wiki', 'md']),
@@ -170,6 +172,8 @@ export const indexedNoteSchema = z.object({
   isPinned: z.boolean(),
   /** The frontmatter mood rating, 1–5, or null when unrated (Stats page). */
   mood: z.number().int().min(1).max(5).nullable(),
+  /** The frontmatter `period:` flag — the day is a period day (Stats page). */
+  isPeriodDay: z.boolean(),
   /** Explicit pin order (`pinned: <n>`); null for bare `pinned: true`. */
   pinnedOrder: z.number().nullable(),
   /** The file carries Git conflict markers from a sync merge (Plan 12). */
@@ -281,6 +285,7 @@ export function buildIndexedNote(
     dailyDate: isDaily(parsed.path) ? dateFromDailyPath(parsed.path) : null,
     isPrivate: parsed.frontmatter.private,
     mood: parsed.frontmatter.mood,
+    isPeriodDay: parsed.frontmatter.period,
     isPinned: isPinned(parsed.frontmatter),
     pinnedOrder: pinnedOrder(parsed.frontmatter),
     hasConflict: detectConflictMarkers(meta.source),

@@ -33,6 +33,7 @@ fn note(path: &str, title: &str, links: Vec<IndexedLink>) -> IndexedNote {
         daily_date: None,
         is_private: false,
         mood: None,
+        is_period_day: false,
         is_pinned: false,
         pinned_order: None,
         has_conflict: false,
@@ -913,6 +914,36 @@ fn mood_is_stored_on_the_note_row_and_survives_a_rename() {
     let mut off_scale = daily_note("daily/2026-10-27.md", "2026-10-27");
     off_scale.mood = Some(6);
     assert!(apply_note(&conn, &off_scale).is_err());
+}
+
+#[test]
+fn period_flag_from_the_ts_payload_lands_in_its_column() {
+    let conn = migrated();
+    apply_note(
+        &conn,
+        &daily_payload(serde_json::json!({ "mood": 2, "isPeriodDay": true })),
+    )
+    .unwrap();
+    let rows = run_query(&conn, "SELECT mood, is_period_day FROM notes", &[]).unwrap();
+    assert_eq!(rows[0]["mood"], Value::from(2));
+    assert_eq!(rows[0]["is_period_day"], Value::from(1));
+}
+
+#[test]
+fn period_day_is_stored_on_the_note_row() {
+    let conn = migrated();
+    let mut day = daily_note("daily/2026-10-26.md", "2026-10-26");
+    day.is_period_day = true;
+    apply_note(&conn, &day).unwrap();
+    apply_note(&conn, &daily_note("daily/2026-10-27.md", "2026-10-27")).unwrap();
+    let rows = run_query(
+        &conn,
+        "SELECT daily_date FROM notes WHERE is_period_day = 1",
+        &[],
+    )
+    .unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["daily_date"], Value::from("2026-10-26"));
 }
 
 #[test]

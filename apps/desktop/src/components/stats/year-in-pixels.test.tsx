@@ -19,11 +19,11 @@ function RouteProbe(): ReactNode {
   return <output data-testid="route">{JSON.stringify(route)}</output>
 }
 
-function renderPixels(moods: DailyMood[], today = '2026-10-26') {
+function renderPixels(moods: DailyMood[], periodDays: string[] = [], today = '2026-10-26') {
   return render(
     <TooltipProvider>
       <RouterProvider initialRoute={{ kind: 'stats' }}>
-        <YearInPixels moods={moods} today={today} />
+        <YearInPixels moods={moods} periodDays={periodDays} today={today} />
         <RouteProbe />
       </RouterProvider>
     </TooltipProvider>,
@@ -82,6 +82,31 @@ describe('YearInPixels', () => {
     cell(view, '2026-10-25').focus()
     fireEvent.keyDown(document.activeElement!, { key: 'Enter' })
     expect(view.getByTestId('route').textContent).toBe('{"kind":"daily","date":"2026-10-25"}')
+  })
+
+  it('dots period days and names them, with a legend and count of their own', () => {
+    const view = renderPixels(
+      [{ date: '2026-10-25', rating: 3 }],
+      ['2026-10-24', '2026-10-25', '2025-12-30'],
+    )
+
+    expect(cell(view, '2026-10-25').getAttribute('aria-label')).toBe('2026-10-25: Okay, period day')
+    expect(cell(view, '2026-10-24').getAttribute('aria-label')).toBe(
+      '2026-10-24: Not rated, period day',
+    )
+    expect(cell(view, '2026-10-24').querySelector('span')).not.toBeNull()
+    expect(cell(view, '2026-10-23').querySelector('span')).toBeNull()
+    expect(view.getByText('1 day rated · 2 period days')).toBeTruthy()
+    expect(view.getByText('Period')).toBeTruthy()
+    // A marked day in an earlier year makes that year reachable.
+    expect(view.getByRole('button', { name: 'Previous year' })).toHaveProperty('disabled', false)
+  })
+
+  it('shows only the period half when no day was ever rated', () => {
+    const view = renderPixels([], ['2026-10-24'])
+    expect(view.getByText('1 period day')).toBeTruthy()
+    expect(view.queryByText('Not rated')).toBeNull()
+    expect(view.queryByText('Awful')).toBeNull()
   })
 
   it('steps back to earlier rated years and stops at the ends', async () => {

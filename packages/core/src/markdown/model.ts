@@ -14,15 +14,16 @@ export interface Span {
 }
 
 /**
- * Coerce the privacy flag. `private` is a hard block (such notes must never reach
- * any external service), so coercion is explicit and predictable rather than
- * truthiness-based: a note is private only when it carries an explicit truthy
- * boolean/number/string. Anything unrecognized (typo, object, absent) is **not**
- * private — it never silently marks an unrelated note private, and the explicit
- * `private: true` path the security model relies on is always honoured. We also
- * accept the YAML 1.1-style words (`yes`/`on`) a 1.2 loader reads as strings.
+ * Coerce a boolean flag (`private`, `period`). `private` is a hard block (such
+ * notes must never reach any external service), so coercion is explicit and
+ * predictable rather than truthiness-based: a flag is set only when the note
+ * carries an explicit truthy boolean/number/string. Anything unrecognized
+ * (typo, object, absent) is **not** set — it never silently marks an unrelated
+ * note private, and the explicit `private: true` path the security model
+ * relies on is always honoured. We also accept the YAML 1.1-style words
+ * (`yes`/`on`) a 1.2 loader reads as strings — so `period: yes` reads as set.
  */
-function coercePrivate(value: unknown): boolean {
+function coerceFlag(value: unknown): boolean {
   if (typeof value === 'boolean') return value
   if (typeof value === 'number') return value === 1
   if (typeof value === 'string') {
@@ -105,7 +106,7 @@ export const frontmatterSchema = z
     id: z.string().optional().catch(undefined),
     aliases: z.array(z.string()).catch([]).default([]),
     /** Hard privacy flag: such notes must never be sent to any external service. */
-    private: z.preprocess(coercePrivate, z.boolean()).default(false),
+    private: z.preprocess(coerceFlag, z.boolean()).default(false),
     /**
      * Pinned to the sidebar's Pinned section: `true`, or a number for an
      * explicit order. Unpinned notes omit the key. Read through
@@ -134,6 +135,12 @@ export const frontmatterSchema = z
      * (or unreadable) is unrated: there is no zero.
      */
     mood: z.preprocess(coerceMood, z.number().nullable()).default(null),
+    /**
+     * The daily note's day is a period day (`period: true`) — what the daily
+     * bar's period toggle writes and the Stats page's cycle reads. Unmarked
+     * is the absence of the flag.
+     */
+    period: z.preprocess(coerceFlag, z.boolean()).default(false),
   })
 export type Frontmatter = z.infer<typeof frontmatterSchema>
 

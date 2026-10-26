@@ -80,6 +80,7 @@ export {
   getDailyWeights,
   getDailyWordCounts,
   getNoteCount,
+  getPeriodDays,
   getPinnedNotes,
   suggestWikiTargets,
   suggestWikiLinkTargets,

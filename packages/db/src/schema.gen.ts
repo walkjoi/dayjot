@@ -64,6 +64,7 @@ export interface Notes {
   gistUrl: string | null;
   hasConflict: Generated<number>;
   id: string | null;
+  isPeriodDay: Generated<number>;
   isPinned: Generated<number>;
   isPrivate: Generated<number>;
   kind: Generated<string>;

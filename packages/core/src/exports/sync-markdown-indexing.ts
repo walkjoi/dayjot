@@ -182,6 +182,7 @@ export {
   getDailyWeights,
   getDailyWordCounts,
   getNoteCount,
+  getPeriodDays,
   groupTaskContexts,
   groupTasks,
   taskDateBucket,
@@ -257,4 +258,5 @@ export {
   moodLabel,
   type MoodRating,
 } from '../stats/mood'
+export { summarizeCycles, type CycleSummary, type Period } from '../stats/cycles'
 export { computeStreaks, type Streaks } from '../stats/streaks'

@@ -5,6 +5,7 @@ import {
   getDailyWeights,
   getDailyWordCounts,
   getNoteCount,
+  getPeriodDays,
   hasBridge,
   type DailyMood,
   type DailyWeight,
@@ -41,6 +42,11 @@ export function useDailyWeights(): DailyWeight[] {
 /** Every rated day (a daily note's `mood:` frontmatter), ascending. */
 export function useDailyMoods(): DailyMood[] {
   return useIndexQuery('daily-moods', () => getDailyMoods()) ?? []
+}
+
+/** ISO dates of every daily note flagged `period: true`, ascending. */
+export function usePeriodDays(): string[] {
+  return useIndexQuery('period-days', () => getPeriodDays()) ?? []
 }
 
 /** ISO dates of every indexed daily note, ascending — the streak substrate. */

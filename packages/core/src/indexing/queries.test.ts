@@ -12,6 +12,7 @@ import {
   getNoteCount,
   getNoteIdsByPath,
   getOpenTasks,
+  getPeriodDays,
   getPinnedNotes,
   noteTitleOwningEmail,
   resolveWikiTarget,
@@ -671,6 +672,16 @@ describe('getDailyMoods', () => {
     expect(sql).toContain('"mood" is not null')
     expect(sql).toContain('"kind" = ?')
     expect(args['params']).toContain('daily')
+  })
+})
+
+describe('getPeriodDays', () => {
+  it('returns the flagged daily dates ascending', async () => {
+    mockInvoke.mockResolvedValue([{ daily_date: '2026-10-25' }, { daily_date: '2026-10-26' }])
+    await expect(getPeriodDays()).resolves.toEqual(['2026-10-25', '2026-10-26'])
+    const [, args] = mockInvoke.mock.calls[0]!
+    expect(String(args['sql'])).toContain('"is_period_day" = ?')
+    expect(args['params']).toEqual(expect.arrayContaining(['daily', 1]))
   })
 })
 

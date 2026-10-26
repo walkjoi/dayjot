@@ -40,6 +40,11 @@ export interface FrontmatterPatch {
    * write. `null` deletes the key: unrated is the absence of a rating.
    */
   mood?: number | null
+  /**
+   * A daily note's period-day flag (`period: true`) — the daily bar's period
+   * toggle. `false` deletes the key: unmarked is the absence of the flag.
+   */
+  period?: boolean
 }
 
 /**
@@ -63,6 +68,9 @@ export function frontmatterPatchToYaml(patch: FrontmatterPatch): Record<string, 
   }
   if (patch.mood !== undefined) {
     yaml['mood'] = patch.mood === null ? undefined : patch.mood
+  }
+  if (patch.period !== undefined) {
+    yaml['period'] = patch.period ? true : undefined
   }
   if (patch.ignoredContacts !== undefined) {
     yaml['ignoredContacts'] =

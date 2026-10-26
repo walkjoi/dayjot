@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react'
-import type { DailyWeight } from '@dayjot/core'
-import { CartesianGrid, ComposedChart, Line, Scatter, XAxis, YAxis } from 'recharts'
+import { summarizeCycles, type DailyWeight } from '@dayjot/core'
+import { CartesianGrid, ComposedChart, Line, ReferenceArea, Scatter, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, type ChartConfig } from '@/components/ui/chart'
 import { cn } from '@/lib/utils'
 import { routeForPath } from '@/routing/route'
@@ -20,6 +20,8 @@ interface WeightChartProps {
   series: readonly DailyWeight[]
   /** Today's ISO date — anchors the range switcher and the 30-day delta. */
   today: string
+  /** Days flagged `period: true`; each period shades its span behind the points. */
+  periodDays?: readonly string[]
 }
 
 const RANGES = [
@@ -38,12 +40,20 @@ const chartConfig = {
   average: { label: '7-day avg', color: 'var(--accent)' },
 } satisfies ChartConfig
 
+const NO_PERIOD_DAYS: readonly string[] = []
+
 /**
  * The weight trend: faded raw daily points over a 7-day moving-average line,
  * on a true time axis (gaps keep their width). Clicking a point opens that
  * day's note — the entry is a line of markdown, so that's where edits happen.
+ * Logged periods shade their days behind the points, so swings that follow
+ * the cycle are easy to tell from the trend.
  */
-export function WeightChart({ series, today }: WeightChartProps): ReactElement {
+export function WeightChart({
+  series,
+  today,
+  periodDays = NO_PERIOD_DAYS,
+}: WeightChartProps): ReactElement {
   const { navigate } = useRouter()
   const [range, setRange] = useState<RangeKey>('90d')
 
@@ -56,6 +66,23 @@ export function WeightChart({ series, today }: WeightChartProps): ReactElement {
     const firstDay = dayNumberFromIso(rangeStartIso(today, days))
     return points.filter((point) => point.day >= firstDay)
   }, [points, range, today])
+
+  // Each period's band spans its days edge to edge (±half a day), clipped to
+  // the plotted range; only bands that overlap it are drawn or named.
+  const periodBands = useMemo(() => {
+    const first = visible[0]?.day
+    const last = visible.at(-1)?.day
+    if (first === undefined || last === undefined) {
+      return []
+    }
+    return summarizeCycles(periodDays, today)
+      .periods.map((period) => ({
+        start: period.start,
+        from: dayNumberFromIso(period.start) - 0.5,
+        to: dayNumberFromIso(period.end) + 0.5,
+      }))
+      .filter((band) => band.to >= first && band.from <= last)
+  }, [periodDays, today, visible])
 
   const latest = points.at(-1)
   const delta = useMemo(() => {
@@ -81,6 +108,12 @@ export function WeightChart({ series, today }: WeightChartProps): ReactElement {
           {delta !== null && (
             <span className="text-xs tabular-nums text-text-muted">
               {`${delta > 0 ? '+' : ''}${delta.toFixed(1)} kg vs 30d ago`}
+            </span>
+          )}
+          {periodBands.length > 0 && (
+            <span className="flex items-center gap-1.5 self-center text-xs text-text-muted">
+              <span aria-hidden className="size-2.5 rounded-[2px] bg-(--period)/30" />
+              Period
             </span>
           )}
         </div>
@@ -112,6 +145,17 @@ export function WeightChart({ series, today }: WeightChartProps): ReactElement {
         <ChartContainer config={chartConfig} className="mt-3 h-56 w-full">
           <ComposedChart data={visible} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--border)" />
+            {periodBands.map((band) => (
+              <ReferenceArea
+                key={band.start}
+                x1={band.from}
+                x2={band.to}
+                fill="var(--period)"
+                fillOpacity={0.14}
+                stroke="none"
+                ifOverflow="hidden"
+              />
+            ))}
             <XAxis
               dataKey="day"
               type="number"

@@ -30,6 +30,7 @@ import { useEditorAutocomplete } from '@/editor/use-editor-autocomplete'
 import { useNoteDocument } from '@/editor/use-note-document'
 import { useTagNavigation } from '@/editor/use-tag-navigation'
 import { useMoodSlashItems } from '@/editor/use-mood-slash-items'
+import { usePeriodSlashItems } from '@/editor/use-period-slash-items'
 import { useTemplateSlashItems } from '@/editor/use-template-slash-items'
 import { useWeightSlashItems } from '@/editor/use-weight-slash-items'
 import { useWikiLinkNavigation } from '@/editor/use-wiki-link-navigation'
@@ -170,11 +171,12 @@ export function NotePaneComponent({
   const getEditor = useCallback(() => registeredHandle.current?.handle ?? null, [])
   const templateSlashSearch = useTemplateSlashItems(getEditor)
   const weightSlashSearch = useWeightSlashItems(getEditor)
-  // `/mood` rates the day, so it is offered only on a real daily note.
+  // `/mood` and `/period` log the day, so they are offered only on a real
+  // daily note.
   const ratedDate = dateFromDailyPath(path)
-  const moodSlashSearch = useMoodSlashItems(
-    ratedDate !== null && isIsoDate(ratedDate) ? path : null,
-  )
+  const loggedDayPath = ratedDate !== null && isIsoDate(ratedDate) ? path : null
+  const moodSlashSearch = useMoodSlashItems(loggedDayPath)
+  const periodSlashSearch = usePeriodSlashItems(loggedDayPath)
 
   const onEditorChange = document.onEditorChange
   const drawings = useNoteDrawings({
@@ -202,15 +204,16 @@ export function NotePaneComponent({
   const drawingSlashSearch = useDrawingSlashItems(drawings.openNewDrawing)
   const onSlashMenuSearch: SlashMenuSearchHandler = useCallback(
     async (query) => {
-      const [drawingItems, templateItems, weightItems, moodItems] = await Promise.all([
+      const [drawingItems, templateItems, weightItems, moodItems, periodItems] = await Promise.all([
         drawingSlashSearch(query),
         templateSlashSearch(query),
         weightSlashSearch(query),
         moodSlashSearch(query),
+        periodSlashSearch(query),
       ])
-      return [...drawingItems, ...templateItems, ...weightItems, ...moodItems]
+      return [...drawingItems, ...templateItems, ...weightItems, ...moodItems, ...periodItems]
     },
-    [drawingSlashSearch, templateSlashSearch, weightSlashSearch, moodSlashSearch],
+    [drawingSlashSearch, templateSlashSearch, weightSlashSearch, moodSlashSearch, periodSlashSearch],
   )
   const handleRef = useCallback(
     (handle: NoteEditorHandle | null) => {

@@ -69,6 +69,8 @@
   --yellow-300:   #fde047;
   --green-700:    #15803d;
   --teal-500:     #14b8a6;
+  --sky-500:      #0ea5e9;   /* Stats · period days (dark)    */
+  --sky-600:      #0284c7;   /* Stats · period days (light)   */
 
   /* ============================================================
      SEMANTIC ALIASES — light (default) app theme
@@ -112,6 +114,15 @@
   --mood-4:           var(--green-700);
   --mood-5:           var(--teal-500);
   --mood-none:        var(--coolgray-200); /* an unrated day: a quiet wash */
+
+  /* Stats · a period day (the Year in Pixels dot, the weight chart's band).
+     A cool blue, because the mood scale already spends the reds and greens:
+     it stays clear of every mood (CVD ΔE ≥ 8.6, full-color ΔE ≥ 17) and of
+     the indigo weight line it shades behind, at 3:1 on --surface. Dark mode
+     takes a brighter step so the dot reads on an unrated dark day; there it
+     sits nearer the teal Great (ΔE 12.8), which the dot's shape and surface
+     ring keep apart — a period mark is never a filled square. */
+  --period:           var(--sky-600);
 
   --radius:           0.5rem;             /* 8px — the house radius      */
 
@@ -160,6 +171,7 @@
   --border-hairline:  0 1px 0 rgba(255,255,255,.05);
 
   --mood-none:        rgba(55,65,81,.5);
+  --period:           var(--sky-500);
   --shadow-app-input:
     0 1px 0 -1px rgba(0,0,0,.10),
     0 1px 1px -1px rgba(0,0,0,.10),

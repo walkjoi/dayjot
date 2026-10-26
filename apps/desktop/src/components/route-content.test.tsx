@@ -242,8 +242,14 @@ describe('RouteContent', () => {
     // The rating is frontmatter: the note's text is untouched.
     expect(files['daily/2020-03-14.md']).toBe('---\nmood: 4\n---\n- walked to work\n')
 
-    // Picking the shown rating again takes the field back out.
+    // The period toggle rides the same frontmatter, beside the rating.
+    act(() => view.getByRole('button', { name: 'Period' }).click())
+    await act(() => flushOpenDocuments())
+    expect(files['daily/2020-03-14.md']).toBe('---\nmood: 4\nperiod: true\n---\n- walked to work\n')
+
+    // Undoing both leaves the note exactly as it was — no empty `---` husk.
     act(() => view.getByRole('button', { name: 'Good' }).click())
+    act(() => view.getByRole('button', { name: 'Period' }).click())
     await act(() => flushOpenDocuments())
     expect(files['daily/2020-03-14.md']).toBe('- walked to work\n')
     view.unmount()
