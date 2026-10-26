@@ -44,7 +44,13 @@ describe('parseFrontmatter', () => {
   it('degrades broken YAML to defaults + a warning, never throwing', () => {
     const { data, warning } = parseFrontmatter('foo: [unclosed')
     expect(warning).toMatch(/invalid YAML/i)
-    expect(data).toEqual({ aliases: [], private: false, pinned: false, ignoredContacts: [] })
+    expect(data).toEqual({
+      aliases: [],
+      private: false,
+      pinned: false,
+      ignoredContacts: [],
+      mood: null,
+    })
   })
 
   it('treats non-mapping frontmatter as ignored + a warning', () => {
@@ -59,6 +65,16 @@ describe('parseFrontmatter', () => {
     expect(parseFrontmatter('private: no').data.private).toBe(false)
     expect(parseFrontmatter('private: banana').data.private).toBe(false)
     expect(parseFrontmatter('id: x').data.private).toBe(false)
+  })
+
+  it('reads a mood rating 1–5 and nothing else (absent, off-scale, words → null)', () => {
+    expect(parseFrontmatter('mood: 4').data.mood).toBe(4)
+    expect(parseFrontmatter('mood: "2"').data.mood).toBe(2)
+    expect(parseFrontmatter('mood: 0').data.mood).toBeNull()
+    expect(parseFrontmatter('mood: 6').data.mood).toBeNull()
+    expect(parseFrontmatter('mood: 3.5').data.mood).toBeNull()
+    expect(parseFrontmatter('mood: good').data.mood).toBeNull()
+    expect(parseFrontmatter('id: x').data.mood).toBeNull()
   })
 
   it('coerces the pinned value: booleans, truthy words, numbers as explicit order', () => {

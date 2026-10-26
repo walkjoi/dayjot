@@ -1,5 +1,11 @@
 import { memo, useCallback, useRef, useState, type ReactElement } from 'react'
-import { detectConflictMarkers, isDaily, isTemplatePath, untitledNoteSeed } from '@dayjot/core'
+import {
+  dateFromDailyPath,
+  detectConflictMarkers,
+  isDaily,
+  isTemplatePath,
+  untitledNoteSeed,
+} from '@dayjot/core'
 import type { SlashMenuSearchHandler } from '@meowdown/react'
 import { BacklinksPanel } from '@/components/backlinks-panel'
 import { ConflictNoteView } from '@/components/conflict-note-view'
@@ -23,10 +29,12 @@ import { resolveAssetFileLink, useAssetPersistence } from '@/editor/use-asset-pe
 import { useEditorAutocomplete } from '@/editor/use-editor-autocomplete'
 import { useNoteDocument } from '@/editor/use-note-document'
 import { useTagNavigation } from '@/editor/use-tag-navigation'
+import { useMoodSlashItems } from '@/editor/use-mood-slash-items'
 import { useTemplateSlashItems } from '@/editor/use-template-slash-items'
 import { useWeightSlashItems } from '@/editor/use-weight-slash-items'
 import { useWikiLinkNavigation } from '@/editor/use-wiki-link-navigation'
 import { useWikiLinkHoverPreview } from '@/editor/use-wiki-link-hover-preview'
+import { isIsoDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { useGraph } from '@/providers/graph-provider'
 import { useSettings } from '@/providers/settings-provider'
@@ -162,6 +170,11 @@ export function NotePaneComponent({
   const getEditor = useCallback(() => registeredHandle.current?.handle ?? null, [])
   const templateSlashSearch = useTemplateSlashItems(getEditor)
   const weightSlashSearch = useWeightSlashItems(getEditor)
+  // `/mood` rates the day, so it is offered only on a real daily note.
+  const ratedDate = dateFromDailyPath(path)
+  const moodSlashSearch = useMoodSlashItems(
+    ratedDate !== null && isIsoDate(ratedDate) ? path : null,
+  )
 
   const onEditorChange = document.onEditorChange
   const drawings = useNoteDrawings({
@@ -189,14 +202,15 @@ export function NotePaneComponent({
   const drawingSlashSearch = useDrawingSlashItems(drawings.openNewDrawing)
   const onSlashMenuSearch: SlashMenuSearchHandler = useCallback(
     async (query) => {
-      const [drawingItems, templateItems, weightItems] = await Promise.all([
+      const [drawingItems, templateItems, weightItems, moodItems] = await Promise.all([
         drawingSlashSearch(query),
         templateSlashSearch(query),
         weightSlashSearch(query),
+        moodSlashSearch(query),
       ])
-      return [...drawingItems, ...templateItems, ...weightItems]
+      return [...drawingItems, ...templateItems, ...weightItems, ...moodItems]
     },
-    [drawingSlashSearch, templateSlashSearch, weightSlashSearch],
+    [drawingSlashSearch, templateSlashSearch, weightSlashSearch, moodSlashSearch],
   )
   const handleRef = useCallback(
     (handle: NoteEditorHandle | null) => {

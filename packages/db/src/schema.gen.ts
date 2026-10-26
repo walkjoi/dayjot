@@ -67,6 +67,7 @@ export interface Notes {
   isPinned: Generated<number>;
   isPrivate: Generated<number>;
   kind: Generated<string>;
+  mood: number | null;
   mtime: Generated<number>;
   path: string;
   pinnedOrder: number | null;

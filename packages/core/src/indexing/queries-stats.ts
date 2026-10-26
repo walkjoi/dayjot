@@ -3,8 +3,8 @@ import { db } from './db'
 
 /**
  * Read getters for the Stats page: the weight series (`weight::` inline
- * fields), daily-note dates (the streak substrate), note counts, and per-day
- * word counts. All are projections — private notes included, because Stats is
+ * fields), the mood ratings (frontmatter `mood:`), daily-note dates (the
+ * streak substrate), note counts, and per-day word counts. All are projections — private notes included, because Stats is
  * a local-only surface like Tasks.
  */
 
@@ -40,6 +40,32 @@ export async function getDailyWeights(): Promise<DailyWeight[]> {
     }
   }
   return [...byDay.values()]
+}
+
+/** One rated day. */
+export interface DailyMood {
+  /** The owning daily note's ISO date. */
+  date: string
+  /** The day's rating, 1 (Awful) to 5 (Great). */
+  rating: number
+}
+
+/**
+ * Every rated day — a daily note whose frontmatter carries a `mood:` — in
+ * ascending date order. Like weights, only daily notes carry date semantics.
+ */
+export async function getDailyMoods(): Promise<DailyMood[]> {
+  const rows = await db
+    .selectFrom('notes')
+    .where('kind', '=', 'daily')
+    .where('dailyDate', 'is not', null)
+    .where('mood', 'is not', null)
+    .select(['dailyDate', 'mood'])
+    .orderBy('dailyDate')
+    .execute()
+  return rows.flatMap((row) =>
+    row.dailyDate === null || row.mood === null ? [] : [{ date: row.dailyDate, rating: row.mood }],
+  )
 }
 
 /**

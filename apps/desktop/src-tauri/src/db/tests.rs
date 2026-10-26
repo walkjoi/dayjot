@@ -32,6 +32,7 @@ fn note(path: &str, title: &str, links: Vec<IndexedLink>) -> IndexedNote {
         kind: "note".to_string(),
         daily_date: None,
         is_private: false,
+        mood: None,
         is_pinned: false,
         pinned_order: None,
         has_conflict: false,
@@ -843,6 +844,75 @@ fn apply_note_serializes_task_breadcrumbs() {
         rows[0]["breadcrumbs"],
         Value::from("[\"Project\",\"Phase one\"]")
     );
+}
+
+/// A daily note's projection as the TypeScript indexer sends it over IPC
+/// (camelCase, `buildIndexedNote` in @dayjot/core), for the payload tests.
+fn daily_payload(extra: serde_json::Value) -> IndexedNote {
+    let mut payload = serde_json::json!({
+        "path": "daily/2026-10-26.md",
+        "id": null,
+        "title": "2026-10-26",
+        "titleKey": "2026-10-26",
+        "kind": "daily",
+        "dailyDate": "2026-10-26",
+        "isPrivate": false,
+        "isPinned": false,
+        "pinnedOrder": null,
+        "hasConflict": false,
+        "gistUrl": null,
+        "gistStale": false,
+        "fileHash": "h",
+        "mtime": 0,
+        "text": "walked",
+        "preview": "walked",
+        "links": [],
+        "tags": [],
+        "aliases": [],
+        "emails": [],
+        "assets": [],
+        "tasks": [],
+    });
+    for (key, value) in extra.as_object().unwrap() {
+        payload[key] = value.clone();
+    }
+    serde_json::from_value(payload).unwrap()
+}
+
+#[test]
+fn mood_from_the_ts_payload_lands_in_its_column() {
+    // The camelCase hand-off the struct tests can't see: a field name that
+    // drifts on either side would silently default and never reach the row.
+    let conn = migrated();
+    apply_note(&conn, &daily_payload(serde_json::json!({ "mood": 4 }))).unwrap();
+    let rows = run_query(&conn, "SELECT mood FROM notes", &[]).unwrap();
+    assert_eq!(rows[0]["mood"], Value::from(4));
+}
+
+#[test]
+fn mood_is_stored_on_the_note_row_and_survives_a_rename() {
+    let conn = migrated();
+    let mut day = daily_note("daily/2026-10-26.md", "2026-10-26");
+    day.mood = Some(4);
+    apply_note(&conn, &day).unwrap();
+    let rows = run_query(&conn, "SELECT mood FROM notes", &[]).unwrap();
+    assert_eq!(rows[0]["mood"], Value::from(4));
+
+    conn.execute_batch("BEGIN; PRAGMA defer_foreign_keys = ON;")
+        .unwrap();
+    move_note(&conn, "daily/2026-10-26.md", "notes/kept.md").unwrap();
+    conn.execute_batch("COMMIT;").unwrap();
+    let moved = run_query(&conn, "SELECT path, mood FROM notes", &[]).unwrap();
+    assert_eq!(moved[0]["path"], Value::from("notes/kept.md"));
+    assert_eq!(moved[0]["mood"], Value::from(4));
+
+    // Unrated is NULL, and the CHECK keeps a buggy writer off the scale.
+    apply_note(&conn, &note("notes/kept.md", "Kept", vec![])).unwrap();
+    let cleared = run_query(&conn, "SELECT mood FROM notes", &[]).unwrap();
+    assert_eq!(cleared[0]["mood"], Value::Null);
+    let mut off_scale = daily_note("daily/2026-10-27.md", "2026-10-27");
+    off_scale.mood = Some(6);
+    assert!(apply_note(&conn, &off_scale).is_err());
 }
 
 #[test]

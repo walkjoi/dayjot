@@ -1,12 +1,13 @@
 import { cleanup, render, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement } from 'react'
 import { RouterProvider } from '@/routing/router'
 import { StatsScreen } from './stats-screen'
 
 const getDailyNoteDates = vi.hoisted(() => vi.fn())
 const getDailyWeights = vi.hoisted(() => vi.fn())
+const getDailyMoods = vi.hoisted(() => vi.fn())
 const getDailyWordCounts = vi.hoisted(() => vi.fn())
 const getNoteCount = vi.hoisted(() => vi.fn())
 vi.mock('@dayjot/core', async (importOriginal) => ({
@@ -14,6 +15,7 @@ vi.mock('@dayjot/core', async (importOriginal) => ({
   hasBridge: () => true,
   getDailyNoteDates,
   getDailyWeights,
+  getDailyMoods,
   getDailyWordCounts,
   getNoteCount,
 }))
@@ -30,6 +32,9 @@ vi.mock('./weight-chart', () => ({
 vi.mock('./words-chart', () => ({
   WordsChart: () => <section aria-label="Words per day" data-testid="words-chart" />,
 }))
+vi.mock('./year-in-pixels', () => ({
+  YearInPixels: () => <section aria-label="Year in Pixels" data-testid="year-in-pixels" />,
+}))
 
 function renderScreen(): ReturnType<typeof render> {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -42,6 +47,10 @@ function renderScreen(): ReturnType<typeof render> {
   )
   return render(view)
 }
+
+beforeEach(() => {
+  getDailyMoods.mockResolvedValue([])
+})
 
 afterEach(() => {
   cleanup()
@@ -74,6 +83,20 @@ describe('StatsScreen', () => {
     await waitFor(() => expect(view.getByText('Notes')).toBeTruthy())
     expect(view.queryByTestId('weight-chart')).toBeNull()
     expect(view.queryByTestId('words-chart')).toBeNull()
+    expect(view.queryByTestId('year-in-pixels')).toBeNull()
+  })
+
+  it('shows the Year in Pixels once a day is rated', async () => {
+    getDailyNoteDates.mockResolvedValue(['2026-08-14'])
+    getDailyWeights.mockResolvedValue([])
+    getDailyMoods.mockResolvedValue([{ date: '2026-08-14', rating: 4 }])
+    getDailyWordCounts.mockResolvedValue([])
+    getNoteCount.mockResolvedValue(1)
+
+    const view = renderScreen()
+
+    await waitFor(() => expect(view.getByTestId('year-in-pixels')).toBeTruthy())
+    expect(view.queryByTestId('weight-chart')).toBeNull()
   })
 
   it('shows the weight section once entries exist', async () => {

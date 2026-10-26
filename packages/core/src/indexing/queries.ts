@@ -26,10 +26,12 @@ export {
   type KeepsakeSubject,
 } from './queries-keepsakes'
 export {
+  getDailyMoods,
   getDailyNoteDates,
   getDailyWeights,
   getDailyWordCounts,
   getNoteCount,
+  type DailyMood,
   type DailyWeight,
   type DailyWordCount,
 } from './queries-stats'

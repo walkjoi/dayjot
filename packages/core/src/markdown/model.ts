@@ -33,6 +33,18 @@ function coercePrivate(value: unknown): boolean {
 }
 
 /**
+ * Coerce a mood rating: an integer 1–5 (or its digit as a string, for YAML
+ * written by hand as `mood: "4"`); anything else — out of range, fractional,
+ * a word — is no rating, never a misread one.
+ */
+function coerceMood(value: unknown): number | null {
+  const rating = typeof value === 'string' && /^\s*[1-5]\s*$/.test(value) ? Number(value) : value
+  return typeof rating === 'number' && Number.isInteger(rating) && rating >= 1 && rating <= 5
+    ? rating
+    : null
+}
+
+/**
  * Coerce the pin value. `pinned: true` pins; a finite number pins **with an
  * explicit sidebar order** — the encoding the pinned shelf reorder writes.
  * Truthy words follow `private`'s rules; anything unrecognized is unpinned.
@@ -115,6 +127,13 @@ export const frontmatterSchema = z
      * card reappears, nothing breaks.
      */
     ignoredContacts: z.array(z.string()).catch([]).default([]),
+    /**
+     * A daily note's mood rating, 1 (Awful) to 5 (Great) — what the daily
+     * mood bar writes and the Stats page's Year in Pixels reads. Frontmatter
+     * rather than body text, so the rating never sits in the prose. Absent
+     * (or unreadable) is unrated: there is no zero.
+     */
+    mood: z.preprocess(coerceMood, z.number().nullable()).default(null),
   })
 export type Frontmatter = z.infer<typeof frontmatterSchema>
 

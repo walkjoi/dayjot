@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import {
+  getDailyMoods,
   getDailyNoteDates,
   getDailyWeights,
   getDailyWordCounts,
   getNoteCount,
   hasBridge,
+  type DailyMood,
   type DailyWeight,
   type DailyWordCount,
 } from '@dayjot/core'
@@ -34,6 +36,11 @@ function useIndexQuery<Value>(
 /** The per-day weight series (last `weight::` entry per day), ascending. */
 export function useDailyWeights(): DailyWeight[] {
   return useIndexQuery('daily-weights', () => getDailyWeights()) ?? []
+}
+
+/** Every rated day (a daily note's `mood:` frontmatter), ascending. */
+export function useDailyMoods(): DailyMood[] {
+  return useIndexQuery('daily-moods', () => getDailyMoods()) ?? []
 }
 
 /** ISO dates of every indexed daily note, ascending — the streak substrate. */

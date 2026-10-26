@@ -10,7 +10,7 @@ import type { DateFormat, TimeFormat } from '@dayjot/core'
  */
 
 // Pure calendar math is shared with the indexing layer — one implementation.
-export { addDaysIso, isIsoDate } from '@dayjot/utils'
+export { addDaysIso, addMonthsIso, isIsoDate, isoFromParts } from '@dayjot/utils'
 
 const ISO_DATE_FORMAT = 'yyyy-MM-dd'
 

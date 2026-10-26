@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactElement } from 'react'
 import { dailyPath } from '@dayjot/core'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { DayCalendar } from '@/components/context-sidebar/day-calendar'
+import { DailyMoodPicker } from '@/components/daily-mood-picker'
 import { NotTodayBanner } from '@/components/not-today-banner'
 import { NoteBottomRunway } from '@/components/note-bottom-runway'
 import { NotePane, type ArrivalCaret } from '@/components/note-pane'
@@ -45,6 +46,9 @@ interface DailyViewProps {
  * sits above its note for as long as it's shown, and the first time the user
  * writes into it on a visit a toast names the day (see
  * {@link useNotTodayTypingAlert}). Both offer the way to today.
+ *
+ * The mood bar sits below the scrolling canvas, pinned to the foot of the
+ * panel, so rating the day never means scrolling to the end of its note.
  */
 export function DailyView({ target }: DailyViewProps): ReactElement {
   const { arrivalSeq, entryId, arrivalFocusEditor, arrivalKeepsake, navigate } = useRouter()
@@ -109,97 +113,100 @@ export function DailyView({ target }: DailyViewProps): ReactElement {
   }, [arrivalKey, date, setFocusedDailyDate])
 
   return (
-    <ScrollRestored className="h-full overflow-auto px-0">
-      <div ref={canvasRef} className="mx-auto flex min-h-full w-full max-w-full flex-col py-8">
-        <div className="dayjot-content-gutter group mb-3 flex items-center justify-between gap-2">
-          <h2 className={cn('dayjot-daily-subject', isToday && 'text-accent')}>
-            {formatDayLabel(date, settings.dateFormat)}
-          </h2>
-          <div className="flex items-center gap-1">
-            {/* Wayfinding home: only rendered off today, always full-strength
-                (unlike the quiet controls beside it) — the one-click way back
-                that ⌘D provides invisibly. */}
-            {!isToday ? (
-              <button
-                type="button"
-                onClick={() => navigate({ kind: 'today' })}
-                className="mr-1 rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-text-secondary transition-colors duration-100 hover:bg-surface-hover hover:text-text"
+    <div className="flex h-full flex-col">
+      <ScrollRestored className="min-h-0 flex-1 overflow-auto px-0">
+        <div ref={canvasRef} className="mx-auto flex min-h-full w-full max-w-full flex-col py-8">
+          <div className="dayjot-content-gutter group mb-3 flex items-center justify-between gap-2">
+            <h2 className={cn('dayjot-daily-subject', isToday && 'text-accent')}>
+              {formatDayLabel(date, settings.dateFormat)}
+            </h2>
+            <div className="flex items-center gap-1">
+              {/* Wayfinding home: only rendered off today, always full-strength
+                  (unlike the quiet controls beside it) — the one-click way back
+                  that ⌘D provides invisibly. */}
+              {!isToday ? (
+                <button
+                  type="button"
+                  onClick={() => navigate({ kind: 'today' })}
+                  className="mr-1 rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-text-secondary transition-colors duration-100 hover:bg-surface-hover hover:text-text"
+                >
+                  Today
+                </button>
+              ) : null}
+              {/* Reading chrome rests quiet; it sharpens on hover, on focus, or
+                  while the calendar is open, so a day you're only reading is a
+                  date and prose. */}
+              <div
+                className={cn(
+                  'flex items-center gap-1 transition-opacity duration-100 focus-within:opacity-100 group-hover:opacity-100',
+                  calendarOpen ? 'opacity-100' : 'opacity-40',
+                )}
               >
-                Today
-              </button>
-            ) : null}
-            {/* Reading chrome rests quiet; it sharpens on hover, on focus, or
-                while the calendar is open, so a day you're only reading is a
-                date and prose. */}
-            <div
-              className={cn(
-                'flex items-center gap-1 transition-opacity duration-100 focus-within:opacity-100 group-hover:opacity-100',
-                calendarOpen ? 'opacity-100' : 'opacity-40',
-              )}
-            >
-              <NotePinButton path={dailyPath(date)} />
-              {/* Jump to any date — the on-demand replacement for the old
-                  always-open month calendar. */}
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="Pick a date"
-                    className="flex size-7 items-center justify-center rounded-md text-text-muted transition-colors duration-100 hover:bg-surface-hover hover:text-text-secondary data-[state=open]:bg-surface-hover data-[state=open]:text-text-secondary"
-                  >
-                    <CalendarDays aria-hidden strokeWidth={1.75} className="size-4" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-72 p-1">
-                  <DayCalendar
-                    selectedDate={date}
-                    today={today}
-                    onNavigate={() => setCalendarOpen(false)}
-                  />
-                </PopoverContent>
-              </Popover>
-              <DayChevron
-                label="Previous day"
-                binding={keybindingFor('day.previous')}
-                onClick={() => navigate(routeForDay(addDaysIso(date, -1), today))}
-              >
-                <ChevronLeft aria-hidden strokeWidth={1.75} className="size-4" />
-              </DayChevron>
-              <DayChevron
-                label="Next day"
-                binding={keybindingFor('day.next')}
-                onClick={() => navigate(routeForDay(addDaysIso(date, 1), today))}
-              >
-                <ChevronRight aria-hidden strokeWidth={1.75} className="size-4" />
-              </DayChevron>
+                <NotePinButton path={dailyPath(date)} />
+                {/* Jump to any date — the on-demand replacement for the old
+                    always-open month calendar. */}
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Pick a date"
+                      className="flex size-7 items-center justify-center rounded-md text-text-muted transition-colors duration-100 hover:bg-surface-hover hover:text-text-secondary data-[state=open]:bg-surface-hover data-[state=open]:text-text-secondary"
+                    >
+                      <CalendarDays aria-hidden strokeWidth={1.75} className="size-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-72 p-1">
+                    <DayCalendar
+                      selectedDate={date}
+                      today={today}
+                      onNavigate={() => setCalendarOpen(false)}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <DayChevron
+                  label="Previous day"
+                  binding={keybindingFor('day.previous')}
+                  onClick={() => navigate(routeForDay(addDaysIso(date, -1), today))}
+                >
+                  <ChevronLeft aria-hidden strokeWidth={1.75} className="size-4" />
+                </DayChevron>
+                <DayChevron
+                  label="Next day"
+                  binding={keybindingFor('day.next')}
+                  onClick={() => navigate(routeForDay(addDaysIso(date, 1), today))}
+                >
+                  <ChevronRight aria-hidden strokeWidth={1.75} className="size-4" />
+                </DayChevron>
+              </div>
             </div>
           </div>
+          {!isToday ? (
+            // Pinned to the top of the canvas's scroll, so the warning stays in
+            // view however far down the day is read or written. The opaque
+            // band behind it keeps text scrolling underneath from showing
+            // through the translucent alert; the negative margin keeps the
+            // unscrolled spacing what it was.
+            <div className="dayjot-content-gutter sticky top-0 z-10 -mt-2 mb-1 bg-surface py-2">
+              <NotTodayBanner onGoToday={goToday} />
+            </div>
+          ) : null}
+          <NotePane
+            path={dailyPath(date)}
+            lazy
+            autoFocus={pendingFocus !== null}
+            autoFocusSelection={pendingFocus ?? 'start'}
+            onAutoFocused={() =>
+              setArrival((current) => ({ ...current, pendingFocus: null }))
+            }
+            className="flex grow flex-col"
+            gutterClassName="dayjot-content-gutter"
+            editorClassName="grow"
+          />
+          <NoteBottomRunway path={dailyPath(date)} />
         </div>
-        {!isToday ? (
-          // Pinned to the top of the canvas's scroll, so the warning stays in
-          // view however far down the day is read or written. The opaque
-          // band behind it keeps text scrolling underneath from showing
-          // through the translucent alert; the negative margin keeps the
-          // unscrolled spacing what it was.
-          <div className="dayjot-content-gutter sticky top-0 z-10 -mt-2 mb-1 bg-surface py-2">
-            <NotTodayBanner onGoToday={goToday} />
-          </div>
-        ) : null}
-        <NotePane
-          path={dailyPath(date)}
-          lazy
-          autoFocus={pendingFocus !== null}
-          autoFocusSelection={pendingFocus ?? 'start'}
-          onAutoFocused={() =>
-            setArrival((current) => ({ ...current, pendingFocus: null }))
-          }
-          className="flex grow flex-col"
-          gutterClassName="dayjot-content-gutter"
-          editorClassName="grow"
-        />
-        <NoteBottomRunway path={dailyPath(date)} />
-      </div>
-    </ScrollRestored>
+      </ScrollRestored>
+      <DailyMoodPicker date={date} />
+    </div>
   )
 }
 

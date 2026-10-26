@@ -35,6 +35,11 @@ export interface FrontmatterPatch {
    * dismissals the frontmatter carries nothing.
    */
   ignoredContacts?: string[]
+  /**
+   * A daily note's mood rating, 1 (Awful) to 5 (Great) — the daily mood bar's
+   * write. `null` deletes the key: unrated is the absence of a rating.
+   */
+  mood?: number | null
 }
 
 /**
@@ -55,6 +60,9 @@ export function frontmatterPatchToYaml(patch: FrontmatterPatch): Record<string, 
   }
   if (patch.private !== undefined) {
     yaml['private'] = patch.private === false ? undefined : true
+  }
+  if (patch.mood !== undefined) {
+    yaml['mood'] = patch.mood === null ? undefined : patch.mood
   }
   if (patch.ignoredContacts !== undefined) {
     yaml['ignoredContacts'] =

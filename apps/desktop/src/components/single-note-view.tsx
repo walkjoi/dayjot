@@ -1,9 +1,12 @@
 import type { ReactElement, ReactNode } from 'react'
+import { dateFromDailyPath } from '@dayjot/core'
+import { DailyMoodPicker } from '@/components/daily-mood-picker'
 import { NoteBottomRunway } from '@/components/note-bottom-runway'
 import { NoteOutlineRail } from '@/components/note-outline/note-outline-rail'
 import { NotePane, type ArrivalCaret } from '@/components/note-pane'
 import { NotePinButton } from '@/components/note-pin-button'
 import { NoteTrashAction } from '@/components/context-sidebar/note-trash-action'
+import { isIsoDate } from '@/lib/dates'
 import { ScrollRestored } from '@/routing/scroll-restore'
 
 interface SingleNoteViewProps {
@@ -25,39 +28,45 @@ interface SingleNoteViewProps {
  * `min-h-full` fills the viewport exactly, and the flex chain stretches the
  * editor over any leftover space. The reading gutter is the editor's own
  * padding, so clicking anywhere in the note body (blank side margins
- * included) focuses it.
+ * included) focuses it. A daily note (a note window shows them this way)
+ * gets the daily canvas's mood bar, pinned below the scrolling column.
  */
 export function SingleNoteView({
   path,
   heading,
   caret = 'start',
 }: SingleNoteViewProps): ReactElement {
+  const dailyDate = dateFromDailyPath(path)
+  const moodDate = dailyDate !== null && isIsoDate(dailyDate) ? dailyDate : null
   return (
-    // `@container` sizes the outline rail's width gate to the pane, not the
-    // window (the settings route's idiom).
-    <ScrollRestored className="@container h-full overflow-auto px-0">
-      <div className="relative mx-auto flex min-h-full w-full max-w-full flex-col py-8">
-        {/* The routed note is the focused note, so its actions are always
-            on screen: the pin (the old note-actions panel, relocated) and,
-            for regular notes, trash (the component hides itself for
-            dailies). */}
-        <div className="absolute right-4 top-3 z-10 flex items-center gap-1">
-          <NotePinButton path={path} />
-          <NoteTrashAction path={path} variant="icon" />
+    <div className="flex h-full flex-col">
+      {/* `@container` sizes the outline rail's width gate to the pane, not the
+          window (the settings route's idiom). */}
+      <ScrollRestored className="@container min-h-0 flex-1 overflow-auto px-0">
+        <div className="relative mx-auto flex min-h-full w-full max-w-full flex-col py-8">
+          {/* The routed note is the focused note, so its actions are always
+              on screen: the pin (the old note-actions panel, relocated) and,
+              for regular notes, trash (the component hides itself for
+              dailies). */}
+          <div className="absolute right-4 top-3 z-10 flex items-center gap-1">
+            <NotePinButton path={path} />
+            <NoteTrashAction path={path} variant="icon" />
+          </div>
+          {heading}
+          <NotePane
+            path={path}
+            lazy
+            autoFocus
+            autoFocusSelection={caret}
+            className="flex grow flex-col"
+            gutterClassName="dayjot-content-gutter"
+            editorClassName="grow"
+          />
+          <NoteBottomRunway path={path} />
+          <NoteOutlineRail />
         </div>
-        {heading}
-        <NotePane
-          path={path}
-          lazy
-          autoFocus
-          autoFocusSelection={caret}
-          className="flex grow flex-col"
-          gutterClassName="dayjot-content-gutter"
-          editorClassName="grow"
-        />
-        <NoteBottomRunway path={path} />
-        <NoteOutlineRail />
-      </div>
-    </ScrollRestored>
+      </ScrollRestored>
+      {moodDate !== null ? <DailyMoodPicker date={moodDate} /> : null}
+    </div>
   )
 }

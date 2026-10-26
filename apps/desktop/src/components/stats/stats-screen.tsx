@@ -2,20 +2,28 @@ import { useEffect, useMemo, useRef, type ReactElement } from 'react'
 import { computeStreaks } from '@dayjot/core'
 import { ScrollRestored } from '@/routing/scroll-restore'
 import { useToday } from '@/lib/use-today'
-import { useDailyNoteDates, useDailyWeights, useDailyWordCounts, useNoteCount } from '@/hooks/use-stats'
+import {
+  useDailyMoods,
+  useDailyNoteDates,
+  useDailyWeights,
+  useDailyWordCounts,
+  useNoteCount,
+} from '@/hooks/use-stats'
 import { StatTile } from './stat-tile'
 import { WeightChart } from './weight-chart'
 import { WordsChart } from './words-chart'
+import { YearInPixels } from './year-in-pixels'
 import { rangeStartIso } from './series'
 
 const WORDS_WINDOW_DAYS = 90
 
 /**
  * The Stats page: journaling streaks, today's words, the note count, words
- * per day, and — only for graphs that log any — the weight trend. Everything
- * is read from the index, so the page refreshes as notes are edited. The
- * weight section renders no trace of itself without data: its one entry point
- * is knowing the `weight::` field (or `/weight` in the editor).
+ * per day, and — only for graphs that log any — the Year in Pixels of mood
+ * ratings and the weight trend. Everything is read from the index, so the
+ * page refreshes as notes are edited. The logged sections render no trace of
+ * themselves without data: moods come from the daily note's mood bar (or
+ * `/mood`), weight from a `weight::` line (or `/weight`).
  */
 export function StatsScreen(): ReactElement {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -23,6 +31,7 @@ export function StatsScreen(): ReactElement {
   const dailyDates = useDailyNoteDates()
   const noteCount = useNoteCount()
   const weights = useDailyWeights()
+  const moods = useDailyMoods()
   const wordCounts = useDailyWordCounts(rangeStartIso(today, WORDS_WINDOW_DAYS))
 
   const streaks = useMemo(() => computeStreaks(dailyDates, today), [dailyDates, today])
@@ -58,6 +67,7 @@ export function StatsScreen(): ReactElement {
             <StatTile label="Notes" value={noteCount.toLocaleString('en-US')} detail="in this graph" />
           </div>
 
+          {moods.length > 0 && <YearInPixels moods={moods} today={today} />}
           {weights.length > 0 && <WeightChart series={weights} today={today} />}
           {wordCounts.length > 0 && (
             <WordsChart series={wordCounts} today={today} days={WORDS_WINDOW_DAYS} />

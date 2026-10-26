@@ -69,8 +69,8 @@ export function applyProjection(database: DatabaseSync, indexed: IndexedNote): v
     .prepare(
       `INSERT INTO notes(
         path, id, title, title_key, kind, daily_date, is_private, is_pinned,
-        pinned_order, mtime, file_hash, preview, word_count, has_conflict, gist_url, gist_stale
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        pinned_order, mtime, file_hash, preview, word_count, mood, has_conflict, gist_url, gist_stale
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       indexed.path,
@@ -86,6 +86,7 @@ export function applyProjection(database: DatabaseSync, indexed: IndexedNote): v
       indexed.fileHash,
       indexed.preview,
       indexed.wordCount,
+      indexed.mood,
       Number(indexed.hasConflict),
       indexed.gistUrl,
       Number(indexed.gistStale),

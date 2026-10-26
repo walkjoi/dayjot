@@ -78,8 +78,10 @@ import { serializeWikiSuggestionAddress } from './suggest'
  * 18 — `weights` projection (`weight::` inline fields) and `notes.word_count`
  * (Stats page): existing notes carry no weight rows and a zero word count
  * until reprojected, so the bump backfills both.
+ * 19 — `notes.mood` (the frontmatter `mood:` rating, Stats page): existing
+ * notes carry a null mood until reprojected, so the bump backfills it.
  */
-export const PROJECTION_VERSION = 18
+export const PROJECTION_VERSION = 19
 
 export const indexedLinkSchema = z.object({
   kind: z.enum(['wiki', 'md']),
@@ -166,6 +168,8 @@ export const indexedNoteSchema = z.object({
   dailyDate: z.string().nullable(),
   isPrivate: z.boolean(),
   isPinned: z.boolean(),
+  /** The frontmatter mood rating, 1–5, or null when unrated (Stats page). */
+  mood: z.number().int().min(1).max(5).nullable(),
   /** Explicit pin order (`pinned: <n>`); null for bare `pinned: true`. */
   pinnedOrder: z.number().nullable(),
   /** The file carries Git conflict markers from a sync merge (Plan 12). */
@@ -276,6 +280,7 @@ export function buildIndexedNote(
     kind: isDaily(parsed.path) ? 'daily' : isTemplatePath(parsed.path) ? 'template' : 'note',
     dailyDate: isDaily(parsed.path) ? dateFromDailyPath(parsed.path) : null,
     isPrivate: parsed.frontmatter.private,
+    mood: parsed.frontmatter.mood,
     isPinned: isPinned(parsed.frontmatter),
     pinnedOrder: pinnedOrder(parsed.frontmatter),
     hasConflict: detectConflictMarkers(meta.source),

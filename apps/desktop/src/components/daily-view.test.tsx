@@ -39,6 +39,9 @@ vi.mock('@/components/context-sidebar/day-calendar', () => ({
     </div>
   ),
 }))
+vi.mock('@/components/daily-mood-picker', () => ({
+  DailyMoodPicker: ({ date }: { date: string }) => <div data-testid="mood-bar" data-date={date} />,
+}))
 const toast = vi.hoisted(() => ({ warning: vi.fn(), dismiss: vi.fn() }))
 vi.mock('sonner', () => ({ toast }))
 vi.mock('@/providers/settings-provider', () => ({
@@ -293,5 +296,16 @@ describe('DailyView', () => {
     expect(screen.getByRole('alert').textContent).toContain('This isn’t today’s note.')
     inputIntoNote()
     expect(toast.warning).toHaveBeenCalledOnce()
+  })
+
+  it("pins the shown day's mood bar below the scrolling canvas, not inside it", () => {
+    renderView({ kind: 'daily', date: '2026-06-09' })
+
+    const bar = screen.getByTestId('mood-bar')
+    expect(bar.dataset['date']).toBe('2026-06-09')
+    const scroller = screen.getByTestId('pane-probe').closest('.overflow-auto')
+    expect(scroller).not.toBeNull()
+    expect(scroller!.contains(bar)).toBe(false)
+    expect(scroller!.nextElementSibling).toBe(bar)
   })
 })

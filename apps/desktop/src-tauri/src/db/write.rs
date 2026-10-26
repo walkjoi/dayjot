@@ -26,6 +26,9 @@ pub struct IndexedNote {
     pub(super) daily_date: Option<String>,
     pub(super) is_private: bool,
     pub(super) is_pinned: bool,
+    /// The frontmatter mood rating, 1–5 (Stats page); `None` when unrated.
+    #[serde(default)]
+    pub(super) mood: Option<i64>,
     pub(super) pinned_order: Option<f64>,
     /// The file carries Git conflict markers (sync merge, Plan 12).
     pub(super) has_conflict: bool,
@@ -126,8 +129,8 @@ pub(super) fn apply_note(conn: &Connection, note: &IndexedNote) -> AppResult<()>
     remove_note(conn, &note.path)?;
 
     conn.prepare_cached(
-        "INSERT INTO notes(path, id, title, title_key, kind, daily_date, is_private, is_pinned, pinned_order, has_conflict, gist_url, gist_stale, file_hash, mtime, updated_at, preview, word_count)
-         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?14, ?15, ?16)",
+        "INSERT INTO notes(path, id, title, title_key, kind, daily_date, is_private, is_pinned, pinned_order, has_conflict, gist_url, gist_stale, file_hash, mtime, updated_at, preview, word_count, mood)
+         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?14, ?15, ?16, ?17)",
     )?
     .execute(params![
         note.path,
@@ -146,6 +149,7 @@ pub(super) fn apply_note(conn: &Connection, note: &IndexedNote) -> AppResult<()>
         note.mtime,
         note.preview,
         note.word_count,
+        note.mood,
     ])?;
     conn.prepare_cached("INSERT INTO note_text(note_path, text) VALUES(?1, ?2)")?
         .execute(params![note.path, note.text])?;

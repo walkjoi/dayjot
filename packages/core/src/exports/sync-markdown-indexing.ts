@@ -178,6 +178,7 @@ export {
   keepsakeDate,
   getCompletedTasks,
   getDailyNoteDates,
+  getDailyMoods,
   getDailyWeights,
   getDailyWordCounts,
   getNoteCount,
@@ -223,6 +224,7 @@ export {
   type OpenTask,
   type Keepsake,
   type KeepsakeSubject,
+  type DailyMood,
   type DailyWeight,
   type DailyWordCount,
   type TaskContext,
@@ -249,4 +251,10 @@ export {
   type TitleRenameRewriteOptions,
   type TitleRenameRewriteResult,
 } from '../indexing'
+export {
+  isMoodRating,
+  MOOD_SCALE,
+  moodLabel,
+  type MoodRating,
+} from '../stats/mood'
 export { computeStreaks, type Streaks } from '../stats/streaks'

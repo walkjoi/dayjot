@@ -3,8 +3,8 @@ import { gistBodyHash, parseNote } from '../markdown'
 import { buildIndexedNote, indexedNoteSchema, PROJECTION_VERSION } from './indexed-note'
 
 describe('buildIndexedNote', () => {
-  it('carries the projection version that backfills weight rows and word counts', () => {
-    expect(PROJECTION_VERSION).toBe(18)
+  it('carries the projection version that backfills the mood column', () => {
+    expect(PROJECTION_VERSION).toBe(19)
   })
 
   it('projects weight fields and a CJK-aware word count', () => {
@@ -18,6 +18,21 @@ describe('buildIndexedNote', () => {
     // The count runs over the note's plain text, so the field line itself counts too.
     expect(indexed.wordCount).toBe(7) // 08:12, weight::, 72.5, 今(1)天(1), went, well
     expect(indexed.kind).toBe('daily')
+  })
+
+  it('projects the frontmatter mood, and nothing from body text', () => {
+    function moodOf(source: string): number | null {
+      const indexed = buildIndexedNote(parseNote({ path: 'daily/2026-10-26.md', source }), {
+        fileHash: 'h',
+        mtime: 0,
+        source,
+      })
+      return indexedNoteSchema.parse(indexed).mood
+    }
+    expect(moodOf('---\nmood: 4\n---\n- walked\n')).toBe(4)
+    expect(moodOf('---\nmood: "2"\n---\n')).toBe(2)
+    expect(moodOf('- walked\n')).toBeNull()
+    expect(moodOf('mood: 4\n')).toBeNull() // body text, not frontmatter
   })
 
   it('flattens a parsed note into the index payload', () => {

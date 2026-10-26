@@ -4,6 +4,7 @@ import {
   dailyDatesInRange,
   findExactWikiTargetMatches,
   getBacklinksWithContext,
+  getDailyMoods,
   getDailyNoteDates,
   getDailyWeights,
   getDailyWordCounts,
@@ -649,6 +650,26 @@ describe('getDailyWeights', () => {
     expect(sql).toContain('"weights"')
     expect(sql).toContain('"kind" = ?') // only daily notes carry date semantics
     expect(sql).toContain('"field_offset"') // document order breaks same-day ties
+    expect(args['params']).toContain('daily')
+  })
+})
+
+describe('getDailyMoods', () => {
+  it("reads each rated daily note's mood column, ascending by date", async () => {
+    mockInvoke.mockResolvedValue([
+      { daily_date: '2026-10-25', mood: 5 },
+      { daily_date: '2026-10-26', mood: 2 },
+    ])
+
+    await expect(getDailyMoods()).resolves.toEqual([
+      { date: '2026-10-25', rating: 5 },
+      { date: '2026-10-26', rating: 2 },
+    ])
+
+    const [, args] = mockInvoke.mock.calls[0]!
+    const sql = String(args['sql'])
+    expect(sql).toContain('"mood" is not null')
+    expect(sql).toContain('"kind" = ?')
     expect(args['params']).toContain('daily')
   })
 })

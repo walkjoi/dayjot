@@ -63,6 +63,13 @@
   --green-500:    #22c55e;   /* success                       */
   --amber-500:    #f59e0b;   /* warning                       */
 
+  /* ---- Stats · mood scale steps (see --mood-* below) ----- */
+  --red-600:      #dc2626;
+  --orange-400:   #fb923c;
+  --yellow-300:   #fde047;
+  --green-700:    #15803d;
+  --teal-500:     #14b8a6;
+
   /* ============================================================
      SEMANTIC ALIASES — light (default) app theme
      ============================================================ */
@@ -90,6 +97,21 @@
 
   --focus-ring:       var(--indigo-500);
   --destructive:      var(--red-500);
+
+  /* Stats · the mood scale (Year in Pixels, the daily mood bar), Awful (1)
+     → Great (5): red, orange, yellow, green, teal — semantic heat, warm for a
+     hard day, cool for a good one. Picked so every pair of ratings stays
+     apart under protanopia/deuteranopia (OKLab ΔE ≥ 8.6 all-pairs; the cool
+     teal end keeps Great clear of Awful's red) and neighbors stay apart for
+     full-color readers (ΔE ≥ 18.8). The pale yellow sits under 3:1 on a
+     light surface by design; every rating is also named (legend, tooltip,
+     labels). Both themes share the steps — all clear 3:1 on the dark one. */
+  --mood-1:           var(--red-600);
+  --mood-2:           var(--orange-400);
+  --mood-3:           var(--yellow-300);
+  --mood-4:           var(--green-700);
+  --mood-5:           var(--teal-500);
+  --mood-none:        var(--coolgray-200); /* an unrated day: a quiet wash */
 
   --radius:           0.5rem;             /* 8px — the house radius      */
 
@@ -136,6 +158,8 @@
 
   --focus-ring:       var(--indigo-500);
   --border-hairline:  0 1px 0 rgba(255,255,255,.05);
+
+  --mood-none:        rgba(55,65,81,.5);
   --shadow-app-input:
     0 1px 0 -1px rgba(0,0,0,.10),
     0 1px 1px -1px rgba(0,0,0,.10),

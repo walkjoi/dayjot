@@ -232,6 +232,31 @@ describe('RouteContent', () => {
     view.unmount()
   })
 
+  it("rates a daily note from the picker at its foot, writing the note's mood field", async () => {
+    files['daily/2020-03-14.md'] = '- walked to work\n'
+    const view = renderRoute({ kind: 'daily', date: '2020-03-14' })
+    await view.findByLabelText('Editing daily/2020-03-14.md')
+
+    act(() => view.getByRole('button', { name: 'Good' }).click())
+    await act(() => flushOpenDocuments())
+    // The rating is frontmatter: the note's text is untouched.
+    expect(files['daily/2020-03-14.md']).toBe('---\nmood: 4\n---\n- walked to work\n')
+
+    // Picking the shown rating again takes the field back out.
+    act(() => view.getByRole('button', { name: 'Good' }).click())
+    await act(() => flushOpenDocuments())
+    expect(files['daily/2020-03-14.md']).toBe('- walked to work\n')
+    view.unmount()
+  })
+
+  it('offers no mood picker on a regular note', async () => {
+    files['notes/exist.md'] = '# Hello\n\nWorld.\n'
+    const view = renderRoute({ kind: 'note', path: 'notes/exist.md' })
+    await view.findByLabelText('Editing notes/exist.md')
+    expect(view.queryByRole('group', { name: 'Mood' })).toBeNull()
+    view.unmount()
+  })
+
   it('opens a note the editor cannot round-trip as read-only, never editable', async () => {
     // Git conflict markers are a known meowdown converter gap (see roundtrip.ts),
     // and get their own view: both sides shown, labeled by the marker names.
