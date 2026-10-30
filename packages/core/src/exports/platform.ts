@@ -17,6 +17,17 @@ export { confirmQuit, hideWindowForClose, subscribeQuitRequested } from '../app/
 export { WINDOW_NAVIGATE_EVENT, subscribeWindowNavigate } from '../app/window-events'
 export { toggleDevtools } from '../app/devtools'
 export {
+  getAppLockStatus,
+  lockApp,
+  recordAppActivity,
+  removeAppLockPassword,
+  setAppLockPassword,
+  setAutoLockTimeout,
+  subscribeAppLockChanged,
+  unlockApp,
+  type AppLockStatus,
+} from '../app/app-lock'
+export {
   appErrorSchema,
   errorMessage,
   isAppError,
@@ -118,6 +129,8 @@ export {
   clampSidebarWidth,
   timestampFormatSchema,
   timestampKeybindingSchema,
+  AUTO_LOCK_MINUTES_OPTIONS,
+  autoLockMinutesSchema,
   contactsEnabledSchema,
   themePreferenceSchema,
   timeFormatSchema,
@@ -139,6 +152,7 @@ export {
   type SidebarWidthRange,
   type ThemePreference,
   type TimeFormat,
+  type AutoLockMinutes,
   type DateFormat,
   type WeekStartDay,
   type KeepsakesGrouping,

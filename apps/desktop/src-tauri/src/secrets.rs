@@ -45,7 +45,7 @@ fn delete_from(entry: &Entry) -> AppResult<()> {
 /// signature doesn't match the item's ACL (every dev rebuild), and a sync
 /// command would freeze the whole app — no paint, no notes — until the user
 /// answers.
-async fn run_blocking<T: Send + 'static>(
+pub(crate) async fn run_blocking<T: Send + 'static>(
     task: impl FnOnce() -> AppResult<T> + Send + 'static,
 ) -> AppResult<T> {
     tauri::async_runtime::spawn_blocking(task)

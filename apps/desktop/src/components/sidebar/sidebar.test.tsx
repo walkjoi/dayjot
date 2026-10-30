@@ -40,6 +40,7 @@ const openNativeContextMenu = vi.hoisted(() =>
   }),
 )
 const unpinNote = vi.hoisted(() => vi.fn(async () => {}))
+const appLock = vi.hoisted(() => ({ configured: false }))
 const updateSettingsWith = vi.hoisted(() =>
   vi.fn<(updater: (current: Settings) => Partial<Settings>) => void>(),
 )
@@ -58,6 +59,9 @@ vi.mock('@/lib/native-menu/context-menu', () => ({ openNativeContextMenu }))
 vi.mock('@/lib/note-pin', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/note-pin')>()),
   unpinNote,
+}))
+vi.mock('@/providers/app-lock-provider', () => ({
+  useAppLock: () => appLock,
 }))
 vi.mock('@/providers/graph-provider', () => ({
   useGraph: () => ({
@@ -132,6 +136,7 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
     toggleContextPanel: vi.fn(),
     toggleFocusMode: vi.fn(),
     toggleNoteOutline: vi.fn(),
+    lockApp: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 1,
@@ -159,6 +164,27 @@ function renderSidebar(overrides?: Partial<CommandContext>, initialRoute?: Route
 }
 
 describe('Sidebar', () => {
+  describe('lock button', () => {
+    afterEach(() => {
+      appLock.configured = false
+    })
+
+    it('stays out of the footer until a password exists', () => {
+      const { view } = renderSidebar()
+      expect(view.queryByRole('button', { name: 'Lock DayJot' })).toBeNull()
+    })
+
+    it('locks through the command once a password exists', async () => {
+      appLock.configured = true
+      const lockApp = vi.fn()
+      const { view } = renderSidebar({ lockApp })
+
+      await userEvent.click(view.getByRole('button', { name: 'Lock DayJot' }))
+
+      expect(lockApp).toHaveBeenCalledOnce()
+    })
+  })
+
   it('offers the collapse toggle in its top row', () => {
     const { view } = renderSidebar()
 

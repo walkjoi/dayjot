@@ -16,6 +16,11 @@ const openRecent = vi.hoisted(() => vi.fn())
 const openRouteInNewWindow = vi.hoisted(() => vi.fn(async () => true))
 const platform = vi.hoisted(() => ({ isMacosDesktop: false }))
 const nativeMenu = vi.hoisted(() => ({ installed: false }))
+const appLock = vi.hoisted(() => ({
+  phase: 'unlocked' as 'pending' | 'locked' | 'unlocked',
+  setupOpen: false,
+  requestLock: vi.fn(async () => {}),
+}))
 
 vi.mock('@/lib/windows/open-in-new-window', () => ({ openRouteInNewWindow }))
 vi.mock('@/lib/native-menu/menu', () => ({
@@ -27,6 +32,9 @@ vi.mock('@/lib/platform', () => ({
   },
 }))
 
+vi.mock('@/providers/app-lock-provider', () => ({
+  useAppLock: () => appLock,
+}))
 vi.mock('@/providers/graph-provider', () => ({
   useGraph: () => ({
     graph: { root: '/g', name: 'g', generation: 1 },
@@ -59,6 +67,9 @@ registerAppCommands() // production does this in main.tsx
 beforeEach(() => {
   platform.isMacosDesktop = false
   nativeMenu.installed = false
+  appLock.phase = 'unlocked'
+  appLock.setupOpen = false
+  appLock.requestLock.mockClear()
 })
 
 afterEach(() => {
@@ -111,6 +122,55 @@ function pressFrom(target: EventTarget, key: string, options: KeyboardEventInit 
     }),
   )
 }
+
+describe('app shortcuts while the app lock is up', () => {
+  it('⌘L locks the app', () => {
+    shortcutsHook()
+
+    act(() => press('l'))
+
+    expect(appLock.requestLock).toHaveBeenCalledOnce()
+  })
+
+  it.each(['pending', 'locked'] as const)('runs no command during the %s phase', (phase) => {
+    appLock.phase = phase
+    const { result } = shortcutsHook()
+
+    act(() => press('n'))
+
+    expect(result.current.router.route.kind).toBe('today')
+  })
+
+  it('refuses native menu activations too', () => {
+    appLock.phase = 'locked'
+    const { result } = shortcutsHook()
+
+    act(() => dispatchMenuCommand('nav.tasks'))
+
+    expect(result.current.router.route.kind).toBe('today')
+  })
+
+  it('leaves the keystroke alone for the password field', () => {
+    appLock.phase = 'locked'
+    shortcutsHook()
+
+    const event = new KeyboardEvent('keydown', { key: 'a', metaKey: true, cancelable: true })
+    act(() => {
+      window.dispatchEvent(event)
+    })
+
+    expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('holds commands while the password step is open', () => {
+    appLock.setupOpen = true
+    const { result } = shortcutsHook()
+
+    act(() => press('n'))
+
+    expect(result.current.router.route.kind).toBe('today')
+  })
+})
 
 describe('app shortcuts', () => {
   it('registers the command keybindings in the central keymap registry', () => {

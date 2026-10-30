@@ -5,6 +5,7 @@ import { SingleNoteView } from '@/components/single-note-view'
 import { useNoteRow } from '@/hooks/use-note-row'
 import { useNoteWindowTitle } from '@/hooks/use-note-window-title'
 import { formatDayLabel, todayIso } from '@/lib/dates'
+import { useAppLock } from '@/providers/app-lock-provider'
 import { useSettings } from '@/providers/settings-provider'
 import { useRouter } from '@/routing/router'
 
@@ -21,20 +22,23 @@ import { useRouter } from '@/routing/router'
 export function NoteWindowContent(): ReactElement {
   const { route } = useRouter()
   const { settings } = useSettings()
+  const { phase: lockPhase } = useAppLock()
   const dailyDate =
     route.kind === 'daily' ? route.date : route.kind === 'today' ? todayIso() : null
 
   // The OS window title follows the shown note — the day label for dailies,
   // the indexed title otherwise (it tracks renames because the row rides the
-  // same query cache the pane invalidates on index writes).
+  // same query cache the pane invalidates on index writes). A locked window
+  // goes back to the app name: the title is readable in the title bar and the
+  // Window menu, outside the lock screen's reach.
   const noteRow = useNoteRow(route.kind === 'note' ? route.path : '')
-  useNoteWindowTitle(
+  const noteTitle =
     dailyDate !== null
       ? formatDayLabel(dailyDate, settings.dateFormat)
       : route.kind === 'note'
         ? noteRow?.title ?? null
-        : null,
-  )
+        : null
+  useNoteWindowTitle(lockPhase === 'unlocked' ? noteTitle : null)
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-surface text-text">

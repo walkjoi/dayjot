@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import { AboutSection } from './settings/about-section'
 import { AllNotesSection } from './settings/all-notes-section'
+import { AppLockSection } from './settings/app-lock-section'
 import { AppearanceSection } from './settings/appearance-section'
 import { DestructiveSection } from './settings/destructive-section'
 import { EditorSection } from './settings/editor-section'
@@ -22,6 +23,7 @@ export function SettingsScreen(): ReactElement {
         <EditorSection />
         <TemplatesSection />
         <AllNotesSection />
+        <AppLockSection />
         <IntegrationsSection />
         <SyncSection />
         <AboutSection />

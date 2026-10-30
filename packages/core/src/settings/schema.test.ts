@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_SETTINGS, settingsSchema } from './schema'
+import { AUTO_LOCK_MINUTES_OPTIONS, DEFAULT_SETTINGS, settingsSchema } from './schema'
 
 describe('settingsSchema', () => {
   it('defaults every key on an empty document (fresh install)', () => {
@@ -27,6 +27,7 @@ describe('settingsSchema', () => {
       calendarIds: [],
       graphColors: {},
       keepsakesGrouping: 'month',
+      autoLockMinutes: 30,
     })
     expect(DEFAULT_SETTINGS.editorMarkdownSyntax).toBe('hide')
     expect(DEFAULT_SETTINGS.editorSpellCheck).toBe(true)
@@ -220,6 +221,7 @@ describe('settingsSchema', () => {
       calendarIds: [],
       graphColors: {},
       keepsakesGrouping: 'month',
+      autoLockMinutes: 30,
       futureKey: true,
     })
   })
@@ -243,4 +245,22 @@ describe('settingsSchema', () => {
     })
   })
 
+
+  describe('autoLockMinutes', () => {
+    it('defaults to 30 minutes', () => {
+      expect(DEFAULT_SETTINGS.autoLockMinutes).toBe(30)
+    })
+
+    it('keeps every offered delay and never', () => {
+      for (const minutes of AUTO_LOCK_MINUTES_OPTIONS) {
+        expect(settingsSchema.parse({ autoLockMinutes: minutes }).autoLockMinutes).toBe(minutes)
+      }
+      expect(settingsSchema.parse({ autoLockMinutes: null }).autoLockMinutes).toBeNull()
+    })
+
+    it('degrades an invalid value to the default', () => {
+      expect(settingsSchema.parse({ autoLockMinutes: 7 }).autoLockMinutes).toBe(30)
+      expect(settingsSchema.parse({ autoLockMinutes: 'soon' }).autoLockMinutes).toBe(30)
+    })
+  })
 })

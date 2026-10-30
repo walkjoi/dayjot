@@ -8,6 +8,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'editor', title: 'Editor' },
   { id: 'templates', title: 'Note templates' },
   { id: 'all-notes', title: 'All notes' },
+  { id: 'app-lock', title: 'App lock' },
   // Only shown where the OS frameworks exist — see use-visible-settings-sections.
   { id: 'integrations', title: 'Integrations' },
   { id: 'sync', title: 'Sync' },

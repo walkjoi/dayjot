@@ -112,6 +112,7 @@ asymmetry is what each broadcast below exists to bridge.
 | `note:moved` | `note_move_indexed` / `index_move` after rows commit | **every** window (`desktop-root.tsx`) | Retarget open sessions + router history after a rename. Renames can originate in any window (a title edit), and a window left behind would resurrect the dead path on its next save. The origin window's in-process handling makes the echo idempotent. |
 | `window:navigate` | `open_note_window` on a preferred-destination hit (targeted `emit_to`) | that note window | Reopening a target focuses its window *and* re-navigates it there — it may have browsed elsewhere since opening. The invoking window is excluded, so modifier-open never redirects its source. |
 | `app:quit-requested` | the deferred-quit hook (`quit.rs`) | every window | Each window flushes its own dirty buffers, then confirms. |
+| `app-lock:changed` | the lock commands and idle check (`app_lock.rs`) | every window (`app-lock-provider.tsx`) | The lock screen goes up and comes down everywhere at once, and a note window opened while locked reads the same state from `app_lock_status` at boot. |
 
 The write path that ties it together: a note window saves via the ordinary
 generation-pinned `note_write` → the watcher reports the file → the main

@@ -325,6 +325,21 @@ export const GRAPH_COLOR_IDS = graphColorSchema.options
 
 export type GraphColors = Record<string, GraphColor>
 
+/** The auto-lock delays offered in Settings, in minutes. */
+export const AUTO_LOCK_MINUTES_OPTIONS = [1, 5, 15, 30, 60, 120] as const
+
+/**
+ * How long the app may sit without keyboard or pointer input before it locks;
+ * `null` is never. Only applies once a password is set. The shell keeps the
+ * clock (`app_lock.rs`) — this is just the chosen delay.
+ */
+export const autoLockMinutesSchema = z
+  .literal(AUTO_LOCK_MINUTES_OPTIONS)
+  .nullable()
+  .catch(30)
+
+export type AutoLockMinutes = z.infer<typeof autoLockMinutesSchema>
+
 /**
  * Identity colors the user has chosen per graph, keyed by the graph's absolute
  * root path. An absent key means the default (the app accent). Entries for
@@ -371,6 +386,7 @@ export const settingsSchema = z
     calendarEnabled: calendarEnabledSchema,
     calendarIds: calendarIdsSchema,
     graphColors: graphColorsSchema,
+    autoLockMinutes: autoLockMinutesSchema,
   })
 
 export type Settings = z.infer<typeof settingsSchema>

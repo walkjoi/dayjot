@@ -1,6 +1,7 @@
 import { useEffect, type ReactElement } from 'react'
 import { hasBridge, subscribeNoteMoved } from '@dayjot/core'
 import { App } from '@/app'
+import { AppLockScreen } from '@/components/app-lock/app-lock-screen'
 import { followHealedMove } from '@/editor/move-note'
 import { OperationsStatus } from '@/components/operations-status'
 import { UpdateToast } from '@/components/update-toast'
@@ -10,13 +11,14 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { useMainWindowEffect } from '@/hooks/use-main-window-effect'
 import { startDeepLinkListener } from '@/lib/deep-links/intake'
 import { trackSubscriptions } from '@/lib/subscriptions'
+import { AppLockProvider } from '@/providers/app-lock-provider'
 import { GraphProvider } from '@/providers/graph-provider'
 import { SidebarWidthEffect } from '@/providers/sidebar-width'
 import { UpdateProvider } from '@/providers/update-provider'
 
 /**
- * The app's surface tree: auto-update checks, the titlebar drag region, and
- * the graph chooser/workspace app.
+ * The app's surface tree: auto-update checks, the titlebar drag region, the
+ * graph chooser/workspace app, and the app lock over all of it.
  */
 export function DesktopRoot(): ReactElement {
   // Deep-link intake starts with the surface, not the workspace: a
@@ -52,17 +54,20 @@ export function DesktopRoot(): ReactElement {
   }, [])
 
   return (
-    <UpdateProvider>
-      <GraphProvider>
-        <TooltipProvider>
-          <SidebarWidthEffect />
-          <WindowDragRegion />
-          <App />
-          <Toaster />
-          <OperationsStatus />
-          <UpdateToast />
-        </TooltipProvider>
-      </GraphProvider>
-    </UpdateProvider>
+    <AppLockProvider>
+      <UpdateProvider>
+        <GraphProvider>
+          <TooltipProvider>
+            <SidebarWidthEffect />
+            <WindowDragRegion />
+            <App />
+            <Toaster />
+            <OperationsStatus />
+            <UpdateToast />
+            <AppLockScreen />
+          </TooltipProvider>
+        </GraphProvider>
+      </UpdateProvider>
+    </AppLockProvider>
   )
 }

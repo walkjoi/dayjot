@@ -76,6 +76,7 @@ function fakeContext(overrides?: Partial<CommandContext>) {
     toggleContextPanel: vi.fn(),
     toggleFocusMode: vi.fn(),
     toggleNoteOutline: vi.fn(),
+    lockApp: vi.fn(),
     switchGraph: vi.fn(),
     timestampFormat: () => '- HH:mm ',
     generation: () => 7,

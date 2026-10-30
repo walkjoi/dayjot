@@ -14,6 +14,7 @@ import { setMenuCommandDispatch } from '@/lib/native-menu/dispatch'
 import { isNativeMenuInstalled } from '@/lib/native-menu/menu'
 import { isMacosDesktop } from '@/lib/platform'
 import type { CommandContext } from '@/lib/commands/types'
+import { useAppLock } from '@/providers/app-lock-provider'
 import { useFocusedDailyDate } from '@/providers/focused-daily-provider'
 import { useGraph } from '@/providers/graph-provider'
 import { useNoteTemplates } from '@/providers/note-templates-provider'
@@ -179,6 +180,7 @@ export function useAppShortcuts(): CommandContext {
   } = useNoteTemplates()
   const { toggleSidebar, toggleContextPanel, toggleFocusMode } = useSidebar()
   const { settings, updateSettingsWith } = useSettings()
+  const { phase: lockPhase, setupOpen: lockSetupOpen, requestLock } = useAppLock()
   const timestampFormatRef = useRef(settings.timestampFormat)
   useEffect(() => {
     timestampFormatRef.current = settings.timestampFormat
@@ -205,6 +207,10 @@ export function useAppShortcuts(): CommandContext {
   // navigate behind them.
   const templatesOpenRef = useRef(templatePickerOpen || templateCreateOpen)
 
+  // And for the lock screen and the password step in front of it: this is the
+  // gate native menu items reach too, and no command may run behind either.
+  const lockOwnsWindowRef = useRef(lockPhase !== 'unlocked' || lockSetupOpen)
+
   // Read at run time, not captured: a command can fire long after the render
   // that created the context (palette open across an index rebuild, etc.).
   const generationRef = useRef<number | null>(graph?.generation ?? null)
@@ -217,6 +223,7 @@ export function useAppShortcuts(): CommandContext {
     paletteOpenRef.current = paletteOpen
     shortcutsOpenRef.current = shortcutsOpen
     templatesOpenRef.current = templatePickerOpen || templateCreateOpen
+    lockOwnsWindowRef.current = lockPhase !== 'unlocked' || lockSetupOpen
     generationRef.current = graph?.generation ?? null
     graphRootRef.current = graph?.root ?? null
     recentsRef.current = recents
@@ -249,6 +256,7 @@ export function useAppShortcuts(): CommandContext {
       // through the provider so a stale render can't undo a racing update.
       toggleNoteOutline: () =>
         updateSettingsWith((current) => ({ editorShowOutline: !current.editorShowOutline })),
+      lockApp: requestLock,
       switchGraph: (index) => {
         const recent = recentsRef.current[index]
         if (recent === undefined || recent.root === graphRootRef.current) {
@@ -278,6 +286,7 @@ export function useAppShortcuts(): CommandContext {
       toggleContextPanel,
       toggleFocusMode,
       updateSettingsWith,
+      requestLock,
     ],
   )
 
@@ -285,6 +294,9 @@ export function useAppShortcuts(): CommandContext {
     // The one guarded entry point for app commands, shared by keystrokes and
     // native menu activations. Returns whether the command was handled.
     function triggerCommand(id: string): boolean {
+      if (lockOwnsWindowRef.current) {
+        return false
+      }
       if (paletteOpenRef.current) {
         return false // modal palette owns the screen; Esc closes, then commands resume
       }

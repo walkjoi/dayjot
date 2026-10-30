@@ -83,10 +83,25 @@ native app.
   verified against a public key compiled into the app before installing. Offline, the
   check fails silently and the app carries on.
 
+## App lock (off until you set a password)
+
+- **Where:** nowhere; it is entirely local.
+- **What it does:** covers every DayJot window with a password screen when you lock it,
+  after the auto-lock delay without keyboard or pointer input (30 minutes by default),
+  and on every launch. Sync, capture, and your unsaved edits carry on behind it.
+- **What it doesn't do:** encrypt anything. Notes stay plain markdown files, readable in
+  Finder or by anything else running as you, and the web inspector that ships in every
+  build can still read a locked page. The lock keeps people out of the app on a Mac that
+  is already unlocked; FileVault and your login password protect the disk.
+- **Forgot the password?** Quit DayJot and delete
+  `~/Library/Application Support/dayjot-desktop/app-lock-enabled`. It opens unlocked,
+  and you can set a new password. Your notes are not touched.
+
 ## Secrets
 
-The GitHub token lives in the **OS keychain only** — never in markdown, never in
-`.dayjot/`, never in git. Disconnecting GitHub in Settings deletes it.
+The GitHub token and the app-lock password's salted Argon2 hash live in the **OS keychain
+only** — never in markdown, never in `.dayjot/`, never in git. Disconnecting GitHub in
+Settings deletes the token; removing the password deletes the hash.
 
 ## Summary table
 

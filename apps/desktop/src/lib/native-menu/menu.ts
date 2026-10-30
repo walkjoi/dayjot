@@ -69,6 +69,7 @@ export function appMenuLayout(): AppSubmenuLayout[] {
         predefined({ About: null }, 'About DayJot'),
         separator(),
         command('settings.open', 'Settings…'),
+        command('app.lock'),
         separator(),
         predefined('Services'),
         separator(),

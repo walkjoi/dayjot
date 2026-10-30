@@ -33,6 +33,8 @@ export interface CommandContext {
   toggleFocusMode: () => void
   /** Show/hide the note outline rail (flips the persisted `editorShowOutline` setting). */
   toggleNoteOutline: () => void
+  /** Lock the app, or offer to set a password first when none exists. */
+  lockApp: () => void | Promise<void>
   /** Switch to a recent graph by zero-based position in the graph switcher. */
   switchGraph: (index: number) => void
   /** The configured Insert-timestamp format (Settings -> Editor). */

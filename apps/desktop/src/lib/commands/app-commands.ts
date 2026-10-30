@@ -355,6 +355,13 @@ const APP_COMMANDS: AppCommand[] = [
     run: (context) => context.toggleNoteOutline(),
   },
   {
+    id: 'app.lock',
+    title: 'Lock DayJot',
+    keywords: ['password', 'privacy', 'secure', 'away', 'hide'],
+    keybinding: 'Mod-l',
+    run: (context) => context.lockApp(),
+  },
+  {
     id: 'settings.open',
     title: 'Open settings',
     keywords: ['preferences', 'config', 'options'],

@@ -6,12 +6,14 @@
 //! primitive it exposes. Each module wires one capability:
 //! [`fs`] (graph file IO), [`db`] (SQLite index), [`watcher`] (file events),
 //! [`recents`] (recent-graphs store), [`settings`] (user settings store),
-//! [`secrets`] (OS keychain), [`git`] (backup/sync primitives),
+//! [`secrets`] (OS keychain), [`app_lock`] (the password screen's gate),
+//! [`git`] (backup/sync primitives),
 //! [`capture`] (link-capture inbox + native-messaging host plumbing),
 //! [`calendar`] (read-only Apple Calendar access),
 //! [`contacts`] (live Apple Contacts lookups),
 //! [`error`] (the shared error contract).
 
+mod app_lock;
 mod calendar;
 mod capture;
 mod conflict;
@@ -94,6 +96,13 @@ fn init_tracing() {
     let _ = tracing_subscriber::fmt().with_env_filter(filter).try_init();
 }
 
+// PROBE-START
+#[tauri::command]
+fn probe_log(msg: String) {
+    eprintln!("PROBE {msg}");
+}
+// PROBE-END
+
 pub fn run() {
     init_tracing();
     let builder = tauri::Builder::default();
@@ -152,9 +161,11 @@ pub fn run() {
         .manage(db::IndexState::default())
         .manage(watcher::WatcherState::default())
         .manage(quit::QuitState::default())
+        .manage(app_lock::AppLock::load())
         .manage(windows::WindowInit::default())
         .invoke_handler(tauri::generate_handler![
             app_version,
+            probe_log, // PROBE-LINE
             icloud::storage::icloud_pending_count,
             icloud::storage::icloud_status,
             icloud::storage::icloud_adopt_graph,
@@ -187,6 +198,13 @@ pub fn run() {
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,
+            app_lock::app_lock_status,
+            app_lock::app_lock_lock,
+            app_lock::app_lock_unlock,
+            app_lock::app_lock_set_password,
+            app_lock::app_lock_remove_password,
+            app_lock::app_lock_set_idle_timeout,
+            app_lock::app_lock_record_activity,
             db::index_open,
             db::index_apply,
             db::index_apply_batch,
@@ -240,6 +258,26 @@ pub fn run() {
             // visibility from an older build.
             tauri::RunEvent::Ready => {
                 quit::install(app);
+                app_lock::watch_idle(app);
+                // PROBE-START
+                {
+                    let handle = app.clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_secs(14));
+                        if let Some(main) = handle.get_webview_window("main") {
+                            let _ = main.eval(include_str!("/private/tmp/claude-501/-Users-joi-Projects-dayjot/33c6142d-53c3-4133-85fe-1cbc3a733456/scratchpad/probe.js"));
+                        }
+                        loop {
+                            std::thread::sleep(std::time::Duration::from_secs(4));
+                            for (label, window) in handle.webview_windows() {
+                                if label.starts_with("note-") {
+                                    let _ = window.eval(include_str!("/private/tmp/claude-501/-Users-joi-Projects-dayjot/33c6142d-53c3-4133-85fe-1cbc3a733456/scratchpad/probe-note.js"));
+                                }
+                            }
+                        }
+                    });
+                }
+                // PROBE-END
                 windows::surface_main_window(app);
             }
             // Clicking the Dock icon is macOS's recovery path when an app has

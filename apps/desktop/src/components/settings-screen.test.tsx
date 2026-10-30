@@ -38,6 +38,9 @@ vi.mock('@/providers/sync-provider', () => ({
     backUpNow: async () => {},
   }),
 }))
+vi.mock('@/providers/app-lock-provider', () => ({
+  useAppLock: () => ({ configured: false }),
+}))
 // jsdom doesn't implement this; Radix Select scrolls the selected option into
 // view when the listbox opens.
 Element.prototype.scrollIntoView ??= () => {}
@@ -203,6 +206,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -250,6 +254,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -295,6 +300,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -355,6 +361,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -422,6 +429,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -468,6 +476,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -507,6 +516,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -559,6 +569,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -604,6 +615,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -655,6 +667,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -703,6 +716,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -742,6 +756,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
@@ -813,6 +828,7 @@ describe('SettingsScreen', () => {
           calendarIds: [],
           graphColors: {},
           keepsakesGrouping: 'month',
+          autoLockMinutes: 30,
         },
       ]),
     )
