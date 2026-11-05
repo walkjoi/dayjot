@@ -12,6 +12,7 @@ import { runCommand } from '@/lib/commands/registry'
 import { todayIso } from '@/lib/dates'
 import { setMenuCommandDispatch } from '@/lib/native-menu/dispatch'
 import { isNativeMenuInstalled } from '@/lib/native-menu/menu'
+import { hasOpenModal } from '@/lib/open-modals'
 import { isMacosDesktop } from '@/lib/platform'
 import type { CommandContext } from '@/lib/commands/types'
 import { useAppLock } from '@/providers/app-lock-provider'
@@ -170,14 +171,9 @@ export function useAppShortcuts(): CommandContext {
   const focusedDailyDate = useFocusedDailyDate()
   const { resolvedTheme, setTheme } = useTheme()
   const { graph, recents, openRecent } = useGraph()
-  const { openPalette, open: paletteOpen } = usePalette()
+  const { openPalette } = usePalette()
   const { openShortcuts, closeShortcuts, open: shortcutsOpen } = useShortcuts()
-  const {
-    openTemplatePicker,
-    openTemplateCreate,
-    pickerOpen: templatePickerOpen,
-    createOpen: templateCreateOpen,
-  } = useNoteTemplates()
+  const { openTemplatePicker, openTemplateCreate } = useNoteTemplates()
   const { toggleSidebar, toggleContextPanel, toggleFocusMode } = useSidebar()
   const { settings, updateSettingsWith } = useSettings()
   const { phase: lockPhase, setupOpen: lockSetupOpen, requestLock } = useAppLock()
@@ -196,19 +192,14 @@ export function useAppShortcuts(): CommandContext {
     )
   }, [settings.timestampKeybinding])
 
-  // The palette is modal: app shortcuts must not navigate behind its overlay.
-  // A ref keeps the listener stable across open/close renders.
-  const paletteOpenRef = useRef(paletteOpen)
-
-  // Same for the ⌘/ cheat-sheet, except ⌘/ itself toggles it closed.
+  // The ⌘/ cheat-sheet is modal like every dialog (see `hasOpenModal` below),
+  // except that ⌘/ itself toggles it closed, so it keeps its own check. A ref
+  // keeps the listener stable across open/close renders.
   const shortcutsOpenRef = useRef(shortcutsOpen)
 
-  // And for the template dialogs — both are Radix modals; nothing may
-  // navigate behind them.
-  const templatesOpenRef = useRef(templatePickerOpen || templateCreateOpen)
-
-  // And for the lock screen and the password step in front of it: this is the
-  // gate native menu items reach too, and no command may run behind either.
+  // The lock screen and the password step in front of it: this is the gate
+  // native menu items reach too, and no command may run behind either — even
+  // in the `pending` phase, before any lock dialog has mounted.
   const lockOwnsWindowRef = useRef(lockPhase !== 'unlocked' || lockSetupOpen)
 
   // Read at run time, not captured: a command can fire long after the render
@@ -220,9 +211,7 @@ export function useAppShortcuts(): CommandContext {
   const routeRef = useRef(route)
   const focusedDailyDateRef = useRef(focusedDailyDate)
   useEffect(() => {
-    paletteOpenRef.current = paletteOpen
     shortcutsOpenRef.current = shortcutsOpen
-    templatesOpenRef.current = templatePickerOpen || templateCreateOpen
     lockOwnsWindowRef.current = lockPhase !== 'unlocked' || lockSetupOpen
     generationRef.current = graph?.generation ?? null
     graphRootRef.current = graph?.root ?? null
@@ -297,20 +286,20 @@ export function useAppShortcuts(): CommandContext {
       if (lockOwnsWindowRef.current) {
         return false
       }
-      if (paletteOpenRef.current) {
-        return false // modal palette owns the screen; Esc closes, then commands resume
-      }
       if (shortcutsOpenRef.current) {
-        // The cheat-sheet is modal too: nothing may navigate behind it, but
-        // the command that opened it closes it again.
+        // The cheat-sheet is modal: nothing may navigate behind it, but the
+        // command that opened it closes it again.
         if (id === 'shortcuts.show') {
           closeShortcuts()
           return true
         }
         return false
       }
-      if (templatesOpenRef.current) {
-        return false // the template picker/create dialogs are modal too
+      if (hasOpenModal()) {
+        // A dialog or the palette owns the screen: nothing may navigate,
+        // create, or toggle chrome behind it. Esc closes it; commands resume.
+        // Unconsumed, the keystroke keeps its native meaning in the dialog.
+        return false
       }
       void runCommand(id, context)
       return true

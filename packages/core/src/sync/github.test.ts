@@ -298,6 +298,79 @@ describe('getGithubToken', () => {
     })
     expect(store.has('github-auth')).toBe(true)
   })
+
+  const EXPIRING_APP_AUTH = JSON.stringify({
+    kind: 'app',
+    accessToken: 'ghu_old',
+    refreshToken: 'ghr_old',
+    expiresAt: 1_000,
+  })
+
+  /** A token endpoint that rotates refresh tokens: each is accepted once. */
+  function rotatingRefreshFetch() {
+    const spent = new Set<string>()
+    return vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as Record<string, unknown>
+      const refreshToken = String(body['refresh_token'])
+      if (spent.has(refreshToken)) {
+        return jsonResponse({ error: 'bad_refresh_token' })
+      }
+      spent.add(refreshToken)
+      return jsonResponse({ access_token: 'ghu_new', refresh_token: 'ghr_new', expires_in: 28800 })
+    })
+  }
+
+  it('shares one refresh between concurrent callers near expiry', async () => {
+    // The sync engine, gist publishing, and the account lookup can all ask
+    // at once; separate refreshes would spend the same refresh token.
+    fakeKeychain({ 'github-auth': EXPIRING_APP_AUTH })
+    const fetchFn = rotatingRefreshFetch()
+
+    const tokens = await Promise.all([
+      getGithubToken(fetchFn, () => 2_000),
+      getGithubToken(fetchFn, () => 2_000),
+      getGithubToken(fetchFn, () => 2_000),
+    ])
+
+    expect(tokens).toEqual(['ghu_new', 'ghu_new', 'ghu_new'])
+    expect(fetchFn).toHaveBeenCalledOnce()
+  })
+
+  it('does not respend a pair read just before a refresh landed', async () => {
+    const store = new Map([['github-auth', EXPIRING_APP_AUTH]])
+    let firstReadRelease: () => void = () => {}
+    const firstRead = new Promise<void>((resolve) => {
+      firstReadRelease = resolve
+    })
+    let reads = 0
+    setBridge({
+      invoke: async (command, args) => {
+        const name = args['name'] as string
+        if (command === 'secret_get') {
+          reads += 1
+          const value = store.get(name) ?? null // read now, answered late for the first caller
+          if (reads === 1) {
+            await firstRead
+          }
+          return value
+        }
+        if (command === 'secret_set') {
+          store.set(name, args['value'] as string)
+          return null
+        }
+        throw new Error(`unexpected command ${command}`)
+      },
+      listen: async () => () => {},
+    })
+    const fetchFn = rotatingRefreshFetch()
+
+    const late = getGithubToken(fetchFn, () => 2_000) // holds the pre-refresh pair
+    expect(await getGithubToken(fetchFn, () => 2_000)).toBe('ghu_new') // refreshes, lands
+    firstReadRelease()
+
+    expect(await late).toBe('ghu_new')
+    expect(fetchFn).toHaveBeenCalledOnce()
+  })
 })
 
 describe('getAuthenticatedUser', () => {

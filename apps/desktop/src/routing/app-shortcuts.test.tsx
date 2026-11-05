@@ -5,6 +5,7 @@ import { PaletteProvider, usePalette } from '@/components/command-palette/palett
 import { listRegisteredBindings } from '@/editor/keymap'
 import { registerAppCommands } from '@/lib/commands/app-commands'
 import { dispatchMenuCommand } from '@/lib/native-menu/dispatch'
+import { registerOpenModal } from '@/lib/open-modals'
 import { NoteTemplatesProvider } from '@/providers/note-templates-provider'
 import { ShortcutsProvider, useShortcuts } from '@/providers/shortcuts-provider'
 import { SidebarProvider, useSidebar } from '@/providers/sidebar-provider'
@@ -457,6 +458,26 @@ describe('app shortcuts', () => {
     act(() => press('n'))
     expect(result.current.router.route).toEqual({ kind: 'today' }) // nothing behind the overlay
     act(() => result.current.palette.closePalette())
+    act(() => press('n'))
+    expect(result.current.router.route.kind).toBe('note') // resumes after close
+  })
+
+  it('is inert behind any open dialog, for keystrokes and native menu items alike', () => {
+    const { result } = shortcutsHook()
+    // Any dialog on the shared wrapper, e.g. the Delete notebook confirmation.
+    const releaseDialog = registerOpenModal()
+    try {
+      const keystroke = new KeyboardEvent('keydown', { key: 'n', metaKey: true, cancelable: true })
+      act(() => {
+        window.dispatchEvent(keystroke)
+      })
+      act(() => dispatchMenuCommand('nav.tasks'))
+      expect(result.current.router.route).toEqual({ kind: 'today' }) // nothing behind the dialog
+      expect(keystroke.defaultPrevented).toBe(false) // the dialog keeps the native keystroke
+    } finally {
+      releaseDialog() // module-level registry: never leak into later tests
+    }
+
     act(() => press('n'))
     expect(result.current.router.route.kind).toBe('note') // resumes after close
   })

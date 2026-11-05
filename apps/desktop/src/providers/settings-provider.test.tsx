@@ -1,5 +1,5 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { ReactNode } from 'react'
 import { setBridge } from '@dayjot/core'
@@ -16,6 +16,7 @@ import { SETTINGS_QUERY_KEY, SettingsProvider, useSettings } from './settings-pr
 
 let stored: Record<string, unknown>
 let saved: unknown[]
+let loadCount: number
 let failSaves: boolean
 let failLoad: boolean
 /** When set, `settings_load` blocks until {@link releaseLoad} is called. */
@@ -29,6 +30,7 @@ function releaseLoad(): void {
 
 function installFakeBridge(): void {
   saved = []
+  loadCount = 0
   failSaves = false
   failLoad = false
   gateLoad = false
@@ -37,6 +39,7 @@ function installFakeBridge(): void {
     invoke: async (command, args) => {
       switch (command) {
         case 'settings_load':
+          loadCount += 1
           if (failLoad) {
             throw { kind: 'io', message: 'corrupt store' }
           }
@@ -147,6 +150,7 @@ describe('SettingsProvider', () => {
           dateFormat: 'mdy',
           weekStartDay: 'monday',
           allNotesFilterTags: ['book'],
+          autoLockMinutes: 30,
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
@@ -213,6 +217,7 @@ describe('SettingsProvider', () => {
           dateFormat: 'mdy',
           weekStartDay: 'monday',
           allNotesFilterTags: ['book', 'link', 'person'],
+          autoLockMinutes: 30,
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
@@ -264,6 +269,7 @@ describe('SettingsProvider', () => {
           dateFormat: 'mdy',
           weekStartDay: 'monday',
           allNotesFilterTags: ['book', 'link', 'person'],
+          autoLockMinutes: 30,
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
@@ -309,6 +315,7 @@ describe('SettingsProvider', () => {
           dateFormat: 'mdy',
           weekStartDay: 'monday',
           allNotesFilterTags: ['book', 'link', 'person'],
+          autoLockMinutes: 30,
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
@@ -460,6 +467,7 @@ describe('SettingsProvider', () => {
           dateFormat: 'mdy',
           weekStartDay: 'monday',
           allNotesFilterTags: ['book', 'link', 'person'],
+          autoLockMinutes: 30,
           calendarEnabled: false,
           calendarIds: [],
           graphColors: {},
@@ -508,6 +516,7 @@ describe('SettingsProvider', () => {
         dateFormat: 'mdy',
         weekStartDay: 'monday',
         allNotesFilterTags: ['book', 'link', 'person'],
+        autoLockMinutes: 30,
         calendarEnabled: false,
         calendarIds: [],
         graphColors: {},
@@ -538,5 +547,32 @@ describe('SettingsProvider', () => {
       await flushSettings()
     })
     expect(saved).toEqual([])
+  })
+
+  it('a failed load stays final when the network comes back', async () => {
+    failLoad = true
+    const { result } = renderHook(() => useSettings(), { wrapper })
+    await expect(result.current.whenSettingsLoaded()).resolves.toBe('failed')
+    act(() => {
+      result.current.updateSettings({ editorMarkdownSyntax: 'show' })
+    })
+
+    // The store turns readable and the network flaps. TanStack refetches
+    // stale queries on reconnect, and a query with no data counts as stale.
+    failLoad = false
+    stored = { editorMarkdownSyntax: 'hide' }
+    act(() => {
+      onlineManager.setOnline(false)
+      onlineManager.setOnline(true)
+    })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+      await flushSettings()
+    })
+
+    // Callers were already told "session only": nothing may load or persist.
+    expect(loadCount).toBe(1)
+    expect(saved).toEqual([])
+    expect(result.current.settings.editorMarkdownSyntax).toBe('show')
   })
 })

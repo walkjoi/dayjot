@@ -14,6 +14,7 @@ import {
 } from '@dayjot/core'
 import { dirtyOpenPaths } from '@/editor/open-documents'
 import { throttledInvalidateIndexQueries } from '@/lib/query-client'
+import { trackSubscriptions } from '@/lib/subscriptions'
 
 /**
  * Whether a graph root lives under iCloud Drive: the app's container and the
@@ -92,7 +93,12 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
   const { graph, indexGeneration } = options
   let disposed = false
   let baselinePending = true
-  const disposers: Array<() => void> = []
+  /**
+   * Every registration `start()` makes. Its listens resolve asynchronously,
+   * so a dispose can land between them; the tracker tears down any that
+   * resolve afterwards instead of leaking them.
+   */
+  const subscriptions = trackSubscriptions()
   const ownWrites = new Map<string, number>()
   let pendingIngest = new Set<string>()
   let applyingSweepResult = false
@@ -244,18 +250,27 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
       console.error('iCloud watch failed to start:', err)
       // Sweeps still run off file-change batches; carry on.
     }
-    disposers.push(subscribeOwnWrites((path) => {
-      const now = Date.now()
-      ownWrites.set(path, now)
-      pruneOwnWrites(now)
-    }))
+    if (disposed) {
+      // Torn down while the watch was starting (StrictMode's probe unmount,
+      // a fast graph switch). dispose() already stopped the watch; a second
+      // stop here could land after the next controller's start and kill its
+      // watch, so just register nothing.
+      return
+    }
+    subscriptions.track(
+      subscribeOwnWrites((path) => {
+        const now = Date.now()
+        ownWrites.set(path, now)
+        pruneOwnWrites(now)
+      }),
+    )
     // Subscriptions are defensive like the watch above: a failed listen must
     // not reject start() (an unhandled rejection at the provider's call site)
     // or skip the initial sweep below — resume triggers and the baseline scan
     // keep conflict handling alive without them.
     try {
-      disposers.push(
-        await subscribeFileChanges((changes) => {
+      await subscriptions.add(
+        subscribeFileChanges((changes) => {
           if (disposed || applyingSweepResult) {
             return
           }
@@ -276,15 +291,15 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
           scheduleIngestScan()
         }),
       )
-      disposers.push(
-        await subscribeIcloudConflicts(() => {
+      await subscriptions.add(
+        subscribeIcloudConflicts(() => {
           if (!disposed) {
             scheduleScan()
           }
         }),
       )
-      disposers.push(
-        await subscribeIcloudWatchFailed(() => {
+      await subscriptions.add(
+        subscribeIcloudWatchFailed(() => {
           if (disposed) {
             return
           }
@@ -299,7 +314,9 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
     } catch (err) {
       console.error('iCloud change subscriptions failed to start:', err)
     }
-    disposers.push(...attachResumeListeners(scheduleScan))
+    for (const detach of attachResumeListeners(scheduleScan)) {
+      subscriptions.track(detach)
+    }
     // The adoption baseline + any conflicts that accrued while closed.
     scheduleScan()
   }
@@ -310,9 +327,7 @@ export function createIcloudController(options: IcloudControllerOptions): Icloud
       clearTimeout(scanTimer)
       scanTimer = null
     }
-    for (const disposeOne of disposers.splice(0)) {
-      disposeOne()
-    }
+    subscriptions.disposeAll()
     void icloudWatchStop().catch(() => {
       // Shutdown/switch race — the next start replaces the watch anyway.
     })

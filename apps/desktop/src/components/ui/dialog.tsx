@@ -2,13 +2,36 @@ import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useModalRegistration } from "@/lib/open-modals"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
 function Dialog({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  modal = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+  // App commands must never run behind an open modal (lib/open-modals.ts), so
+  // openness is tracked here even for an uncontrolled, trigger-driven dialog.
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen)
+  const open = openProp ?? uncontrolledOpen
+  useModalRegistration(modal && open)
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      open={open}
+      onOpenChange={(next) => {
+        if (openProp === undefined) {
+          setUncontrolledOpen(next)
+        }
+        onOpenChange?.(next)
+      }}
+      modal={modal}
+      {...props}
+    />
+  )
 }
 
 function DialogTrigger({
