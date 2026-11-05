@@ -13,8 +13,12 @@ import {
  * the "Insert template…" picker and the "New template" name dialog — provided
  * once per workspace so the palette commands (via CommandContext) and the
  * dialogs themselves share one definition of "open", the same shape as the
- * shortcuts provider.
+ * shortcuts provider. One value, not a flag per dialog, so the two can never
+ * be open together.
  */
+
+/** The open template surface; at most one at a time. */
+type TemplateSurface = 'picker' | 'create'
 
 interface NoteTemplatesContextValue {
   pickerOpen: boolean
@@ -28,35 +32,34 @@ interface NoteTemplatesContextValue {
 const NoteTemplatesContext = createContext<NoteTemplatesContextValue | null>(null)
 
 export function NoteTemplatesProvider({ children }: { children: ReactNode }): ReactElement {
-  const [pickerOpen, setPickerOpen] = useState(false)
-  const [createOpen, setCreateOpen] = useState(false)
+  const [openSurface, setOpenSurface] = useState<TemplateSurface | null>(null)
 
   const openTemplatePicker = useCallback(() => {
-    setPickerOpen(true)
+    setOpenSurface('picker')
   }, [])
+  // Each close only closes its own surface: a late close from the one just
+  // replaced must not dismiss the other.
   const closeTemplatePicker = useCallback(() => {
-    setPickerOpen(false)
+    setOpenSurface((current) => (current === 'picker' ? null : current))
   }, [])
   const openTemplateCreate = useCallback(() => {
-    setPickerOpen(false) // the picker's empty state chains here
-    setCreateOpen(true)
+    setOpenSurface('create') // replaces the picker, whose empty state chains here
   }, [])
   const closeTemplateCreate = useCallback(() => {
-    setCreateOpen(false)
+    setOpenSurface((current) => (current === 'create' ? null : current))
   }, [])
 
   const value = useMemo<NoteTemplatesContextValue>(
     () => ({
-      pickerOpen,
-      createOpen,
+      pickerOpen: openSurface === 'picker',
+      createOpen: openSurface === 'create',
       openTemplatePicker,
       closeTemplatePicker,
       openTemplateCreate,
       closeTemplateCreate,
     }),
     [
-      pickerOpen,
-      createOpen,
+      openSurface,
       openTemplatePicker,
       closeTemplatePicker,
       openTemplateCreate,
