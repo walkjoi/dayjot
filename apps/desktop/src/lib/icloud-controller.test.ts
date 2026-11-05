@@ -36,6 +36,18 @@ let scanCalls: ScanCall[]
 let scanResults: Array<Record<string, unknown> | Error | 'hang'>
 let releaseScan: (() => void) | null
 let listeners: Map<string, (payload: unknown) => void>
+/** When set, `icloud_watch_start` answers only once this resolves. */
+let watchStartGate: Promise<void> | null
+/** When set, every bridge `listen` resolves only once this does. */
+let listenGate: Promise<void> | null
+
+function deferred(): { promise: Promise<void>; resolve: () => void } {
+  let resolve: () => void = () => {}
+  const promise = new Promise<void>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+  return { promise, resolve }
+}
 
 beforeEach(() => {
   // Fake only what the controller schedules — leaving setImmediate real
@@ -49,6 +61,8 @@ beforeEach(() => {
   scanResults = []
   releaseScan = null
   listeners = new Map()
+  watchStartGate = null
+  listenGate = null
   seams.dirtyOpenPaths.mockReturnValue([])
   setBridge({
     invoke: async (command: string, args?: Record<string, unknown>) => {
@@ -76,11 +90,19 @@ beforeEach(() => {
         }
         case 'note_read':
           return '# merged\n'
+        case 'icloud_watch_start':
+          if (watchStartGate !== null) {
+            await watchStartGate
+          }
+          return null
         default:
           return null
       }
     },
     listen: async (event: string, handler: (payload: unknown) => void) => {
+      if (listenGate !== null) {
+        await listenGate
+      }
       listeners.set(event, handler)
       return () => listeners.delete(event)
     },
@@ -118,7 +140,12 @@ async function settleScan(advanceMs = 1_100): Promise<void> {
   // last timer, and hashing awaits `crypto.subtle` — a *real* async source
   // fake timers can't flush. setImmediate stays un-faked (see beforeEach) so
   // each round yields a genuine event-loop turn.
-  for (let round = 0; round < 20; round += 1) {
+  await yieldTurns(20)
+}
+
+/** Yield genuine event-loop turns so pending promise chains advance. */
+async function yieldTurns(rounds = 5): Promise<void> {
+  for (let round = 0; round < rounds; round += 1) {
     await new Promise((resolve) => setImmediate(resolve))
   }
 }
@@ -310,5 +337,47 @@ describe('createIcloudController', () => {
     await settleScan()
 
     expect(scanCalls[0]?.skipPaths).toEqual(['daily/2026-07-04.md'])
+  })
+
+  it('a dispose while the watch is starting registers nothing', async () => {
+    // StrictMode's probe unmount (or a fast graph switch) disposes the
+    // controller before the native watch start has answered.
+    const watchStart = deferred()
+    watchStartGate = watchStart.promise
+    const addWindowListener = vi.spyOn(window, 'addEventListener')
+    try {
+      const icloud = controller()
+      const starting = icloud.start()
+      icloud.dispose()
+      active = null
+      watchStart.resolve()
+      await starting
+
+      expect(listeners.size).toBe(0)
+      expect(addWindowListener).not.toHaveBeenCalledWith('focus', expect.any(Function))
+      emitFileChanges([{ path: 'notes/late.md', kind: 'upsert', modifiedMs: 1 }])
+      await settleScan(INGEST_SETTLE_MS)
+      expect(scanCalls).toHaveLength(0)
+    } finally {
+      addWindowListener.mockRestore()
+    }
+  })
+
+  it('a dispose while its listens resolve tears each one down', async () => {
+    const listen = deferred()
+    listenGate = listen.promise
+    const icloud = controller()
+    const starting = icloud.start()
+    await yieldTurns() // past the watch start, parked on the first listen
+    icloud.dispose()
+    active = null
+    listen.resolve()
+    await starting
+
+    expect(listeners.size).toBe(0)
+    emitFileChanges([{ path: 'notes/late.md', kind: 'upsert', modifiedMs: 1 }])
+    window.dispatchEvent(new Event('focus'))
+    await settleScan(INGEST_SETTLE_MS)
+    expect(scanCalls).toHaveLength(0)
   })
 })
