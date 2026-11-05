@@ -189,7 +189,9 @@ export function IcloudSettingsField(): ReactElement | null {
         ) : null}
         {hosted ? null : (
           <div className="mt-2">
-            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            {/* A move in flight owns the dialog until it settles (it closes
+                itself once the copy lands), like every confirm dialog here. */}
+            <Dialog open={confirmOpen} onOpenChange={(open) => !busy && setConfirmOpen(open)}>
               <DialogTrigger asChild>
                 <Button size="xs" variant="outline" disabled={status?.available !== true}>
                   Move graph to iCloud…
