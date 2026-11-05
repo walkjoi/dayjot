@@ -22,48 +22,64 @@ pub use platform::install;
 /// webview can't block quitting (or a logout) forever.
 const FLUSH_DEADLINE: Duration = Duration::from_secs(5);
 
-/// Labels of webviews that still owe a flush confirmation; empty when no quit
-/// is in flight. Tracked per label so a window that confirms and is then
-/// destroyed, or confirms again after a second ⌘Q, counts once.
+/// The quit-time flush handshake in flight, if any.
 #[derive(Default)]
 pub struct QuitState {
-    pending: Mutex<HashSet<String>>,
+    handshake: Mutex<Handshake>,
+}
+
+#[derive(Default)]
+struct Handshake {
+    /// Bumped by every [`QuitState::arm`]. A deadline thread carries the id
+    /// it was started for, so a repeated ⌘Q's fresh handshake keeps its own
+    /// full deadline instead of inheriting the first one's.
+    id: u64,
+    /// Labels of webviews that still owe a flush confirmation; empty when no
+    /// quit is in flight. Tracked per label so a window that confirms and is
+    /// then destroyed, or confirms again after a second ⌘Q, counts once.
+    pending: HashSet<String>,
 }
 
 impl QuitState {
-    fn lock(&self) -> MutexGuard<'_, HashSet<String>> {
+    fn lock(&self) -> MutexGuard<'_, Handshake> {
         // The set stays valid whatever a panic interrupted; don't wedge quit.
-        self.pending
+        self.handshake
             .lock()
             .unwrap_or_else(|poison| poison.into_inner())
     }
 
-    /// Start (or restart, on a repeated ⌘Q) the handshake for `windows`.
-    pub fn arm(&self, windows: impl IntoIterator<Item = String>) {
-        let mut pending = self.lock();
-        pending.clear();
-        pending.extend(windows);
+    /// Start (or restart, on a repeated ⌘Q) the handshake for `windows`, and
+    /// return its id for the deadline that may later abandon it.
+    pub fn arm(&self, windows: impl IntoIterator<Item = String>) -> u64 {
+        let mut handshake = self.lock();
+        handshake.id += 1;
+        handshake.pending.clear();
+        handshake.pending.extend(windows);
+        handshake.id
     }
 
     /// Whether a quit is waiting on confirmations. Window creation checks
     /// this: a webview born mid-handshake would never be waited on.
     pub fn armed(&self) -> bool {
-        !self.lock().is_empty()
+        !self.lock().pending.is_empty()
     }
 
     /// Settle `label`'s obligation (confirmed, or destroyed). True only when
     /// it was the last one owed.
     pub fn settle(&self, label: &str) -> bool {
-        let mut pending = self.lock();
-        pending.remove(label) && pending.is_empty()
+        let mut handshake = self.lock();
+        handshake.pending.remove(label) && handshake.pending.is_empty()
     }
 
-    /// Drop every remaining obligation. True when a handshake was still open.
-    pub fn abandon(&self) -> bool {
-        let mut pending = self.lock();
-        let open = !pending.is_empty();
-        pending.clear();
-        open
+    /// Drop handshake `id`'s remaining obligations. True when it was still
+    /// open; false when it already concluded or a later `arm` replaced it.
+    pub fn abandon(&self, id: u64) -> bool {
+        let mut handshake = self.lock();
+        if handshake.id != id || handshake.pending.is_empty() {
+            return false;
+        }
+        handshake.pending.clear();
+        true
     }
 }
 
@@ -73,12 +89,12 @@ fn begin(app: &AppHandle) -> bool {
     if windows.is_empty() {
         return false;
     }
-    app.state::<QuitState>().arm(windows);
+    let handshake = app.state::<QuitState>().arm(windows);
     let _ = app.emit("app:quit-requested", ());
     let handle = app.clone();
     std::thread::spawn(move || {
         std::thread::sleep(FLUSH_DEADLINE);
-        if handle.state::<QuitState>().abandon() {
+        if handle.state::<QuitState>().abandon(handshake) {
             tracing::warn!("quit flush missed its deadline; quitting anyway");
             finish();
         }
@@ -221,10 +237,21 @@ mod tests {
     #[test]
     fn abandoning_concludes_once() {
         let state = QuitState::default();
-        state.arm(["main".into(), "note-a".into()]);
-        assert!(state.abandon());
+        let handshake = state.arm(["main".into(), "note-a".into()]);
+        assert!(state.abandon(handshake));
         assert!(!state.armed());
-        assert!(!state.abandon());
+        assert!(!state.abandon(handshake));
         assert!(!state.settle("note-a")); // a late confirm can't finish twice
+    }
+
+    #[test]
+    fn a_superseded_deadline_cannot_abandon_a_rearmed_handshake() {
+        let state = QuitState::default();
+        let first = state.arm(["main".into(), "note-a".into()]);
+        let second = state.arm(["main".into(), "note-a".into()]); // second ⌘Q
+        assert!(!state.abandon(first)); // the first ⌘Q's deadline fires
+        assert!(state.armed()); // the fresh handshake still waits on its windows
+        assert!(state.abandon(second));
+        assert!(!state.armed());
     }
 }
