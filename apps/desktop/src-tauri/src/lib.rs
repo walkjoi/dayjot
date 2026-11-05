@@ -96,13 +96,6 @@ fn init_tracing() {
     let _ = tracing_subscriber::fmt().with_env_filter(filter).try_init();
 }
 
-// PROBE-START
-#[tauri::command]
-fn probe_log(msg: String) {
-    eprintln!("PROBE {msg}");
-}
-// PROBE-END
-
 pub fn run() {
     init_tracing();
     let builder = tauri::Builder::default();
@@ -165,7 +158,6 @@ pub fn run() {
         .manage(windows::WindowInit::default())
         .invoke_handler(tauri::generate_handler![
             app_version,
-            probe_log, // PROBE-LINE
             icloud::storage::icloud_pending_count,
             icloud::storage::icloud_status,
             icloud::storage::icloud_adopt_graph,
@@ -259,25 +251,6 @@ pub fn run() {
             tauri::RunEvent::Ready => {
                 quit::install(app);
                 app_lock::watch_idle(app);
-                // PROBE-START
-                {
-                    let handle = app.clone();
-                    std::thread::spawn(move || {
-                        std::thread::sleep(std::time::Duration::from_secs(14));
-                        if let Some(main) = handle.get_webview_window("main") {
-                            let _ = main.eval(include_str!("/private/tmp/claude-501/-Users-joi-Projects-dayjot/33c6142d-53c3-4133-85fe-1cbc3a733456/scratchpad/probe.js"));
-                        }
-                        loop {
-                            std::thread::sleep(std::time::Duration::from_secs(4));
-                            for (label, window) in handle.webview_windows() {
-                                if label.starts_with("note-") {
-                                    let _ = window.eval(include_str!("/private/tmp/claude-501/-Users-joi-Projects-dayjot/33c6142d-53c3-4133-85fe-1cbc3a733456/scratchpad/probe-note.js"));
-                                }
-                            }
-                        }
-                    });
-                }
-                // PROBE-END
                 windows::surface_main_window(app);
             }
             // Clicking the Dock icon is macOS's recovery path when an app has
