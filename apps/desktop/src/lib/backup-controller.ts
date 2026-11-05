@@ -122,6 +122,12 @@ export function createBackupController(options: BackupControllerOptions): Backup
   let state: BackupState = { phase: 'loading' }
   const listeners = new Set<() => void>()
   let disposed = false
+  /**
+   * Bumped by every `start()`. Connect, disconnect, sign-out, and the
+   * back-up-now retry all restart the lifecycle, so runs can overlap; only
+   * the latest may act once its awaits resolve.
+   */
+  let startRun = 0
   let engine: SyncEngine | null = null
   let unlisten: Unlisten | null = null
   const domDisposers: Array<() => void> = []
@@ -194,9 +200,9 @@ export function createBackupController(options: BackupControllerOptions): Backup
   /**
    * Wire an engine into the watcher (which feeds its debounce) and the
    * quit-time flusher. Returns false when teardown or a restart won the race
-   * against the subscribe — the engine is already stopped in that case.
+   * against the subscribe — the engine is stopped in that case.
    */
-  async function adoptEngine(next: SyncEngine): Promise<boolean> {
+  async function adoptEngine(next: SyncEngine, superseded: () => boolean): Promise<boolean> {
     engine = next
     // Spooled capture envelopes (`.dayjot/inbox/`) are git-ignored and
     // drained within seconds — they must not tick the commit debounce. The
@@ -206,7 +212,7 @@ export function createBackupController(options: BackupControllerOptions): Backup
         next.noteChanged()
       }
     })
-    if (disposed || engine !== next) {
+    if (superseded()) {
       subscription()
       next.stop()
       return false
@@ -226,9 +232,15 @@ export function createBackupController(options: BackupControllerOptions): Backup
    * the UI stays `disconnected`. Connecting a backup later adopts this
    * repository, history included.
    */
-  async function startLocalHistory(initialized: boolean): Promise<void> {
+  async function startLocalHistory(
+    initialized: boolean,
+    superseded: () => boolean,
+  ): Promise<void> {
     if (!initialized) {
       await gitSetup(null, null, generation)
+      if (superseded()) {
+        return
+      }
     }
     const next = createSyncEngine({
       generation,
@@ -242,13 +254,15 @@ export function createBackupController(options: BackupControllerOptions): Backup
         }
       },
     })
-    if (!(await adoptEngine(next))) {
+    if (!(await adoptEngine(next, superseded))) {
       return
     }
     void next.syncNow() // first snapshot: commit whatever is already pending
   }
 
   async function start(): Promise<void> {
+    const run = ++startRun
+    const superseded = (): boolean => disposed || run !== startRun
     teardown()
     if (disposed) {
       return
@@ -256,12 +270,12 @@ export function createBackupController(options: BackupControllerOptions): Backup
     setState({ phase: 'loading' })
     try {
       const [status, auth] = await Promise.all([gitStatus(generation), loadGithubAuth()])
-      if (disposed) {
-        return
+      if (superseded()) {
+        return // a newer run probes for itself; this probe may predate its change
       }
       if (!status.initialized || status.remoteUrl === null) {
         setState({ phase: 'disconnected' })
-        await startLocalHistory(status.initialized)
+        await startLocalHistory(status.initialized, superseded)
         return
       }
       const remoteUrl = status.remoteUrl
@@ -308,7 +322,7 @@ export function createBackupController(options: BackupControllerOptions): Backup
         onRemoteChanges,
       })
       setState({ phase: 'connected', remoteUrl, repo, status: { state: 'idle' } })
-      if (!(await adoptEngine(next))) {
+      if (!(await adoptEngine(next, superseded))) {
         return
       }
 
@@ -343,13 +357,16 @@ export function createBackupController(options: BackupControllerOptions): Backup
 
       void next.syncNow() // launch pull: pick up other devices' changes
     } catch (error) {
+      if (superseded()) {
+        // A newer run (or dispose) owns the lifecycle now: tearing down here
+        // would stop *its* engine, and its state is the one to show.
+        return
+      }
       // Any partially-built lifecycle is torn down whole — no zombie engine
       // keeps timers or git work running behind a disconnected UI.
       teardown()
-      if (!disposed) {
-        console.error('backup start failed:', errorMessage(error))
-        setState({ phase: 'disconnected' })
-      }
+      console.error('backup start failed:', errorMessage(error))
+      setState({ phase: 'disconnected' })
     }
   }
 
@@ -414,7 +431,15 @@ export function createBackupController(options: BackupControllerOptions): Backup
       await start()
     },
     backUpNow: async () => {
-      await engine?.syncNow()
+      if (engine === null) {
+        // Connected with no engine: the probe refused to start one (an HTTPS
+        // generic remote). Re-probe, so a remote the user just switched to
+        // SSH is adopted without a relaunch; an unchanged one reports the
+        // same error again instead of the button silently doing nothing.
+        await start()
+        return
+      }
+      await engine.syncNow()
     },
     dispose: () => {
       disposed = true

@@ -41,6 +41,12 @@ interface FakeOptions {
   /** Hold the listen promise until `release()` (the teardown-race window). */
   gateListen?: boolean
   failStatus?: boolean
+  /**
+   * Hold the first `git_status` until `releaseStatus()`, then answer with the
+   * status as it was when called (`'stale'`) or fail (`'fail'`): a probe
+   * still out when a newer `start()` runs.
+   */
+  gateFirstStatus?: 'stale' | 'fail'
   /** Scripted `git_merge_remote` outcome (defaults to up-to-date). */
   mergeOutcome?: unknown
   /** Per-call merge outcomes for retry/convergence tests. */
@@ -71,6 +77,8 @@ function fakeBridge(options: FakeOptions = {}) {
   }
   let releaseListen: (() => void) | null = null
   let releaseIndexApply: (() => void) | null = null
+  let releaseStatus: (() => void) | null = null
+  let statusCount = 0
   let indexApplyCount = 0
   const mergeOutcomes = [...(options.mergeOutcomes ?? [])]
   const pushOutcomes = [...(options.pushOutcomes ?? [])]
@@ -79,11 +87,23 @@ function fakeBridge(options: FakeOptions = {}) {
       calls.push(command)
       invocations.push({ command, args })
       switch (command) {
-        case 'git_status':
+        case 'git_status': {
           if (options.failStatus === true) {
             throw { kind: 'io', message: 'broken repo' }
           }
+          statusCount += 1
+          if (options.gateFirstStatus !== undefined && statusCount === 1) {
+            const asCalled = { ...status }
+            await new Promise<void>((resolve) => {
+              releaseStatus = resolve
+            })
+            if (options.gateFirstStatus === 'fail') {
+              throw { kind: 'io', message: 'probe failed late' }
+            }
+            return asCalled
+          }
           return status
+        }
         case 'git_setup':
           status.initialized = true
           status.remoteUrl = typeof args['remoteUrl'] === 'string' ? args['remoteUrl'] : null
@@ -144,6 +164,7 @@ function fakeBridge(options: FakeOptions = {}) {
     status,
     releaseListen: () => releaseListen?.(),
     releaseIndexApply: () => releaseIndexApply?.(),
+    releaseStatus: () => releaseStatus?.(),
   }
 }
 
@@ -229,6 +250,83 @@ describe('createBackupController', () => {
     expect(calls).not.toContain('git_commit_all')
     expect(calls).not.toContain('git_fetch')
     controller.dispose()
+  })
+
+  it('back up now re-checks a refused remote and adopts it once it is SSH', async () => {
+    const { calls, status } = fakeBridge({ remoteUrl: 'https://gitlab.com/alex/notes.git' })
+    const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
+    await controller.start()
+
+    // Unchanged remote: the button re-checks and reports the same refusal,
+    // rather than doing nothing.
+    await controller.backUpNow()
+    expect(calls.filter((command) => command === 'git_status')).toHaveLength(2)
+    expect(controller.getState()).toMatchObject({
+      phase: 'connected',
+      status: { state: 'error', errorKind: 'rejected' },
+    })
+
+    // The user follows the advice: git remote set-url origin git@….
+    status.remoteUrl = 'git@gitlab.com:alex/notes.git'
+    await controller.backUpNow()
+    await vi.waitFor(() => {
+      expect(controller.getState()).toMatchObject({
+        phase: 'connected',
+        repo: null,
+        status: { state: 'idle' },
+      })
+    })
+    expect(calls).toContain('git_fetch')
+    controller.dispose()
+  })
+
+  it('a probe superseded by a newer start never adopts its stale answer', async () => {
+    // The launch probe is still out when the user disconnects: its answer
+    // predates the disconnect and must not resurrect a connected engine.
+    const { calls, releaseStatus } = fakeBridge({ gateFirstStatus: 'stale' })
+    const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
+    const launch = controller.start()
+    await vi.waitFor(() => {
+      expect(calls).toContain('git_status')
+    })
+
+    await controller.disconnectGraph()
+    expect(controller.getState()).toEqual({ phase: 'disconnected' })
+
+    releaseStatus()
+    await launch
+
+    expect(controller.getState()).toEqual({ phase: 'disconnected' })
+    expect(calls).not.toContain('git_fetch')
+    controller.dispose()
+  })
+
+  it('a superseded probe that fails leaves the newer run in charge', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const { calls, releaseStatus } = fakeBridge({ gateFirstStatus: 'fail' })
+      const controller = createBackupController({ graph: GRAPH, indexGeneration: 1 })
+      const first = controller.start()
+      await vi.waitFor(() => {
+        expect(calls).toContain('git_status')
+      })
+      await controller.start() // a restart while the first probe is still out
+      await vi.waitFor(() => {
+        expect(controller.getState()).toMatchObject({ phase: 'connected', status: { state: 'idle' } })
+      })
+
+      releaseStatus()
+      await first
+
+      // The stale failure must not tear down the live engine or flip the UI.
+      expect(controller.getState()).toMatchObject({ phase: 'connected', status: { state: 'idle' } })
+      const fetches = calls.filter((command) => command === 'git_fetch').length
+      await controller.backUpNow()
+      expect(calls.filter((command) => command === 'git_fetch')).toHaveLength(fetches + 1)
+      controller.dispose()
+    } finally {
+      errorSpy.mockRestore()
+    }
   })
 
   it('runs the launch pull when fully connected — and skips the idle push', async () => {
