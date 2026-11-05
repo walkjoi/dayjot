@@ -290,30 +290,69 @@ export async function refreshGithubAuth(
 const REFRESH_MARGIN_MS = 5 * 60 * 1000
 
 /**
+ * The refresh in flight, shared by every caller that finds the token near
+ * expiry at once (the sync engine, gist publishing, the account lookup). A
+ * refresh rotates the pair, so two concurrent refreshes would spend the same
+ * refresh token twice and the loser would read as signed out. Scoped to this
+ * JS context: each window refreshes on its own.
+ */
+let inFlightRefresh: Promise<string | null> | null = null
+
+/**
  * The token for git/API calls, silently refreshing app tokens near expiry.
  * `null` means not connected — or the refresh token lapsed and the user must
- * reconnect.
+ * reconnect. Concurrent callers near expiry share one refresh, which runs
+ * with the first caller's `fetchFn` and clock.
  */
 export async function getGithubToken(
   fetchFn: FetchFn = fetch,
   now: () => number = Date.now,
 ): Promise<string | null> {
-  const auth = await loadGithubAuth()
-  if (auth === null) {
-    return null
+  const stored = await loadGithubAuth()
+  if (expiringAppAuth(stored, now) === null) {
+    return tokenOf(stored)
   }
-  if (auth.kind === 'pat') {
-    return auth.token
+  inFlightRefresh ??= refreshStoredAuth(fetchFn, now).finally(() => {
+    inFlightRefresh = null
+  })
+  return inFlightRefresh
+}
+
+/**
+ * Refresh the stored app credential and persist the new pair. Re-reads the
+ * store first: a refresh that landed after this caller read its copy has
+ * already rotated the pair, and the copy's refresh token is spent.
+ */
+async function refreshStoredAuth(fetchFn: FetchFn, now: () => number): Promise<string | null> {
+  const stored = await loadGithubAuth()
+  const expiring = expiringAppAuth(stored, now)
+  if (expiring === null) {
+    return tokenOf(stored)
   }
-  if (now() < auth.expiresAt - REFRESH_MARGIN_MS) {
-    return auth.accessToken
-  }
-  const refreshed = await refreshGithubAuth(auth, fetchFn, now)
+  const refreshed = await refreshGithubAuth(expiring, fetchFn, now)
   if (refreshed === null) {
     return null
   }
   await saveGithubAuth(refreshed)
-  return refreshed.kind === 'pat' ? refreshed.token : refreshed.accessToken
+  return tokenOf(refreshed)
+}
+
+/** The stored app credential when it is due a refresh, else `null`. */
+function expiringAppAuth(
+  auth: GithubAuth | null,
+  now: () => number,
+): Extract<GithubAuth, { kind: 'app' }> | null {
+  return auth !== null && auth.kind === 'app' && now() >= auth.expiresAt - REFRESH_MARGIN_MS
+    ? auth
+    : null
+}
+
+/** The bearer token a credential carries; `null` when nothing is stored. */
+function tokenOf(auth: GithubAuth | null): string | null {
+  if (auth === null) {
+    return null
+  }
+  return auth.kind === 'pat' ? auth.token : auth.accessToken
 }
 
 export interface GithubUser {
