@@ -139,7 +139,12 @@ export function SettingsProvider({ children }: SettingsProviderProps): ReactElem
     queryKey: SETTINGS_QUERY_KEY,
     queryFn: loadSettings,
     enabled: hasBridge(),
-    staleTime: Infinity,
+    // Loaded once per provider, and its outcome is final: a `'failed'` load
+    // has already told `whenSettingsLoaded()` callers "session only", so it
+    // must never quietly turn into `'loaded'` later. `Infinity` is not
+    // enough — TanStack treats a query with no data as stale regardless and
+    // refetches it on reconnect; `'static'` opts out of every refetch.
+    staleTime: 'static',
   })
   const [overrides, setOverrides] = useState<Partial<Settings>>({})
   const loadedRef = useRef(loaded)
